@@ -117,19 +117,31 @@ function ProfileForm() {
   async function startKyc() {
     setBusy(true);
     setError("");
-    const res = await fetch("/api/kyc", { method: "POST" });
-    const data = await res.json();
-    setBusy(false);
-    if (!res.ok) {
-      setError(data.error ?? "KYC impossible");
-      return;
+    setMessage("");
+    try {
+      const res = await fetch("/api/kyc", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "KYC impossible");
+        return;
+      }
+      if (data.alreadyVerified) {
+        setMessage("Identité déjà vérifiée.");
+        await load();
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError(
+        "Stripe n'a pas renvoyé de lien de vérification. Activez Identity dans le Dashboard Stripe."
+      );
+    } catch {
+      setError("Erreur réseau lors du démarrage KYC.");
+    } finally {
+      setBusy(false);
     }
-    if (data.alreadyVerified) {
-      setMessage("Identité déjà vérifiée.");
-      await load();
-      return;
-    }
-    if (data.url) window.location.href = data.url;
   }
 
   async function startConnect() {
@@ -182,9 +194,16 @@ function ProfileForm() {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {user.kycStatus !== "VERIFIED" && (
-            <Button disabled={busy} onClick={startKyc}>
-              Vérifier mon identité
-            </Button>
+            <div className="space-y-2">
+              <Button disabled={busy} onClick={startKyc}>
+                {busy ? "Ouverture…" : "Vérifier mon identité"}
+              </Button>
+              <p className="text-xs text-[var(--muted)]">
+                Vous serez redirigé vers Stripe Identity (passeport / pièce
+                d&apos;identité + selfie). Identity doit être activé sur le
+                compte Stripe.
+              </p>
+            </div>
           )}
           {user.kycStatus === "VERIFIED" &&
             !user.stripeConnectChargesEnabled && (

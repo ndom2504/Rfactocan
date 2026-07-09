@@ -11,7 +11,10 @@ export async function POST() {
   }
   if (!isStripeConfigured()) {
     return NextResponse.json(
-      { error: "Stripe n'est pas configuré sur ce serveur." },
+      {
+        error:
+          "Stripe n'est pas configuré. Ajoutez STRIPE_SECRET_KEY sur Vercel.",
+      },
       { status: 503 }
     );
   }
@@ -35,11 +38,12 @@ export async function POST() {
       kycStatus: "PENDING",
     });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Impossible de démarrer la vérification d'identité." },
-      { status: 500 }
-    );
+    console.error("KYC start error:", error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Impossible de démarrer la vérification d'identité.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
