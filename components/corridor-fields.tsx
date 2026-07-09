@@ -21,6 +21,18 @@ export function CorridorFields({ defaults }: Props) {
   const [fromCity, setFromCity] = useState(defaults?.fromCity ?? "Montréal");
   const [toCity, setToCity] = useState(defaults?.toCity ?? "Paris");
 
+  useEffect(() => {
+    if (defaults?.fromCountry) setFromCountry(defaults.fromCountry);
+    if (defaults?.toCountry) setToCountry(defaults.toCountry);
+    if (defaults?.fromCity) setFromCity(defaults.fromCity);
+    if (defaults?.toCity) setToCity(defaults.toCity);
+  }, [
+    defaults?.fromCountry,
+    defaults?.toCountry,
+    defaults?.fromCity,
+    defaults?.toCity,
+  ]);
+
   const fromCities = useMemo(() => getCities(fromCountry), [fromCountry]);
   const toCities = useMemo(() => getCities(toCountry), [toCountry]);
 
@@ -92,15 +104,23 @@ export function DateField({
   name,
   label,
   required,
+  defaultValue,
 }: {
   name: string;
   label: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} name={name} type="datetime-local" required={required} />
+      <Input
+        id={name}
+        name={name}
+        type="datetime-local"
+        required={required}
+        defaultValue={defaultValue}
+      />
     </div>
   );
 }

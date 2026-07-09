@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input";
 type Props = {
   fromCountry?: string;
   toCountry?: string;
+  airline?: string;
+  flightNumber?: string;
+  fromAirportCode?: string;
+  toAirportCode?: string;
   airlineLabel?: string;
   flightLabel?: string;
   fromAirportLabel?: string;
@@ -18,6 +22,10 @@ type Props = {
 export function FlightFields({
   fromCountry = "CA",
   toCountry = "GA",
+  airline = "",
+  flightNumber = "",
+  fromAirportCode = "",
+  toAirportCode = "",
   airlineLabel = "Compagnie",
   flightLabel = "N° de vol",
   fromAirportLabel = "Aéroport de départ",
@@ -25,6 +33,14 @@ export function FlightFields({
 }: Props) {
   const [fromC, setFromC] = useState(fromCountry);
   const [toC, setToC] = useState(toCountry);
+
+  useEffect(() => {
+    setFromC(fromCountry);
+  }, [fromCountry]);
+
+  useEffect(() => {
+    setToC(toCountry);
+  }, [toCountry]);
 
   useEffect(() => {
     const onChange = (e: Event) => {
@@ -45,24 +61,36 @@ export function FlightFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="airline">{airlineLabel}</Label>
-          <Select id="airline" name="airline" defaultValue="">
+          <Select id="airline" name="airline" defaultValue={airline}>
             <option value="">—</option>
             {AIRLINES.map((a) => (
               <option key={a.code} value={a.name}>
                 {a.name}
               </option>
             ))}
+            {airline && !AIRLINES.some((a) => a.name === airline) && (
+              <option value={airline}>{airline}</option>
+            )}
           </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="flightNumber">{flightLabel}</Label>
-          <Input id="flightNumber" name="flightNumber" placeholder="AC123" />
+          <Input
+            id="flightNumber"
+            name="flightNumber"
+            placeholder="AC123"
+            defaultValue={flightNumber}
+          />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="fromAirportCode">{fromAirportLabel}</Label>
-          <Select id="fromAirportCode" name="fromAirportCode" defaultValue="">
+          <Select
+            id="fromAirportCode"
+            name="fromAirportCode"
+            defaultValue={fromAirportCode}
+          >
             <option value="">—</option>
             {fromAirports.map((a) => (
               <option key={a.code} value={a.code}>
@@ -73,7 +101,11 @@ export function FlightFields({
         </div>
         <div className="space-y-2">
           <Label htmlFor="toAirportCode">{toAirportLabel}</Label>
-          <Select id="toAirportCode" name="toAirportCode" defaultValue="">
+          <Select
+            id="toAirportCode"
+            name="toAirportCode"
+            defaultValue={toAirportCode}
+          >
             <option value="">—</option>
             {toAirports.map((a) => (
               <option key={a.code} value={a.code}>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
+import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
@@ -121,10 +122,17 @@ export default function RequestDetailPage({
             avatarUrl={request.user.avatarUrl}
             size="lg"
           />
-          <div>
-            <CardTitle className="text-2xl">
-              {request.fromCity} → {request.toCity}
-            </CardTitle>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-2xl">
+                {request.fromCity} → {request.toCity}
+              </CardTitle>
+              {isOwner && (
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {t("my_listing")}
+                </Badge>
+              )}
+            </div>
             <CardDescription>
               {formatKg(request.weightKg)} · {urgency(request.urgency)}
               {request.desiredDate
@@ -147,6 +155,14 @@ export default function RequestDetailPage({
               />
             ))}
           </div>
+        )}
+        {isOwner && (
+          <ListingOwnerActions
+            className="mt-6"
+            kind="request"
+            id={request.id}
+            editHref={`/requests/${request.id}/edit`}
+          />
         )}
       </Card>
 

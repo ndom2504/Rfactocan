@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
+import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -15,6 +17,7 @@ type Props = { params: Promise<{ id: string }> };
 export default async function TripDetailPage({ params }: Props) {
   const { id } = await params;
   const locale = await getRequestLocale();
+  const me = await getSessionUser();
   const trip = await prisma.trip.findUnique({
     where: { id },
     include: {
@@ -33,6 +36,8 @@ export default async function TripDetailPage({ params }: Props) {
   });
   if (!trip) notFound();
 
+  const isOwner = me?.id === trip.userId || me?.role === "ADMIN";
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <Card>
@@ -42,10 +47,17 @@ export default async function TripDetailPage({ params }: Props) {
             avatarUrl={trip.user.avatarUrl}
             size="lg"
           />
-          <div>
-            <CardTitle className="text-2xl">
-              {trip.fromCity} → {trip.toCity}
-            </CardTitle>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-2xl">
+                {trip.fromCity} → {trip.toCity}
+              </CardTitle>
+              {isOwner && (
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {t(locale, "my_listing")}
+                </Badge>
+              )}
+            </div>
             <CardDescription>
               {getCountryName(trip.fromCountry)} →{" "}
               {getCountryName(trip.toCountry)}
@@ -103,10 +115,18 @@ export default async function TripDetailPage({ params }: Props) {
             )}
           </div>
         </dl>
-        <div className="mt-6">
-          <Link href="/requests">
-            <Button>{t(locale, "see_requests")}</Button>
-          </Link>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {isOwner ? (
+            <ListingOwnerActions
+              kind="trip"
+              id={trip.id}
+              editHref={`/trips/${trip.id}/edit`}
+            />
+          ) : (
+            <Link href="/requests">
+              <Button>{t(locale, "see_requests")}</Button>
+            </Link>
+          )}
         </div>
       </Card>
     </div>

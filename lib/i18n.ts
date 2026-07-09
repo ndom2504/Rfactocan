@@ -26,6 +26,23 @@ const dict = {
     details: "Détails",
     match: "Matcher",
     publish: "Publier",
+    edit: "Modifier",
+    delete: "Supprimer",
+    save_changes: "Enregistrer les modifications",
+    edit_trip: "Modifier le voyage",
+    edit_request: "Modifier la demande",
+    delete_confirm_trip:
+      "Supprimer ce voyage ? Il ne sera plus visible. Les réservations actives empêchent la suppression.",
+    delete_confirm_request:
+      "Supprimer cette demande ? Elle ne sera plus visible. Les réservations actives empêchent la suppression.",
+    deleted_ok: "Publication supprimée.",
+    my_listing: "Ma publication",
+    my_trips: "Mes voyages",
+    my_requests: "Mes demandes",
+    show_all_trips: "Tous les voyages",
+    show_all_requests: "Toutes les demandes",
+    cannot_delete_active:
+      "Impossible de supprimer : une réservation active est en cours.",
     all: "Tous",
     all_f: "Toutes",
 
@@ -270,6 +287,23 @@ const dict = {
     details: "Details",
     match: "Match",
     publish: "Publish",
+    edit: "Edit",
+    delete: "Delete",
+    save_changes: "Save changes",
+    edit_trip: "Edit trip",
+    edit_request: "Edit request",
+    delete_confirm_trip:
+      "Delete this trip? It will no longer be visible. Active bookings block deletion.",
+    delete_confirm_request:
+      "Delete this request? It will no longer be visible. Active bookings block deletion.",
+    deleted_ok: "Listing deleted.",
+    my_listing: "My listing",
+    my_trips: "My trips",
+    my_requests: "My requests",
+    show_all_trips: "All trips",
+    show_all_requests: "All requests",
+    cannot_delete_active:
+      "Cannot delete: an active booking is in progress.",
     all: "All",
     all_f: "All",
 

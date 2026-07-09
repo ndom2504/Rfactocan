@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t, urgencyLabel } from "@/lib/i18n";
@@ -6,13 +7,23 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
+import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
-export default async function RequestsPage() {
+type Props = { searchParams: Promise<{ mine?: string }> };
+
+export default async function RequestsPage({ searchParams }: Props) {
+  const user = await getSessionUser();
+  if (!user) return null;
   const locale = await getRequestLocale();
+  const { mine } = await searchParams;
+  const mineOnly = mine === "1";
+
   const requests = await prisma.parcelRequest.findMany({
-    where: { status: "OPEN" },
+    where: mineOnly
+      ? { userId: user.id, status: { not: "CANCELLED" } }
+      : { status: "OPEN" },
     include: {
       user: {
         select: {
@@ -31,21 +42,35 @@ export default async function RequestsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-            {t(locale, "requests_title")}
+            {mineOnly ? t(locale, "my_requests") : t(locale, "requests_title")}
           </h1>
           <p className="text-[var(--muted)]">
             {t(locale, "requests_subtitle")}
           </p>
         </div>
-        <Link href="/requests/new">
-          <Button>{t(locale, "publish_request")}</Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {mineOnly ? (
+            <Link href="/requests">
+              <Button variant="outline">
+                {t(locale, "show_all_requests")}
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/requests?mine=1">
+              <Button variant="outline">{t(locale, "my_requests")}</Button>
+            </Link>
+          )}
+          <Link href="/requests/new">
+            <Button>{t(locale, "publish_request")}</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4">
         {requests.map((req) => {
           const photos = JSON.parse(req.photosJson || "[]") as string[];
           const cover = photos[0];
+          const isOwner = req.userId === user.id;
           return (
             <Card key={req.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -65,7 +90,7 @@ export default async function RequestsPage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <UserAvatar
                         name={req.user.displayName}
                         avatarUrl={req.user.avatarUrl}
@@ -74,6 +99,11 @@ export default async function RequestsPage() {
                       <CardTitle>
                         {req.fromCity} → {req.toCity}
                       </CardTitle>
+                      {isOwner && (
+                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          {t(locale, "my_listing")}
+                        </Badge>
+                      )}
                     </div>
                     <CardDescription>
                       {getCountryName(req.toCountry)} · {formatKg(req.weightKg)}{" "}
@@ -99,9 +129,18 @@ export default async function RequestsPage() {
                     </div>
                   </div>
                 </div>
-                <Link href={`/requests/${req.id}`}>
-                  <Button variant="outline">{t(locale, "match")}</Button>
-                </Link>
+                <div className="flex flex-col items-end gap-2">
+                  <Link href={`/requests/${req.id}`}>
+                    <Button variant="outline">{t(locale, "match")}</Button>
+                  </Link>
+                  {isOwner && (
+                    <ListingOwnerActions
+                      kind="request"
+                      id={req.id}
+                      editHref={`/requests/${req.id}/edit`}
+                    />
+                  )}
+                </div>
               </div>
             </Card>
           );
