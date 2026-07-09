@@ -7,6 +7,7 @@ import { notifyUser } from "@/lib/notifications";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
+import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 import type { BookingStatus } from "@prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
@@ -290,6 +291,17 @@ export async function PATCH(request: Request, { params }: Params) {
             : {}),
         },
       });
+
+      if (nextStatus !== booking.status) {
+        await recordBookingEvent(tx, {
+          bookingId: id,
+          type: "STATUS",
+          status: nextStatus,
+          label: statusEventLabel(nextStatus),
+          actorId: session.id,
+          meta: { from: booking.status, to: nextStatus },
+        });
+      }
 
       if (
         nextStatus === "AWAITING_PAYMENT" ||

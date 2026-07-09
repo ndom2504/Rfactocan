@@ -241,13 +241,45 @@ model Booking {
   request  ParcelRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   trip     Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
   sender   User          @relation("BookingSender", fields: [senderId], references: [id], onDelete: Cascade)
-  messages Message[]
-  reviews  Review[]
-  payment  Payment?
+  messages  Message[]
+  reviews   Review[]
+  payment   Payment?
+  events    BookingEvent[]
+  locations BookingLocation[]
 
   @@unique([requestId, tripId])
   @@index([senderId])
   @@index([status])
+}
+
+model BookingEvent {
+  id        String   @id @default(cuid())
+  bookingId String
+  type      String
+  status    String?
+  label     String
+  metaJson  String   @default("{}")
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}
+
+model BookingLocation {
+  id         String   @id @default(cuid())
+  bookingId  String
+  userId     String
+  latitude   Float
+  longitude  Float
+  accuracyM  Float?
+  label      String?
+  createdAt  DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
 }
 
 model Payment {

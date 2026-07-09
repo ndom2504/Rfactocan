@@ -6,6 +6,7 @@ import { notifyUser } from "@/lib/notifications";
 import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
 export const runtime = "nodejs";
 
@@ -49,27 +50,32 @@ async function handlePaymentIntent(
         payment: true,
       },
     });
-    await prisma.$transaction([
-      prisma.payment.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
         where: { id: payment.id },
         data: {
           status: "AUTHORIZED",
           stripePaymentIntentId: pi.id,
         },
-      }),
-      prisma.booking.update({
+      });
+      await tx.booking.update({
         where: { id: bookingId },
         data: { status: "ACCEPTED" },
-      }),
-      ...(booking
-        ? [
-            prisma.parcelRequest.update({
-              where: { id: booking.requestId },
-              data: { status: "MATCHED" as const },
-            }),
-          ]
-        : []),
-    ]);
+      });
+      if (booking) {
+        await tx.parcelRequest.update({
+          where: { id: booking.requestId },
+          data: { status: "MATCHED" },
+        });
+        await recordBookingEvent(tx, {
+          bookingId,
+          type: "STATUS",
+          status: "ACCEPTED",
+          label: statusEventLabel("ACCEPTED"),
+          meta: { source: "stripe_webhook" },
+        });
+      }
+    });
 
     if (booking) {
       const amountLabel = new Intl.NumberFormat("fr-CA", {

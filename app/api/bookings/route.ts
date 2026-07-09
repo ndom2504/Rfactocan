@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { emailBookingProposed } from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
+import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
 const createSchema = z.object({
   requestId: z.string().min(1),
@@ -100,13 +101,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const booking = await prisma.booking.create({
-      data: {
-        requestId: body.requestId,
-        tripId: body.tripId,
-        senderId: session.id,
+    const booking = await prisma.$transaction(async (tx) => {
+      const created = await tx.booking.create({
+        data: {
+          requestId: body.requestId,
+          tripId: body.tripId,
+          senderId: session.id,
+          status: "PROPOSED",
+        },
+      });
+      await recordBookingEvent(tx, {
+        bookingId: created.id,
+        type: "STATUS",
         status: "PROPOSED",
-      },
+        label: statusEventLabel("PROPOSED"),
+        actorId: session.id,
+        meta: { requestId: body.requestId, tripId: body.tripId },
+      });
+      return created;
     });
 
     const route = `${parcel.fromCity} → ${parcel.toCity}`;

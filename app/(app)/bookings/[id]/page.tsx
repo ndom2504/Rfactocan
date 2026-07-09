@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookingChat } from "@/components/booking-chat";
+import { BookingTracker } from "@/components/booking-tracker";
 import { formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
@@ -444,6 +445,7 @@ export default function BookingDetailPage({
         <Link href="/bookings" className="text-sm text-[var(--muted)] underline">
           {t("back_bookings")}
         </Link>
+        <BookingTracker bookingId={id} />
       </div>
 
       <BookingChat
