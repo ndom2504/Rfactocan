@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/user-avatar";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -17,10 +18,12 @@ export default async function TripDetailPage({ params }: Props) {
       user: {
         select: {
           displayName: true,
+          avatarUrl: true,
           bio: true,
           verifiedAt: true,
           ratingAvg: true,
           ratingCount: true,
+          kycStatus: true,
         },
       },
     },
@@ -30,12 +33,22 @@ export default async function TripDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <Card>
-        <CardTitle className="text-2xl">
-          {trip.fromCity} → {trip.toCity}
-        </CardTitle>
-        <CardDescription>
-          {getCountryName(trip.fromCountry)} → {getCountryName(trip.toCountry)}
-        </CardDescription>
+        <div className="flex items-start gap-4">
+          <UserAvatar
+            name={trip.user.displayName}
+            avatarUrl={trip.user.avatarUrl}
+            size="lg"
+          />
+          <div>
+            <CardTitle className="text-2xl">
+              {trip.fromCity} → {trip.toCity}
+            </CardTitle>
+            <CardDescription>
+              {getCountryName(trip.fromCountry)} →{" "}
+              {getCountryName(trip.toCountry)}
+            </CardDescription>
+          </div>
+        </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Badge>{formatDate(trip.departAt)}</Badge>
           <Badge>{formatKg(trip.weightKg)}</Badge>
@@ -64,7 +77,9 @@ export default async function TripDetailPage({ params }: Props) {
             <dt className="text-[var(--muted)]">Voyageur</dt>
             <dd>
               {trip.user.displayName}
-              {trip.user.verifiedAt ? " · Vérifié" : ""}
+              {trip.user.verifiedAt || trip.user.kycStatus === "VERIFIED"
+                ? " · Vérifié"
+                : ""}
               {trip.user.ratingCount
                 ? ` · ★ ${trip.user.ratingAvg.toFixed(1)} (${trip.user.ratingCount})`
                 : ""}

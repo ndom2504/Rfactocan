@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/user-avatar";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName, URGENCY_LABELS } from "@/lib/corridors";
 
@@ -11,7 +12,12 @@ export default async function RequestsPage() {
     where: { status: "OPEN" },
     include: {
       user: {
-        select: { displayName: true, verifiedAt: true, avatarUrl: true },
+        select: {
+          displayName: true,
+          verifiedAt: true,
+          avatarUrl: true,
+          kycStatus: true,
+        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -56,12 +62,19 @@ export default async function RequestsPage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <CardTitle>
-                      {req.fromCity} → {req.toCity}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <UserAvatar
+                        name={req.user.displayName}
+                        avatarUrl={req.user.avatarUrl}
+                        size="sm"
+                      />
+                      <CardTitle>
+                        {req.fromCity} → {req.toCity}
+                      </CardTitle>
+                    </div>
                     <CardDescription>
-                      {getCountryName(req.toCountry)} · {formatKg(req.weightKg)} ·{" "}
-                      {URGENCY_LABELS[req.urgency]}
+                      {getCountryName(req.toCountry)} · {formatKg(req.weightKg)}{" "}
+                      · {URGENCY_LABELS[req.urgency]}
                       {req.desiredDate
                         ? ` · souhaité ${formatDate(req.desiredDate)}`
                         : ""}
@@ -71,6 +84,12 @@ export default async function RequestsPage() {
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Badge>{req.user.displayName}</Badge>
+                      {(req.user.verifiedAt ||
+                        req.user.kycStatus === "VERIFIED") && (
+                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          Vérifié
+                        </Badge>
+                      )}
                       {photos.length > 1 && (
                         <Badge>+{photos.length - 1} photo(s)</Badge>
                       )}

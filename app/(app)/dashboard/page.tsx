@@ -3,8 +3,9 @@ import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { TravelerSearch } from "@/components/traveler-search";
 import { formatDate, formatKg } from "@/lib/utils";
-import { getCountryName } from "@/lib/corridors";
+import { getCountryName, BOOKING_STATUS_LABELS } from "@/lib/corridors";
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -66,6 +67,8 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      <TravelerSearch />
+
       <section>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
           Activité récente
@@ -88,7 +91,8 @@ export default async function DashboardPage() {
                     </CardTitle>
                     <CardDescription>
                       {formatKg(b.request.weightKg)} · départ voyage{" "}
-                      {formatDate(b.trip.departAt)} · {b.status}
+                      {formatDate(b.trip.departAt)} ·{" "}
+                      {BOOKING_STATUS_LABELS[b.status] ?? b.status}
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm">

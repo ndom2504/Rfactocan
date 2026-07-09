@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/user-avatar";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
 
 type Match = {
@@ -30,6 +31,7 @@ type Match = {
     user: {
       id: string;
       displayName: string;
+      avatarUrl?: string | null;
       ratingAvg: number;
       ratingCount: number;
       verifiedAt: string | null;
@@ -48,7 +50,7 @@ type RequestData = {
   desiredDate: string | null;
   photos: string[];
   userId: string;
-  user: { displayName: string };
+  user: { displayName: string; avatarUrl?: string | null };
 };
 
 export default function RequestDetailPage({
@@ -111,15 +113,25 @@ export default function RequestDetailPage({
   return (
     <div className="space-y-8">
       <Card>
-        <CardTitle className="text-2xl">
-          {request.fromCity} → {request.toCity}
-        </CardTitle>
-        <CardDescription>
-          {formatKg(request.weightKg)} · {request.urgency}
-          {request.desiredDate
-            ? ` · souhaité ${formatDate(request.desiredDate)}`
-            : ""}
-        </CardDescription>
+        <div className="flex items-start gap-4">
+          <UserAvatar
+            name={request.user.displayName}
+            avatarUrl={request.user.avatarUrl}
+            size="lg"
+          />
+          <div>
+            <CardTitle className="text-2xl">
+              {request.fromCity} → {request.toCity}
+            </CardTitle>
+            <CardDescription>
+              {formatKg(request.weightKg)} · {request.urgency}
+              {request.desiredDate
+                ? ` · souhaité ${formatDate(request.desiredDate)}`
+                : ""}{" "}
+              · {request.user.displayName}
+            </CardDescription>
+          </div>
+        </div>
         <p className="mt-4 text-sm leading-relaxed">{request.description}</p>
         {request.photos?.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -150,31 +162,38 @@ export default function RequestDetailPage({
           {matches.map((m) => (
             <Card key={m.trip.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CardTitle>
-                      {m.trip.fromCity} → {m.trip.toCity}
-                    </CardTitle>
-                    <Badge className="bg-[var(--accent)] text-white">
-                      {m.score}%
-                    </Badge>
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <UserAvatar
+                    name={m.trip.user.displayName}
+                    avatarUrl={m.trip.user.avatarUrl}
+                    size="md"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CardTitle>
+                        {m.trip.fromCity} → {m.trip.toCity}
+                      </CardTitle>
+                      <Badge className="bg-[var(--accent)] text-white">
+                        {m.score}%
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      {formatDate(m.trip.departAt)} · {formatKg(m.trip.weightKg)}{" "}
+                      · {formatCad(m.trip.pricePerKgCad)}/kg
+                    </CardDescription>
+                    <p className="mt-2 text-sm">
+                      {m.trip.user.displayName}
+                      {m.trip.user.verifiedAt ? " · Vérifié" : ""}
+                      {m.trip.user.ratingCount
+                        ? ` · ★ ${m.trip.user.ratingAvg.toFixed(1)}`
+                        : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      Route {m.breakdown.route}% · Date {m.breakdown.date}% · Prix{" "}
+                      {m.breakdown.price}% · Réputation {m.breakdown.reputation}% ·
+                      Historique {m.breakdown.history}%
+                    </p>
                   </div>
-                  <CardDescription>
-                    {formatDate(m.trip.departAt)} · {formatKg(m.trip.weightKg)} ·{" "}
-                    {formatCad(m.trip.pricePerKgCad)}/kg
-                  </CardDescription>
-                  <p className="mt-2 text-sm">
-                    {m.trip.user.displayName}
-                    {m.trip.user.verifiedAt ? " · Vérifié" : ""}
-                    {m.trip.user.ratingCount
-                      ? ` · ★ ${m.trip.user.ratingAvg.toFixed(1)}`
-                      : ""}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    Route {m.breakdown.route}% · Date {m.breakdown.date}% · Prix{" "}
-                    {m.breakdown.price}% · Réputation {m.breakdown.reputation}% ·
-                    Historique {m.breakdown.history}%
-                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Link href={`/trips/${m.trip.id}`}>

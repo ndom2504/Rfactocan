@@ -18,6 +18,7 @@ export async function GET(_request: Request, { params }: Params) {
         select: {
           id: true,
           displayName: true,
+          avatarUrl: true,
           ratingAvg: true,
           ratingCount: true,
           verifiedAt: true,

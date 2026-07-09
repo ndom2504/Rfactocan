@@ -1,0 +1,95 @@
+import { NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/auth";
+import { countryCodesForRegion } from "@/lib/regions";
+import { prisma } from "@/lib/prisma";
+
+/**
+ * Quick traveler search for dashboard.
+ * Filters open trips by q / country / city / region (destination or origin).
+ */
+export async function GET(request: Request) {
+  const session = await getSessionUser();
+  if (!session) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const q = (searchParams.get("q") ?? "").trim();
+  const country = (searchParams.get("country") ?? "").trim().toUpperCase();
+  const city = (searchParams.get("city") ?? "").trim();
+  const region = (searchParams.get("region") ?? "").trim();
+  const limit = Math.min(Number(searchParams.get("limit") ?? 20) || 20, 50);
+
+  const regionCodes = region ? countryCodesForRegion(region) : [];
+
+  const trips = await prisma.trip.findMany({
+    where: {
+      status: "OPEN",
+      userId: { not: session.id },
+      ...(country
+        ? {
+            OR: [{ toCountry: country }, { fromCountry: country }],
+          }
+        : {}),
+      ...(city
+        ? {
+            OR: [
+              { toCity: { contains: city, mode: "insensitive" } },
+              { fromCity: { contains: city, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(regionCodes.length
+        ? {
+            OR: [
+              { toCountry: { in: regionCodes } },
+              { fromCountry: { in: regionCodes } },
+            ],
+          }
+        : {}),
+      ...(q
+        ? {
+            OR: [
+              { user: { displayName: { contains: q, mode: "insensitive" } } },
+              { fromCity: { contains: q, mode: "insensitive" } },
+              { toCity: { contains: q, mode: "insensitive" } },
+              { fromCountry: { contains: q, mode: "insensitive" } },
+              { toCountry: { contains: q, mode: "insensitive" } },
+              { airline: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          displayName: true,
+          avatarUrl: true,
+          country: true,
+          ratingAvg: true,
+          ratingCount: true,
+          verifiedAt: true,
+          kycStatus: true,
+          completedDeliveries: true,
+        },
+      },
+    },
+    orderBy: { departAt: "asc" },
+    take: limit,
+  });
+
+  return NextResponse.json({
+    travelers: trips.map((t) => ({
+      tripId: t.id,
+      fromCountry: t.fromCountry,
+      fromCity: t.fromCity,
+      toCountry: t.toCountry,
+      toCity: t.toCity,
+      departAt: t.departAt,
+      weightKg: t.weightKg,
+      pricePerKgCad: t.pricePerKgCad,
+      user: t.user,
+    })),
+  });
+}
