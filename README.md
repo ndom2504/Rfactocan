@@ -2,60 +2,84 @@
 
 Plateforme web de mise en relation entre **voyageurs** et **expéditeurs** pour transporter des colis du **Canada vers l'Afrique**.
 
-MVP sans paiement in-app : authentification, annonces, matching, réservations, messagerie, notations, admin.
+Auth, matching, réservations, messagerie, **paiement escrow Stripe**, **KYC Stripe Identity**, admin.
 
 ## Stack
 
 - Next.js 15 (App Router) + TypeScript + Tailwind
 - Prisma + **Neon Postgres**
-- Auth session JWT (cookie httpOnly)
-- Déploiement front : **Vercel**
-- API REST sous `/api/*` (contrat stable pour une future app Expo Android)
+- Auth session JWT + Google OAuth
+- **Stripe** : Checkout (manual capture), Connect Express, Identity
+- Déploiement : **Vercel** (`rfacto.com`)
 
 ## Démarrage local
 
 ```bash
 npm install
 cp .env.example .env
-# Renseigne DATABASE_URL + DIRECT_URL (Neon) et AUTH_SECRET
+# Renseigne Neon + AUTH_SECRET (+ Stripe pour paiements/KYC)
 npm run db:setup
 npm run dev
 ```
 
-Ouvrir [http://localhost:3000](http://localhost:3000).
-
-### Variables d'environnement (local + Vercel)
+### Variables d'environnement (Vercel)
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | URL Neon **pooled** (`…-pooler…`) |
-| `DIRECT_URL` | URL Neon **directe** (sans `-pooler`, pour Prisma) |
-| `AUTH_SECRET` | Secret long aléatoire pour les sessions |
-| `NEXT_PUBLIC_APP_URL` | `https://rfacto.com` (redirects OAuth) |
-| `GOOGLE_CLIENT_ID` | Client ID Google Cloud |
-| `GOOGLE_CLIENT_SECRET` | Client Secret Google Cloud |
+| `DATABASE_URL` | Neon pooled |
+| `DIRECT_URL` | Neon direct |
+| `AUTH_SECRET` | Secret sessions |
+| `NEXT_PUBLIC_APP_URL` | `https://rfacto.com` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth |
+| `STRIPE_SECRET_KEY` | Clé secrète Stripe |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Clé publique Stripe |
+| `STRIPE_WEBHOOK_SECRET` | Secret webhook |
+| `PLATFORM_FEE_BPS` | Commission (défaut `1000` = 10 %) |
 
-Sur Vercel : Project → Settings → Environment Variables — ajouter toutes les variables ci-dessus (Production).
+Root Directory Vercel : **vide**.
 
-Root Directory Vercel : **laisser vide** (app à la racine du repo).
+### Neon SQL (si `db push` échoue en local)
 
-### Auth Google (rfacto.com)
+Exécuter dans l'ordre dans Neon SQL Editor :
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials
-2. Créer **OAuth client ID** → type **Web application**
-3. Authorized JavaScript origins :
-   - `https://rfacto.com`
-   - `https://www.rfacto.com` (si utilisé)
-   - `http://localhost:3000` (dev)
-4. Authorized redirect URIs :
-   - `https://rfacto.com/api/auth/google/callback`
-   - `https://www.rfacto.com/api/auth/google/callback` (si utilisé)
-   - `http://localhost:3000/api/auth/google/callback` (dev)
-5. Copier Client ID / Secret dans Vercel + `.env`
-6. Sur Neon SQL Editor, exécuter `prisma/neon-google-auth.sql` (colonne `googleId`)
-7. Redeploy Vercel
+1. `prisma/neon-init.sql` (schéma de base)
+2. `prisma/neon-google-auth.sql`
+3. `prisma/neon-payments-kyc.sql` (**V2 paiements + KYC**)
+4. `prisma/neon-seed.sql` (comptes démo)
 
-Écran de consentement OAuth : type **External**, ajouter ton email comme test user tant que l'app n'est pas en production Google.
+### Stripe (escrow + KYC)
+
+1. [Stripe Dashboard](https://dashboard.stripe.com/) → activer **Identity** et **Connect**
+2. Developers → API keys → copier Secret + Publishable dans Vercel
+3. Developers → Webhooks → Add endpoint :
+   - URL : `https://rfacto.com/api/stripe/webhook`
+   - Events :
+     - `identity.verification_session.verified`
+     - `identity.verification_session.requires_input`
+     - `identity.verification_session.canceled`
+     - `checkout.session.completed`
+     - `payment_intent.amount_capturable_updated`
+     - `payment_intent.succeeded`
+     - `payment_intent.canceled`
+     - `payment_intent.payment_failed`
+     - `account.updated`
+     - `charge.refunded`
+4. Copier le **Signing secret** → `STRIPE_WEBHOOK_SECRET`
+5. Connect settings : brand Rfacto, return URLs via `NEXT_PUBLIC_APP_URL`
+
+### Flux paiement
+
+1. Voyageur : Profil → **Vérifier mon identité** (Identity) → **Activer les paiements** (Connect)
+2. Expéditeur propose une réservation
+3. Voyageur accepte (+ checklist douanière) → statut `AWAITING_PAYMENT`
+4. Expéditeur paie via Stripe Checkout (autorisation, fonds bloqués)
+5. Webhook → `AUTHORIZED` + booking `ACCEPTED`
+6. Transit → **Livré** → capture + transfer net au voyageur (Rfacto garde 10 %)
+
+### Auth Google
+
+Redirect URI : `https://rfacto.com/api/auth/google/callback`  
+Origins : `https://rfacto.com`, `http://localhost:3000`
 
 ### Comptes démo
 
@@ -65,39 +89,6 @@ Root Directory Vercel : **laisser vide** (app à la racine du repo).
 | Voyageur | voyageur@rfacto.ca | password123 |
 | Expéditeur | expediteur@rfacto.ca | password123 |
 
-## Fonctionnalités MVP
+## Hors scope (V2.1+)
 
-- Inscription / connexion (email)
-- Profils + rôles (expéditeur, voyageur, les deux, admin)
-- Publication de voyages et de demandes de colis
-- Upload photos (local `/public/uploads` — à remplacer par stockage cloud en prod)
-- Matching score (destination, date, poids, prix, note)
-- Réservation : proposer → accepter/refuser (checklist douanière) → suivi des statuts
-- Messagerie par réservation (polling)
-- Notations après livraison
-- Admin : vérifier / suspendre utilisateurs, signalements
-
-## Structure
-
-```
-app/
-  (marketing)/     Landing
-  (auth)/          Login / register
-  (app)/           Dashboard authentifié
-  api/             API JSON
-components/
-lib/               auth, prisma, matching, supabase
-prisma/
-```
-
-## Déploiement Vercel + Neon
-
-1. Créer une base Neon et copier les connection strings
-2. Pousser le schéma : `npm run db:setup` (une fois depuis ta machine)
-3. Connecter le repo GitHub à Vercel
-4. Ajouter `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET` dans Vercel
-5. Deploy (Root Directory vide)
-
-## Hors MVP (V2)
-
-Paiement escrow Stripe, Mobile Money, KYC passeport, QR codes, Expo Android, stockage images cloud.
+Mobile Money, assurance, litiges automatisés, QR scan, Expo Android, multi-devises.

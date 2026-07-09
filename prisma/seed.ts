@@ -23,7 +23,11 @@ async function main() {
 
   const traveler = await prisma.user.upsert({
     where: { email: "voyageur@rfacto.ca" },
-    update: {},
+    update: {
+      kycStatus: "VERIFIED",
+      kycVerifiedAt: new Date(),
+      verifiedAt: new Date(),
+    },
     create: {
       email: "voyageur@rfacto.ca",
       passwordHash,
@@ -31,6 +35,8 @@ async function main() {
       role: "TRAVELER",
       status: "ACTIVE",
       verifiedAt: new Date(),
+      kycStatus: "VERIFIED",
+      kycVerifiedAt: new Date(),
       country: "Canada",
       bio: "Voyage régulièrement Montréal → Libreville.",
       ratingAvg: 4.8,
@@ -103,6 +109,32 @@ async function main() {
     tripId: trip.id,
     requestId: request.id,
   });
+
+  const corridors = [
+    ["CA", "GA"],
+    ["CA", "CM"],
+    ["CA", "CI"],
+    ["CA", "SN"],
+    ["CA", "CG"],
+    ["CA", "CD"],
+  ] as const;
+
+  for (const [fromCountry, toCountry] of corridors) {
+    await prisma.corridorConfig.upsert({
+      where: {
+        fromCountry_toCountry: { fromCountry, toCountry },
+      },
+      update: { active: true, feeBps: 1000, currency: "cad" },
+      create: {
+        fromCountry,
+        toCountry,
+        currency: "cad",
+        feeBps: 1000,
+        active: true,
+        paymentProvider: "stripe",
+      },
+    });
+  }
 }
 
 main()

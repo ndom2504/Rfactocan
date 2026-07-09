@@ -20,12 +20,30 @@ export function getCities(code: string) {
 
 export const BOOKING_STATUS_LABELS: Record<string, string> = {
   PROPOSED: "Proposée",
-  ACCEPTED: "Acceptée",
+  AWAITING_PAYMENT: "En attente de paiement",
+  ACCEPTED: "Acceptée (payée)",
   HANDED_OVER: "Remis au voyageur",
   IN_TRANSIT: "En transit",
   DELIVERED: "Livré",
   CANCELLED: "Annulée",
   REFUSED: "Refusée",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  REQUIRES_PAYMENT: "Paiement requis",
+  AUTHORIZED: "Fonds bloqués",
+  CAPTURED: "Payé / transféré",
+  CANCELLED: "Annulé",
+  REFUNDED: "Remboursé",
+  FAILED: "Échoué",
+};
+
+export const KYC_STATUS_LABELS: Record<string, string> = {
+  NONE: "Non vérifié",
+  PENDING: "Vérification en cours",
+  VERIFIED: "Identité vérifiée",
+  FAILED: "Échec",
+  REQUIRES_INPUT: "Action requise",
 };
 
 export const URGENCY_LABELS: Record<string, string> = {

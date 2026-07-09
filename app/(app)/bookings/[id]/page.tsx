@@ -9,8 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BOOKING_STATUS_LABELS } from "@/lib/corridors";
+import {
+  BOOKING_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+} from "@/lib/corridors";
 import { formatDate, formatKg } from "@/lib/utils";
+
+type Payment = {
+  id: string;
+  status: string;
+  amountCadCents: number;
+  platformFeeCents: number;
+  travelerPayoutCents: number;
+};
 
 type Booking = {
   id: string;
@@ -18,6 +29,7 @@ type Booking = {
   senderId: string;
   goodsCertified: boolean;
   customsAcknowledged: boolean;
+  payment?: Payment | null;
   request: {
     fromCity: string;
     toCity: string;
@@ -31,7 +43,13 @@ type Booking = {
     departAt: string;
     fromCity: string;
     toCity: string;
-    user: { id: string; displayName: string };
+    pricePerKgCad?: number;
+    user: {
+      id: string;
+      displayName: string;
+      kycStatus?: string;
+      stripeConnectChargesEnabled?: boolean;
+    };
   };
   sender: { id: string; displayName: string };
   reviews: { fromUserId: string }[];
@@ -45,6 +63,13 @@ type Message = {
   senderId: string;
   sender: { displayName: string };
 };
+
+function formatCents(cents: number) {
+  return new Intl.NumberFormat("fr-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(cents / 100);
+}
 
 export default function BookingDetailPage({
   params,
@@ -113,6 +138,19 @@ export default function BookingDetailPage({
     router.refresh();
   }
 
+  async function startCheckout() {
+    setLoading(true);
+    setError("");
+    const res = await fetch(`/api/payments/${id}/checkout`, { method: "POST" });
+    const data = await res.json();
+    setLoading(false);
+    if (!res.ok) {
+      setError(data.error ?? "Paiement impossible");
+      return;
+    }
+    window.location.href = data.checkoutUrl;
+  }
+
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
@@ -151,6 +189,7 @@ export default function BookingDetailPage({
   const isTraveler = meId === booking.trip.userId;
   const isSender = meId === booking.senderId;
   const alreadyReviewed = booking.reviews.some((r) => r.fromUserId === meId);
+  const payment = booking.payment;
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -163,8 +202,18 @@ export default function BookingDetailPage({
             {formatKg(booking.request.weightKg)} · départ{" "}
             {formatDate(booking.trip.departAt)}
           </CardDescription>
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap gap-2">
             <Badge>{BOOKING_STATUS_LABELS[booking.status] ?? booking.status}</Badge>
+            {payment && (
+              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+              </Badge>
+            )}
+            {booking.trip.user.kycStatus === "VERIFIED" && (
+              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                Voyageur vérifié
+              </Badge>
+            )}
           </div>
           <p className="mt-4 text-sm">{booking.request.description}</p>
           <p className="mt-3 text-sm text-[var(--muted)]">
@@ -176,6 +225,11 @@ export default function BookingDetailPage({
 
           {booking.status === "PROPOSED" && isTraveler && (
             <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <p className="text-sm text-[var(--muted)]">
+                Après acceptation, l&apos;expéditeur paiera en séquestre. Les
+                fonds ne vous seront versés qu&apos;après confirmation de
+                livraison.
+              </p>
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -196,12 +250,12 @@ export default function BookingDetailPage({
                 Je respecte les lois douanières des pays de départ, transit et
                 arrivée.
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={loading || !goodsCertified || !customsAcknowledged}
                   onClick={() => patchStatus("ACCEPTED")}
                 >
-                  Accepter
+                  Accepter (demander paiement)
                 </Button>
                 <Button
                   variant="danger"
@@ -211,7 +265,46 @@ export default function BookingDetailPage({
                   Refuser
                 </Button>
               </div>
+              <p className="text-xs text-[var(--muted)]">
+                KYC + Stripe Connect requis. Configurez-les dans{" "}
+                <Link href="/profile" className="underline">
+                  Profil
+                </Link>
+                .
+              </p>
             </div>
+          )}
+
+          {booking.status === "AWAITING_PAYMENT" && isSender && (
+            <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <h3 className="font-medium">Payer et sécuriser le colis</h3>
+              {payment ? (
+                <ul className="space-y-1 text-sm">
+                  <li>Total : {formatCents(payment.amountCadCents)}</li>
+                  <li>
+                    Commission Rfacto (10 %) :{" "}
+                    {formatCents(payment.platformFeeCents)}
+                  </li>
+                  <li>
+                    Voyageur recevra : {formatCents(payment.travelerPayoutCents)}
+                  </li>
+                </ul>
+              ) : (
+                <p className="text-sm text-[var(--muted)]">
+                  Les fonds seront bloqués jusqu&apos;à la confirmation de
+                  livraison.
+                </p>
+              )}
+              <Button disabled={loading} onClick={startCheckout}>
+                {loading ? "Redirection..." : "Payer avec Stripe"}
+              </Button>
+            </div>
+          )}
+
+          {booking.status === "AWAITING_PAYMENT" && isTraveler && (
+            <p className="mt-4 text-sm text-[var(--muted)]">
+              En attente du paiement sécurisé de l&apos;expéditeur.
+            </p>
           )}
 
           {["ACCEPTED", "HANDED_OVER", "IN_TRANSIT"].includes(booking.status) &&
@@ -238,7 +331,7 @@ export default function BookingDetailPage({
                     disabled={loading}
                     onClick={() => patchStatus("DELIVERED")}
                   >
-                    Marquer livré
+                    Marquer livré (libère le paiement)
                   </Button>
                 )}
                 <Button

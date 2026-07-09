@@ -9,30 +9,30 @@ export async function GET() {
     return NextResponse.json({ error: "Interdit" }, { status: 403 });
   }
 
-  const [users, trips, requests, bookings, reports, revenueProxy] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.trip.count(),
-      prisma.parcelRequest.count(),
-      prisma.booking.groupBy({ by: ["status"], _count: true }),
-      prisma.report.count({ where: { resolved: false } }),
-      prisma.booking.count({ where: { status: "DELIVERED" } }),
-    ]);
-
-  const pendingUsers = await prisma.user.findMany({
-    where: { verifiedAt: null, status: { not: "SUSPENDED" } },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-    select: {
-      id: true,
-      email: true,
-      displayName: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      ratingAvg: true,
-    },
-  });
+  const [
+    users,
+    trips,
+    requests,
+    bookings,
+    reports,
+    delivered,
+    paymentsCaptured,
+    feeAgg,
+    kycVerified,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.trip.count(),
+    prisma.parcelRequest.count(),
+    prisma.booking.groupBy({ by: ["status"], _count: true }),
+    prisma.report.count({ where: { resolved: false } }),
+    prisma.booking.count({ where: { status: "DELIVERED" } }),
+    prisma.payment.count({ where: { status: "CAPTURED" } }),
+    prisma.payment.aggregate({
+      where: { status: "CAPTURED" },
+      _sum: { platformFeeCents: true, amountCadCents: true },
+    }),
+    prisma.user.count({ where: { kycStatus: "VERIFIED" } }),
+  ]);
 
   const openReports = await prisma.report.findMany({
     where: { resolved: false },
@@ -53,9 +53,32 @@ export async function GET() {
       role: true,
       status: true,
       verifiedAt: true,
+      kycStatus: true,
+      stripeConnectChargesEnabled: true,
       ratingAvg: true,
       ratingCount: true,
       createdAt: true,
+    },
+  });
+
+  const recentPayments = await prisma.payment.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 30,
+    include: {
+      booking: {
+        select: {
+          id: true,
+          status: true,
+          sender: { select: { displayName: true, email: true } },
+          trip: {
+            select: {
+              fromCity: true,
+              toCity: true,
+              user: { select: { displayName: true, email: true } },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -64,19 +87,30 @@ export async function GET() {
       users,
       trips,
       requests,
-      delivered: revenueProxy,
+      delivered,
       openReports: reports,
       bookingsByStatus: bookings,
+      paymentsCaptured,
+      kycVerified,
+      platformFeesCadCents: feeAgg._sum.platformFeeCents ?? 0,
+      volumeCadCents: feeAgg._sum.amountCadCents ?? 0,
     },
-    pendingUsers,
     openReports,
     users: allUsers,
+    payments: recentPayments,
   });
 }
 
 const patchSchema = z.object({
   userId: z.string(),
-  action: z.enum(["verify", "unverify", "suspend", "activate", "make_admin"]),
+  action: z.enum([
+    "verify",
+    "unverify",
+    "suspend",
+    "activate",
+    "make_admin",
+    "mark_kyc_verified",
+  ]),
 });
 
 export async function PATCH(request: Request) {
@@ -89,14 +123,29 @@ export async function PATCH(request: Request) {
     const body = patchSchema.parse(await request.json());
     const data =
       body.action === "verify"
-        ? { verifiedAt: new Date(), status: "ACTIVE" as const }
-        : body.action === "unverify"
-          ? { verifiedAt: null }
-          : body.action === "suspend"
-            ? { status: "SUSPENDED" as const }
-            : body.action === "activate"
-              ? { status: "ACTIVE" as const }
-              : { role: "ADMIN" as const };
+        ? {
+            verifiedAt: new Date(),
+            status: "ACTIVE" as const,
+            kycStatus: "VERIFIED" as const,
+            kycVerifiedAt: new Date(),
+          }
+        : body.action === "mark_kyc_verified"
+          ? {
+              kycStatus: "VERIFIED" as const,
+              kycVerifiedAt: new Date(),
+              verifiedAt: new Date(),
+            }
+          : body.action === "unverify"
+            ? {
+                verifiedAt: null,
+                kycStatus: "NONE" as const,
+                kycVerifiedAt: null,
+              }
+            : body.action === "suspend"
+              ? { status: "SUSPENDED" as const }
+              : body.action === "activate"
+                ? { status: "ACTIVE" as const }
+                : { role: "ADMIN" as const };
 
     const user = await prisma.user.update({
       where: { id: body.userId },

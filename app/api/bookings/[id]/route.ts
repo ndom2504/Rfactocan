@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { travelerCanReceivePayments } from "@/lib/connect";
+import { getPaymentProvider } from "@/lib/payments/provider";
 import { prisma } from "@/lib/prisma";
+import { isStripeConfigured } from "@/lib/stripe";
 import type { BookingStatus } from "@prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
 
 const patchSchema = z.object({
   status: z.enum([
+    "AWAITING_PAYMENT",
     "ACCEPTED",
     "REFUSED",
     "HANDED_OVER",
@@ -20,7 +24,8 @@ const patchSchema = z.object({
 });
 
 const transitions: Record<BookingStatus, BookingStatus[]> = {
-  PROPOSED: ["ACCEPTED", "REFUSED", "CANCELLED"],
+  PROPOSED: ["AWAITING_PAYMENT", "ACCEPTED", "REFUSED", "CANCELLED"],
+  AWAITING_PAYMENT: ["ACCEPTED", "CANCELLED", "REFUSED"],
   ACCEPTED: ["HANDED_OVER", "CANCELLED"],
   HANDED_OVER: ["IN_TRANSIT", "CANCELLED"],
   IN_TRANSIT: ["DELIVERED", "CANCELLED"],
@@ -40,6 +45,7 @@ export async function GET(_request: Request, { params }: Params) {
     where: { id },
     include: {
       request: true,
+      payment: true,
       trip: {
         include: {
           user: {
@@ -50,6 +56,9 @@ export async function GET(_request: Request, { params }: Params) {
               ratingCount: true,
               verifiedAt: true,
               avatarUrl: true,
+              kycStatus: true,
+              stripeConnectChargesEnabled: true,
+              stripeConnectAccountId: true,
             },
           },
         },
@@ -62,6 +71,7 @@ export async function GET(_request: Request, { params }: Params) {
           ratingCount: true,
           verifiedAt: true,
           avatarUrl: true,
+          kycStatus: true,
         },
       },
       reviews: true,
@@ -88,6 +98,7 @@ export async function GET(_request: Request, { params }: Params) {
         photos: JSON.parse(booking.request.photosJson || "[]") as string[],
       },
     },
+    stripeConfigured: isStripeConfigured(),
   });
 }
 
@@ -102,7 +113,12 @@ export async function PATCH(request: Request, { params }: Params) {
     const body = patchSchema.parse(await request.json());
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { trip: true, request: true },
+      include: {
+        trip: { include: { user: true } },
+        request: true,
+        payment: true,
+        sender: true,
+      },
     });
 
     if (!booking) {
@@ -112,26 +128,67 @@ export async function PATCH(request: Request, { params }: Params) {
     const isTraveler = booking.trip.userId === session.id;
     const isSender = booking.senderId === session.id;
     const allowed = transitions[booking.status] ?? [];
-    if (!allowed.includes(body.status as BookingStatus)) {
+
+    // Traveler "accept" → AWAITING_PAYMENT (Stripe) or ACCEPTED (demo sans Stripe)
+    let nextStatus: BookingStatus;
+    if (booking.status === "PROPOSED" && body.status === "ACCEPTED") {
+      nextStatus = isStripeConfigured() ? "AWAITING_PAYMENT" : "ACCEPTED";
+    } else {
+      nextStatus = body.status as BookingStatus;
+    }
+
+    if (!allowed.includes(nextStatus)) {
       return NextResponse.json(
         { error: `Transition invalide depuis ${booking.status}` },
         { status: 400 }
       );
     }
 
-    if (body.status === "ACCEPTED" || body.status === "REFUSED") {
+    if (
+      body.status === "REFUSED" ||
+      (booking.status === "PROPOSED" && body.status === "ACCEPTED")
+    ) {
       if (!isTraveler) {
         return NextResponse.json(
           { error: "Seul le voyageur peut accepter ou refuser." },
           { status: 403 }
         );
       }
-      if (body.status === "ACCEPTED") {
-        if (!body.goodsCertified || !body.customsAcknowledged) {
+    }
+
+    if (
+      booking.status === "PROPOSED" &&
+      body.status === "ACCEPTED" &&
+      isTraveler
+    ) {
+      if (!body.goodsCertified || !body.customsAcknowledged) {
+        return NextResponse.json(
+          {
+            error:
+              "Vous devez certifier l'inspection du colis et la conformité douanière.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (isStripeConfigured()) {
+        const traveler = booking.trip.user;
+        if (traveler.kycStatus !== "VERIFIED") {
           return NextResponse.json(
             {
               error:
-                "Vous devez certifier l'inspection du colis et la conformité douanière.",
+                "Vérifiez votre identité (KYC) avant d'accepter une réservation.",
+              code: "KYC_REQUIRED",
+            },
+            { status: 400 }
+          );
+        }
+        if (!travelerCanReceivePayments(traveler)) {
+          return NextResponse.json(
+            {
+              error:
+                "Activez les paiements Stripe Connect avant d'accepter une réservation.",
+              code: "CONNECT_REQUIRED",
             },
             { status: 400 }
           );
@@ -139,24 +196,90 @@ export async function PATCH(request: Request, { params }: Params) {
       }
     }
 
-    if (body.status === "CANCELLED" && !isSender && !isTraveler) {
+    // ACCEPTED only via payment webhook (or admin) — block manual jump
+    if (
+      body.status === "ACCEPTED" &&
+      booking.status === "AWAITING_PAYMENT" &&
+      session.role !== "ADMIN"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Le statut Accepté est activé automatiquement après le paiement sécurisé.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (nextStatus === "CANCELLED" && !isSender && !isTraveler && session.role !== "ADMIN") {
       return NextResponse.json({ error: "Interdit" }, { status: 403 });
     }
 
     if (
-      ["HANDED_OVER", "IN_TRANSIT", "DELIVERED"].includes(body.status) &&
+      ["HANDED_OVER", "IN_TRANSIT", "DELIVERED"].includes(nextStatus) &&
       !isSender &&
       !isTraveler
     ) {
       return NextResponse.json({ error: "Interdit" }, { status: 403 });
     }
 
+    if (
+      ["HANDED_OVER", "IN_TRANSIT", "DELIVERED"].includes(nextStatus) &&
+      booking.status !== "ACCEPTED" &&
+      !["HANDED_OVER", "IN_TRANSIT"].includes(booking.status)
+    ) {
+      if (booking.status === "AWAITING_PAYMENT") {
+        return NextResponse.json(
+          { error: "Le paiement doit être confirmé avant le transit." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (nextStatus === "DELIVERED") {
+      if (isStripeConfigured() && booking.payment?.status === "AUTHORIZED") {
+        try {
+          await getPaymentProvider().captureAndTransfer(booking.id);
+        } catch (error) {
+          console.error(error);
+          return NextResponse.json(
+            {
+              error:
+                "Livraison enregistrée impossible : échec de la capture/transfert Stripe.",
+            },
+            { status: 502 }
+          );
+        }
+      } else if (
+        isStripeConfigured() &&
+        booking.payment &&
+        booking.payment.status !== "CAPTURED"
+      ) {
+        return NextResponse.json(
+          { error: "Le paiement n'est pas encore autorisé." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (
+      (nextStatus === "CANCELLED" || nextStatus === "REFUSED") &&
+      isStripeConfigured()
+    ) {
+      try {
+        await getPaymentProvider().cancelAuthorization(booking.id);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.booking.update({
         where: { id },
         data: {
-          status: body.status as BookingStatus,
-          ...(body.status === "ACCEPTED"
+          status: nextStatus,
+          ...(nextStatus === "AWAITING_PAYMENT" ||
+          (nextStatus === "ACCEPTED" && booking.status === "PROPOSED")
             ? {
                 goodsCertified: true,
                 customsAcknowledged: true,
@@ -165,14 +288,17 @@ export async function PATCH(request: Request, { params }: Params) {
         },
       });
 
-      if (body.status === "ACCEPTED") {
+      if (
+        nextStatus === "AWAITING_PAYMENT" ||
+        (nextStatus === "ACCEPTED" && booking.status === "PROPOSED")
+      ) {
         await tx.parcelRequest.update({
           where: { id: booking.requestId },
           data: { status: "MATCHED" },
         });
       }
 
-      if (body.status === "DELIVERED") {
+      if (nextStatus === "DELIVERED") {
         await tx.parcelRequest.update({
           where: { id: booking.requestId },
           data: { status: "CLOSED" },

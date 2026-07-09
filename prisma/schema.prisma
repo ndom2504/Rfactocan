@@ -44,6 +44,7 @@ enum Urgency {
 
 enum BookingStatus {
   PROPOSED
+  AWAITING_PAYMENT
   ACCEPTED
   HANDED_OVER
   IN_TRANSIT
@@ -52,50 +53,74 @@ enum BookingStatus {
   REFUSED
 }
 
-model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String?
-  googleId     String?    @unique
-  displayName  String
-  avatarUrl    String?
-  country      String?
-  bio          String?
-  role         UserRole   @default(BOTH)
-  status       UserStatus @default(ACTIVE)
-  verifiedAt   DateTime?
-  ratingAvg    Float      @default(0)
-  ratingCount  Int        @default(0)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+enum KycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  FAILED
+  REQUIRES_INPUT
+}
 
-  trips           Trip[]
-  parcelRequests  ParcelRequest[]
-  bookingsAsSender Booking[] @relation("BookingSender")
-  messages        Message[]
-  reviewsGiven    Review[]  @relation("ReviewsGiven")
-  reviewsReceived Review[]  @relation("ReviewsReceived")
-  reportsFiled    Report[]  @relation("ReportsFiled")
-  reportsAgainst  Report[]  @relation("ReportsAgainst")
+enum PaymentStatus {
+  REQUIRES_PAYMENT
+  AUTHORIZED
+  CAPTURED
+  CANCELLED
+  REFUNDED
+  FAILED
+}
+
+model User {
+  id                         String     @id @default(cuid())
+  email                      String     @unique
+  passwordHash               String?
+  googleId                   String?    @unique
+  displayName                String
+  avatarUrl                  String?
+  country                    String?
+  bio                        String?
+  role                       UserRole   @default(BOTH)
+  status                     UserStatus @default(ACTIVE)
+  verifiedAt                 DateTime?
+  ratingAvg                  Float      @default(0)
+  ratingCount                Int        @default(0)
+  stripeCustomerId           String?    @unique
+  stripeConnectAccountId     String?    @unique
+  stripeConnectChargesEnabled Boolean   @default(false)
+  stripeConnectPayoutsEnabled Boolean   @default(false)
+  kycStatus                  KycStatus  @default(NONE)
+  kycSessionId               String?
+  kycVerifiedAt              DateTime?
+  createdAt                  DateTime   @default(now())
+  updatedAt                  DateTime   @updatedAt
+
+  trips            Trip[]
+  parcelRequests   ParcelRequest[]
+  bookingsAsSender Booking[]       @relation("BookingSender")
+  messages         Message[]
+  reviewsGiven     Review[]        @relation("ReviewsGiven")
+  reviewsReceived  Review[]        @relation("ReviewsReceived")
+  reportsFiled     Report[]        @relation("ReportsFiled")
+  reportsAgainst   Report[]        @relation("ReportsAgainst")
 }
 
 model Trip {
-  id              String     @id @default(cuid())
-  userId          String
-  fromCountry     String
-  fromCity        String
-  toCountry       String
-  toCity          String
-  departAt        DateTime
-  weightKg        Float
-  pricePerKgCad   Float
-  acceptedGoods   String
-  notes           String?
-  airline         String?
-  flightNumber    String?
-  status          TripStatus @default(OPEN)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  userId        String
+  fromCountry   String
+  fromCity      String
+  toCountry     String
+  toCity        String
+  departAt      DateTime
+  weightKg      Float
+  pricePerKgCad Float
+  acceptedGoods String
+  notes         String?
+  airline       String?
+  flightNumber  String?
+  status        TripStatus @default(OPEN)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]
@@ -105,22 +130,22 @@ model Trip {
 }
 
 model ParcelRequest {
-  id             String        @id @default(cuid())
-  userId         String
-  fromCountry    String
-  fromCity       String
-  toCountry      String
-  toCity         String
-  weightKg       Float
-  description    String
-  photosJson     String        @default("[]")
-  urgency        Urgency       @default(NORMAL)
-  declaredValue  Float?
-  maxPricePerKg  Float?
-  desiredDate    DateTime?
-  status         RequestStatus @default(OPEN)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  userId        String
+  fromCountry   String
+  fromCity      String
+  toCountry     String
+  toCity        String
+  weightKg      Float
+  description   String
+  photosJson    String        @default("[]")
+  urgency       Urgency       @default(NORMAL)
+  declaredValue Float?
+  maxPricePerKg Float?
+  desiredDate   DateTime?
+  status        RequestStatus @default(OPEN)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]
@@ -130,25 +155,66 @@ model ParcelRequest {
 }
 
 model Booking {
-  id                   String        @id @default(cuid())
-  requestId            String
-  tripId               String
-  senderId             String
-  status               BookingStatus @default(PROPOSED)
-  goodsCertified       Boolean       @default(false)
-  customsAcknowledged  Boolean       @default(false)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  requestId           String
+  tripId              String
+  senderId            String
+  status              BookingStatus @default(PROPOSED)
+  goodsCertified      Boolean       @default(false)
+  customsAcknowledged Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   request  ParcelRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   trip     Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
   sender   User          @relation("BookingSender", fields: [senderId], references: [id], onDelete: Cascade)
   messages Message[]
   reviews  Review[]
+  payment  Payment?
 
   @@unique([requestId, tripId])
   @@index([senderId])
   @@index([status])
+}
+
+model Payment {
+  id                     String        @id @default(cuid())
+  bookingId              String        @unique
+  amountCadCents         Int
+  platformFeeCents       Int
+  travelerPayoutCents    Int
+  currency               String        @default("cad")
+  provider               String        @default("stripe")
+  status                 PaymentStatus @default(REQUIRES_PAYMENT)
+  stripePaymentIntentId  String?       @unique
+  stripeCheckoutSessionId String?      @unique
+  stripeTransferId       String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model CorridorConfig {
+  id              String  @id @default(cuid())
+  fromCountry     String
+  toCountry       String
+  currency        String  @default("cad")
+  feeBps          Int     @default(1000)
+  active          Boolean @default(true)
+  paymentProvider String  @default("stripe")
+
+  @@unique([fromCountry, toCountry])
+  @@index([active])
+}
+
+model StripeEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique
+  type        String
+  processedAt DateTime @default(now())
 }
 
 model Message {
