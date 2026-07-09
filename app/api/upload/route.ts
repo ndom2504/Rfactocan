@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { getSessionUser } from "@/lib/auth";
+import { uploadImage } from "@/lib/storage";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -30,12 +29,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const ext = file.type.split("/")[1] ?? "bin";
-  const filename = `${session.id}-${Date.now()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(path.join(uploadDir, filename), bytes);
-
-  return NextResponse.json({ url: `/uploads/${filename}` });
+  try {
+    const { url } = await uploadImage(file, session.id);
+    return NextResponse.json({ url });
+  } catch (error) {
+    console.error("Upload error:", error);
+    const message =
+      error instanceof Error ? error.message : "Échec de l'upload.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

@@ -9,7 +9,7 @@ const schema = z.object({
   country: z.string().max(80).optional(),
   avatarUrl: z
     .string()
-    .max(500)
+    .max(1000)
     .refine(
       (v) =>
         v.startsWith("/uploads/") ||
