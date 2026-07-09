@@ -74,7 +74,55 @@ export default async function RequestsPage({ searchParams }: Props) {
           return (
             <Card key={req.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex min-w-0 flex-1 gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle>
+                      {req.fromCity} → {req.toCity}
+                    </CardTitle>
+                    {isOwner && (
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        {t(locale, "my_listing")}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription>
+                    {getCountryName(req.toCountry)} · {formatKg(req.weightKg)} ·{" "}
+                    {urgencyLabel(locale, req.urgency)}
+                    {req.desiredDate
+                      ? ` · ${t(locale, "desired_date")} ${formatDate(req.desiredDate)}`
+                      : ""}
+                  </CardDescription>
+                  <p className="mt-3 line-clamp-2 text-sm text-[var(--muted)]">
+                    {req.description}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {(req.user.verifiedAt ||
+                      req.user.kycStatus === "VERIFIED") && (
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        {t(locale, "verified")}
+                      </Badge>
+                    )}
+                    {photos.length > 1 && (
+                      <Badge>+{photos.length - 1}</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <Link href={`/requests/${req.id}`}>
+                    <Button variant="outline">{t(locale, "match")}</Button>
+                  </Link>
+                  {isOwner && (
+                    <ListingOwnerActions
+                      kind="request"
+                      id={req.id}
+                      editHref={`/requests/${req.id}/edit`}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-4 border-t border-[var(--border)] pt-4 sm:grid-cols-2">
+                <div className="flex items-center gap-3">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
                     {cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -90,56 +138,28 @@ export default async function RequestsPage({ searchParams }: Props) {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <UserAvatar
-                        name={req.user.displayName}
-                        avatarUrl={req.user.avatarUrl}
-                        size="sm"
-                      />
-                      <CardTitle>
-                        {req.fromCity} → {req.toCity}
-                      </CardTitle>
-                      {isOwner && (
-                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                          {t(locale, "my_listing")}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription>
-                      {getCountryName(req.toCountry)} · {formatKg(req.weightKg)}{" "}
-                      · {urgencyLabel(locale, req.urgency)}
-                      {req.desiredDate
-                        ? ` · ${t(locale, "desired_date")} ${formatDate(req.desiredDate)}`
-                        : ""}
-                    </CardDescription>
-                    <p className="mt-3 line-clamp-2 text-sm text-[var(--muted)]">
-                      {req.description}
+                    <p className="text-xs text-[var(--muted)]">
+                      {t(locale, "parcel_photo")}
                     </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Badge>{req.user.displayName}</Badge>
-                      {(req.user.verifiedAt ||
-                        req.user.kycStatus === "VERIFIED") && (
-                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                          {t(locale, "verified")}
-                        </Badge>
-                      )}
-                      {photos.length > 1 && (
-                        <Badge>+{photos.length - 1}</Badge>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium">
+                      {cover
+                        ? t(locale, "parcel_photos")
+                        : t(locale, "no_parcel_photo")}
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <Link href={`/requests/${req.id}`}>
-                    <Button variant="outline">{t(locale, "match")}</Button>
-                  </Link>
-                  {isOwner && (
-                    <ListingOwnerActions
-                      kind="request"
-                      id={req.id}
-                      editHref={`/requests/${req.id}/edit`}
-                    />
-                  )}
+                <div className="flex items-center gap-3">
+                  <UserAvatar
+                    name={req.user.displayName}
+                    avatarUrl={req.user.avatarUrl}
+                    size="xl"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs text-[var(--muted)]">
+                      {t(locale, "profile_photo")}
+                    </p>
+                    <p className="font-medium">{req.user.displayName}</p>
+                  </div>
                 </div>
               </div>
             </Card>

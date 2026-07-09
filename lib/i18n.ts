@@ -177,6 +177,8 @@ const dict = {
     no_matches: "Aucun voyageur compatible pour le moment.",
     propose: "Proposer",
     no_parcel_photo: "Pas de photo",
+    parcel_photo: "Colis",
+    profile_photo: "Profil",
 
     // Bookings
     bookings_title: "Réservations",
@@ -430,6 +432,8 @@ const dict = {
     no_matches: "No matching travelers right now.",
     propose: "Propose",
     no_parcel_photo: "No photo",
+    parcel_photo: "Parcel",
+    profile_photo: "Profile",
 
     bookings_title: "Bookings",
     bookings_subtitle: "Track proposals, payments and deliveries.",

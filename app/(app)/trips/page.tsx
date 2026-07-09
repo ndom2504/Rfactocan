@@ -69,47 +69,34 @@ export default async function TripsPage({ searchParams }: Props) {
           return (
             <Card key={trip.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex min-w-0 flex-1 gap-4">
-                  <UserAvatar
-                    name={trip.user.displayName}
-                    avatarUrl={trip.user.avatarUrl}
-                    size="lg"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <CardTitle>
-                        {trip.fromCity} → {trip.toCity}
-                      </CardTitle>
-                      {isOwner && (
-                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                          {t(locale, "my_listing")}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription>
-                      {getCountryName(trip.fromCountry)} →{" "}
-                      {getCountryName(trip.toCountry)} ·{" "}
-                      {formatDate(trip.departAt)}
-                    </CardDescription>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge>
-                        {formatKg(trip.weightKg)}{" "}
-                        {t(locale, "weight_available_badge")}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle>
+                      {trip.fromCity} → {trip.toCity}
+                    </CardTitle>
+                    {isOwner && (
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        {t(locale, "my_listing")}
                       </Badge>
-                      <Badge>{formatCad(trip.pricePerKgCad)}/kg</Badge>
-                      {(trip.user.verifiedAt ||
-                        trip.user.kycStatus === "VERIFIED") && (
-                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                          {t(locale, "traveler_verified")}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="mt-3 text-sm text-[var(--muted)]">
-                      {trip.user.displayName}
-                      {trip.user.ratingAvg
-                        ? ` · ★ ${trip.user.ratingAvg.toFixed(1)}`
-                        : ""}
-                    </p>
+                    )}
+                  </div>
+                  <CardDescription>
+                    {getCountryName(trip.fromCountry)} →{" "}
+                    {getCountryName(trip.toCountry)} ·{" "}
+                    {formatDate(trip.departAt)}
+                  </CardDescription>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge>
+                      {formatKg(trip.weightKg)}{" "}
+                      {t(locale, "weight_available_badge")}
+                    </Badge>
+                    <Badge>{formatCad(trip.pricePerKgCad)}/kg</Badge>
+                    {(trip.user.verifiedAt ||
+                      trip.user.kycStatus === "VERIFIED") && (
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        {t(locale, "traveler_verified")}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -123,6 +110,25 @@ export default async function TripsPage({ searchParams }: Props) {
                       editHref={`/trips/${trip.id}/edit`}
                     />
                   )}
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center gap-4 border-t border-[var(--border)] pt-4">
+                <UserAvatar
+                  name={trip.user.displayName}
+                  avatarUrl={trip.user.avatarUrl}
+                  size="xl"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs text-[var(--muted)]">
+                    {t(locale, "profile_photo")}
+                  </p>
+                  <p className="font-medium">{trip.user.displayName}</p>
+                  {trip.user.ratingAvg ? (
+                    <p className="text-sm text-[var(--muted)]">
+                      ★ {trip.user.ratingAvg.toFixed(1)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </Card>

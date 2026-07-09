@@ -116,12 +116,7 @@ export default function RequestDetailPage({
   return (
     <div className="space-y-8">
       <Card>
-        <div className="flex items-start gap-4">
-          <UserAvatar
-            name={request.user.displayName}
-            avatarUrl={request.user.avatarUrl}
-            size="lg"
-          />
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle className="text-2xl">
@@ -137,33 +132,56 @@ export default function RequestDetailPage({
               {formatKg(request.weightKg)} · {urgency(request.urgency)}
               {request.desiredDate
                 ? ` · ${t("desired_date")} ${formatDate(request.desiredDate)}`
-                : ""}{" "}
-              · {request.user.displayName}
+                : ""}
             </CardDescription>
+            <p className="mt-4 text-sm leading-relaxed">{request.description}</p>
+          </div>
+          {isOwner && (
+            <ListingOwnerActions
+              kind="request"
+              id={request.id}
+              editHref={`/requests/${request.id}/edit`}
+            />
+          )}
+        </div>
+
+        <div className="mt-6 grid gap-4 border-t border-[var(--border)] pt-5 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs text-[var(--muted)]">{t("parcel_photo")}</p>
+            {request.photos?.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {request.photos.map((url) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={url}
+                    src={url}
+                    alt=""
+                    className="h-24 w-24 rounded-lg border border-[var(--border)] object-cover"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-xs text-[var(--muted)]">
+                {t("no_parcel_photo")}
+              </div>
+            )}
+          </div>
+          <div className="flex items-start gap-3">
+            <div>
+              <p className="mb-2 text-xs text-[var(--muted)]">
+                {t("profile_photo")}
+              </p>
+              <div className="flex items-center gap-3">
+                <UserAvatar
+                  name={request.user.displayName}
+                  avatarUrl={request.user.avatarUrl}
+                  size="xl"
+                />
+                <p className="font-medium">{request.user.displayName}</p>
+              </div>
+            </div>
           </div>
         </div>
-        <p className="mt-4 text-sm leading-relaxed">{request.description}</p>
-        {request.photos?.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {request.photos.map((url) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={url}
-                src={url}
-                alt=""
-                className="h-20 w-20 rounded object-cover"
-              />
-            ))}
-          </div>
-        )}
-        {isOwner && (
-          <ListingOwnerActions
-            className="mt-6"
-            kind="request"
-            id={request.id}
-            editHref={`/requests/${request.id}/edit`}
-          />
-        )}
       </Card>
 
       {isOwner && (
@@ -178,38 +196,24 @@ export default function RequestDetailPage({
           {matches.map((m) => (
             <Card key={m.trip.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex min-w-0 flex-1 gap-3">
-                  <UserAvatar
-                    name={m.trip.user.displayName}
-                    avatarUrl={m.trip.user.avatarUrl}
-                    size="md"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <CardTitle>
-                        {m.trip.fromCity} → {m.trip.toCity}
-                      </CardTitle>
-                      <Badge className="bg-[var(--accent)] text-white">
-                        {m.score}%
-                      </Badge>
-                    </div>
-                    <CardDescription>
-                      {formatDate(m.trip.departAt)} · {formatKg(m.trip.weightKg)}{" "}
-                      · {formatCad(m.trip.pricePerKgCad)}/kg
-                    </CardDescription>
-                    <p className="mt-2 text-sm">
-                      {m.trip.user.displayName}
-                      {m.trip.user.verifiedAt ? ` · ${t("verified")}` : ""}
-                      {m.trip.user.ratingCount
-                        ? ` · ★ ${m.trip.user.ratingAvg.toFixed(1)}`
-                        : ""}
-                    </p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">
-                      Route {m.breakdown.route}% · Date {m.breakdown.date}% · Prix{" "}
-                      {m.breakdown.price}% · Réputation {m.breakdown.reputation}% ·
-                      Historique {m.breakdown.history}%
-                    </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle>
+                      {m.trip.fromCity} → {m.trip.toCity}
+                    </CardTitle>
+                    <Badge className="bg-[var(--accent)] text-white">
+                      {m.score}%
+                    </Badge>
                   </div>
+                  <CardDescription>
+                    {formatDate(m.trip.departAt)} · {formatKg(m.trip.weightKg)} ·{" "}
+                    {formatCad(m.trip.pricePerKgCad)}/kg
+                  </CardDescription>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Route {m.breakdown.route}% · Date {m.breakdown.date}% · Prix{" "}
+                    {m.breakdown.price}% · Réputation {m.breakdown.reputation}% ·
+                    Historique {m.breakdown.history}%
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Link href={`/trips/${m.trip.id}`}>
@@ -224,6 +228,23 @@ export default function RequestDetailPage({
                   >
                     {loadingId === m.trip.id ? "..." : t("propose")}
                   </Button>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-3 border-t border-[var(--border)] pt-4">
+                <UserAvatar
+                  name={m.trip.user.displayName}
+                  avatarUrl={m.trip.user.avatarUrl}
+                  size="xl"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs text-[var(--muted)]">{t("profile_photo")}</p>
+                  <p className="font-medium">
+                    {m.trip.user.displayName}
+                    {m.trip.user.verifiedAt ? ` · ${t("verified")}` : ""}
+                    {m.trip.user.ratingCount
+                      ? ` · ★ ${m.trip.user.ratingAvg.toFixed(1)}`
+                      : ""}
+                  </p>
                 </div>
               </div>
             </Card>

@@ -41,12 +41,7 @@ export default async function TripDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <Card>
-        <div className="flex items-start gap-4">
-          <UserAvatar
-            name={trip.user.displayName}
-            avatarUrl={trip.user.avatarUrl}
-            size="lg"
-          />
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle className="text-2xl">
@@ -62,13 +57,27 @@ export default async function TripDetailPage({ params }: Props) {
               {getCountryName(trip.fromCountry)} →{" "}
               {getCountryName(trip.toCountry)}
             </CardDescription>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge>{formatDate(trip.departAt)}</Badge>
+              <Badge>{formatKg(trip.weightKg)}</Badge>
+              <Badge>{formatCad(trip.pricePerKgCad)}/kg</Badge>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {isOwner ? (
+              <ListingOwnerActions
+                kind="trip"
+                id={trip.id}
+                editHref={`/trips/${trip.id}/edit`}
+              />
+            ) : (
+              <Link href="/requests">
+                <Button>{t(locale, "see_requests")}</Button>
+              </Link>
+            )}
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Badge>{formatDate(trip.departAt)}</Badge>
-          <Badge>{formatKg(trip.weightKg)}</Badge>
-          <Badge>{formatCad(trip.pricePerKgCad)}/kg</Badge>
-        </div>
+
         <dl className="mt-6 space-y-3 text-sm">
           <div>
             <dt className="text-[var(--muted)]">{t(locale, "accepted_goods")}</dt>
@@ -99,34 +108,33 @@ export default async function TripDetailPage({ params }: Props) {
               </dd>
             </div>
           )}
-          <div>
-            <dt className="text-[var(--muted)]">{t(locale, "traveler")}</dt>
-            <dd>
+        </dl>
+
+        <div className="mt-6 flex items-center gap-4 border-t border-[var(--border)] pt-5">
+          <UserAvatar
+            name={trip.user.displayName}
+            avatarUrl={trip.user.avatarUrl}
+            size="xl"
+          />
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--muted)]">
+              {t(locale, "profile_photo")}
+            </p>
+            <p className="font-medium">
               {trip.user.displayName}
               {trip.user.verifiedAt || trip.user.kycStatus === "VERIFIED"
                 ? ` · ${t(locale, "verified")}`
                 : ""}
-              {trip.user.ratingCount
-                ? ` · ★ ${trip.user.ratingAvg.toFixed(1)} (${trip.user.ratingCount})`
-                : ""}
-            </dd>
+            </p>
+            {trip.user.ratingCount ? (
+              <p className="text-sm text-[var(--muted)]">
+                ★ {trip.user.ratingAvg.toFixed(1)} ({trip.user.ratingCount})
+              </p>
+            ) : null}
             {trip.user.bio && (
-              <p className="mt-1 text-[var(--muted)]">{trip.user.bio}</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">{trip.user.bio}</p>
             )}
           </div>
-        </dl>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {isOwner ? (
-            <ListingOwnerActions
-              kind="trip"
-              id={trip.id}
-              editHref={`/trips/${trip.id}/edit`}
-            />
-          ) : (
-            <Link href="/requests">
-              <Button>{t(locale, "see_requests")}</Button>
-            </Link>
-          )}
         </div>
       </Card>
     </div>
