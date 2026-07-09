@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
@@ -23,53 +24,55 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="relative mx-auto min-h-[78vh] max-w-6xl overflow-hidden px-6 pb-16 pt-8">
+      <section className="relative min-h-[78vh] overflow-hidden">
+        <Image
+          src="/images/hero-travel.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center opacity-45"
+        />
         <div
-          className="absolute inset-0 -z-10 rounded-[2rem]"
+          className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(135deg, var(--hero-from), var(--hero-to)), radial-gradient(circle at 70% 30%, rgba(255,255,255,0.12), transparent 40%)",
+              "linear-gradient(105deg, rgba(11,61,46,0.92) 0%, rgba(11,61,46,0.78) 42%, rgba(26,92,69,0.55) 70%, rgba(26,92,69,0.35) 100%)",
           }}
         />
-        <div
-          className="absolute inset-0 -z-10 rounded-[2rem] opacity-30"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-          }}
-        />
-
-        <div className="flex min-h-[70vh] flex-col justify-end gap-8 px-2 pb-10 pt-24 text-white md:max-w-2xl md:justify-center md:pb-0 md:pt-10">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-white/70">
-            RapidFacto
-          </p>
-          <h1 className="font-[family-name:var(--font-display)] text-5xl leading-[1.05] font-semibold md:text-6xl">
-            Rfacto
-          </h1>
-          <p className="max-w-xl text-lg text-white/85 md:text-xl">
-            {t(locale, "hero_tagline")}
-          </p>
-          <p className="max-w-xl text-sm text-white/70">
-            {t(locale, "hero_sub")}
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/register?role=SENDER">
-              <Button
-                size="lg"
-                className="bg-white text-[var(--hero-from)] hover:bg-white/90"
-              >
-                {t(locale, "cta_send")}
-              </Button>
-            </Link>
-            <Link href="/register?role=TRAVELER">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/40 bg-transparent text-white hover:bg-white/10"
-              >
-                {t(locale, "cta_travel")}
-              </Button>
-            </Link>
+        <div className="relative mx-auto flex min-h-[78vh] max-w-6xl flex-col justify-end gap-8 px-6 pb-16 pt-24 text-white md:justify-center md:pb-20 md:pt-16">
+          <div className="md:max-w-2xl">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-white/75">
+              RapidFacto
+            </p>
+            <h1 className="mt-4 font-[family-name:var(--font-display)] text-5xl leading-[1.05] font-semibold md:text-6xl">
+              Rfacto
+            </h1>
+            <p className="mt-6 max-w-xl text-lg text-white/90 md:text-xl">
+              {t(locale, "hero_tagline")}
+            </p>
+            <p className="mt-3 max-w-xl text-sm text-white/75">
+              {t(locale, "hero_sub")}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/register?role=SENDER">
+                <Button
+                  size="lg"
+                  className="bg-white text-[var(--hero-from)] hover:bg-white/90"
+                >
+                  {t(locale, "cta_send")}
+                </Button>
+              </Link>
+              <Link href="/register?role=TRAVELER">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                >
+                  {t(locale, "cta_travel")}
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

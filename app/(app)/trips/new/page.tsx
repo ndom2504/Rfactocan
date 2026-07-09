@@ -18,6 +18,8 @@ export default function NewTripPage() {
   const { t } = useI18n();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fromCountry, setFromCountry] = useState("CA");
+  const [toCountry, setToCountry] = useState("FR");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -66,7 +68,10 @@ export default function NewTripPage() {
       <CardTitle>{t("new_trip_title")}</CardTitle>
       <CardDescription>{t("new_trip_subtitle")}</CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <CorridorFields />
+        <CorridorFields
+          onFromCountryChange={setFromCountry}
+          onToCountryChange={setToCountry}
+        />
         <DateField name="departAt" label={t("departure_date")} required />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -109,7 +114,7 @@ export default function NewTripPage() {
             required
           />
         </div>
-        <FlightFields />
+        <FlightFields fromCountry={fromCountry} toCountry={toCountry} />
         <div className="space-y-2">
           <Label htmlFor="notes">{t("notes")}</Label>
           <Textarea id="notes" name="notes" />

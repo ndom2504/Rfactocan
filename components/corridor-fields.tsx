@@ -13,9 +13,15 @@ type Props = {
     toCountry?: string;
     toCity?: string;
   };
+  onFromCountryChange?: (code: string) => void;
+  onToCountryChange?: (code: string) => void;
 };
 
-export function CorridorFields({ defaults }: Props) {
+export function CorridorFields({
+  defaults,
+  onFromCountryChange,
+  onToCountryChange,
+}: Props) {
   const [fromCountry, setFromCountry] = useState(defaults?.fromCountry ?? "CA");
   const [toCountry, setToCountry] = useState(defaults?.toCountry ?? "FR");
   const [fromCity, setFromCity] = useState(defaults?.fromCity ?? "Montréal");
@@ -54,7 +60,10 @@ export function CorridorFields({ defaults }: Props) {
         name="fromCountry"
         label="Pays de départ"
         value={fromCountry}
-        onChange={setFromCountry}
+        onChange={(code) => {
+          setFromCountry(code);
+          onFromCountryChange?.(code);
+        }}
       />
       <div className="space-y-2">
         <Label htmlFor="fromCity">Ville de départ</Label>
@@ -77,7 +86,10 @@ export function CorridorFields({ defaults }: Props) {
         name="toCountry"
         label="Pays d'arrivée"
         value={toCountry}
-        onChange={setToCountry}
+        onChange={(code) => {
+          setToCountry(code);
+          onToCountryChange?.(code);
+        }}
       />
       <div className="space-y-2">
         <Label htmlFor="toCity">Ville d&apos;arrivée</Label>

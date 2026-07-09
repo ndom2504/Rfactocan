@@ -49,6 +49,8 @@ export default function EditTripPage({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const [fromCountry, setFromCountry] = useState("CA");
+  const [toCountry, setToCountry] = useState("FR");
 
   useEffect(() => {
     void params.then((p) => setId(p.id));
@@ -77,6 +79,8 @@ export default function EditTripPage({
         return;
       }
       setTrip(tripData.trip);
+      setFromCountry(tripData.trip.fromCountry);
+      setToCountry(tripData.trip.toCountry);
     })();
   }, [id]);
 
@@ -144,6 +148,8 @@ export default function EditTripPage({
             toCountry: trip.toCountry,
             toCity: trip.toCity,
           }}
+          onFromCountryChange={setFromCountry}
+          onToCountryChange={setToCountry}
         />
         <DateField
           name="departAt"
@@ -199,8 +205,8 @@ export default function EditTripPage({
           />
         </div>
         <FlightFields
-          fromCountry={trip.fromCountry}
-          toCountry={trip.toCountry}
+          fromCountry={fromCountry}
+          toCountry={toCountry}
           airline={trip.airline ?? ""}
           flightNumber={trip.flightNumber ?? ""}
           fromAirportCode={trip.fromAirportCode ?? ""}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AIRLINES, airportsForCountry } from "@/lib/airports";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -21,7 +21,7 @@ type Props = {
 
 export function FlightFields({
   fromCountry = "CA",
-  toCountry = "GA",
+  toCountry = "FR",
   airline = "",
   flightNumber = "",
   fromAirportCode = "",
@@ -31,30 +31,50 @@ export function FlightFields({
   fromAirportLabel = "Aéroport de départ",
   toAirportLabel = "Aéroport d'arrivée",
 }: Props) {
-  const [fromC, setFromC] = useState(fromCountry);
-  const [toC, setToC] = useState(toCountry);
+  const fromAirports = useMemo(
+    () => airportsForCountry(fromCountry),
+    [fromCountry]
+  );
+  const toAirports = useMemo(
+    () => airportsForCountry(toCountry),
+    [toCountry]
+  );
+
+  const [fromAirport, setFromAirport] = useState(() =>
+    fromAirportCode &&
+    airportsForCountry(fromCountry).some((a) => a.code === fromAirportCode)
+      ? fromAirportCode
+      : ""
+  );
+  const [toAirport, setToAirport] = useState(() =>
+    toAirportCode &&
+    airportsForCountry(toCountry).some((a) => a.code === toAirportCode)
+      ? toAirportCode
+      : ""
+  );
 
   useEffect(() => {
-    setFromC(fromCountry);
-  }, [fromCountry]);
+    setFromAirport((prev) => {
+      if (prev && fromAirports.some((a) => a.code === prev)) return prev;
+      if (
+        fromAirportCode &&
+        fromAirports.some((a) => a.code === fromAirportCode)
+      ) {
+        return fromAirportCode;
+      }
+      return "";
+    });
+  }, [fromCountry, fromAirports, fromAirportCode]);
 
   useEffect(() => {
-    setToC(toCountry);
-  }, [toCountry]);
-
-  useEffect(() => {
-    const onChange = (e: Event) => {
-      const el = e.target as HTMLSelectElement | null;
-      if (!el?.name) return;
-      if (el.name === "fromCountry") setFromC(el.value);
-      if (el.name === "toCountry") setToC(el.value);
-    };
-    document.addEventListener("change", onChange);
-    return () => document.removeEventListener("change", onChange);
-  }, []);
-
-  const fromAirports = airportsForCountry(fromC);
-  const toAirports = airportsForCountry(toC);
+    setToAirport((prev) => {
+      if (prev && toAirports.some((a) => a.code === prev)) return prev;
+      if (toAirportCode && toAirports.some((a) => a.code === toAirportCode)) {
+        return toAirportCode;
+      }
+      return "";
+    });
+  }, [toCountry, toAirports, toAirportCode]);
 
   return (
     <div className="space-y-4">
@@ -78,7 +98,7 @@ export function FlightFields({
           <Input
             id="flightNumber"
             name="flightNumber"
-            placeholder="AC123"
+            placeholder="AF123"
             defaultValue={flightNumber}
           />
         </div>
@@ -87,9 +107,11 @@ export function FlightFields({
         <div className="space-y-2">
           <Label htmlFor="fromAirportCode">{fromAirportLabel}</Label>
           <Select
+            key={`from-${fromCountry}`}
             id="fromAirportCode"
             name="fromAirportCode"
-            defaultValue={fromAirportCode}
+            value={fromAirport}
+            onChange={(e) => setFromAirport(e.target.value)}
           >
             <option value="">—</option>
             {fromAirports.map((a) => (
@@ -98,13 +120,20 @@ export function FlightFields({
               </option>
             ))}
           </Select>
+          {fromAirports.length === 0 && (
+            <p className="text-xs text-[var(--muted)]">
+              Aucun aéroport listé pour ce pays.
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="toAirportCode">{toAirportLabel}</Label>
           <Select
+            key={`to-${toCountry}`}
             id="toAirportCode"
             name="toAirportCode"
-            defaultValue={toAirportCode}
+            value={toAirport}
+            onChange={(e) => setToAirport(e.target.value)}
           >
             <option value="">—</option>
             {toAirports.map((a) => (
@@ -113,6 +142,11 @@ export function FlightFields({
               </option>
             ))}
           </Select>
+          {toAirports.length === 0 && (
+            <p className="text-xs text-[var(--muted)]">
+              Aucun aéroport listé pour ce pays.
+            </p>
+          )}
         </div>
       </div>
     </div>
