@@ -25,21 +25,15 @@ export function PaymentReadinessCard({
   const steps = [
     {
       ok: kycStatus === "VERIFIED",
-      label: locale === "en" ? "Identity verified (KYC)" : "Identité vérifiée (KYC)",
+      label: t(locale, "kyc_step"),
     },
     {
       ok: connectCharges,
-      label:
-        locale === "en"
-          ? "Bank account linked (Stripe Express)"
-          : "Compte bancaire lié (Stripe Express)",
+      label: t(locale, "bank_step"),
     },
     {
       ok: connectPayouts,
-      label:
-        locale === "en"
-          ? "Payouts enabled"
-          : "Virements activés",
+      label: t(locale, "payouts_step"),
     },
   ];
   const ready = steps.every((s) => s.ok) && stripeConfigured;
@@ -56,9 +50,7 @@ export function PaymentReadinessCard({
       </CardDescription>
       {!stripeConfigured && (
         <p className="mt-2 text-xs text-[var(--muted)]">
-          {locale === "en"
-            ? "Stripe is not configured on this server (demo mode)."
-            : "Stripe n'est pas configuré sur ce serveur (mode démo)."}
+          {t(locale, "stripe_demo")}
         </p>
       )}
       <ul className="mt-3 space-y-2">
@@ -81,7 +73,7 @@ export function PaymentReadinessCard({
         <div className="mt-4">
           <Link href="/profile">
             <Button size="sm" variant="outline">
-              {locale === "en" ? "Complete in Profile" : "Compléter dans Profil"}
+              {t(locale, "complete_in_profile")}
             </Button>
           </Link>
         </div>

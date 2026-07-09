@@ -8,6 +8,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { useI18n } from "@/components/locale-provider";
 
 type Match = {
   score: number;
@@ -59,6 +60,7 @@ export default function RequestDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { t, urgency } = useI18n();
   const [id, setId] = useState<string>("");
   const [request, setRequest] = useState<RequestData | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -105,7 +107,7 @@ export default function RequestDetailPage({
   }
 
   if (!request) {
-    return <p className="text-sm text-[var(--muted)]">Chargement...</p>;
+    return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
 
   const isOwner = meId === request.userId;
@@ -124,9 +126,9 @@ export default function RequestDetailPage({
               {request.fromCity} → {request.toCity}
             </CardTitle>
             <CardDescription>
-              {formatKg(request.weightKg)} · {request.urgency}
+              {formatKg(request.weightKg)} · {urgency(request.urgency)}
               {request.desiredDate
-                ? ` · souhaité ${formatDate(request.desiredDate)}`
+                ? ` · ${t("desired_date")} ${formatDate(request.desiredDate)}`
                 : ""}{" "}
               · {request.user.displayName}
             </CardDescription>
@@ -151,13 +153,11 @@ export default function RequestDetailPage({
       {isOwner && (
         <section className="space-y-4">
           <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-            Voyageurs suggérés
+            {t("suggested_travelers")}
           </h2>
           {error && <p className="text-sm text-red-700">{error}</p>}
           {matches.length === 0 && (
-            <p className="text-sm text-[var(--muted)]">
-              Aucun voyageur compatible pour le moment.
-            </p>
+            <p className="text-sm text-[var(--muted)]">{t("no_matches")}</p>
           )}
           {matches.map((m) => (
             <Card key={m.trip.id}>
@@ -183,7 +183,7 @@ export default function RequestDetailPage({
                     </CardDescription>
                     <p className="mt-2 text-sm">
                       {m.trip.user.displayName}
-                      {m.trip.user.verifiedAt ? " · Vérifié" : ""}
+                      {m.trip.user.verifiedAt ? ` · ${t("verified")}` : ""}
                       {m.trip.user.ratingCount
                         ? ` · ★ ${m.trip.user.ratingAvg.toFixed(1)}`
                         : ""}
@@ -198,7 +198,7 @@ export default function RequestDetailPage({
                 <div className="flex gap-2">
                   <Link href={`/trips/${m.trip.id}`}>
                     <Button variant="outline" size="sm">
-                      Voir
+                      {t("view_trip")}
                     </Button>
                   </Link>
                   <Button
@@ -206,7 +206,7 @@ export default function RequestDetailPage({
                     disabled={loadingId === m.trip.id}
                     onClick={() => propose(m.trip.id)}
                   >
-                    {loadingId === m.trip.id ? "..." : "Proposer"}
+                    {loadingId === m.trip.id ? "..." : t("propose")}
                   </Button>
                 </div>
               </div>

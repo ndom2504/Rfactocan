@@ -2,14 +2,14 @@ import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
-import { t } from "@/lib/i18n";
+import { t, bookingStatusLabel } from "@/lib/i18n";
 import { isStripeConfigured } from "@/lib/stripe";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TravelerSearch } from "@/components/traveler-search";
 import { PaymentReadinessCard } from "@/components/payment-readiness";
 import { formatDate, formatKg } from "@/lib/utils";
-import { getCountryName, BOOKING_STATUS_LABELS } from "@/lib/corridors";
+import { getCountryName } from "@/lib/corridors";
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -47,12 +47,10 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          {locale === "en" ? "Hello" : "Bonjour"}, {user.displayName}
+          {t(locale, "hello")}, {user.displayName}
         </h1>
         <p className="mt-1 text-[var(--muted)]">
-          {locale === "en"
-            ? "Manage your trips, requests and international bookings."
-            : "Gérez vos voyages, demandes et réservations internationales."}
+          {t(locale, "dashboard_subtitle")}
         </p>
       </div>
 
@@ -99,9 +97,7 @@ export default async function DashboardPage() {
         <div className="mt-4 space-y-3">
           {bookings.length === 0 && (
             <p className="text-sm text-[var(--muted)]">
-              {locale === "en"
-                ? "No bookings yet. Post a trip or a request to get started."
-                : "Aucune réservation pour le moment. Publiez un voyage ou une demande pour commencer."}
+              {t(locale, "no_bookings_yet")}
             </p>
           )}
           {bookings.map((b) => (
@@ -116,11 +112,11 @@ export default async function DashboardPage() {
                     <CardDescription>
                       {formatKg(b.request.weightKg)} ·{" "}
                       {formatDate(b.trip.departAt)} ·{" "}
-                      {BOOKING_STATUS_LABELS[b.status] ?? b.status}
+                      {bookingStatusLabel(locale, b.status)}
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm">
-                    {locale === "en" ? "Open" : "Ouvrir"}
+                    {t(locale, "open")}
                   </Button>
                 </div>
               </Card>

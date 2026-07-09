@@ -5,6 +5,7 @@ export const LOCALE_COOKIE = "rfacto_locale";
 
 const dict = {
   fr: {
+    // Nav
     nav_dashboard: "Tableau de bord",
     nav_trips: "Voyages",
     nav_requests: "Demandes",
@@ -16,26 +17,237 @@ const dict = {
     nav_signup: "Créer un compte",
     verified: "Vérifié",
     logout: "Déconnexion",
+    open: "Ouvrir",
+    save: "Enregistrer",
+    cancel: "Annuler",
+    loading: "Chargement…",
+    search: "Rechercher",
+    reset: "Réinitialiser",
+    details: "Détails",
+    match: "Matcher",
+    publish: "Publier",
+    all: "Tous",
+    all_f: "Toutes",
+
+    // Notifications
     notifications: "Notifications",
     no_notifications: "Aucune notification",
     mark_all_read: "Tout marquer lu",
+
+    // Common fields
     language: "Langue",
     currency: "Devise",
+    preferred_currency: "Devise préférée",
+    airline: "Compagnie",
+    flight_number: "N° de vol",
+    airport_from: "Aéroport de départ",
+    airport_to: "Aéroport d'arrivée",
+    price_per_kg: "Prix / kg",
+    weight_kg: "Poids (kg)",
+    weight_available: "Poids disponible (kg)",
+    departure_date: "Date de départ",
+    accepted_goods: "Objets acceptés",
+    notes: "Notes",
+    display_name: "Nom affiché",
+    bio: "Bio",
+    role: "Rôle",
+    role_sender: "Expéditeur",
+    role_traveler: "Voyageur",
+    role_both: "Les deux",
+    country: "Pays",
+    city: "Ville",
+    region: "Région",
+    photo: "Photo de profil",
+    no_photo: "Aucune",
+    remove_photo: "Retirer la photo",
+    uploading: "Téléversement…",
+
+    // Dashboard
+    hello: "Bonjour",
+    dashboard_subtitle:
+      "Gérez vos voyages, demandes et réservations internationales.",
     search_travelers: "Recherche rapide de voyageurs",
+    search_travelers_hint:
+      "Filtrez par nom, pays, ville ou région (départ ou arrivée).",
+    search_placeholder: "Nom, ville, compagnie…",
     publish_trip: "Publier un voyage",
     publish_request: "Publier une demande",
     recent_activity: "Activité récente",
     open_trips: "Voyages ouverts",
     open_requests: "Demandes ouvertes",
     avg_rating: "Note moyenne",
-    airline: "Compagnie",
-    flight_number: "N° de vol",
-    airport_from: "Aéroport de départ",
-    airport_to: "Aéroport d'arrivée",
-    price_per_kg: "Prix / kg",
+    no_bookings_yet:
+      "Aucune réservation pour le moment. Publiez un voyage ou une demande pour commencer.",
+    travelers_found: "voyageur(s) trouvé(s)",
+    no_travelers: "Aucun voyageur pour ces critères. Élargissez la région ou la ville.",
+    view_trip: "Voir le voyage",
     payment_checklist: "Parcours paiement",
     payment_ready: "Prêt à recevoir des paiements",
     payment_steps_needed: "Étapes restantes pour encaisser",
+    complete_in_profile: "Compléter dans Profil",
+    stripe_demo:
+      "Stripe n'est pas configuré sur ce serveur (mode démo).",
+    kyc_step: "Identité vérifiée (KYC)",
+    bank_step: "Compte bancaire lié (Stripe Express)",
+    payouts_step: "Virements activés",
+
+    // Marketing
+    hero_tagline:
+      "Le réseau mondial qui connecte les voyageurs et les expéditeurs partout dans le monde.",
+    hero_sub:
+      "Chaque voyageur peut devenir un transporteur occasionnel. Chaque espace disponible dans un bagage devient une opportunité logistique.",
+    cta_send: "Envoyer un colis",
+    cta_travel: "Je voyage",
+    section_airbnb_title: "L'Airbnb du bagage international",
+    section_airbnb_text:
+      "Une marketplace P2P : comme Uber connecte conducteurs et passagers, Rfacto connecte l'espace bagage des voyageurs aux besoins d'expédition des particuliers et PME.",
+    step_publish: "Publiez",
+    step_publish_text:
+      "Annoncez votre trajet ou votre besoin de colis — d'un pays à un autre.",
+    step_match: "Match mondial",
+    step_match_text:
+      "Score Rfacto : route, date, prix, réputation et historique de livraisons.",
+    step_trust: "Confiance",
+    step_trust_text:
+      "KYC, paiement séquestre, messagerie et notations mutuelles.",
+    dual_role_title: "Un compte, deux rôles",
+    dual_role_text:
+      "Envoyez un colis aujourd'hui, transportez demain. Pas de rôle figé : chaque utilisateur peut être expéditeur et voyageur.",
+    phase1_title: "Phase 1 — corridors prioritaires",
+    phase1_text:
+      "Diaspora francophone : Canada, France, Belgique ↔ Gabon, Cameroun, Côte d'Ivoire, Sénégal, RDC — puis Europe ↔ Afrique, puis le monde entier.",
+    phase1_examples:
+      "Exemples déjà supportés : Montréal → Paris, New York → Dakar, Dubaï → Nairobi, Johannesburg → Douala…",
+    join_rfacto: "Rejoindre Rfacto",
+
+    // Auth
+    login_title: "Connexion",
+    login_subtitle: "Accédez à votre compte Rfacto",
+    register_title: "Créer un compte",
+    register_subtitle: "Rejoignez le réseau mondial Rfacto",
+    email: "Email",
+    password: "Mot de passe",
+    no_account: "Pas encore de compte ?",
+    have_account: "Déjà un compte ?",
+    sign_in: "Se connecter",
+    create_account: "Créer mon compte",
+
+    // Trips
+    trips_title: "Voyages",
+    trips_subtitle:
+      "Voyageurs disponibles sur tous les corridors internationaux.",
+    no_trips: "Aucun voyage publié.",
+    new_trip_title: "Publier un voyage",
+    new_trip_subtitle:
+      "Indiquez votre itinéraire et le poids disponible dans vos bagages.",
+    goods_placeholder: "Vêtements, documents, produits non périssables…",
+    traveler: "Voyageur",
+    flight: "Vol",
+    see_requests: "Voir les demandes / matcher",
+    weight_available_badge: "dispo",
+
+    // Requests
+    requests_title: "Demandes de colis",
+    requests_subtitle: "Besoins d'expédition publiés par les particuliers.",
+    no_requests: "Aucune demande ouverte.",
+    new_request_title: "Publier une demande",
+    new_request_subtitle: "Décrivez le colis à envoyer.",
+    description: "Description",
+    urgency: "Urgence",
+    desired_date: "Date souhaitée",
+    parcel_photos: "Photos du colis (max 5, 2 Mo)",
+    suggested_travelers: "Voyageurs suggérés",
+    no_matches: "Aucun voyageur compatible pour le moment.",
+    propose: "Proposer",
+    no_parcel_photo: "Pas de photo",
+
+    // Bookings
+    bookings_title: "Réservations",
+    bookings_subtitle: "Suivez vos propositions, paiements et livraisons.",
+    no_bookings: "Aucune réservation. Proposez un voyageur depuis une demande.",
+    to_pay: "À payer",
+    funds_held: "Fonds bloqués",
+    paid: "Payé",
+    pay: "Payer",
+    sender: "Expéditeur",
+    messaging: "Messagerie",
+    messaging_hint: "Discussion liée à cette réservation",
+    your_message: "Votre message…",
+    send: "Envoyer",
+    no_messages: "Aucun message. Présentez-vous et négociez les détails.",
+    back_bookings: "Retour aux réservations",
+    pay_secure: "Payer et sécuriser le colis",
+    pay_stripe: "Payer avec Stripe",
+    retry_payment: "Réessayer le paiement",
+    total: "Total",
+    commission: "Commission Rfacto",
+    traveler_receives: "Voyageur recevra",
+    awaiting_sender_payment: "En attente du paiement sécurisé de l'expéditeur.",
+    accept_ask_payment: "Accepter (demander paiement)",
+    refuse: "Refuser",
+    handed_over: "Colis remis",
+    in_transit: "En transit",
+    mark_delivered: "Marquer livré (libère le paiement)",
+    leave_review: "Noter l'autre partie",
+    rating: "Note",
+    comment: "Commentaire",
+    send_review: "Envoyer l'avis",
+    review_thanks: "Merci, votre avis a été enregistré.",
+    traveler_verified: "Voyageur vérifié",
+    accept_hint:
+      "Après acceptation, l'expéditeur paiera en séquestre. Les fonds ne vous seront versés qu'après confirmation de livraison.",
+    goods_cert:
+      "Je confirme avoir inspecté le contenu du colis et n'accepter que des biens conformes.",
+    customs_ack:
+      "Je respecte les lois douanières des pays de départ, transit et arrivée.",
+    kyc_connect_hint:
+      "Identité vérifiée + compte bancaire (recevoir mes gains) requis. Configurez-les dans Profil.",
+    payment_confirming:
+      "Confirmation Stripe en cours… cette page se met à jour automatiquement.",
+    payment_failed_hint:
+      "Le paiement précédent a échoué. Vous pouvez réessayer.",
+    funds_held_until:
+      "Les fonds seront bloqués jusqu'à la confirmation de livraison.",
+
+    // Profile
+    profile_title: "Mon profil",
+    trust_payments: "Confiance & paiements",
+    trust_hint: "Obligatoire pour accepter des colis en tant que voyageur.",
+    verify_identity: "Vérifier mon identité",
+    receive_earnings: "Recevoir mes gains (compte bancaire)",
+    receive_earnings_hint:
+      "Ouverture d'un compte Stripe Express pour recevoir vos gains après chaque livraison (particulier, pas un commerce).",
+    bank_ready:
+      "Compte bancaire prêt : vous pouvez accepter des colis et recevoir vos gains après livraison.",
+    payments_label: "Paiements",
+    gains_ready: "Gains prêts",
+    bank_to_setup: "Compte bancaire à configurer",
+    account_verified: "Compte vérifié",
+    profile_saved: "Profil mis à jour.",
+
+    // Messages
+    messages_title: "Messages",
+    messages_subtitle: "Conversations liées à vos réservations.",
+
+    // Status labels
+    status_proposed: "Proposée",
+    status_awaiting_payment: "En attente de paiement",
+    status_accepted: "Acceptée (payée)",
+    status_handed_over: "Remis au voyageur",
+    status_in_transit: "En transit",
+    status_delivered: "Livré",
+    status_cancelled: "Annulée",
+    status_refused: "Refusée",
+    pay_requires: "Paiement requis",
+    pay_authorized: "Fonds bloqués",
+    pay_captured: "Payé / transféré",
+    pay_cancelled: "Annulé",
+    pay_refunded: "Remboursé",
+    pay_failed: "Échoué",
+    urgency_low: "Faible",
+    urgency_normal: "Normale",
+    urgency_high: "Élevée",
+    urgency_urgent: "Urgente",
   },
   en: {
     nav_dashboard: "Dashboard",
@@ -49,26 +261,223 @@ const dict = {
     nav_signup: "Sign up",
     verified: "Verified",
     logout: "Log out",
+    open: "Open",
+    save: "Save",
+    cancel: "Cancel",
+    loading: "Loading…",
+    search: "Search",
+    reset: "Reset",
+    details: "Details",
+    match: "Match",
+    publish: "Publish",
+    all: "All",
+    all_f: "All",
+
     notifications: "Notifications",
     no_notifications: "No notifications",
     mark_all_read: "Mark all read",
+
     language: "Language",
     currency: "Currency",
+    preferred_currency: "Preferred currency",
+    airline: "Airline",
+    flight_number: "Flight number",
+    airport_from: "Departure airport",
+    airport_to: "Arrival airport",
+    price_per_kg: "Price / kg",
+    weight_kg: "Weight (kg)",
+    weight_available: "Available weight (kg)",
+    departure_date: "Departure date",
+    accepted_goods: "Accepted items",
+    notes: "Notes",
+    display_name: "Display name",
+    bio: "Bio",
+    role: "Role",
+    role_sender: "Sender",
+    role_traveler: "Traveler",
+    role_both: "Both",
+    country: "Country",
+    city: "City",
+    region: "Region",
+    photo: "Profile photo",
+    no_photo: "None",
+    remove_photo: "Remove photo",
+    uploading: "Uploading…",
+
+    hello: "Hello",
+    dashboard_subtitle:
+      "Manage your trips, requests and international bookings.",
     search_travelers: "Quick traveler search",
+    search_travelers_hint:
+      "Filter by name, country, city or region (origin or destination).",
+    search_placeholder: "Name, city, airline…",
     publish_trip: "Post a trip",
     publish_request: "Post a request",
     recent_activity: "Recent activity",
     open_trips: "Open trips",
     open_requests: "Open requests",
     avg_rating: "Average rating",
-    airline: "Airline",
-    flight_number: "Flight number",
-    airport_from: "Departure airport",
-    airport_to: "Arrival airport",
-    price_per_kg: "Price / kg",
+    no_bookings_yet:
+      "No bookings yet. Post a trip or a request to get started.",
+    travelers_found: "traveler(s) found",
+    no_travelers:
+      "No travelers for these filters. Broaden the region or city.",
+    view_trip: "View trip",
     payment_checklist: "Payment readiness",
     payment_ready: "Ready to receive payments",
     payment_steps_needed: "Steps left to get paid",
+    complete_in_profile: "Complete in Profile",
+    stripe_demo: "Stripe is not configured on this server (demo mode).",
+    kyc_step: "Identity verified (KYC)",
+    bank_step: "Bank account linked (Stripe Express)",
+    payouts_step: "Payouts enabled",
+
+    hero_tagline:
+      "The global network connecting travelers and senders worldwide.",
+    hero_sub:
+      "Every traveler can become an occasional carrier. Every spare bag space becomes a logistics opportunity.",
+    cta_send: "Send a parcel",
+    cta_travel: "I'm traveling",
+    section_airbnb_title: "The Airbnb of international baggage",
+    section_airbnb_text:
+      "A P2P marketplace: like Uber connects drivers and riders, Rfacto connects travelers' spare baggage space with shipping needs of individuals and SMEs.",
+    step_publish: "Post",
+    step_publish_text:
+      "List your trip or parcel need — from any country to another.",
+    step_match: "Global match",
+    step_match_text:
+      "Rfacto score: route, date, price, reputation and delivery history.",
+    step_trust: "Trust",
+    step_trust_text:
+      "KYC, escrow payment, messaging and mutual ratings.",
+    dual_role_title: "One account, two roles",
+    dual_role_text:
+      "Send a parcel today, carry tomorrow. No fixed role: every user can be both sender and traveler.",
+    phase1_title: "Phase 1 — priority corridors",
+    phase1_text:
+      "Francophone diaspora: Canada, France, Belgium ↔ Gabon, Cameroon, Côte d'Ivoire, Senegal, DRC — then Europe ↔ Africa, then worldwide.",
+    phase1_examples:
+      "Already supported: Montreal → Paris, New York → Dakar, Dubai → Nairobi, Johannesburg → Douala…",
+    join_rfacto: "Join Rfacto",
+
+    login_title: "Log in",
+    login_subtitle: "Access your Rfacto account",
+    register_title: "Create an account",
+    register_subtitle: "Join the global Rfacto network",
+    email: "Email",
+    password: "Password",
+    no_account: "No account yet?",
+    have_account: "Already have an account?",
+    sign_in: "Sign in",
+    create_account: "Create my account",
+
+    trips_title: "Trips",
+    trips_subtitle: "Travelers available on international corridors.",
+    no_trips: "No trips published.",
+    new_trip_title: "Post a trip",
+    new_trip_subtitle:
+      "Enter your itinerary and available baggage weight.",
+    goods_placeholder: "Clothes, documents, non-perishable goods…",
+    traveler: "Traveler",
+    flight: "Flight",
+    see_requests: "See requests / match",
+    weight_available_badge: "available",
+
+    requests_title: "Parcel requests",
+    requests_subtitle: "Shipping needs posted by individuals.",
+    no_requests: "No open requests.",
+    new_request_title: "Post a request",
+    new_request_subtitle: "Describe the parcel to send.",
+    description: "Description",
+    urgency: "Urgency",
+    desired_date: "Desired date",
+    parcel_photos: "Parcel photos (max 5, 2 MB)",
+    suggested_travelers: "Suggested travelers",
+    no_matches: "No matching travelers right now.",
+    propose: "Propose",
+    no_parcel_photo: "No photo",
+
+    bookings_title: "Bookings",
+    bookings_subtitle: "Track proposals, payments and deliveries.",
+    no_bookings: "No bookings. Propose a traveler from a request.",
+    to_pay: "To pay",
+    funds_held: "Funds held",
+    paid: "Paid",
+    pay: "Pay",
+    sender: "Sender",
+    messaging: "Messaging",
+    messaging_hint: "Chat for this booking",
+    your_message: "Your message…",
+    send: "Send",
+    no_messages: "No messages yet. Introduce yourself and agree on details.",
+    back_bookings: "Back to bookings",
+    pay_secure: "Pay and secure the parcel",
+    pay_stripe: "Pay with Stripe",
+    retry_payment: "Retry payment",
+    total: "Total",
+    commission: "Rfacto fee",
+    traveler_receives: "Traveler receives",
+    awaiting_sender_payment: "Waiting for the sender's secure payment.",
+    accept_ask_payment: "Accept (request payment)",
+    refuse: "Decline",
+    handed_over: "Parcel handed over",
+    in_transit: "In transit",
+    mark_delivered: "Mark delivered (release payment)",
+    leave_review: "Rate the other party",
+    rating: "Rating",
+    comment: "Comment",
+    send_review: "Submit review",
+    review_thanks: "Thanks, your review was saved.",
+    traveler_verified: "Verified traveler",
+    accept_hint:
+      "After acceptance, the sender pays into escrow. Funds are released to you only after delivery confirmation.",
+    goods_cert:
+      "I confirm I inspected the parcel contents and only accept compliant goods.",
+    customs_ack:
+      "I comply with customs laws of departure, transit and arrival countries.",
+    kyc_connect_hint:
+      "Verified identity + bank account (receive earnings) required. Set them up in Profile.",
+    payment_confirming:
+      "Stripe confirmation in progress… this page updates automatically.",
+    payment_failed_hint: "The previous payment failed. You can try again.",
+    funds_held_until: "Funds are held until delivery is confirmed.",
+
+    profile_title: "My profile",
+    trust_payments: "Trust & payouts",
+    trust_hint: "Required to accept parcels as a traveler.",
+    verify_identity: "Verify my identity",
+    receive_earnings: "Receive my earnings (bank account)",
+    receive_earnings_hint:
+      "Open a Stripe Express account to receive earnings after each delivery (individual, not a business).",
+    bank_ready:
+      "Bank account ready: you can accept parcels and receive earnings after delivery.",
+    payments_label: "Payouts",
+    gains_ready: "Ready",
+    bank_to_setup: "Bank account to set up",
+    account_verified: "Verified account",
+    profile_saved: "Profile updated.",
+
+    messages_title: "Messages",
+    messages_subtitle: "Conversations linked to your bookings.",
+
+    status_proposed: "Proposed",
+    status_awaiting_payment: "Awaiting payment",
+    status_accepted: "Accepted (paid)",
+    status_handed_over: "Handed to traveler",
+    status_in_transit: "In transit",
+    status_delivered: "Delivered",
+    status_cancelled: "Cancelled",
+    status_refused: "Declined",
+    pay_requires: "Payment required",
+    pay_authorized: "Funds held",
+    pay_captured: "Paid / transferred",
+    pay_cancelled: "Cancelled",
+    pay_refunded: "Refunded",
+    pay_failed: "Failed",
+    urgency_low: "Low",
+    urgency_normal: "Normal",
+    urgency_high: "High",
+    urgency_urgent: "Urgent",
   },
 } as const;
 
@@ -80,4 +489,43 @@ export function t(locale: Locale, key: DictKey): string {
 
 export function normalizeLocale(value?: string | null): Locale {
   return value === "en" ? "en" : "fr";
+}
+
+export function bookingStatusLabel(locale: Locale, status: string) {
+  const map: Record<string, DictKey> = {
+    PROPOSED: "status_proposed",
+    AWAITING_PAYMENT: "status_awaiting_payment",
+    ACCEPTED: "status_accepted",
+    HANDED_OVER: "status_handed_over",
+    IN_TRANSIT: "status_in_transit",
+    DELIVERED: "status_delivered",
+    CANCELLED: "status_cancelled",
+    REFUSED: "status_refused",
+  };
+  const key = map[status];
+  return key ? t(locale, key) : status;
+}
+
+export function paymentStatusLabel(locale: Locale, status: string) {
+  const map: Record<string, DictKey> = {
+    REQUIRES_PAYMENT: "pay_requires",
+    AUTHORIZED: "pay_authorized",
+    CAPTURED: "pay_captured",
+    CANCELLED: "pay_cancelled",
+    REFUNDED: "pay_refunded",
+    FAILED: "pay_failed",
+  };
+  const key = map[status];
+  return key ? t(locale, key) : status;
+}
+
+export function urgencyLabel(locale: Locale, urgency: string) {
+  const map: Record<string, DictKey> = {
+    LOW: "urgency_low",
+    NORMAL: "urgency_normal",
+    HIGH: "urgency_high",
+    URGENT: "urgency_urgent",
+  };
+  const key = map[urgency];
+  return key ? t(locale, key) : urgency;
 }

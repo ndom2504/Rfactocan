@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import { LogoutButton } from "@/components/logout-button";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { NotificationBell } from "@/components/notification-bell";
+import { LocaleProvider } from "@/components/locale-provider";
 import { Badge } from "@/components/ui/badge";
 
 export default async function AppLayout({
@@ -27,75 +28,77 @@ export default async function AppLayout({
   ];
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="font-[family-name:var(--font-display)] text-xl font-semibold"
-            >
-              Rfacto
-            </Link>
-            <nav className="hidden gap-4 md:flex">
-              {links.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
-                >
-                  {l.label}
-                </Link>
-              ))}
-              {user.role === "ADMIN" && (
-                <Link
-                  href="/admin"
-                  className="text-sm font-medium text-[var(--highlight)]"
-                >
-                  {t(locale, "nav_admin")}
-                </Link>
+    <LocaleProvider locale={locale}>
+      <div className="min-h-screen">
+        <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+            <div className="flex items-center gap-6">
+              <Link
+                href="/dashboard"
+                className="font-[family-name:var(--font-display)] text-xl font-semibold"
+              >
+                Rfacto
+              </Link>
+              <nav className="hidden gap-4 md:flex">
+                {links.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+                {user.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="text-sm font-medium text-[var(--highlight)]"
+                  >
+                    {t(locale, "nav_admin")}
+                  </Link>
+                )}
+              </nav>
+            </div>
+            <div className="flex items-center gap-3">
+              <LocaleToggle locale={locale} />
+              <NotificationBell locale={locale} />
+              {user.verifiedAt && (
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {t(locale, "verified")}
+                </Badge>
               )}
-            </nav>
+              <Link href="/profile" className="flex items-center gap-2">
+                {user.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.avatarUrl}
+                    alt=""
+                    className="h-8 w-8 rounded-full border border-[var(--border)] object-cover"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-xs font-medium">
+                    {user.displayName.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <span className="text-sm">{user.displayName}</span>
+              </Link>
+              <LogoutButton />
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <LocaleToggle locale={locale} />
-            <NotificationBell locale={locale} />
-            {user.verifiedAt && (
-              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                {t(locale, "verified")}
-              </Badge>
-            )}
-            <Link href="/profile" className="flex items-center gap-2">
-              {user.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={user.avatarUrl}
-                  alt=""
-                  className="h-8 w-8 rounded-full border border-[var(--border)] object-cover"
-                />
-              ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-xs font-medium">
-                  {user.displayName.slice(0, 1).toUpperCase()}
-                </span>
-              )}
-              <span className="text-sm">{user.displayName}</span>
-            </Link>
-            <LogoutButton />
-          </div>
-        </div>
-        <nav className="mx-auto flex max-w-6xl gap-3 overflow-x-auto px-6 pb-3 md:hidden">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="whitespace-nowrap text-sm text-[var(--muted)]"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
-    </div>
+          <nav className="mx-auto flex max-w-6xl gap-3 overflow-x-auto px-6 pb-3 md:hidden">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="whitespace-nowrap text-sm text-[var(--muted)]"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
+        <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+      </div>
+    </LocaleProvider>
   );
 }

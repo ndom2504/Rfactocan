@@ -9,11 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  BOOKING_STATUS_LABELS,
-  PAYMENT_STATUS_LABELS,
-} from "@/lib/corridors";
 import { formatDate, formatKg } from "@/lib/utils";
+import { useI18n } from "@/components/locale-provider";
 
 type Payment = {
   id: string;
@@ -87,6 +84,7 @@ export default function BookingDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { t, bookingStatus, paymentStatus } = useI18n();
   const [id, setId] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -139,8 +137,8 @@ export default function BookingDetailPage({
 
   useEffect(() => {
     void load();
-    const t = setInterval(() => void load(), 4000);
-    return () => clearInterval(t);
+    const interval = setInterval(() => void load(), 4000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -236,7 +234,7 @@ export default function BookingDetailPage({
   }
 
   if (!booking) {
-    return <p className="text-sm text-[var(--muted)]">Chargement...</p>;
+    return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
 
   const isTraveler = meId === booking.trip.userId;
@@ -257,27 +255,27 @@ export default function BookingDetailPage({
             {booking.request.fromCity} → {booking.request.toCity}
           </CardTitle>
           <CardDescription>
-            {formatKg(booking.request.weightKg)} · départ{" "}
+            {formatKg(booking.request.weightKg)} · {t("departure_date")}{" "}
             {formatDate(booking.trip.departAt)}
           </CardDescription>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Badge>{BOOKING_STATUS_LABELS[booking.status] ?? booking.status}</Badge>
+            <Badge>{bookingStatus(booking.status)}</Badge>
             {payment && (
               <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                {paymentStatus(payment.status)}
               </Badge>
             )}
             {booking.trip.user.kycStatus === "VERIFIED" && (
               <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                Voyageur vérifié
+                {t("traveler_verified")}
               </Badge>
             )}
           </div>
           <p className="mt-4 text-sm">{booking.request.description}</p>
           <p className="mt-3 text-sm text-[var(--muted)]">
-            Expéditeur : {booking.sender.displayName}
+            {t("sender")} : {booking.sender.displayName}
             <br />
-            Voyageur : {booking.trip.user.displayName}
+            {t("traveler")} : {booking.trip.user.displayName}
           </p>
           {message && (
             <p className="mt-3 text-sm text-[var(--accent)]">{message}</p>
@@ -297,11 +295,7 @@ export default function BookingDetailPage({
 
           {booking.status === "PROPOSED" && isTraveler && (
             <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <p className="text-sm text-[var(--muted)]">
-                Après acceptation, l&apos;expéditeur paiera en séquestre. Les
-                fonds ne vous seront versés qu&apos;après confirmation de
-                livraison.
-              </p>
+              <p className="text-sm text-[var(--muted)]">{t("accept_hint")}</p>
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -309,8 +303,7 @@ export default function BookingDetailPage({
                   onChange={(e) => setGoodsCertified(e.target.checked)}
                   className="mt-1"
                 />
-                Je confirme avoir inspecté le contenu du colis et n&apos;accepter
-                que des biens conformes.
+                {t("goods_cert")}
               </label>
               <label className="flex items-start gap-2 text-sm">
                 <input
@@ -319,67 +312,63 @@ export default function BookingDetailPage({
                   onChange={(e) => setCustomsAcknowledged(e.target.checked)}
                   className="mt-1"
                 />
-                Je respecte les lois douanières des pays de départ, transit et
-                arrivée.
+                {t("customs_ack")}
               </label>
               <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={loading || !goodsCertified || !customsAcknowledged}
                   onClick={() => patchStatus("ACCEPTED")}
                 >
-                  Accepter (demander paiement)
+                  {t("accept_ask_payment")}
                 </Button>
                 <Button
                   variant="danger"
                   disabled={loading}
                   onClick={() => patchStatus("REFUSED")}
                 >
-                  Refuser
+                  {t("refuse")}
                 </Button>
               </div>
               <p className="text-xs text-[var(--muted)]">
-                Identité vérifiée + compte bancaire (recevoir mes gains)
-                requis. Configurez-les dans{" "}
+                {t("kyc_connect_hint")}{" "}
                 <Link href="/profile" className="underline">
-                  Profil
+                  {t("nav_profile")}
                 </Link>
-                .
               </p>
             </div>
           )}
 
           {booking.status === "AWAITING_PAYMENT" && isSender && (
             <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <h3 className="font-medium">Payer et sécuriser le colis</h3>
+              <h3 className="font-medium">{t("pay_secure")}</h3>
               {awaitingConfirm && (
                 <p className="text-sm text-[var(--accent)]">
-                  Confirmation Stripe en cours… cette page se met à jour
-                  automatiquement.
+                  {t("payment_confirming")}
                 </p>
               )}
               {paymentFailed && (
                 <p className="text-sm text-red-700">
-                  Le paiement précédent a échoué. Vous pouvez réessayer.
+                  {t("payment_failed_hint")}
                 </p>
               )}
               {payment && !paymentAuthorized && (
                 <ul className="space-y-1 text-sm">
                   <li>
-                    Total :{" "}
+                    {t("total")} :{" "}
                     {formatCents(
                       payment.amountCadCents,
                       payment.currency ?? "CAD"
                     )}
                   </li>
                   <li>
-                    Commission Rfacto ({feePercentLabel(payment)}) :{" "}
+                    {t("commission")} ({feePercentLabel(payment)}) :{" "}
                     {formatCents(
                       payment.platformFeeCents,
                       payment.currency ?? "CAD"
                     )}
                   </li>
                   <li>
-                    Voyageur recevra :{" "}
+                    {t("traveler_receives")} :{" "}
                     {formatCents(
                       payment.travelerPayoutCents,
                       payment.currency ?? "CAD"
@@ -389,22 +378,21 @@ export default function BookingDetailPage({
               )}
               {!payment && (
                 <p className="text-sm text-[var(--muted)]">
-                  Les fonds seront bloqués jusqu&apos;à la confirmation de
-                  livraison.
+                  {t("funds_held_until")}
                 </p>
               )}
               {!awaitingConfirm && !paymentAuthorized && (
                 <Button disabled={loading} onClick={startCheckout}>
                   {loading
-                    ? "Redirection..."
+                    ? t("loading")
                     : paymentFailed
-                      ? "Réessayer le paiement"
-                      : "Payer avec Stripe"}
+                      ? t("retry_payment")
+                      : t("pay_stripe")}
                 </Button>
               )}
               {!stripeConfigured && (
                 <p className="text-xs text-[var(--muted)]">
-                  Mode démo : Stripe n&apos;est pas configuré sur ce serveur.
+                  {t("stripe_demo")}
                 </p>
               )}
             </div>
@@ -412,7 +400,7 @@ export default function BookingDetailPage({
 
           {booking.status === "AWAITING_PAYMENT" && isTraveler && (
             <p className="mt-4 text-sm text-[var(--muted)]">
-              En attente du paiement sécurisé de l&apos;expéditeur.
+              {t("awaiting_sender_payment")}
             </p>
           )}
 
@@ -424,7 +412,7 @@ export default function BookingDetailPage({
                     disabled={loading}
                     onClick={() => patchStatus("HANDED_OVER")}
                   >
-                    Colis remis
+                    {t("handed_over")}
                   </Button>
                 )}
                 {booking.status === "HANDED_OVER" && (
@@ -432,7 +420,7 @@ export default function BookingDetailPage({
                     disabled={loading}
                     onClick={() => patchStatus("IN_TRANSIT")}
                   >
-                    En transit
+                    {t("in_transit")}
                   </Button>
                 )}
                 {booking.status === "IN_TRANSIT" && (
@@ -440,7 +428,7 @@ export default function BookingDetailPage({
                     disabled={loading}
                     onClick={() => patchStatus("DELIVERED")}
                   >
-                    Marquer livré (libère le paiement)
+                    {t("mark_delivered")}
                   </Button>
                 )}
                 <Button
@@ -448,16 +436,16 @@ export default function BookingDetailPage({
                   disabled={loading}
                   onClick={() => patchStatus("CANCELLED")}
                 >
-                  Annuler
+                  {t("cancel")}
                 </Button>
               </div>
             )}
 
           {booking.status === "DELIVERED" && !alreadyReviewed && (
             <div className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">
-              <h3 className="font-medium">Noter l&apos;autre partie</h3>
+              <h3 className="font-medium">{t("leave_review")}</h3>
               <div className="space-y-2">
-                <Label>Note</Label>
+                <Label>{t("rating")}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -467,27 +455,27 @@ export default function BookingDetailPage({
                 />
               </div>
               <Textarea
-                placeholder="Commentaire"
+                placeholder={t("comment")}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
-              <Button onClick={submitReview}>Envoyer l&apos;avis</Button>
+              <Button onClick={submitReview}>{t("send_review")}</Button>
             </div>
           )}
           {alreadyReviewed && (
             <p className="mt-4 text-sm text-[var(--accent)]">
-              Merci, votre avis a été enregistré.
+              {t("review_thanks")}
             </p>
           )}
         </Card>
         <Link href="/bookings" className="text-sm text-[var(--muted)] underline">
-          Retour aux réservations
+          {t("back_bookings")}
         </Link>
       </div>
 
       <Card className="flex min-h-[420px] flex-col">
-        <CardTitle>Messagerie</CardTitle>
-        <CardDescription>Discussion liée à cette réservation</CardDescription>
+        <CardTitle>{t("messaging")}</CardTitle>
+        <CardDescription>{t("messaging_hint")}</CardDescription>
         <div className="mt-4 flex-1 space-y-3 overflow-y-auto">
           {messages.map((m) => (
             <div
@@ -503,18 +491,16 @@ export default function BookingDetailPage({
             </div>
           ))}
           {messages.length === 0 && (
-            <p className="text-sm text-[var(--muted)]">
-              Aucun message. Présentez-vous et négociez les détails.
-            </p>
+            <p className="text-sm text-[var(--muted)]">{t("no_messages")}</p>
           )}
         </div>
         <form onSubmit={sendMessage} className="mt-4 flex gap-2">
           <Input
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Votre message..."
+            placeholder={t("your_message")}
           />
-          <Button type="submit">Envoyer</Button>
+          <Button type="submit">{t("send")}</Button>
         </form>
       </Card>
     </div>

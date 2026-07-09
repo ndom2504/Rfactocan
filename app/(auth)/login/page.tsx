@@ -8,25 +8,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { useI18n } from "@/components/locale-provider";
 
-const ERROR_MESSAGES: Record<string, string> = {
-  google_not_configured: "Google Auth n'est pas encore configuré.",
-  invalid_oauth_state: "Session Google invalide. Réessayez.",
-  google_email_required: "Google n'a pas fourni d'email.",
-  google_email_unverified: "Votre email Google n'est pas vérifié.",
-  account_suspended: "Ce compte est suspendu.",
-  google_auth_failed: "Échec de la connexion Google. Réessayez.",
-  access_denied: "Connexion Google annulée.",
+const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
+  google_not_configured: {
+    fr: "Google Auth n'est pas encore configuré.",
+    en: "Google Auth is not configured yet.",
+  },
+  invalid_oauth_state: {
+    fr: "Session Google invalide. Réessayez.",
+    en: "Invalid Google session. Try again.",
+  },
+  google_email_required: {
+    fr: "Google n'a pas fourni d'email.",
+    en: "Google did not provide an email.",
+  },
+  google_email_unverified: {
+    fr: "Votre email Google n'est pas vérifié.",
+    en: "Your Google email is not verified.",
+  },
+  account_suspended: {
+    fr: "Ce compte est suspendu.",
+    en: "This account is suspended.",
+  },
+  google_auth_failed: {
+    fr: "Échec de la connexion Google. Réessayez.",
+    en: "Google sign-in failed. Try again.",
+  },
+  access_denied: {
+    fr: "Connexion Google annulée.",
+    en: "Google sign-in cancelled.",
+  },
 };
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const { t, locale } = useI18n();
   const oauthError = params.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(
-    oauthError ? ERROR_MESSAGES[oauthError] || oauthError : ""
+    oauthError
+      ? ERROR_MESSAGES[oauthError]?.[locale] || oauthError
+      : ""
   );
   const [loading, setLoading] = useState(false);
 
@@ -51,20 +76,22 @@ function LoginForm() {
 
   return (
     <Card className="w-full">
-      <CardTitle>Connexion</CardTitle>
-      <CardDescription>Accédez à votre espace Rfacto.</CardDescription>
+      <CardTitle>{t("login_title")}</CardTitle>
+      <CardDescription>{t("login_subtitle")}</CardDescription>
 
       <div className="mt-6 space-y-4">
         <GoogleSignInButton />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
-          <span className="bg-[var(--surface)] px-2 relative z-10">ou</span>
+          <span className="bg-[var(--surface)] px-2 relative z-10">
+            {locale === "en" ? "or" : "ou"}
+          </span>
           <div className="absolute inset-x-0 top-1/2 border-t border-[var(--border)]" />
         </div>
       </div>
 
       <form onSubmit={onSubmit} className="mt-2 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -74,7 +101,7 @@ function LoginForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <Input
             id="password"
             type="password"
@@ -85,13 +112,13 @@ function LoginForm() {
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Connexion..." : "Se connecter"}
+          {loading ? t("loading") : t("sign_in")}
         </Button>
       </form>
       <p className="mt-4 text-sm text-[var(--muted)]">
-        Pas encore de compte ?{" "}
+        {t("no_account")}{" "}
         <Link href="/register" className="text-[var(--accent)] underline">
-          S&apos;inscrire
+          {t("nav_signup")}
         </Link>
       </p>
     </Card>

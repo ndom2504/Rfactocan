@@ -1,22 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import type { Locale } from "@/lib/i18n";
+import { useI18n } from "@/components/locale-provider";
 
 export function LocaleToggle({ locale }: { locale: Locale }) {
-  const router = useRouter();
+  const { setLocale } = useI18n();
   const [pending, startTransition] = useTransition();
 
-  function setLocale(next: Locale) {
+  function changeLocale(next: Locale) {
     if (next === locale) return;
-    startTransition(async () => {
-      await fetch("/api/locale", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locale: next }),
-      });
-      router.refresh();
+    startTransition(() => {
+      void setLocale(next);
     });
   }
 
@@ -25,7 +20,7 @@ export function LocaleToggle({ locale }: { locale: Locale }) {
       <button
         type="button"
         disabled={pending}
-        onClick={() => setLocale("fr")}
+        onClick={() => changeLocale("fr")}
         className={`px-2 py-1 ${
           locale === "fr"
             ? "bg-[var(--accent)] text-white"
@@ -37,7 +32,7 @@ export function LocaleToggle({ locale }: { locale: Locale }) {
       <button
         type="button"
         disabled={pending}
-        onClick={() => setLocale("en")}
+        onClick={() => changeLocale("en")}
         className={`px-2 py-1 ${
           locale === "en"
             ? "bg-[var(--accent)] text-white"

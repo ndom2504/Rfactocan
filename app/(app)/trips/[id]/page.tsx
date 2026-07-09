@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getRequestLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function TripDetailPage({ params }: Props) {
   const { id } = await params;
+  const locale = await getRequestLocale();
   const trip = await prisma.trip.findUnique({
     where: { id },
     include: {
@@ -56,12 +59,12 @@ export default async function TripDetailPage({ params }: Props) {
         </div>
         <dl className="mt-6 space-y-3 text-sm">
           <div>
-            <dt className="text-[var(--muted)]">Objets acceptés</dt>
+            <dt className="text-[var(--muted)]">{t(locale, "accepted_goods")}</dt>
             <dd>{trip.acceptedGoods}</dd>
           </div>
           {trip.notes && (
             <div>
-              <dt className="text-[var(--muted)]">Notes</dt>
+              <dt className="text-[var(--muted)]">{t(locale, "notes")}</dt>
               <dd>{trip.notes}</dd>
             </div>
           )}
@@ -70,7 +73,7 @@ export default async function TripDetailPage({ params }: Props) {
             trip.fromAirportCode ||
             trip.toAirportCode) && (
             <div>
-              <dt className="text-[var(--muted)]">Vol</dt>
+              <dt className="text-[var(--muted)]">{t(locale, "flight")}</dt>
               <dd>
                 {[
                   trip.airline,
@@ -85,11 +88,11 @@ export default async function TripDetailPage({ params }: Props) {
             </div>
           )}
           <div>
-            <dt className="text-[var(--muted)]">Voyageur</dt>
+            <dt className="text-[var(--muted)]">{t(locale, "traveler")}</dt>
             <dd>
               {trip.user.displayName}
               {trip.user.verifiedAt || trip.user.kycStatus === "VERIFIED"
-                ? " · Vérifié"
+                ? ` · ${t(locale, "verified")}`
                 : ""}
               {trip.user.ratingCount
                 ? ` · ★ ${trip.user.ratingAvg.toFixed(1)} (${trip.user.ratingCount})`
@@ -102,7 +105,7 @@ export default async function TripDetailPage({ params }: Props) {
         </dl>
         <div className="mt-6">
           <Link href="/requests">
-            <Button>Voir les demandes / matcher</Button>
+            <Button>{t(locale, "see_requests")}</Button>
           </Link>
         </div>
       </Card>

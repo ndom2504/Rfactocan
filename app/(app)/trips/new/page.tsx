@@ -11,9 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { resolveCheckoutCurrency } from "@/lib/currency";
+import { useI18n } from "@/components/locale-provider";
 
 export default function NewTripPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -61,16 +63,14 @@ export default function NewTripPage() {
 
   return (
     <Card className="max-w-2xl">
-      <CardTitle>Publier un voyage</CardTitle>
-      <CardDescription>
-        Indiquez votre itinéraire et le poids disponible dans vos bagages.
-      </CardDescription>
+      <CardTitle>{t("new_trip_title")}</CardTitle>
+      <CardDescription>{t("new_trip_subtitle")}</CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <CorridorFields />
-        <DateField name="departAt" label="Date de départ" required />
+        <DateField name="departAt" label={t("departure_date")} required />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="weightKg">Poids disponible (kg)</Label>
+            <Label htmlFor="weightKg">{t("weight_available")}</Label>
             <Input
               id="weightKg"
               name="weightKg"
@@ -81,7 +81,7 @@ export default function NewTripPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pricePerKgCad">Prix / kg</Label>
+            <Label htmlFor="pricePerKgCad">{t("price_per_kg")}</Label>
             <Input
               id="pricePerKgCad"
               name="pricePerKgCad"
@@ -92,7 +92,7 @@ export default function NewTripPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currency">Devise</Label>
+            <Label htmlFor="currency">{t("currency")}</Label>
             <Select id="currency" name="currency" defaultValue="CAD">
               <option value="CAD">CAD</option>
               <option value="USD">USD</option>
@@ -101,22 +101,22 @@ export default function NewTripPage() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="acceptedGoods">Objets acceptés</Label>
+          <Label htmlFor="acceptedGoods">{t("accepted_goods")}</Label>
           <Textarea
             id="acceptedGoods"
             name="acceptedGoods"
-            placeholder="Vêtements, documents, produits non périssables..."
+            placeholder={t("goods_placeholder")}
             required
           />
         </div>
         <FlightFields />
         <div className="space-y-2">
-          <Label htmlFor="notes">Notes</Label>
+          <Label htmlFor="notes">{t("notes")}</Label>
           <Textarea id="notes" name="notes" />
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" disabled={loading}>
-          {loading ? "Publication..." : "Publier"}
+          {loading ? t("loading") : t("publish")}
         </Button>
       </form>
     </Card>

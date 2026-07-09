@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { useI18n } from "@/components/locale-provider";
 
 type TravelerHit = {
   tripId: string;
@@ -36,6 +37,7 @@ type TravelerHit = {
 };
 
 export function TravelerSearch() {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("");
   const [country, setCountry] = useState("");
@@ -96,20 +98,20 @@ export function TravelerSearch() {
     <section className="space-y-4">
       <div>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-          Recherche rapide de voyageurs
+          {t("search_travelers")}
         </h2>
         <p className="text-sm text-[var(--muted)]">
-          Filtrez par nom, pays, ville ou région (départ ou arrivée).
+          {t("search_travelers_hint")}
         </p>
       </div>
 
       <Card>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
-            <Label htmlFor="traveler-q">Recherche</Label>
+            <Label htmlFor="traveler-q">{t("search")}</Label>
             <Input
               id="traveler-q"
-              placeholder="Nom, ville, compagnie…"
+              placeholder={t("search_placeholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => {
@@ -118,7 +120,7 @@ export function TravelerSearch() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="traveler-region">Région</Label>
+            <Label htmlFor="traveler-region">{t("region")}</Label>
             <Select
               id="traveler-region"
               value={region}
@@ -128,7 +130,7 @@ export function TravelerSearch() {
                 setCity("");
               }}
             >
-              <option value="">Toutes</option>
+              <option value="">{t("all_f")}</option>
               {REGIONS.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
@@ -137,7 +139,7 @@ export function TravelerSearch() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="traveler-country">Pays</Label>
+            <Label htmlFor="traveler-country">{t("country")}</Label>
             <Select
               id="traveler-country"
               value={country}
@@ -146,7 +148,7 @@ export function TravelerSearch() {
                 setCity("");
               }}
             >
-              <option value="">Tous</option>
+              <option value="">{t("all")}</option>
               {countryOptions.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.name}
@@ -155,14 +157,14 @@ export function TravelerSearch() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="traveler-city">Ville</Label>
+            <Label htmlFor="traveler-city">{t("city")}</Label>
             {cityOptions.length > 0 ? (
               <Select
                 id="traveler-city"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
               >
-                <option value="">Toutes</option>
+                <option value="">{t("all_f")}</option>
                 {cityOptions.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -184,7 +186,7 @@ export function TravelerSearch() {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button disabled={pending} onClick={runSearch}>
-            {pending ? "Recherche…" : "Rechercher"}
+            {pending ? t("loading") : t("search")}
           </Button>
           <Button
             type="button"
@@ -200,7 +202,7 @@ export function TravelerSearch() {
               setError("");
             }}
           >
-            Réinitialiser
+            {t("reset")}
           </Button>
         </div>
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
@@ -209,8 +211,7 @@ export function TravelerSearch() {
       {searched && (
         <div className="space-y-3">
           <p className="text-sm text-[var(--muted)]">
-            {results.length} voyageur{results.length !== 1 ? "s" : ""} trouvé
-            {results.length !== 1 ? "s" : ""}
+            {results.length} {t("travelers_found")}
           </p>
           {results.map((hit) => (
             <Card key={hit.tripId}>
@@ -236,7 +237,7 @@ export function TravelerSearch() {
                       <Badge>{formatCad(hit.pricePerKgCad)}/kg</Badge>
                       {hit.user.kycStatus === "VERIFIED" && (
                         <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                          Vérifié
+                          {t("verified")}
                         </Badge>
                       )}
                       {hit.user.ratingCount > 0 && (
@@ -250,17 +251,14 @@ export function TravelerSearch() {
                 </div>
                 <Link href={`/trips/${hit.tripId}`}>
                   <Button variant="outline" size="sm">
-                    Voir le voyage
+                    {t("view_trip")}
                   </Button>
                 </Link>
               </div>
             </Card>
           ))}
           {results.length === 0 && (
-            <p className="text-sm text-[var(--muted)]">
-              Aucun voyageur pour ces critères. Élargissez la région ou la
-              ville.
-            </p>
+            <p className="text-sm text-[var(--muted)]">{t("no_travelers")}</p>
           )}
         </div>
       )}

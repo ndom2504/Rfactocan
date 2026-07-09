@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { useI18n } from "@/components/locale-provider";
 
 function RegisterForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const { t, locale } = useI18n();
   const initialRole = params.get("role");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,22 +46,26 @@ function RegisterForm() {
 
   return (
     <Card className="w-full">
-      <CardTitle>Créer un compte</CardTitle>
-      <CardDescription>
-        Rejoignez Rfacto en tant qu&apos;expéditeur, voyageur, ou les deux.
-      </CardDescription>
+      <CardTitle>{t("register_title")}</CardTitle>
+      <CardDescription>{t("register_subtitle")}</CardDescription>
 
       <div className="mt-6 space-y-4">
-        <GoogleSignInButton label="S'inscrire avec Google" />
+        <GoogleSignInButton
+          label={
+            locale === "en" ? "Sign up with Google" : "S'inscrire avec Google"
+          }
+        />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
-          <span className="bg-[var(--surface)] px-2 relative z-10">ou</span>
+          <span className="bg-[var(--surface)] px-2 relative z-10">
+            {locale === "en" ? "or" : "ou"}
+          </span>
           <div className="absolute inset-x-0 top-1/2 border-t border-[var(--border)]" />
         </div>
       </div>
 
       <form onSubmit={onSubmit} className="mt-2 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="displayName">Nom affiché</Label>
+          <Label htmlFor="displayName">{t("display_name")}</Label>
           <Input
             id="displayName"
             value={displayName}
@@ -68,7 +74,7 @@ function RegisterForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -78,7 +84,7 @@ function RegisterForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <Input
             id="password"
             type="password"
@@ -89,26 +95,26 @@ function RegisterForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="role">Je suis</Label>
+          <Label htmlFor="role">{t("role")}</Label>
           <Select
             id="role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="SENDER">Expéditeur</option>
-            <option value="TRAVELER">Voyageur</option>
-            <option value="BOTH">Les deux</option>
+            <option value="SENDER">{t("role_sender")}</option>
+            <option value="TRAVELER">{t("role_traveler")}</option>
+            <option value="BOTH">{t("role_both")}</option>
           </Select>
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Création..." : "S'inscrire"}
+          {loading ? t("loading") : t("create_account")}
         </Button>
       </form>
       <p className="mt-4 text-sm text-[var(--muted)]">
-        Déjà inscrit ?{" "}
+        {t("have_account")}{" "}
         <Link href="/login" className="text-[var(--accent)] underline">
-          Se connecter
+          {t("sign_in")}
         </Link>
       </p>
     </Card>

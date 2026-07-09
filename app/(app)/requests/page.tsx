@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getRequestLocale } from "@/lib/locale";
+import { t, urgencyLabel } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatDate, formatKg } from "@/lib/utils";
-import { getCountryName, URGENCY_LABELS } from "@/lib/corridors";
+import { getCountryName } from "@/lib/corridors";
 
 export default async function RequestsPage() {
+  const locale = await getRequestLocale();
   const requests = await prisma.parcelRequest.findMany({
     where: { status: "OPEN" },
     include: {
@@ -28,14 +31,14 @@ export default async function RequestsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-            Demandes de colis
+            {t(locale, "requests_title")}
           </h1>
           <p className="text-[var(--muted)]">
-            Besoins d&apos;expédition publiés par les particuliers.
+            {t(locale, "requests_subtitle")}
           </p>
         </div>
         <Link href="/requests/new">
-          <Button>Publier une demande</Button>
+          <Button>{t(locale, "publish_request")}</Button>
         </Link>
       </div>
 
@@ -52,12 +55,12 @@ export default async function RequestsPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={cover}
-                        alt={`Colis ${req.fromCity} → ${req.toCity}`}
+                        alt={`${req.fromCity} → ${req.toCity}`}
                         className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
-                        Pas de photo
+                        {t(locale, "no_parcel_photo")}
                       </div>
                     )}
                   </div>
@@ -74,9 +77,9 @@ export default async function RequestsPage() {
                     </div>
                     <CardDescription>
                       {getCountryName(req.toCountry)} · {formatKg(req.weightKg)}{" "}
-                      · {URGENCY_LABELS[req.urgency]}
+                      · {urgencyLabel(locale, req.urgency)}
                       {req.desiredDate
-                        ? ` · souhaité ${formatDate(req.desiredDate)}`
+                        ? ` · ${t(locale, "desired_date")} ${formatDate(req.desiredDate)}`
                         : ""}
                     </CardDescription>
                     <p className="mt-3 line-clamp-2 text-sm text-[var(--muted)]">
@@ -87,24 +90,26 @@ export default async function RequestsPage() {
                       {(req.user.verifiedAt ||
                         req.user.kycStatus === "VERIFIED") && (
                         <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                          Vérifié
+                          {t(locale, "verified")}
                         </Badge>
                       )}
                       {photos.length > 1 && (
-                        <Badge>+{photos.length - 1} photo(s)</Badge>
+                        <Badge>+{photos.length - 1}</Badge>
                       )}
                     </div>
                   </div>
                 </div>
                 <Link href={`/requests/${req.id}`}>
-                  <Button variant="outline">Matcher</Button>
+                  <Button variant="outline">{t(locale, "match")}</Button>
                 </Link>
               </div>
             </Card>
           );
         })}
         {requests.length === 0 && (
-          <p className="text-sm text-[var(--muted)]">Aucune demande ouverte.</p>
+          <p className="text-sm text-[var(--muted)]">
+            {t(locale, "no_requests")}
+          </p>
         )}
       </div>
     </div>

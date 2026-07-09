@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/components/locale-provider";
 
 export default function NewRequestPage() {
   const router = useRouter();
+  const { t, urgency } = useI18n();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -74,15 +76,13 @@ export default function NewRequestPage() {
 
   return (
     <Card className="max-w-2xl">
-      <CardTitle>Publier une demande de colis</CardTitle>
-      <CardDescription>
-        Décrivez le colis à envoyer. Le matching proposera des voyageurs.
-      </CardDescription>
+      <CardTitle>{t("new_request_title")}</CardTitle>
+      <CardDescription>{t("new_request_subtitle")}</CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <CorridorFields />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="weightKg">Poids (kg)</Label>
+            <Label htmlFor="weightKg">{t("weight_kg")}</Label>
             <Input
               id="weightKg"
               name="weightKg"
@@ -93,16 +93,16 @@ export default function NewRequestPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="urgency">Urgence</Label>
+            <Label htmlFor="urgency">{t("urgency")}</Label>
             <Select id="urgency" name="urgency" defaultValue="NORMAL">
-              <option value="LOW">Faible</option>
-              <option value="NORMAL">Normale</option>
-              <option value="HIGH">Élevée</option>
-              <option value="URGENT">Urgente</option>
+              <option value="LOW">{urgency("LOW")}</option>
+              <option value="NORMAL">{urgency("NORMAL")}</option>
+              <option value="HIGH">{urgency("HIGH")}</option>
+              <option value="URGENT">{urgency("URGENT")}</option>
             </Select>
           </div>
         </div>
-        <DateField name="desiredDate" label="Date souhaitée (optionnel)" />
+        <DateField name="desiredDate" label={t("desired_date")} />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="declaredValue">Valeur déclarée (CAD)</Label>
@@ -124,11 +124,11 @@ export default function NewRequestPage() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">{t("description")}</Label>
           <Textarea id="description" name="description" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="photos">Photos du colis (max 5, 2 Mo)</Label>
+          <Label htmlFor="photos">{t("parcel_photos")}</Label>
           <Input
             id="photos"
             type="file"
@@ -141,7 +141,7 @@ export default function NewRequestPage() {
             }}
           />
           {uploading && (
-            <p className="text-xs text-[var(--muted)]">Téléversement…</p>
+            <p className="text-xs text-[var(--muted)]">{t("uploading")}</p>
           )}
           {photos.length > 0 && (
             <div className="grid grid-cols-3 gap-3 pt-2 sm:grid-cols-5">
@@ -153,20 +153,15 @@ export default function NewRequestPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
-                    alt={`Aperçu colis ${index + 1}`}
+                    alt={`${index + 1}`}
                     className="h-full w-full object-cover"
                   />
-                  {index === 0 && (
-                    <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                      Principale
-                    </span>
-                  )}
                   <button
                     type="button"
                     onClick={() => removePhoto(url)}
                     className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white opacity-90 hover:bg-red-700"
                   >
-                    Retirer
+                    {t("remove_photo")}
                   </button>
                 </div>
               ))}
@@ -175,7 +170,7 @@ export default function NewRequestPage() {
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" disabled={loading || uploading}>
-          {loading ? "Publication..." : "Publier"}
+          {loading ? t("loading") : t("publish")}
         </Button>
       </form>
     </Card>

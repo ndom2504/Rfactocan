@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
@@ -8,6 +10,7 @@ import { formatDate } from "@/lib/utils";
 export default async function MessagesPage() {
   const user = await getSessionUser();
   if (!user) return null;
+  const locale = await getRequestLocale();
 
   const bookings = await prisma.booking.findMany({
     where: {
@@ -27,11 +30,9 @@ export default async function MessagesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          Messages
+          {t(locale, "messages_title")}
         </h1>
-        <p className="text-[var(--muted)]">
-          Conversations liées à vos réservations.
-        </p>
+        <p className="text-[var(--muted)]">{t(locale, "messages_subtitle")}</p>
       </div>
       <div className="space-y-3">
         {bookings.map((b) => {
@@ -50,12 +51,12 @@ export default async function MessagesPage() {
                   <CardDescription>
                     {last
                       ? `${last.body.slice(0, 80)}${last.body.length > 80 ? "…" : ""} · ${formatDate(last.createdAt)}`
-                      : "Aucun message encore"}
+                      : t(locale, "no_messages")}
                   </CardDescription>
                 </div>
                 <Link href={`/bookings/${b.id}`}>
                   <Button variant="outline" size="sm">
-                    Ouvrir
+                    {t(locale, "open")}
                   </Button>
                 </Link>
               </div>
@@ -64,7 +65,7 @@ export default async function MessagesPage() {
         })}
         {bookings.length === 0 && (
           <p className="text-sm text-[var(--muted)]">
-            Aucune conversation active.
+            {t(locale, "no_messages")}
           </p>
         )}
       </div>

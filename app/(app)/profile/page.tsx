@@ -12,6 +12,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CountrySelect } from "@/components/country-select";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
+import { useI18n } from "@/components/locale-provider";
 
 type User = {
   id: string;
@@ -35,6 +36,7 @@ type User = {
 
 function ProfileForm() {
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -144,7 +146,7 @@ function ProfileForm() {
       return;
     }
     setUser(data.user);
-    setMessage("Profil mis à jour.");
+    setMessage(t("profile_saved"));
     if (language === "fr" || language === "en") {
       await fetch("/api/locale", {
         method: "POST",
@@ -198,7 +200,7 @@ function ProfileForm() {
   }
 
   if (!user) {
-    return <p className="text-sm text-[var(--muted)]">Chargement...</p>;
+    return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
 
   const kycLabel =
@@ -207,10 +209,8 @@ function ProfileForm() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <Card>
-        <CardTitle>Confiance & paiements</CardTitle>
-        <CardDescription>
-          Obligatoire pour accepter des colis en tant que voyageur.
-        </CardDescription>
+        <CardTitle>{t("trust_payments")}</CardTitle>
+        <CardDescription>{t("trust_hint")}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-2">
           <Badge
             className={
@@ -229,17 +229,17 @@ function ProfileForm() {
                 : undefined
             }
           >
-            Paiements :{" "}
+            {t("payments_label")} :{" "}
             {user.stripeConnectChargesEnabled && user.stripeConnectPayoutsEnabled
-              ? "Gains prêts"
-              : "Compte bancaire à configurer"}
+              ? t("gains_ready")
+              : t("bank_to_setup")}
           </Badge>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {user.kycStatus !== "VERIFIED" && (
             <div className="space-y-2">
               <Button disabled={busy} onClick={startKyc}>
-                {busy ? "Ouverture…" : "Vérifier mon identité"}
+                {busy ? t("loading") : t("verify_identity")}
               </Button>
               <p className="text-xs text-[var(--muted)]">
                 Redirection vers Stripe Identity (passeport / pièce + selfie).
@@ -257,31 +257,27 @@ function ProfileForm() {
             ) && (
               <div className="space-y-2">
                 <Button disabled={busy} onClick={startConnect}>
-                  {busy ? "Ouverture…" : "Recevoir mes gains (compte bancaire)"}
+                  {busy ? t("loading") : t("receive_earnings")}
                 </Button>
                 <p className="text-xs text-[var(--muted)]">
-                  Ouverture d&apos;un compte Stripe Express pour recevoir vos
-                  gains après chaque livraison (particulier, pas un commerce).
+                  {t("receive_earnings_hint")}
                 </p>
               </div>
             )}
           {user.stripeConnectChargesEnabled &&
             user.stripeConnectPayoutsEnabled && (
-              <p className="text-sm text-[var(--accent)]">
-                Compte bancaire prêt : vous pouvez accepter des colis et
-                recevoir vos gains après livraison.
-              </p>
+              <p className="text-sm text-[var(--accent)]">{t("bank_ready")}</p>
             )}
         </div>
       </Card>
 
       <Card>
-        <CardTitle>Mon profil</CardTitle>
+        <CardTitle>{t("profile_title")}</CardTitle>
         <CardDescription>{user.email}</CardDescription>
         <div className="mt-3 flex flex-wrap gap-2">
           {(user.verifiedAt || user.kycStatus === "VERIFIED") && (
             <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-              Compte vérifié
+              {t("account_verified")}
             </Badge>
           )}
           <Badge>
@@ -292,19 +288,19 @@ function ProfileForm() {
         </div>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="space-y-3">
-            <Label>Photo de profil</Label>
+            <Label>{t("photo")}</Label>
             <div className="flex items-center gap-4">
               <div className="h-20 w-20 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface-2)]">
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={avatarUrl}
-                    alt="Photo de profil"
+                    alt={t("photo")}
                     className="h-full w-full object-cover"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
-                    Aucune
+                    {t("no_photo")}
                   </div>
                 )}
               </div>
@@ -326,18 +322,18 @@ function ProfileForm() {
                     size="sm"
                     onClick={() => setAvatarUrl(null)}
                   >
-                    Retirer la photo
+                    {t("remove_photo")}
                   </Button>
                 )}
                 {uploading && (
-                  <p className="text-xs text-[var(--muted)]">Téléversement…</p>
+                  <p className="text-xs text-[var(--muted)]">{t("uploading")}</p>
                 )}
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Nom affiché</Label>
+            <Label>{t("display_name")}</Label>
             <Input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -349,7 +345,7 @@ function ProfileForm() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Langue</Label>
+              <Label>{t("language")}</Label>
               <Select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
@@ -359,7 +355,7 @@ function ProfileForm() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Devise préférée</Label>
+              <Label>{t("preferred_currency")}</Label>
               <Select
                 value={preferredCurrency}
                 onChange={(e) => setPreferredCurrency(e.target.value)}
@@ -372,23 +368,23 @@ function ProfileForm() {
           </div>
 
           <div className="space-y-2">
-            <Label>Bio</Label>
+            <Label>{t("bio")}</Label>
             <Textarea value={bio} onChange={(e) => setBio(e.target.value)} />
           </div>
           {user.role !== "ADMIN" && (
             <div className="space-y-2">
-              <Label>Rôle</Label>
+              <Label>{t("role")}</Label>
               <Select value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="SENDER">Expéditeur</option>
-                <option value="TRAVELER">Voyageur</option>
-                <option value="BOTH">Les deux</option>
+                <option value="SENDER">{t("role_sender")}</option>
+                <option value="TRAVELER">{t("role_traveler")}</option>
+                <option value="BOTH">{t("role_both")}</option>
               </Select>
             </div>
           )}
           {error && <p className="text-sm text-red-700">{error}</p>}
           {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
           <Button type="submit" disabled={uploading}>
-            Enregistrer
+            {t("save")}
           </Button>
         </form>
       </Card>
