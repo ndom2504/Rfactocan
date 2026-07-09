@@ -58,20 +58,45 @@ function ProfileForm() {
   }
 
   useEffect(() => {
-    void load();
-    const kyc = searchParams.get("kyc");
-    const connect = searchParams.get("connect");
-    if (kyc === "return")
-      setMessage(
-        "Vérification d'identité terminée — statut mis à jour sous peu."
-      );
-    if (connect === "return") {
-      setMessage("Onboarding paiements terminé — synchronisation en cours.");
-      void fetch("/api/connect").then(() => load());
+    async function boot() {
+      await load();
+      const kyc = searchParams.get("kyc");
+      const connect = searchParams.get("connect");
+
+      if (kyc === "return") {
+        try {
+          const res = await fetch("/api/kyc");
+          const data = await res.json();
+          await load();
+          if (data.user?.kycStatus === "VERIFIED") {
+            setMessage("Identité vérifiée avec succès.");
+          } else if (data.kycHint) {
+            setError(data.kycHint);
+          } else if (data.user?.kycStatus === "REQUIRES_INPUT") {
+            setError(
+              "Vérification refusée ou incomplète. Réessayez (Edge ou téléphone souvent plus fiable que Chrome si la caméra est bloquée)."
+            );
+          } else {
+            setMessage(
+              "Vérification reçue — statut mis à jour sous peu (webhook Stripe)."
+            );
+          }
+        } catch {
+          setMessage("Retour KYC — actualisez la page dans quelques secondes.");
+        }
+      }
+
+      if (connect === "return") {
+        setMessage("Onboarding paiements terminé — synchronisation en cours.");
+        void fetch("/api/connect").then(() => load());
+      }
+      if (connect === "refresh") {
+        setError(
+          "Le lien Connect a expiré. Relancez l'activation des paiements."
+        );
+      }
     }
-    if (connect === "refresh") {
-      setError("Le lien Connect a expiré. Relancez l'activation des paiements.");
-    }
+    void boot();
   }, [searchParams]);
 
   async function onUploadAvatar(file: File) {
@@ -199,9 +224,11 @@ function ProfileForm() {
                 {busy ? "Ouverture…" : "Vérifier mon identité"}
               </Button>
               <p className="text-xs text-[var(--muted)]">
-                Vous serez redirigé vers Stripe Identity (passeport / pièce
-                d&apos;identité + selfie). Identity doit être activé sur le
-                compte Stripe.
+                Redirection vers Stripe Identity (passeport / pièce + selfie).
+                Si Chrome refuse la caméra, autorisez{" "}
+                <span className="font-medium">verify.stripe.com</span> dans
+                Paramètres → Confidentialité → Caméra, ou utilisez Edge / votre
+                téléphone (option « autre appareil » dans Stripe).
               </p>
             </div>
           )}

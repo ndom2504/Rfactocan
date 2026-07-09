@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { createIdentitySession } from "@/lib/kyc";
+import {
+  createIdentitySession,
+  refreshUserKycFromStripe,
+} from "@/lib/kyc";
 import { isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
@@ -52,6 +55,16 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
+
+  let stripeSync: Awaited<ReturnType<typeof refreshUserKycFromStripe>> = null;
+  try {
+    if (isStripeConfigured()) {
+      stripeSync = await refreshUserKycFromStripe(session.id);
+    }
+  } catch (error) {
+    console.error("KYC refresh error:", error);
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: session.id },
     select: {
@@ -63,5 +76,9 @@ export async function GET() {
       stripeConnectPayoutsEnabled: true,
     },
   });
-  return NextResponse.json({ user });
+  return NextResponse.json({
+    user,
+    kycHint: stripeSync?.hint ?? null,
+    kycLastErrorCode: stripeSync?.lastErrorCode ?? null,
+  });
 }
