@@ -11,10 +11,13 @@ const schema = z.object({
   departAt: z.string().datetime().or(z.string().min(8)),
   weightKg: z.coerce.number().positive().max(100),
   pricePerKgCad: z.coerce.number().positive().max(500),
+  currency: z.enum(["CAD", "USD", "EUR"]).optional(),
   acceptedGoods: z.string().min(2),
   notes: z.string().optional(),
   airline: z.string().optional(),
   flightNumber: z.string().optional(),
+  fromAirportCode: z.string().optional(),
+  toAirportCode: z.string().optional(),
 });
 
 export async function GET(request: Request) {
@@ -67,10 +70,13 @@ export async function POST(request: Request) {
         departAt: new Date(body.departAt),
         weightKg: body.weightKg,
         pricePerKgCad: body.pricePerKgCad,
+        currency: body.currency ?? "CAD",
         acceptedGoods: body.acceptedGoods,
         notes: body.notes,
         airline: body.airline,
         flightNumber: body.flightNumber,
+        fromAirportCode: body.fromAirportCode,
+        toAirportCode: body.toAirportCode,
       },
     });
     return NextResponse.json({ trip }, { status: 201 });

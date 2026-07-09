@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { emailBookingProposed } from "@/lib/email";
+import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -115,6 +116,13 @@ export async function POST(request: Request) {
       senderName: session.displayName,
       route,
       bookingId: booking.id,
+    });
+    void notifyUser({
+      userId: trip.userId,
+      type: "booking_proposed",
+      title: "Nouvelle proposition de colis",
+      body: `${session.displayName} · ${route}`,
+      href: `/bookings/${booking.id}`,
     });
 
     return NextResponse.json({ booking }, { status: 201 });

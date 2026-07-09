@@ -21,6 +21,8 @@ const schema = z.object({
     .optional()
     .nullable(),
   role: z.enum(["SENDER", "TRAVELER", "BOTH"]).optional(),
+  language: z.enum(["fr", "en"]).optional(),
+  preferredCurrency: z.enum(["CAD", "USD", "EUR"]).optional(),
 });
 
 export async function GET() {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { syncConnectAccount } from "@/lib/connect";
 import { emailPaymentAuthorized } from "@/lib/email";
+import { notifyUser } from "@/lib/notifications";
 import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
@@ -73,7 +74,7 @@ async function handlePaymentIntent(
     if (booking) {
       const amountLabel = new Intl.NumberFormat("fr-CA", {
         style: "currency",
-        currency: "CAD",
+        currency: (payment.currency || "cad").toUpperCase(),
       }).format(payment.amountCadCents / 100);
       const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
       void emailPaymentAuthorized({
@@ -84,6 +85,20 @@ async function handlePaymentIntent(
         route,
         bookingId,
         amountLabel,
+      });
+      void notifyUser({
+        userId: booking.senderId,
+        type: "payment_authorized",
+        title: "Paiement confirmé",
+        body: `${amountLabel} · ${route}`,
+        href: `/bookings/${bookingId}`,
+      });
+      void notifyUser({
+        userId: booking.trip.userId,
+        type: "payment_authorized",
+        title: "Paiement reçu (séquestre)",
+        body: `${amountLabel} · ${route}`,
+        href: `/bookings/${bookingId}`,
       });
     }
     return;

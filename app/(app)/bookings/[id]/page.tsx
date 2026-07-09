@@ -21,6 +21,7 @@ type Payment = {
   amountCadCents: number;
   platformFeeCents: number;
   travelerPayoutCents: number;
+  currency?: string;
 };
 
 type Booking = {
@@ -65,10 +66,10 @@ type Message = {
   sender: { displayName: string };
 };
 
-function formatCents(cents: number) {
+function formatCents(cents: number, currency = "CAD") {
   return new Intl.NumberFormat("fr-CA", {
     style: "currency",
-    currency: "CAD",
+    currency: currency.toUpperCase(),
   }).format(cents / 100);
 }
 
@@ -363,13 +364,26 @@ export default function BookingDetailPage({
               )}
               {payment && !paymentAuthorized && (
                 <ul className="space-y-1 text-sm">
-                  <li>Total : {formatCents(payment.amountCadCents)}</li>
                   <li>
-                    Commission Rfacto ({feePercentLabel(payment)}) :{" "}
-                    {formatCents(payment.platformFeeCents)}
+                    Total :{" "}
+                    {formatCents(
+                      payment.amountCadCents,
+                      payment.currency ?? "CAD"
+                    )}
                   </li>
                   <li>
-                    Voyageur recevra : {formatCents(payment.travelerPayoutCents)}
+                    Commission Rfacto ({feePercentLabel(payment)}) :{" "}
+                    {formatCents(
+                      payment.platformFeeCents,
+                      payment.currency ?? "CAD"
+                    )}
+                  </li>
+                  <li>
+                    Voyageur recevra :{" "}
+                    {formatCents(
+                      payment.travelerPayoutCents,
+                      payment.currency ?? "CAD"
+                    )}
                   </li>
                 </ul>
               )}

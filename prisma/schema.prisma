@@ -154,6 +154,23 @@ model User {
   reviewsReceived  Review[]        @relation("ReviewsReceived")
   reportsFiled     Report[]        @relation("ReportsFiled")
   reportsAgainst   Report[]        @relation("ReportsAgainst")
+  notifications    Notification[]
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
 }
 
 model Trip {
@@ -168,10 +185,12 @@ model Trip {
   pricePerKgCad Float
   currency      String     @default("CAD")
   acceptedGoods String
-  notes         String?
-  airline       String?
-  flightNumber  String?
-  status        TripStatus @default(OPEN)
+  notes           String?
+  airline         String?
+  flightNumber    String?
+  fromAirportCode String?
+  toAirportCode   String?
+  status          TripStatus @default(OPEN)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 

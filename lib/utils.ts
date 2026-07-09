@@ -23,3 +23,18 @@ export function formatCad(value: number) {
     currency: "CAD",
   }).format(value);
 }
+
+export function formatMoney(
+  value: number,
+  currency: string = "CAD",
+  locale = "fr-CA"
+) {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currency.toUpperCase(),
+    }).format(value);
+  } catch {
+    return formatCad(value);
+  }
+}

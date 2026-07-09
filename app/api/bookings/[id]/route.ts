@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { travelerCanReceivePayments } from "@/lib/connect";
 import { emailDelivered, emailPaymentRequested } from "@/lib/email";
+import { notifyUser } from "@/lib/notifications";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
@@ -324,6 +325,13 @@ export async function PATCH(request: Request, { params }: Params) {
         route,
         bookingId: booking.id,
       });
+      void notifyUser({
+        userId: booking.senderId,
+        type: "payment_requested",
+        title: "Paiement requis",
+        body: `${booking.trip.user.displayName} a accepté · ${route}`,
+        href: `/bookings/${booking.id}`,
+      });
     }
 
     if (nextStatus === "DELIVERED") {
@@ -334,7 +342,7 @@ export async function PATCH(request: Request, { params }: Params) {
         0;
       const payoutLabel = new Intl.NumberFormat("fr-CA", {
         style: "currency",
-        currency: "CAD",
+        currency: (booking.payment?.currency ?? "cad").toUpperCase(),
       }).format(payoutCents / 100);
       void emailDelivered({
         senderEmail: booking.sender.email,
@@ -344,6 +352,20 @@ export async function PATCH(request: Request, { params }: Params) {
         route,
         bookingId: booking.id,
         payoutLabel,
+      });
+      void notifyUser({
+        userId: booking.senderId,
+        type: "delivered",
+        title: "Colis livré",
+        body: route,
+        href: `/bookings/${booking.id}`,
+      });
+      void notifyUser({
+        userId: booking.trip.userId,
+        type: "payout_released",
+        title: "Fonds libérés",
+        body: `${payoutLabel} · ${route}`,
+        href: `/bookings/${booking.id}`,
       });
     }
 

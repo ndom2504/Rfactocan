@@ -1,10 +1,11 @@
 import type { PaymentStatus } from "@prisma/client";
 import { getAppUrl } from "@/lib/app-url";
 import {
-  computePaymentAmounts,
-  getStripe,
-  isStripeConfigured,
-} from "@/lib/stripe";
+  resolveCheckoutCurrency,
+  toStripeCurrency,
+  type MoneyCurrency,
+} from "@/lib/currency";
+import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
 export type CreateAuthorizationInput = {
@@ -16,6 +17,7 @@ export type CreateAuthorizationInput = {
   travelerConnectAccountId: string;
   fromCountry: string;
   toCountry: string;
+  preferredCurrency?: string | null;
 };
 
 export type PaymentProvider = {
@@ -26,16 +28,28 @@ export type PaymentProvider = {
   cancelAuthorization: (bookingId: string) => Promise<void>;
 };
 
-async function resolveFeeBps(fromCountry: string, toCountry: string) {
+async function resolveCorridor(
+  fromCountry: string,
+  toCountry: string
+): Promise<{ feeBps: number; currency: MoneyCurrency }> {
   const corridor = await prisma.corridorConfig.findUnique({
     where: {
       fromCountry_toCountry: { fromCountry, toCountry },
     },
   });
-  if (corridor?.active) return corridor.feeBps;
-  const raw = process.env.PLATFORM_FEE_BPS;
-  const parsed = raw ? Number(raw) : 1000;
-  return Number.isFinite(parsed) ? Math.floor(parsed) : 1000;
+  const feeBps = corridor?.active
+    ? corridor.feeBps
+    : (() => {
+        const raw = process.env.PLATFORM_FEE_BPS;
+        const parsed = raw ? Number(raw) : 1000;
+        return Number.isFinite(parsed) ? Math.floor(parsed) : 1000;
+      })();
+  const currency = resolveCheckoutCurrency(
+    fromCountry,
+    toCountry,
+    corridor?.currency
+  );
+  return { feeBps, currency };
 }
 
 export const stripePaymentProvider: PaymentProvider = {
@@ -44,13 +58,17 @@ export const stripePaymentProvider: PaymentProvider = {
       throw new Error("Stripe n'est pas configuré");
     }
 
-    const feeBps = await resolveFeeBps(input.fromCountry, input.toCountry);
-    const amountCadCents = Math.max(
+    const { feeBps, currency } = await resolveCorridor(
+      input.fromCountry,
+      input.toCountry
+    );
+    const amountCents = Math.max(
       100,
       Math.round(input.weightKg * input.pricePerKgCad * 100)
     );
-    const platformFeeCents = Math.floor((amountCadCents * feeBps) / 10000);
-    const travelerPayoutCents = amountCadCents - platformFeeCents;
+    const platformFeeCents = Math.floor((amountCents * feeBps) / 10000);
+    const travelerPayoutCents = amountCents - platformFeeCents;
+    const stripeCurrency = toStripeCurrency(currency);
 
     const stripe = getStripe();
     const appUrl = getAppUrl();
@@ -77,17 +95,18 @@ export const stripePaymentProvider: PaymentProvider = {
       where: { bookingId: input.bookingId },
       create: {
         bookingId: input.bookingId,
-        amountCadCents,
+        amountCadCents: amountCents,
         platformFeeCents,
         travelerPayoutCents,
-        currency: "cad",
+        currency: stripeCurrency,
         provider: "stripe",
         status: "REQUIRES_PAYMENT",
       },
       update: {
-        amountCadCents,
+        amountCadCents: amountCents,
         platformFeeCents,
         travelerPayoutCents,
+        currency: stripeCurrency,
         status: "REQUIRES_PAYMENT",
       },
     });
@@ -100,11 +119,11 @@ export const stripePaymentProvider: PaymentProvider = {
         {
           quantity: 1,
           price_data: {
-            currency: "cad",
-            unit_amount: amountCadCents,
+            currency: stripeCurrency,
+            unit_amount: amountCents,
             product_data: {
-              name: "Transport de colis Rfacto (séquestre)",
-              description: `Réservation ${input.bookingId} — fonds bloqués jusqu'à livraison`,
+              name: "Rfacto parcel transport (escrow)",
+              description: `Booking ${input.bookingId} — funds held until delivery`,
             },
           },
         },
@@ -118,11 +137,13 @@ export const stripePaymentProvider: PaymentProvider = {
           travelerConnectAccountId: input.travelerConnectAccountId,
           platformFeeCents: String(platformFeeCents),
           travelerPayoutCents: String(travelerPayoutCents),
+          currency: stripeCurrency,
         },
       },
       metadata: {
         bookingId: input.bookingId,
         paymentId: payment.id,
+        currency: stripeCurrency,
       },
       success_url: `${appUrl}/bookings/${input.bookingId}?payment=success`,
       cancel_url: `${appUrl}/bookings/${input.bookingId}?payment=cancel`,
@@ -236,4 +257,4 @@ export function getPaymentProvider(): PaymentProvider {
   return stripePaymentProvider;
 }
 
-export { computePaymentAmounts };
+export { computePaymentAmounts } from "@/lib/stripe";

@@ -212,15 +212,25 @@ async function main() {
   ] as const;
 
   for (const [fromCountry, toCountry] of corridors) {
+    const currency =
+      ["FR", "BE", "DE", "ES", "IT", "NL", "PT", "SN", "CI", "CM", "GA", "MA", "TN"].includes(
+        toCountry
+      ) ||
+      ["FR", "BE", "DE"].includes(fromCountry)
+        ? "eur"
+        : ["US", "NG", "GH", "KE", "AE", "IN", "ZA"].includes(toCountry) ||
+            fromCountry === "US"
+          ? "usd"
+          : "cad";
     await prisma.corridorConfig.upsert({
       where: {
         fromCountry_toCountry: { fromCountry, toCountry },
       },
-      update: { active: true, feeBps: 1000 },
+      update: { active: true, feeBps: 1000, currency },
       create: {
         fromCountry,
         toCountry,
-        currency: "cad",
+        currency,
         feeBps: 1000,
         active: true,
         paymentProvider: "stripe",

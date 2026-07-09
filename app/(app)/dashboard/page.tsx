@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRequestLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
+import { isStripeConfigured } from "@/lib/stripe";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TravelerSearch } from "@/components/traveler-search";
+import { PaymentReadinessCard } from "@/components/payment-readiness";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName, BOOKING_STATUS_LABELS } from "@/lib/corridors";
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) return null;
+  const locale = await getRequestLocale();
 
-  const [trips, requests, bookings] = await Promise.all([
+  const [trips, requests, bookings, dbUser] = await Promise.all([
     prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
     prisma.parcelRequest.count({
       where: { userId: user.id, status: "OPEN" },
@@ -28,42 +33,60 @@ export default async function DashboardPage() {
       orderBy: { updatedAt: "desc" },
       take: 5,
     }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        kycStatus: true,
+        stripeConnectChargesEnabled: true,
+        stripeConnectPayoutsEnabled: true,
+      },
+    }),
   ]);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          Bonjour, {user.displayName}
+          {locale === "en" ? "Hello" : "Bonjour"}, {user.displayName}
         </h1>
         <p className="mt-1 text-[var(--muted)]">
-          Gérez vos voyages, demandes et réservations internationales.
+          {locale === "en"
+            ? "Manage your trips, requests and international bookings."
+            : "Gérez vos voyages, demandes et réservations internationales."}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
-          <CardDescription>Voyages ouverts</CardDescription>
+          <CardDescription>{t(locale, "open_trips")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">{trips}</CardTitle>
         </Card>
         <Card>
-          <CardDescription>Demandes ouvertes</CardDescription>
+          <CardDescription>{t(locale, "open_requests")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">{requests}</CardTitle>
         </Card>
         <Card>
-          <CardDescription>Note moyenne</CardDescription>
+          <CardDescription>{t(locale, "avg_rating")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">
             {user.ratingCount ? user.ratingAvg.toFixed(1) : "—"}
           </CardTitle>
         </Card>
       </div>
 
+      <PaymentReadinessCard
+        locale={locale}
+        kycStatus={dbUser?.kycStatus ?? "NONE"}
+        connectCharges={Boolean(dbUser?.stripeConnectChargesEnabled)}
+        connectPayouts={Boolean(dbUser?.stripeConnectPayoutsEnabled)}
+        stripeConfigured={isStripeConfigured()}
+      />
+
       <div className="flex flex-wrap gap-3">
         <Link href="/trips/new">
-          <Button>Publier un voyage</Button>
+          <Button>{t(locale, "publish_trip")}</Button>
         </Link>
         <Link href="/requests/new">
-          <Button variant="secondary">Publier une demande</Button>
+          <Button variant="secondary">{t(locale, "publish_request")}</Button>
         </Link>
       </div>
 
@@ -71,13 +94,14 @@ export default async function DashboardPage() {
 
       <section>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-          Activité récente
+          {t(locale, "recent_activity")}
         </h2>
         <div className="mt-4 space-y-3">
           {bookings.length === 0 && (
             <p className="text-sm text-[var(--muted)]">
-              Aucune réservation pour le moment. Publiez un voyage ou une
-              demande pour commencer.
+              {locale === "en"
+                ? "No bookings yet. Post a trip or a request to get started."
+                : "Aucune réservation pour le moment. Publiez un voyage ou une demande pour commencer."}
             </p>
           )}
           {bookings.map((b) => (
@@ -90,13 +114,13 @@ export default async function DashboardPage() {
                       {getCountryName(b.request.toCountry)})
                     </CardTitle>
                     <CardDescription>
-                      {formatKg(b.request.weightKg)} · départ voyage{" "}
+                      {formatKg(b.request.weightKg)} ·{" "}
                       {formatDate(b.trip.departAt)} ·{" "}
                       {BOOKING_STATUS_LABELS[b.status] ?? b.status}
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm">
-                    Ouvrir
+                    {locale === "en" ? "Open" : "Ouvrir"}
                   </Button>
                 </div>
               </Card>

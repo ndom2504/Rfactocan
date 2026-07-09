@@ -65,11 +65,22 @@ export default async function TripDetailPage({ params }: Props) {
               <dd>{trip.notes}</dd>
             </div>
           )}
-          {(trip.airline || trip.flightNumber) && (
+          {(trip.airline ||
+            trip.flightNumber ||
+            trip.fromAirportCode ||
+            trip.toAirportCode) && (
             <div>
               <dt className="text-[var(--muted)]">Vol</dt>
               <dd>
-                {[trip.airline, trip.flightNumber].filter(Boolean).join(" · ")}
+                {[
+                  trip.airline,
+                  trip.flightNumber,
+                  trip.fromAirportCode && trip.toAirportCode
+                    ? `${trip.fromAirportCode} → ${trip.toAirportCode}`
+                    : trip.fromAirportCode || trip.toAirportCode,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </dd>
             </div>
           )}

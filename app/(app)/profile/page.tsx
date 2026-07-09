@@ -21,6 +21,8 @@ type User = {
   country: string | null;
   avatarUrl: string | null;
   role: string;
+  language?: string;
+  preferredCurrency?: string;
   verifiedAt: string | null;
   ratingAvg: number;
   ratingCount: number;
@@ -39,6 +41,8 @@ function ProfileForm() {
   const [country, setCountry] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [role, setRole] = useState("BOTH");
+  const [language, setLanguage] = useState("fr");
+  const [preferredCurrency, setPreferredCurrency] = useState("CAD");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,6 +58,8 @@ function ProfileForm() {
       setCountry(data.user.country ?? "");
       setAvatarUrl(data.user.avatarUrl ?? null);
       setRole(data.user.role === "ADMIN" ? "BOTH" : data.user.role);
+      setLanguage(data.user.language ?? "fr");
+      setPreferredCurrency(data.user.preferredCurrency ?? "CAD");
     }
   }
 
@@ -127,6 +133,8 @@ function ProfileForm() {
         bio,
         country: country || undefined,
         avatarUrl,
+        language,
+        preferredCurrency,
         ...(user?.role !== "ADMIN" ? { role } : {}),
       }),
     });
@@ -137,6 +145,13 @@ function ProfileForm() {
     }
     setUser(data.user);
     setMessage("Profil mis à jour.");
+    if (language === "fr" || language === "en") {
+      await fetch("/api/locale", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale: language }),
+      });
+    }
   }
 
   async function startKyc() {
@@ -331,6 +346,30 @@ function ProfileForm() {
           </div>
 
           <CountrySelect value={country} onChange={setCountry} />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Langue</Label>
+              <Select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Devise préférée</Label>
+              <Select
+                value={preferredCurrency}
+                onChange={(e) => setPreferredCurrency(e.target.value)}
+              >
+                <option value="CAD">CAD</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </Select>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label>Bio</Label>

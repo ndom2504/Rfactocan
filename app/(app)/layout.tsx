@@ -1,17 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
+import { getRequestLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { LogoutButton } from "@/components/logout-button";
+import { LocaleToggle } from "@/components/locale-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 import { Badge } from "@/components/ui/badge";
-
-const links = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/trips", label: "Voyages" },
-  { href: "/requests", label: "Demandes" },
-  { href: "/bookings", label: "Réservations" },
-  { href: "/messages", label: "Messages" },
-  { href: "/profile", label: "Profil" },
-];
 
 export default async function AppLayout({
   children,
@@ -20,6 +15,16 @@ export default async function AppLayout({
 }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  const locale = await getRequestLocale();
+
+  const links = [
+    { href: "/dashboard", label: t(locale, "nav_dashboard") },
+    { href: "/trips", label: t(locale, "nav_trips") },
+    { href: "/requests", label: t(locale, "nav_requests") },
+    { href: "/bookings", label: t(locale, "nav_bookings") },
+    { href: "/messages", label: t(locale, "nav_messages") },
+    { href: "/profile", label: t(locale, "nav_profile") },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -47,15 +52,17 @@ export default async function AppLayout({
                   href="/admin"
                   className="text-sm font-medium text-[var(--highlight)]"
                 >
-                  Admin
+                  {t(locale, "nav_admin")}
                 </Link>
               )}
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <LocaleToggle locale={locale} />
+            <NotificationBell locale={locale} />
             {user.verifiedAt && (
               <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                Vérifié
+                {t(locale, "verified")}
               </Badge>
             )}
             <Link href="/profile" className="flex items-center gap-2">
@@ -64,7 +71,7 @@ export default async function AppLayout({
                 <img
                   src={user.avatarUrl}
                   alt=""
-                  className="h-8 w-8 rounded-full object-cover border border-[var(--border)]"
+                  className="h-8 w-8 rounded-full border border-[var(--border)] object-cover"
                 />
               ) : (
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-xs font-medium">

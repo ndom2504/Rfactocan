@@ -3,11 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
+import { FlightFields } from "@/components/flight-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
+import { resolveCheckoutCurrency } from "@/lib/currency";
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -20,18 +23,25 @@ export default function NewTripPage() {
     setError("");
     const fd = new FormData(e.currentTarget);
     const departLocal = String(fd.get("departAt"));
+    const fromCountry = String(fd.get("fromCountry"));
+    const toCountry = String(fd.get("toCountry"));
+    const currency = String(fd.get("currency") || "") ||
+      resolveCheckoutCurrency(fromCountry, toCountry);
     const payload = {
-      fromCountry: String(fd.get("fromCountry")),
+      fromCountry,
       fromCity: String(fd.get("fromCity")),
-      toCountry: String(fd.get("toCountry")),
+      toCountry,
       toCity: String(fd.get("toCity")),
       departAt: new Date(departLocal).toISOString(),
       weightKg: Number(fd.get("weightKg")),
       pricePerKgCad: Number(fd.get("pricePerKgCad")),
+      currency,
       acceptedGoods: String(fd.get("acceptedGoods")),
       notes: String(fd.get("notes") || "") || undefined,
       airline: String(fd.get("airline") || "") || undefined,
       flightNumber: String(fd.get("flightNumber") || "") || undefined,
+      fromAirportCode: String(fd.get("fromAirportCode") || "") || undefined,
+      toAirportCode: String(fd.get("toAirportCode") || "") || undefined,
     };
 
     const res = await fetch("/api/trips", {
@@ -71,7 +81,7 @@ export default function NewTripPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pricePerKgCad">Prix indicatif / kg (devise locale → CAD)</Label>
+            <Label htmlFor="pricePerKgCad">Prix / kg</Label>
             <Input
               id="pricePerKgCad"
               name="pricePerKgCad"
@@ -80,6 +90,14 @@ export default function NewTripPage() {
               min="1"
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="currency">Devise</Label>
+            <Select id="currency" name="currency" defaultValue="CAD">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </Select>
           </div>
         </div>
         <div className="space-y-2">
@@ -91,16 +109,7 @@ export default function NewTripPage() {
             required
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="airline">Compagnie</Label>
-            <Input id="airline" name="airline" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="flightNumber">N° de vol</Label>
-            <Input id="flightNumber" name="flightNumber" />
-          </div>
-        </div>
+        <FlightFields />
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
           <Textarea id="notes" name="notes" />
