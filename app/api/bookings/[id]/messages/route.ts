@@ -2,18 +2,32 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyUser } from "@/lib/notifications";
 
 type Params = { params: Promise<{ id: string }> };
 
-const schema = z.object({
-  body: z.string().min(1).max(4000),
-  attachmentUrl: z.string().url().optional().nullable(),
-});
+const schema = z
+  .object({
+    body: z.string().max(4000).optional().nullable(),
+    attachmentUrl: z.string().url().optional().nullable(),
+  })
+  .refine(
+    (v) => Boolean((v.body && v.body.trim()) || v.attachmentUrl),
+    { message: "Message ou pièce jointe requis." }
+  );
 
-async function assertBookingAccess(bookingId: string, userId: string, isAdmin: boolean) {
+async function assertBookingAccess(
+  bookingId: string,
+  userId: string,
+  isAdmin: boolean
+) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { trip: true },
+    include: {
+      trip: { include: { user: { select: { id: true, displayName: true } } } },
+      sender: { select: { id: true, displayName: true } },
+      request: { select: { fromCity: true, toCity: true } },
+    },
   });
   if (!booking) return null;
   const ok =
@@ -72,13 +86,18 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
-    const body = schema.parse(await request.json());
+    const parsed = schema.parse(await request.json());
+    const text = (parsed.body ?? "").trim();
+    const attachmentUrl = parsed.attachmentUrl ?? null;
+    const bodyText =
+      text || (attachmentUrl ? "Pièce jointe" : "");
+
     const message = await prisma.message.create({
       data: {
         bookingId: id,
         senderId: session.id,
-        body: body.body,
-        attachmentUrl: body.attachmentUrl ?? null,
+        body: bodyText,
+        attachmentUrl,
       },
       include: {
         sender: {
@@ -92,10 +111,31 @@ export async function POST(request: Request, { params }: Params) {
       data: { updatedAt: new Date() },
     });
 
+    const recipientId =
+      session.id === booking.senderId
+        ? booking.trip.userId
+        : booking.senderId;
+    const preview = attachmentUrl
+      ? text
+        ? `📎 ${text.slice(0, 80)}`
+        : "📎 Pièce jointe"
+      : text.slice(0, 100);
+
+    void notifyUser({
+      userId: recipientId,
+      type: "MESSAGE",
+      title: `Message de ${session.displayName}`,
+      body: `${booking.request.fromCity} → ${booking.request.toCity} · ${preview}`,
+      href: `/bookings/${id}`,
+    });
+
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message },
+        { status: 400 }
+      );
     }
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

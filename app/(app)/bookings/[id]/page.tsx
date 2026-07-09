@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BookingChat } from "@/components/booking-chat";
 import { formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
@@ -54,15 +55,6 @@ type Booking = {
   reviews: { fromUserId: string }[];
 };
 
-type Message = {
-  id: string;
-  body: string;
-  attachmentUrl: string | null;
-  createdAt: string;
-  senderId: string;
-  sender: { displayName: string };
-};
-
 function formatCents(cents: number, currency = "CAD") {
   return new Intl.NumberFormat("fr-CA", {
     style: "currency",
@@ -87,9 +79,7 @@ export default function BookingDetailPage({
   const { t, bookingStatus, paymentStatus } = useI18n();
   const [id, setId] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [meId, setMeId] = useState("");
-  const [body, setBody] = useState("");
   const [goodsCertified, setGoodsCertified] = useState(false);
   const [customsAcknowledged, setCustomsAcknowledged] = useState(false);
   const [rating, setRating] = useState(5);
@@ -112,13 +102,11 @@ export default function BookingDetailPage({
 
   async function load() {
     if (!id) return;
-    const [bRes, mRes, meRes] = await Promise.all([
+    const [bRes, meRes] = await Promise.all([
       fetch(`/api/bookings/${id}`),
-      fetch(`/api/bookings/${id}/messages`),
       fetch("/api/auth/me"),
     ]);
     const bData = await bRes.json();
-    const mData = await mRes.json();
     const meData = await meRes.json();
     if (bRes.ok) {
       setBooking(bData.booking);
@@ -131,13 +119,12 @@ export default function BookingDetailPage({
         setPaymentReturn(null);
       }
     }
-    if (mRes.ok) setMessages(mData.messages ?? []);
     if (meRes.ok) setMeId(meData.user?.id ?? "");
   }
 
   useEffect(() => {
     void load();
-    const interval = setInterval(() => void load(), 4000);
+    const interval = setInterval(() => void load(), 8000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -200,20 +187,6 @@ export default function BookingDetailPage({
       return;
     }
     window.location.href = data.checkoutUrl;
-  }
-
-  async function sendMessage(e: React.FormEvent) {
-    e.preventDefault();
-    if (!body.trim()) return;
-    const res = await fetch(`/api/bookings/${id}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body }),
-    });
-    if (res.ok) {
-      setBody("");
-      await load();
-    }
   }
 
   async function submitReview() {
@@ -473,36 +446,11 @@ export default function BookingDetailPage({
         </Link>
       </div>
 
-      <Card className="flex min-h-[420px] flex-col">
-        <CardTitle>{t("messaging")}</CardTitle>
-        <CardDescription>{t("messaging_hint")}</CardDescription>
-        <div className="mt-4 flex-1 space-y-3 overflow-y-auto">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                m.senderId === meId
-                  ? "ml-auto bg-[var(--accent)] text-white"
-                  : "bg-[var(--surface-2)]"
-              }`}
-            >
-              <p className="text-xs opacity-70">{m.sender.displayName}</p>
-              <p>{m.body}</p>
-            </div>
-          ))}
-          {messages.length === 0 && (
-            <p className="text-sm text-[var(--muted)]">{t("no_messages")}</p>
-          )}
-        </div>
-        <form onSubmit={sendMessage} className="mt-4 flex gap-2">
-          <Input
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder={t("your_message")}
-          />
-          <Button type="submit">{t("send")}</Button>
-        </form>
-      </Card>
+      <BookingChat
+        bookingId={id}
+        meId={meId}
+        closed={["CANCELLED", "REFUSED"].includes(booking.status)}
+      />
     </div>
   );
 }

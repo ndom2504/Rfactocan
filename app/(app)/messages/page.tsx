@@ -5,6 +5,7 @@ import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/user-avatar";
 import { formatDate } from "@/lib/utils";
 
 export default async function MessagesPage() {
@@ -19,8 +20,12 @@ export default async function MessagesPage() {
     },
     include: {
       request: true,
-      trip: { include: { user: { select: { displayName: true } } } },
-      sender: { select: { displayName: true } },
+      trip: {
+        include: {
+          user: { select: { displayName: true, avatarUrl: true } },
+        },
+      },
+      sender: { select: { displayName: true, avatarUrl: true } },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
     },
     orderBy: { updatedAt: "desc" },
@@ -36,23 +41,33 @@ export default async function MessagesPage() {
       </div>
       <div className="space-y-3">
         {bookings.map((b) => {
-          const other =
-            b.senderId === user.id
-              ? b.trip.user.displayName
-              : b.sender.displayName;
+          const isSender = b.senderId === user.id;
+          const other = isSender ? b.trip.user : b.sender;
           const last = b.messages[0];
+          const preview = last
+            ? last.attachmentUrl
+              ? `📎 ${last.body?.slice(0, 60) || t(locale, "attachment_label")}`
+              : `${last.body.slice(0, 80)}${last.body.length > 80 ? "…" : ""}`
+            : t(locale, "no_messages");
           return (
             <Card key={b.id}>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <CardTitle className="text-base">
-                    {other} · {b.request.fromCity} → {b.request.toCity}
-                  </CardTitle>
-                  <CardDescription>
-                    {last
-                      ? `${last.body.slice(0, 80)}${last.body.length > 80 ? "…" : ""} · ${formatDate(last.createdAt)}`
-                      : t(locale, "no_messages")}
-                  </CardDescription>
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <UserAvatar
+                    name={other.displayName}
+                    avatarUrl={other.avatarUrl}
+                    size="lg"
+                  />
+                  <div className="min-w-0">
+                    <CardTitle className="text-base">
+                      {other.displayName} · {b.request.fromCity} →{" "}
+                      {b.request.toCity}
+                    </CardTitle>
+                    <CardDescription>
+                      {preview}
+                      {last ? ` · ${formatDate(last.createdAt)}` : ""}
+                    </CardDescription>
+                  </div>
                 </div>
                 <Link href={`/bookings/${b.id}`}>
                   <Button variant="outline" size="sm">
