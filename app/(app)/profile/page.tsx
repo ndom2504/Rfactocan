@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CountrySelect } from "@/components/country-select";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
 
 type User = {
@@ -18,6 +19,7 @@ type User = {
   displayName: string;
   bio: string | null;
   country: string | null;
+  avatarUrl: string | null;
   role: string;
   verifiedAt: string | null;
   ratingAvg: number;
@@ -35,10 +37,12 @@ function ProfileForm() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [country, setCountry] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [role, setRole] = useState("BOTH");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   async function load() {
     const res = await fetch("/api/profile");
@@ -48,6 +52,7 @@ function ProfileForm() {
       setDisplayName(data.user.displayName);
       setBio(data.user.bio ?? "");
       setCountry(data.user.country ?? "");
+      setAvatarUrl(data.user.avatarUrl ?? null);
       setRole(data.user.role === "ADMIN" ? "BOTH" : data.user.role);
     }
   }
@@ -56,7 +61,10 @@ function ProfileForm() {
     void load();
     const kyc = searchParams.get("kyc");
     const connect = searchParams.get("connect");
-    if (kyc === "return") setMessage("Vérification d'identité terminée — statut mis à jour sous peu.");
+    if (kyc === "return")
+      setMessage(
+        "Vérification d'identité terminée — statut mis à jour sous peu."
+      );
     if (connect === "return") {
       setMessage("Onboarding paiements terminé — synchronisation en cours.");
       void fetch("/api/connect").then(() => load());
@@ -65,6 +73,22 @@ function ProfileForm() {
       setError("Le lien Connect a expiré. Relancez l'activation des paiements.");
     }
   }, [searchParams]);
+
+  async function onUploadAvatar(file: File) {
+    setUploading(true);
+    setError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    setUploading(false);
+    if (!res.ok) {
+      setError(data.error ?? "Upload échoué");
+      return;
+    }
+    setAvatarUrl(data.url);
+    setMessage("Photo importée — cliquez sur Enregistrer pour confirmer.");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +100,8 @@ function ProfileForm() {
       body: JSON.stringify({
         displayName,
         bio,
-        country,
+        country: country || undefined,
+        avatarUrl,
         ...(user?.role !== "ADMIN" ? { role } : {}),
       }),
     });
@@ -124,7 +149,8 @@ function ProfileForm() {
     return <p className="text-sm text-[var(--muted)]">Chargement...</p>;
   }
 
-  const kycLabel = KYC_STATUS_LABELS[user.kycStatus ?? "NONE"] ?? user.kycStatus;
+  const kycLabel =
+    KYC_STATUS_LABELS[user.kycStatus ?? "NONE"] ?? user.kycStatus;
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -160,11 +186,12 @@ function ProfileForm() {
               Vérifier mon identité
             </Button>
           )}
-          {user.kycStatus === "VERIFIED" && !user.stripeConnectChargesEnabled && (
-            <Button disabled={busy} onClick={startConnect}>
-              Activer les paiements (Stripe)
-            </Button>
-          )}
+          {user.kycStatus === "VERIFIED" &&
+            !user.stripeConnectChargesEnabled && (
+              <Button disabled={busy} onClick={startConnect}>
+                Activer les paiements (Stripe)
+              </Button>
+            )}
           {user.stripeConnectChargesEnabled && (
             <p className="text-sm text-[var(--accent)]">
               Vous pouvez accepter des réservations et recevoir des fonds après
@@ -190,6 +217,51 @@ function ProfileForm() {
           <Badge>{user.role}</Badge>
         </div>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div className="space-y-3">
+            <Label>Photo de profil</Label>
+            <div className="flex items-center gap-4">
+              <div className="h-20 w-20 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface-2)]">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt="Photo de profil"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
+                    Aucune
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void onUploadAvatar(file);
+                    e.target.value = "";
+                  }}
+                />
+                {avatarUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAvatarUrl(null)}
+                  >
+                    Retirer la photo
+                  </Button>
+                )}
+                {uploading && (
+                  <p className="text-xs text-[var(--muted)]">Téléversement…</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label>Nom affiché</Label>
             <Input
@@ -198,10 +270,9 @@ function ProfileForm() {
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label>Pays</Label>
-            <Input value={country} onChange={(e) => setCountry(e.target.value)} />
-          </div>
+
+          <CountrySelect value={country} onChange={setCountry} />
+
           <div className="space-y-2">
             <Label>Bio</Label>
             <Textarea value={bio} onChange={(e) => setBio(e.target.value)} />
@@ -218,7 +289,9 @@ function ProfileForm() {
           )}
           {error && <p className="text-sm text-red-700">{error}</p>}
           {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
-          <Button type="submit">Enregistrer</Button>
+          <Button type="submit" disabled={uploading}>
+            Enregistrer
+          </Button>
         </form>
       </Card>
     </div>

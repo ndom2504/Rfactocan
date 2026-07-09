@@ -58,7 +58,21 @@ export default async function AppLayout({
                 Vérifié
               </Badge>
             )}
-            <span className="text-sm">{user.displayName}</span>
+            <Link href="/profile" className="flex items-center gap-2">
+              {user.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  className="h-8 w-8 rounded-full object-cover border border-[var(--border)]"
+                />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-xs font-medium">
+                  {user.displayName.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <span className="text-sm">{user.displayName}</span>
+            </Link>
             <LogoutButton />
           </div>
         </div>

@@ -7,7 +7,18 @@ const schema = z.object({
   displayName: z.string().min(2).max(80).optional(),
   bio: z.string().max(500).optional(),
   country: z.string().max(80).optional(),
-  avatarUrl: z.string().url().optional().nullable(),
+  avatarUrl: z
+    .string()
+    .max(500)
+    .refine(
+      (v) =>
+        v.startsWith("/uploads/") ||
+        v.startsWith("https://") ||
+        v.startsWith("http://"),
+      "URL de photo invalide"
+    )
+    .optional()
+    .nullable(),
   role: z.enum(["SENDER", "TRAVELER", "BOTH"]).optional(),
 });
 

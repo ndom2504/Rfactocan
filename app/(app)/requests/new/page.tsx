@@ -14,15 +14,23 @@ export default function NewRequestPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
 
   async function onUpload(file: File) {
+    setUploading(true);
+    setError("");
     const fd = new FormData();
     fd.append("file", file);
     const res = await fetch("/api/upload", { method: "POST", body: fd });
     const data = await res.json();
-    if (res.ok) setPhotos((p) => [...p, data.url]);
+    setUploading(false);
+    if (res.ok) setPhotos((p) => [...p, data.url].slice(0, 5));
     else setError(data.error ?? "Upload échoué");
+  }
+
+  function removePhoto(url: string) {
+    setPhotos((p) => p.filter((x) => x !== url));
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -120,32 +128,53 @@ export default function NewRequestPage() {
           <Textarea id="description" name="description" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="photos">Photos (max 5, 2 Mo)</Label>
+          <Label htmlFor="photos">Photos du colis (max 5, 2 Mo)</Label>
           <Input
             id="photos"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            disabled={uploading || photos.length >= 5}
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file && photos.length < 5) void onUpload(file);
+              e.target.value = "";
             }}
           />
+          {uploading && (
+            <p className="text-xs text-[var(--muted)]">Téléversement…</p>
+          )}
           {photos.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-2">
-              {photos.map((url) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+            <div className="grid grid-cols-3 gap-3 pt-2 sm:grid-cols-5">
+              {photos.map((url, index) => (
+                <div
                   key={url}
-                  src={url}
-                  alt=""
-                  className="h-16 w-16 rounded object-cover"
-                />
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`Aperçu colis ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                  {index === 0 && (
+                    <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                      Principale
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(url)}
+                    className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white opacity-90 hover:bg-red-700"
+                  >
+                    Retirer
+                  </button>
+                </div>
               ))}
             </div>
           )}
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || uploading}>
           {loading ? "Publication..." : "Publier"}
         </Button>
       </form>

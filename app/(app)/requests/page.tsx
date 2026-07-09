@@ -11,7 +11,7 @@ export default async function RequestsPage() {
     where: { status: "OPEN" },
     include: {
       user: {
-        select: { displayName: true, verifiedAt: true },
+        select: { displayName: true, verifiedAt: true, avatarUrl: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -34,31 +34,56 @@ export default async function RequestsPage() {
       </div>
 
       <div className="grid gap-4">
-        {requests.map((req) => (
-          <Card key={req.id}>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <CardTitle>
-                  {req.fromCity} → {req.toCity}
-                </CardTitle>
-                <CardDescription>
-                  {getCountryName(req.toCountry)} · {formatKg(req.weightKg)} ·{" "}
-                  {URGENCY_LABELS[req.urgency]}
-                  {req.desiredDate ? ` · souhaité ${formatDate(req.desiredDate)}` : ""}
-                </CardDescription>
-                <p className="mt-3 line-clamp-2 text-sm text-[var(--muted)]">
-                  {req.description}
-                </p>
-                <div className="mt-3">
-                  <Badge>{req.user.displayName}</Badge>
+        {requests.map((req) => {
+          const photos = JSON.parse(req.photosJson || "[]") as string[];
+          const cover = photos[0];
+          return (
+            <Card key={req.id}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex min-w-0 flex-1 gap-4">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
+                    {cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={cover}
+                        alt={`Colis ${req.fromCity} → ${req.toCity}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
+                        Pas de photo
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle>
+                      {req.fromCity} → {req.toCity}
+                    </CardTitle>
+                    <CardDescription>
+                      {getCountryName(req.toCountry)} · {formatKg(req.weightKg)} ·{" "}
+                      {URGENCY_LABELS[req.urgency]}
+                      {req.desiredDate
+                        ? ` · souhaité ${formatDate(req.desiredDate)}`
+                        : ""}
+                    </CardDescription>
+                    <p className="mt-3 line-clamp-2 text-sm text-[var(--muted)]">
+                      {req.description}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Badge>{req.user.displayName}</Badge>
+                      {photos.length > 1 && (
+                        <Badge>+{photos.length - 1} photo(s)</Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
+                <Link href={`/requests/${req.id}`}>
+                  <Button variant="outline">Matcher</Button>
+                </Link>
               </div>
-              <Link href={`/requests/${req.id}`}>
-                <Button variant="outline">Matcher</Button>
-              </Link>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
         {requests.length === 0 && (
           <p className="text-sm text-[var(--muted)]">Aucune demande ouverte.</p>
         )}
