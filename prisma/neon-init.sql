@@ -24,6 +24,7 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT,
+    "googleId" TEXT,
     "displayName" TEXT NOT NULL,
     "avatarUrl" TEXT,
     "country" TEXT,
@@ -138,6 +139,9 @@ CREATE TABLE "Report" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 
 -- CreateIndex
 CREATE INDEX "Trip_toCountry_toCity_departAt_idx" ON "Trip"("toCountry", "toCity", "departAt");

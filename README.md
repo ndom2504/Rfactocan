@@ -31,10 +31,31 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 | `DATABASE_URL` | URL Neon **pooled** (`…-pooler…`) |
 | `DIRECT_URL` | URL Neon **directe** (sans `-pooler`, pour Prisma) |
 | `AUTH_SECRET` | Secret long aléatoire pour les sessions |
+| `NEXT_PUBLIC_APP_URL` | `https://rfacto.com` (redirects OAuth) |
+| `GOOGLE_CLIENT_ID` | Client ID Google Cloud |
+| `GOOGLE_CLIENT_SECRET` | Client Secret Google Cloud |
 
-Sur Vercel : Project → Settings → Environment Variables — ajouter les 3 ci-dessus (Production + Preview).
+Sur Vercel : Project → Settings → Environment Variables — ajouter toutes les variables ci-dessus (Production).
 
 Root Directory Vercel : **laisser vide** (app à la racine du repo).
+
+### Auth Google (rfacto.com)
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials
+2. Créer **OAuth client ID** → type **Web application**
+3. Authorized JavaScript origins :
+   - `https://rfacto.com`
+   - `https://www.rfacto.com` (si utilisé)
+   - `http://localhost:3000` (dev)
+4. Authorized redirect URIs :
+   - `https://rfacto.com/api/auth/google/callback`
+   - `https://www.rfacto.com/api/auth/google/callback` (si utilisé)
+   - `http://localhost:3000/api/auth/google/callback` (dev)
+5. Copier Client ID / Secret dans Vercel + `.env`
+6. Sur Neon SQL Editor, exécuter `prisma/neon-google-auth.sql` (colonne `googleId`)
+7. Redeploy Vercel
+
+Écran de consentement OAuth : type **External**, ajouter ton email comme test user tant que l'app n'est pas en production Google.
 
 ### Comptes démo
 

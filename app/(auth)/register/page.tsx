@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 function RegisterForm() {
   const router = useRouter();
@@ -47,7 +48,16 @@ function RegisterForm() {
       <CardDescription>
         Rejoignez Rfacto en tant qu&apos;expéditeur, voyageur, ou les deux.
       </CardDescription>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+      <div className="mt-6 space-y-4">
+        <GoogleSignInButton label="S'inscrire avec Google" />
+        <div className="relative py-1 text-center text-xs text-[var(--muted)]">
+          <span className="bg-[var(--surface)] px-2 relative z-10">ou</span>
+          <div className="absolute inset-x-0 top-1/2 border-t border-[var(--border)]" />
+        </div>
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-2 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="displayName">Nom affiché</Label>
           <Input
