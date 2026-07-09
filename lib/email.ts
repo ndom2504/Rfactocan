@@ -18,27 +18,55 @@ export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY?.trim());
 }
 
+export type SendEmailResult =
+  | { ok: true; id: string }
+  | { ok: false; skipped: true; reason: string }
+  | { ok: false; skipped: false; error: string };
+
 async function sendEmail(opts: {
   to: string;
   subject: string;
   html: string;
-}) {
+}): Promise<SendEmailResult> {
   const resend = getResend();
   if (!resend) {
-    console.info("[email skipped — RESEND_API_KEY missing]", opts.subject, opts.to);
-    return { skipped: true as const };
+    console.info(
+      "[email skipped — RESEND_API_KEY missing]",
+      opts.subject,
+      opts.to
+    );
+    return {
+      ok: false,
+      skipped: true,
+      reason: "RESEND_API_KEY manquant",
+    };
   }
+
   try {
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: fromAddress(),
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
     });
-    return { skipped: false as const };
+
+    if (error) {
+      const message =
+        (error as { message?: string }).message ||
+        (error as { error?: string }).error ||
+        JSON.stringify(error);
+      console.error("[email resend error]", opts.subject, opts.to, message);
+      return { ok: false, skipped: false, error: message };
+    }
+
+    const id = data?.id ?? "unknown";
+    console.info("[email sent via Resend]", { id, to: opts.to, subject: opts.subject });
+    return { ok: true, id };
   } catch (error) {
-    console.error("[email error]", opts.subject, error);
-    return { skipped: false as const, error };
+    const message =
+      error instanceof Error ? error.message : "Erreur réseau Resend";
+    console.error("[email exception]", opts.subject, message);
+    return { ok: false, skipped: false, error: message };
   }
 }
 
@@ -57,6 +85,19 @@ function layout(title: string, body: string) {
   </div>
 </body>
 </html>`;
+}
+
+/** Direct Resend call for admin smoke-test. */
+export async function sendTestEmail(to: string) {
+  return sendEmail({
+    to,
+    subject: "Rfacto — test Resend OK",
+    html: layout(
+      "Test email",
+      `<p>Si vous lisez ceci, Resend est correctement branché sur Rfacto.</p>
+       <p>Envoyé à <strong>${to}</strong> via <code>resend.emails.send</code>.</p>`
+    ),
+  });
 }
 
 export async function emailBookingProposed(input: {
