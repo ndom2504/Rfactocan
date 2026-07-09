@@ -9,10 +9,11 @@ const schema = z.object({
   country: z.string().max(80).optional(),
   avatarUrl: z
     .string()
-    .max(1000)
+    .max(2000)
     .refine(
       (v) =>
         v.startsWith("/uploads/") ||
+        v.startsWith("/api/media?") ||
         v.startsWith("https://") ||
         v.startsWith("http://"),
       "URL de photo invalide"

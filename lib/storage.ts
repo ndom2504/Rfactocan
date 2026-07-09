@@ -1,6 +1,7 @@
-import { put } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { getAppUrl } from "@/lib/app-url";
 
 function extensionFor(contentType: string) {
   const ext = contentType.split("/")[1] ?? "bin";
@@ -15,6 +16,18 @@ function isVercelRuntime() {
   return Boolean(process.env.VERCEL);
 }
 
+/** Match store access mode: private (default) or public. */
+export function blobAccess(): "private" | "public" {
+  return process.env.BLOB_ACCESS === "public" ? "public" : "private";
+}
+
+function toAppMediaUrl(blobUrl: string) {
+  if (blobAccess() === "public") return blobUrl;
+  const encoded = encodeURIComponent(blobUrl);
+  // Relative URL works in browser; absolute needed if ever emailed.
+  return `/api/media?url=${encoded}`;
+}
+
 /**
  * Upload an image to Vercel Blob when configured.
  * Local disk fallback only outside Vercel (dev without a Blob token).
@@ -27,11 +40,13 @@ export async function uploadImage(file: File, userId: string) {
   const pathname = `uploads/${safeUserId}-${Date.now()}.${ext}`;
 
   if (isBlobConfigured()) {
+    const access = blobAccess();
     const blob = await put(pathname, file, {
-      access: "public",
+      access,
       contentType: file.type,
+      addRandomSuffix: true,
     });
-    return { url: blob.url };
+    return { url: toAppMediaUrl(blob.url), blobUrl: blob.url };
   }
 
   if (isVercelRuntime() || process.env.NODE_ENV === "production") {
@@ -46,4 +61,36 @@ export async function uploadImage(file: File, userId: string) {
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, filename), bytes);
   return { url: `/uploads/${filename}` };
+}
+
+/** Stream a private blob through our API (auth optional — URL is unguessable). */
+export async function fetchPrivateBlob(blobUrl: string) {
+  if (!isBlobConfigured()) {
+    throw new Error("Blob non configuré");
+  }
+  if (!isAllowedBlobUrl(blobUrl)) {
+    throw new Error("URL blob invalide");
+  }
+  return get(blobUrl, { access: blobAccess() });
+}
+
+export function isAllowedBlobUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === "https:" &&
+      (parsed.hostname.endsWith(".blob.vercel-storage.com") ||
+        parsed.hostname.endsWith(".public.blob.vercel-storage.com"))
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Absolute media URL for emails / Stripe (optional helper). */
+export function absoluteMediaUrl(storedUrl: string) {
+  if (storedUrl.startsWith("http://") || storedUrl.startsWith("https://")) {
+    return storedUrl;
+  }
+  return `${getAppUrl()}${storedUrl.startsWith("/") ? "" : "/"}${storedUrl}`;
 }
