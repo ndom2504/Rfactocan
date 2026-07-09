@@ -76,14 +76,24 @@ async function seedGeo() {
 async function main() {
   await seedGeo();
 
-  const passwordHash = await bcrypt.hash("password123", 10);
+  const demoPasswordHash = await bcrypt.hash("password123", 10);
+  const adminEmail = (
+    process.env.ADMIN_EMAIL?.trim() || "admin@rfacto.ca"
+  ).toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim() || "password123";
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@rfacto.ca" },
-    update: {},
+    where: { email: adminEmail },
+    update: {
+      passwordHash: adminPasswordHash,
+      role: "ADMIN",
+      status: "ACTIVE",
+      verifiedAt: new Date(),
+    },
     create: {
-      email: "admin@rfacto.ca",
-      passwordHash,
+      email: adminEmail,
+      passwordHash: adminPasswordHash,
       displayName: "Admin Rfacto",
       role: "ADMIN",
       status: "ACTIVE",
@@ -106,7 +116,7 @@ async function main() {
     },
     create: {
       email: "voyageur@rfacto.ca",
-      passwordHash,
+      passwordHash: demoPasswordHash,
       displayName: "Amina N.",
       role: "BOTH",
       status: "ACTIVE",
@@ -128,7 +138,7 @@ async function main() {
     update: { role: "BOTH" },
     create: {
       email: "expediteur@rfacto.ca",
-      passwordHash,
+      passwordHash: demoPasswordHash,
       displayName: "Marc D.",
       role: "BOTH",
       status: "ACTIVE",
@@ -221,9 +231,10 @@ async function main() {
   console.log("Seed OK (geo + demo users)");
   console.log({
     admin: admin.email,
+    adminPasswordHint: adminPassword === "password123" ? "password123" : "(ADMIN_PASSWORD)",
     traveler: traveler.email,
     sender: sender.email,
-    password: "password123",
+    demoPassword: "password123",
     tripId: trip.id,
     requestId: request.id,
   });

@@ -11,6 +11,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma db push && tsx prisma/seed.ts",
     "db:migrate": "prisma migrate deploy",
+    "db:set-admin": "tsx scripts/set-admin.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
