@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { travelerCanReceivePayments } from "@/lib/connect";
+import { emailDelivered, emailPaymentRequested } from "@/lib/email";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
@@ -58,6 +59,7 @@ export async function GET(_request: Request, { params }: Params) {
               avatarUrl: true,
               kycStatus: true,
               stripeConnectChargesEnabled: true,
+              stripeConnectPayoutsEnabled: true,
               stripeConnectAccountId: true,
             },
           },
@@ -187,7 +189,7 @@ export async function PATCH(request: Request, { params }: Params) {
           return NextResponse.json(
             {
               error:
-                "Activez les paiements Stripe Connect avant d'accepter une réservation.",
+                "Configurez la réception de vos gains (compte bancaire Stripe) dans Profil avant d'accepter.",
               code: "CONNECT_REQUIRED",
             },
             { status: 400 }
@@ -311,6 +313,39 @@ export async function PATCH(request: Request, { params }: Params) {
 
       return result;
     });
+
+    const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
+
+    if (nextStatus === "AWAITING_PAYMENT") {
+      void emailPaymentRequested({
+        senderEmail: booking.sender.email,
+        senderName: booking.sender.displayName,
+        travelerName: booking.trip.user.displayName,
+        route,
+        bookingId: booking.id,
+      });
+    }
+
+    if (nextStatus === "DELIVERED") {
+      const payoutCents =
+        booking.payment?.travelerPayoutCents ??
+        (await prisma.payment.findUnique({ where: { bookingId: booking.id } }))
+          ?.travelerPayoutCents ??
+        0;
+      const payoutLabel = new Intl.NumberFormat("fr-CA", {
+        style: "currency",
+        currency: "CAD",
+      }).format(payoutCents / 100);
+      void emailDelivered({
+        senderEmail: booking.sender.email,
+        travelerEmail: booking.trip.user.email,
+        senderName: booking.sender.displayName,
+        travelerName: booking.trip.user.displayName,
+        route,
+        bookingId: booking.id,
+        payoutLabel,
+      });
+    }
 
     return NextResponse.json({ booking: updated });
   } catch (error) {

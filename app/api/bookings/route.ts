@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { emailBookingProposed } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
     },
     include: {
       request: true,
+      payment: true,
       trip: {
         include: {
           user: {
@@ -70,7 +72,10 @@ export async function POST(request: Request) {
     const parcel = await prisma.parcelRequest.findUnique({
       where: { id: body.requestId },
     });
-    const trip = await prisma.trip.findUnique({ where: { id: body.tripId } });
+    const trip = await prisma.trip.findUnique({
+      where: { id: body.tripId },
+      include: { user: true },
+    });
 
     if (!parcel || !trip) {
       return NextResponse.json({ error: "Ressource introuvable" }, { status: 404 });
@@ -101,6 +106,15 @@ export async function POST(request: Request) {
         senderId: session.id,
         status: "PROPOSED",
       },
+    });
+
+    const route = `${parcel.fromCity} → ${parcel.toCity}`;
+    void emailBookingProposed({
+      travelerEmail: trip.user.email,
+      travelerName: trip.user.displayName,
+      senderName: session.displayName,
+      route,
+      bookingId: booking.id,
     });
 
     return NextResponse.json({ booking }, { status: 201 });

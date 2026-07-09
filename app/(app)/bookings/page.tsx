@@ -17,6 +17,7 @@ export default async function BookingsPage() {
     },
     include: {
       request: true,
+      payment: true,
       trip: {
         include: {
           user: { select: { displayName: true } },
@@ -34,7 +35,7 @@ export default async function BookingsPage() {
           Réservations
         </h1>
         <p className="text-[var(--muted)]">
-          Suivez vos propositions, acceptations et livraisons.
+          Suivez vos propositions, paiements et livraisons.
         </p>
       </div>
       <div className="space-y-3">
@@ -51,13 +52,31 @@ export default async function BookingsPage() {
                     {role} · {formatKg(b.request.weightKg)} · départ{" "}
                     {formatDate(b.trip.departAt)}
                   </CardDescription>
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <Badge>{BOOKING_STATUS_LABELS[b.status] ?? b.status}</Badge>
+                    {b.status === "AWAITING_PAYMENT" &&
+                      b.senderId === user.id && (
+                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          À payer
+                        </Badge>
+                      )}
+                    {b.payment?.status === "AUTHORIZED" && (
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        Fonds bloqués
+                      </Badge>
+                    )}
+                    {b.payment?.status === "CAPTURED" && (
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        Payé
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <Link href={`/bookings/${b.id}`}>
                   <Button variant="outline" size="sm">
-                    Ouvrir
+                    {b.status === "AWAITING_PAYMENT" && b.senderId === user.id
+                      ? "Payer"
+                      : "Ouvrir"}
                   </Button>
                 </Link>
               </div>

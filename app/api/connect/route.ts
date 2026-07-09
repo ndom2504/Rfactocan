@@ -24,7 +24,7 @@ export async function POST() {
     return NextResponse.json(
       {
         error:
-          "Vérifiez d'abord votre identité (KYC) avant d'activer les paiements.",
+          "Vérifiez d'abord votre identité (KYC) avant de configurer la réception de vos gains.",
       },
       { status: 400 }
     );

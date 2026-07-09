@@ -72,10 +72,12 @@ export function travelerCanReceivePayments(user: {
   kycStatus: string;
   stripeConnectAccountId: string | null;
   stripeConnectChargesEnabled: boolean;
+  stripeConnectPayoutsEnabled: boolean;
 }) {
   return (
     user.kycStatus === "VERIFIED" &&
     Boolean(user.stripeConnectAccountId) &&
-    user.stripeConnectChargesEnabled
+    user.stripeConnectChargesEnabled &&
+    user.stripeConnectPayoutsEnabled
   );
 }

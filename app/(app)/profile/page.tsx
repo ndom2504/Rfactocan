@@ -92,7 +92,7 @@ function ProfileForm() {
       }
       if (connect === "refresh") {
         setError(
-          "Le lien Connect a expiré. Relancez l'activation des paiements."
+          "Le lien a expiré. Relancez « Recevoir mes gains » pour configurer votre compte bancaire."
         );
       }
     }
@@ -208,13 +208,16 @@ function ProfileForm() {
           </Badge>
           <Badge
             className={
-              user.stripeConnectChargesEnabled
+              user.stripeConnectChargesEnabled &&
+              user.stripeConnectPayoutsEnabled
                 ? "bg-[var(--accent-soft)] text-[var(--accent)]"
                 : undefined
             }
           >
             Paiements :{" "}
-            {user.stripeConnectChargesEnabled ? "Activés" : "Non activés"}
+            {user.stripeConnectChargesEnabled && user.stripeConnectPayoutsEnabled
+              ? "Gains prêts"
+              : "Compte bancaire à configurer"}
           </Badge>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -233,17 +236,27 @@ function ProfileForm() {
             </div>
           )}
           {user.kycStatus === "VERIFIED" &&
-            !user.stripeConnectChargesEnabled && (
-              <Button disabled={busy} onClick={startConnect}>
-                Activer les paiements (Stripe)
-              </Button>
+            !(
+              user.stripeConnectChargesEnabled &&
+              user.stripeConnectPayoutsEnabled
+            ) && (
+              <div className="space-y-2">
+                <Button disabled={busy} onClick={startConnect}>
+                  {busy ? "Ouverture…" : "Recevoir mes gains (compte bancaire)"}
+                </Button>
+                <p className="text-xs text-[var(--muted)]">
+                  Ouverture d&apos;un compte Stripe Express pour recevoir vos
+                  gains après chaque livraison (particulier, pas un commerce).
+                </p>
+              </div>
             )}
-          {user.stripeConnectChargesEnabled && (
-            <p className="text-sm text-[var(--accent)]">
-              Vous pouvez accepter des réservations et recevoir des fonds après
-              livraison.
-            </p>
-          )}
+          {user.stripeConnectChargesEnabled &&
+            user.stripeConnectPayoutsEnabled && (
+              <p className="text-sm text-[var(--accent)]">
+                Compte bancaire prêt : vous pouvez accepter des colis et
+                recevoir vos gains après livraison.
+              </p>
+            )}
         </div>
       </Card>
 

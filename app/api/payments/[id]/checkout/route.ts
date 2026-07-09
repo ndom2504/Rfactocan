@@ -45,6 +45,22 @@ export async function POST(_request: Request, { params }: Params) {
     );
   }
 
+  if (booking.payment?.status === "AUTHORIZED") {
+    return NextResponse.json(
+      {
+        error: "Le paiement est déjà sécurisé pour cette réservation.",
+        alreadyPaid: true,
+      },
+      { status: 400 }
+    );
+  }
+  if (booking.payment?.status === "CAPTURED") {
+    return NextResponse.json(
+      { error: "Ce paiement a déjà été capturé.", alreadyPaid: true },
+      { status: 400 }
+    );
+  }
+
   const traveler = booking.trip.user;
   if (
     traveler.kycStatus !== "VERIFIED" ||
@@ -54,7 +70,7 @@ export async function POST(_request: Request, { params }: Params) {
     return NextResponse.json(
       {
         error:
-          "Le voyageur n'est pas encore prêt à recevoir des paiements (KYC / Connect).",
+          "Le voyageur n'a pas encore configuré la réception de ses gains (identité / compte bancaire).",
       },
       { status: 400 }
     );

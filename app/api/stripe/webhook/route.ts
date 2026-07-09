@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { syncConnectAccount } from "@/lib/connect";
+import { emailPaymentAuthorized } from "@/lib/email";
 import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
@@ -29,17 +30,23 @@ async function handlePaymentIntent(
 
   const payment = await prisma.payment.findFirst({
     where: {
-      OR: [
-        { stripePaymentIntentId: pi.id },
-        { bookingId },
-      ],
+      OR: [{ stripePaymentIntentId: pi.id }, { bookingId }],
     },
   });
   if (!payment) return;
 
   if (nextStatus === "AUTHORIZED") {
+    if (payment.status === "AUTHORIZED" || payment.status === "CAPTURED") {
+      return;
+    }
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
+      include: {
+        request: true,
+        sender: true,
+        trip: { include: { user: true } },
+        payment: true,
+      },
     });
     await prisma.$transaction([
       prisma.payment.update({
@@ -62,6 +69,23 @@ async function handlePaymentIntent(
           ]
         : []),
     ]);
+
+    if (booking) {
+      const amountLabel = new Intl.NumberFormat("fr-CA", {
+        style: "currency",
+        currency: "CAD",
+      }).format(payment.amountCadCents / 100);
+      const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
+      void emailPaymentAuthorized({
+        senderEmail: booking.sender.email,
+        travelerEmail: booking.trip.user.email,
+        senderName: booking.sender.displayName,
+        travelerName: booking.trip.user.displayName,
+        route,
+        bookingId,
+        amountLabel,
+      });
+    }
     return;
   }
 

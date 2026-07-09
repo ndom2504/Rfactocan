@@ -49,6 +49,7 @@ type Booking = {
       displayName: string;
       kycStatus?: string;
       stripeConnectChargesEnabled?: boolean;
+      stripeConnectPayoutsEnabled?: boolean;
     };
   };
   sender: { id: string; displayName: string };
@@ -71,6 +72,14 @@ function formatCents(cents: number) {
   }).format(cents / 100);
 }
 
+function feePercentLabel(payment: Payment) {
+  if (!payment.amountCadCents) return "—";
+  const pct = Math.round(
+    (payment.platformFeeCents / payment.amountCadCents) * 1000
+  ) / 10;
+  return `${pct} %`;
+}
+
 export default function BookingDetailPage({
   params,
 }: {
@@ -87,10 +96,19 @@ export default function BookingDetailPage({
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stripeConfigured, setStripeConfigured] = useState(true);
+  const [paymentReturn, setPaymentReturn] = useState<
+    "success" | "cancel" | null
+  >(null);
 
   useEffect(() => {
     void params.then((p) => setId(p.id));
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("payment");
+      if (q === "success" || q === "cancel") setPaymentReturn(q);
+    }
   }, [params]);
 
   async function load() {
@@ -103,7 +121,17 @@ export default function BookingDetailPage({
     const bData = await bRes.json();
     const mData = await mRes.json();
     const meData = await meRes.json();
-    if (bRes.ok) setBooking(bData.booking);
+    if (bRes.ok) {
+      setBooking(bData.booking);
+      setStripeConfigured(bData.stripeConfigured !== false);
+      if (
+        paymentReturn === "success" &&
+        bData.booking?.status === "ACCEPTED"
+      ) {
+        setMessage("Paiement confirmé — fonds sécurisés jusqu'à la livraison.");
+        setPaymentReturn(null);
+      }
+    }
     if (mRes.ok) setMessages(mData.messages ?? []);
     if (meRes.ok) setMeId(meData.user?.id ?? "");
   }
@@ -114,6 +142,18 @@ export default function BookingDetailPage({
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (paymentReturn === "success") {
+      setMessage(
+        "Paiement envoyé — confirmation en cours (quelques secondes)."
+      );
+      void load();
+    } else if (paymentReturn === "cancel") {
+      setError("Paiement annulé. Vous pouvez réessayer quand vous voulez.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentReturn, id]);
 
   async function patchStatus(status: string) {
     setLoading(true);
@@ -131,7 +171,13 @@ export default function BookingDetailPage({
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error ?? "Erreur");
+      if (data.code === "KYC_REQUIRED" || data.code === "CONNECT_REQUIRED") {
+        setError(
+          `${data.error ?? "Configuration requise."} → Profil`
+        );
+      } else {
+        setError(data.error ?? "Erreur");
+      }
       return;
     }
     await load();
@@ -141,10 +187,16 @@ export default function BookingDetailPage({
   async function startCheckout() {
     setLoading(true);
     setError("");
+    setMessage("");
     const res = await fetch(`/api/payments/${id}/checkout`, { method: "POST" });
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
+      if (data.alreadyPaid) {
+        setMessage("Paiement déjà sécurisé.");
+        await load();
+        return;
+      }
       setError(data.error ?? "Paiement impossible");
       return;
     }
@@ -190,6 +242,11 @@ export default function BookingDetailPage({
   const isSender = meId === booking.senderId;
   const alreadyReviewed = booking.reviews.some((r) => r.fromUserId === meId);
   const payment = booking.payment;
+  const paymentAuthorized =
+    payment?.status === "AUTHORIZED" || payment?.status === "CAPTURED";
+  const paymentFailed = payment?.status === "FAILED";
+  const awaitingConfirm =
+    paymentReturn === "success" && booking.status === "AWAITING_PAYMENT";
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -221,7 +278,21 @@ export default function BookingDetailPage({
             <br />
             Voyageur : {booking.trip.user.displayName}
           </p>
-          {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
+          {message && (
+            <p className="mt-3 text-sm text-[var(--accent)]">{message}</p>
+          )}
+          {error && (
+            <p className="mt-3 text-sm text-red-700">
+              {error}{" "}
+              {(error.includes("Profil") ||
+                error.includes("identité") ||
+                error.includes("gains")) && (
+                <Link href="/profile" className="underline">
+                  Ouvrir le profil
+                </Link>
+              )}
+            </p>
+          )}
 
           {booking.status === "PROPOSED" && isTraveler && (
             <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
@@ -266,7 +337,8 @@ export default function BookingDetailPage({
                 </Button>
               </div>
               <p className="text-xs text-[var(--muted)]">
-                KYC + Stripe Connect requis. Configurez-les dans{" "}
+                Identité vérifiée + compte bancaire (recevoir mes gains)
+                requis. Configurez-les dans{" "}
                 <Link href="/profile" className="underline">
                   Profil
                 </Link>
@@ -278,26 +350,49 @@ export default function BookingDetailPage({
           {booking.status === "AWAITING_PAYMENT" && isSender && (
             <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
               <h3 className="font-medium">Payer et sécuriser le colis</h3>
-              {payment ? (
+              {awaitingConfirm && (
+                <p className="text-sm text-[var(--accent)]">
+                  Confirmation Stripe en cours… cette page se met à jour
+                  automatiquement.
+                </p>
+              )}
+              {paymentFailed && (
+                <p className="text-sm text-red-700">
+                  Le paiement précédent a échoué. Vous pouvez réessayer.
+                </p>
+              )}
+              {payment && !paymentAuthorized && (
                 <ul className="space-y-1 text-sm">
                   <li>Total : {formatCents(payment.amountCadCents)}</li>
                   <li>
-                    Commission Rfacto (10 %) :{" "}
+                    Commission Rfacto ({feePercentLabel(payment)}) :{" "}
                     {formatCents(payment.platformFeeCents)}
                   </li>
                   <li>
                     Voyageur recevra : {formatCents(payment.travelerPayoutCents)}
                   </li>
                 </ul>
-              ) : (
+              )}
+              {!payment && (
                 <p className="text-sm text-[var(--muted)]">
                   Les fonds seront bloqués jusqu&apos;à la confirmation de
                   livraison.
                 </p>
               )}
-              <Button disabled={loading} onClick={startCheckout}>
-                {loading ? "Redirection..." : "Payer avec Stripe"}
-              </Button>
+              {!awaitingConfirm && !paymentAuthorized && (
+                <Button disabled={loading} onClick={startCheckout}>
+                  {loading
+                    ? "Redirection..."
+                    : paymentFailed
+                      ? "Réessayer le paiement"
+                      : "Payer avec Stripe"}
+                </Button>
+              )}
+              {!stripeConfigured && (
+                <p className="text-xs text-[var(--muted)]">
+                  Mode démo : Stripe n&apos;est pas configuré sur ce serveur.
+                </p>
+              )}
             </div>
           )}
 
