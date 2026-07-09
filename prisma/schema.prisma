@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SENDER
+  TRAVELER
+  BOTH
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum TripStatus {
+  OPEN
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+enum RequestStatus {
+  OPEN
+  MATCHED
+  CLOSED
+  CANCELLED
+}
+
+enum Urgency {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum BookingStatus {
+  PROPOSED
+  ACCEPTED
+  HANDED_OVER
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+  REFUSED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  displayName  String
+  avatarUrl    String?
+  country      String?
+  bio          String?
+  role         UserRole   @default(BOTH)
+  status       UserStatus @default(ACTIVE)
+  verifiedAt   DateTime?
+  ratingAvg    Float      @default(0)
+  ratingCount  Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  trips           Trip[]
+  parcelRequests  ParcelRequest[]
+  bookingsAsSender Booking[] @relation("BookingSender")
+  messages        Message[]
+  reviewsGiven    Review[]  @relation("ReviewsGiven")
+  reviewsReceived Review[]  @relation("ReviewsReceived")
+  reportsFiled    Report[]  @relation("ReportsFiled")
+  reportsAgainst  Report[]  @relation("ReportsAgainst")
+}
+
+model Trip {
+  id              String     @id @default(cuid())
+  userId          String
+  fromCountry     String
+  fromCity        String
+  toCountry       String
+  toCity          String
+  departAt        DateTime
+  weightKg        Float
+  pricePerKgCad   Float
+  acceptedGoods   String
+  notes           String?
+  airline         String?
+  flightNumber    String?
+  status          TripStatus @default(OPEN)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([toCountry, toCity, departAt])
+  @@index([userId])
+}
+
+model ParcelRequest {
+  id             String        @id @default(cuid())
+  userId         String
+  fromCountry    String
+  fromCity       String
+  toCountry      String
+  toCity         String
+  weightKg       Float
+  description    String
+  photosJson     String        @default("[]")
+  urgency        Urgency       @default(NORMAL)
+  declaredValue  Float?
+  maxPricePerKg  Float?
+  desiredDate    DateTime?
+  status         RequestStatus @default(OPEN)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([toCountry, toCity])
+  @@index([userId])
+}
+
+model Booking {
+  id                   String        @id @default(cuid())
+  requestId            String
+  tripId               String
+  senderId             String
+  status               BookingStatus @default(PROPOSED)
+  goodsCertified       Boolean       @default(false)
+  customsAcknowledged  Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  request  ParcelRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  trip     Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sender   User          @relation("BookingSender", fields: [senderId], references: [id], onDelete: Cascade)
+  messages Message[]
+  reviews  Review[]
+
+  @@unique([requestId, tripId])
+  @@index([senderId])
+  @@index([status])
+}
+
+model Message {
+  id            String   @id @default(cuid())
+  bookingId     String
+  senderId      String
+  body          String
+  attachmentUrl String?
+  createdAt     DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender  User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String
+  fromUserId String
+  toUserId   String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromUser User    @relation("ReviewsGiven", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User    @relation("ReviewsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, fromUserId])
+  @@index([toUserId])
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  reporterId   String
+  targetUserId String
+  reason       String
+  details      String?
+  resolved     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  reporter   User @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUser User @relation("ReportsAgainst", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([resolved])
+}
