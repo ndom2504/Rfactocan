@@ -1,9 +1,81 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { buildGeoSeed } from "../lib/geo";
 
 const prisma = new PrismaClient();
 
+async function seedGeo() {
+  const { currencies, languages, countries } = buildGeoSeed();
+
+  for (const lang of languages) {
+    await prisma.language.upsert({
+      where: { code: lang.code },
+      update: { name: lang.name, active: true },
+      create: { code: lang.code, name: lang.name, active: true },
+    });
+  }
+
+  for (const cur of currencies) {
+    await prisma.currency.upsert({
+      where: { code: cur.code },
+      update: {
+        name: cur.name,
+        symbol: cur.symbol,
+        exchangeRate: cur.exchangeRate,
+        active: true,
+      },
+      create: {
+        code: cur.code,
+        name: cur.name,
+        symbol: cur.symbol,
+        exchangeRate: cur.exchangeRate,
+        active: true,
+      },
+    });
+  }
+
+  for (const country of countries) {
+    await prisma.country.upsert({
+      where: { code: country.code },
+      update: {
+        name: country.name,
+        continent: country.continent,
+        flagEmoji: country.flagEmoji,
+        currencyCode: country.currencyCode,
+        active: true,
+      },
+      create: {
+        code: country.code,
+        name: country.name,
+        continent: country.continent,
+        flagEmoji: country.flagEmoji,
+        currencyCode: country.currencyCode,
+        active: true,
+      },
+    });
+
+    for (const cityName of country.cities) {
+      await prisma.city.upsert({
+        where: {
+          countryCode_name: {
+            countryCode: country.code,
+            name: cityName,
+          },
+        },
+        update: { active: true },
+        create: {
+          countryCode: country.code,
+          name: cityName,
+          active: true,
+        },
+      });
+    }
+  }
+}
+
 async function main() {
+  await seedGeo();
+
   const passwordHash = await bcrypt.hash("password123", 10);
 
   const admin = await prisma.user.upsert({
@@ -17,6 +89,8 @@ async function main() {
       status: "ACTIVE",
       verifiedAt: new Date(),
       country: "Canada",
+      language: "fr",
+      preferredCurrency: "CAD",
       bio: "Administrateur de la plateforme Rfacto.",
     },
   });
@@ -27,35 +101,42 @@ async function main() {
       kycStatus: "VERIFIED",
       kycVerifiedAt: new Date(),
       verifiedAt: new Date(),
+      role: "BOTH",
+      completedDeliveries: 12,
     },
     create: {
       email: "voyageur@rfacto.ca",
       passwordHash,
       displayName: "Amina N.",
-      role: "TRAVELER",
+      role: "BOTH",
       status: "ACTIVE",
       verifiedAt: new Date(),
       kycStatus: "VERIFIED",
       kycVerifiedAt: new Date(),
       country: "Canada",
-      bio: "Voyage régulièrement Montréal → Libreville.",
+      language: "fr",
+      preferredCurrency: "CAD",
+      bio: "Voyage régulièrement Montréal → Libreville. Peut aussi envoyer des colis.",
       ratingAvg: 4.8,
       ratingCount: 12,
+      completedDeliveries: 12,
     },
   });
 
   const sender = await prisma.user.upsert({
     where: { email: "expediteur@rfacto.ca" },
-    update: {},
+    update: { role: "BOTH" },
     create: {
       email: "expediteur@rfacto.ca",
       passwordHash,
       displayName: "Marc D.",
-      role: "SENDER",
+      role: "BOTH",
       status: "ACTIVE",
       verifiedAt: new Date(),
       country: "Canada",
-      bio: "Envoie des colis familiaux vers le Gabon.",
+      language: "fr",
+      preferredCurrency: "CAD",
+      bio: "Envoie des colis familiaux et voyage parfois.",
       ratingAvg: 4.5,
       ratingCount: 6,
     },
@@ -74,6 +155,7 @@ async function main() {
       departAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 20),
       weightKg: 18,
       pricePerKgCad: 18,
+      currency: "CAD",
       acceptedGoods: "Vêtements, documents, produits non périssables",
       notes: "Bagage soute disponible, objets fragiles acceptés avec emballage.",
       airline: "Air Canada / Ethiopian",
@@ -90,7 +172,8 @@ async function main() {
       toCountry: "GA",
       toCity: "Libreville",
       weightKg: 5,
-      description: "Documents et vêtements pour la famille. Urgent mais flexible ±3 jours.",
+      description:
+        "Documents et vêtements pour la famille. Urgent mais flexible ±3 jours.",
       photosJson: "[]",
       urgency: "HIGH",
       declaredValue: 150,
@@ -100,23 +183,22 @@ async function main() {
     },
   });
 
-  console.log("Seed OK");
-  console.log({
-    admin: admin.email,
-    traveler: traveler.email,
-    sender: sender.email,
-    password: "password123",
-    tripId: trip.id,
-    requestId: request.id,
-  });
-
   const corridors = [
     ["CA", "GA"],
     ["CA", "CM"],
     ["CA", "CI"],
     ["CA", "SN"],
-    ["CA", "CG"],
-    ["CA", "CD"],
+    ["CA", "FR"],
+    ["FR", "SN"],
+    ["FR", "CI"],
+    ["BE", "CD"],
+    ["US", "NG"],
+    ["US", "GH"],
+    ["GB", "KE"],
+    ["AE", "IN"],
+    ["DE", "TN"],
+    ["ZA", "CM"],
+    ["MA", "SN"],
   ] as const;
 
   for (const [fromCountry, toCountry] of corridors) {
@@ -124,7 +206,7 @@ async function main() {
       where: {
         fromCountry_toCountry: { fromCountry, toCountry },
       },
-      update: { active: true, feeBps: 1000, currency: "cad" },
+      update: { active: true, feeBps: 1000 },
       create: {
         fromCountry,
         toCountry,
@@ -135,6 +217,16 @@ async function main() {
       },
     });
   }
+
+  console.log("Seed OK (geo + demo users)");
+  console.log({
+    admin: admin.email,
+    traveler: traveler.email,
+    sender: sender.email,
+    password: "password123",
+    tripId: trip.id,
+    requestId: request.id,
+  });
 }
 
 main()

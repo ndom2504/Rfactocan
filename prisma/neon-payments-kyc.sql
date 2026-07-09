@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS "StripeEvent" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS "StripeEvent_eventId_key" ON "StripeEvent"("eventId");
 
--- Seed corridors Canada → Afrique
+-- Seed sample corridors (fee defaults; any route works via PLATFORM_FEE_BPS fallback)
 INSERT INTO "CorridorConfig" ("id", "fromCountry", "toCountry", "currency", "feeBps", "active", "paymentProvider")
 VALUES
   ('corr_ca_ga', 'CA', 'GA', 'cad', 1000, true, 'stripe'),

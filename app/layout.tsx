@@ -15,9 +15,9 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Rfacto — Colis Canada ↔ Afrique",
+  title: "Rfacto — Réseau mondial voyageurs & expéditeurs",
   description:
-    "Rfacto (RapidFacto) met en relation voyageurs et expéditeurs pour transporter des colis du Canada vers l'Afrique.",
+    "Rfacto (RapidFacto) : le réseau mondial qui connecte les voyageurs et les expéditeurs partout dans le monde. Marketplace P2P de transport collaboratif de colis.",
 };
 
 export default function RootLayout({

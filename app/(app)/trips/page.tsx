@@ -33,7 +33,7 @@ export default async function TripsPage() {
             Voyages
           </h1>
           <p className="text-[var(--muted)]">
-            Voyageurs disponibles sur les corridors Canada → Afrique.
+            Voyageurs disponibles sur tous les corridors internationaux.
           </p>
         </div>
         <Link href="/trips/new">

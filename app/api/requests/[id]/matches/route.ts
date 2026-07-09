@@ -35,6 +35,7 @@ export async function GET(_request: Request, { params }: Params) {
           ratingCount: true,
           verifiedAt: true,
           avatarUrl: true,
+          completedDeliveries: true,
         },
       },
     },

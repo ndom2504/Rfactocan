@@ -71,7 +71,7 @@ export default function NewTripPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pricePerKgCad">Prix indicatif (CAD/kg)</Label>
+            <Label htmlFor="pricePerKgCad">Prix indicatif / kg (devise locale → CAD)</Label>
             <Input
               id="pricePerKgCad"
               name="pricePerKgCad"

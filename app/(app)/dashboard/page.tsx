@@ -36,7 +36,7 @@ export default async function DashboardPage() {
           Bonjour, {user.displayName}
         </h1>
         <p className="mt-1 text-[var(--muted)]">
-          Gérez vos voyages, demandes et réservations Canada ↔ Afrique.
+          Gérez vos voyages, demandes et réservations internationales.
         </p>
       </div>
 

@@ -1,8 +1,10 @@
 # Rfacto (RapidFacto)
 
-Plateforme web de mise en relation entre **voyageurs** et **expéditeurs** pour transporter des colis du **Canada vers l'Afrique**.
+Plateforme mondiale de mise en relation entre **voyageurs** et **expéditeurs** — marketplace P2P de transport collaboratif de colis (*l'Airbnb du bagage international*).
 
-Auth, matching, réservations, messagerie, **paiement escrow Stripe**, **KYC Stripe Identity**, admin.
+> Le réseau mondial qui connecte les voyageurs et les expéditeurs partout dans le monde.
+
+Auth, matching mondial, réservations, messagerie, **paiement escrow Stripe**, **KYC Stripe Identity**, géo (Country / City / Currency / Language), admin.
 
 ## Stack
 
@@ -44,8 +46,9 @@ Exécuter dans l'ordre dans Neon SQL Editor :
 
 1. `prisma/neon-init.sql` (schéma de base)
 2. `prisma/neon-google-auth.sql`
-3. `prisma/neon-payments-kyc.sql` (**V2 paiements + KYC**)
-4. `prisma/neon-seed.sql` (comptes démo)
+3. `prisma/neon-payments-kyc.sql`
+4. `prisma/neon-geo.sql` (**Country / City / Currency / Language**)
+5. Puis `npm run db:seed` (ou `prisma/neon-seed.sql` pour comptes démo)
 
 ### Stripe (escrow + KYC)
 

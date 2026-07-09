@@ -28,8 +28,12 @@ export default function HomePage() {
             Rfacto
           </h1>
           <p className="max-w-xl text-lg text-white/85 md:text-xl">
-            Envoyez vos colis du Canada vers l&apos;Afrique via des voyageurs
-            vérifiés — plus rapide, plus humain, plus abordable.
+            Le réseau mondial qui connecte les voyageurs et les expéditeurs
+            partout dans le monde.
+          </p>
+          <p className="max-w-xl text-sm text-white/70">
+            Chaque voyageur peut devenir un transporteur occasionnel. Chaque
+            espace disponible dans un bagage devient une opportunité logistique.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/register?role=SENDER">
@@ -52,25 +56,26 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          Comment ça marche
+          L&apos;Airbnb du bagage international
         </h2>
         <p className="mt-2 max-w-2xl text-[var(--muted)]">
-          Une mise en relation simple entre voyageurs disposant d&apos;espace
-          bagage et particuliers qui souhaitent expédier un colis.
+          Une marketplace P2P : comme Uber connecte conducteurs et passagers,
+          Rfacto connecte l&apos;espace bagage des voyageurs aux besoins
+          d&apos;expédition des particuliers et PME.
         </p>
         <div className="mt-10 grid gap-8 md:grid-cols-3">
           {[
             {
               title: "Publiez",
-              text: "Le voyageur annonce son itinéraire. L'expéditeur publie son besoin de colis.",
+              text: "Annoncez votre trajet ou votre besoin de colis — d'un pays à un autre.",
             },
             {
-              title: "Match",
-              text: "Rfacto propose les meilleurs voyageurs selon destination, date, poids et réputation.",
+              title: "Match mondial",
+              text: "Score Rfacto : route, date, prix, réputation et historique de livraisons.",
             },
             {
               title: "Confiance",
-              text: "Messagerie, certification douanière, suivi des statuts et notations mutuelles.",
+              text: "KYC, paiement séquestre, messagerie et notations mutuelles.",
             },
           ].map((item) => (
             <div key={item.title}>
@@ -85,13 +90,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-6 pb-10">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+          Un compte, deux rôles
+        </h2>
+        <p className="mt-2 max-w-2xl text-[var(--muted)]">
+          Envoyez un colis aujourd&apos;hui, transportez demain. Pas de rôle
+          figé : chaque utilisateur peut être expéditeur et voyageur.
+        </p>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="rounded-[1.5rem] bg-[var(--surface)] px-8 py-10 border border-[var(--border)]">
+        <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] px-8 py-10">
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
-            Corridors couverts
+            Phase 1 — corridors prioritaires
           </h2>
           <p className="mt-2 text-[var(--muted)]">
-            Canada → Gabon, Cameroun, Côte d&apos;Ivoire, Sénégal, Congo, RDC.
+            Diaspora francophone : Canada, France, Belgique ↔ Gabon, Cameroun,
+            Côte d&apos;Ivoire, Sénégal, RDC — puis Europe ↔ Afrique, puis le
+            monde entier.
+          </p>
+          <p className="mt-4 text-sm text-[var(--muted)]">
+            Exemples déjà supportés : Montréal → Paris, New York → Dakar, Dubaï →
+            Nairobi, Johannesburg → Douala…
           </p>
           <div className="mt-6">
             <Link href="/register">

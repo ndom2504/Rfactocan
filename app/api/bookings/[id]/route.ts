@@ -303,6 +303,10 @@ export async function PATCH(request: Request, { params }: Params) {
           where: { id: booking.requestId },
           data: { status: "CLOSED" },
         });
+        await tx.user.update({
+          where: { id: booking.trip.userId },
+          data: { completedDeliveries: { increment: 1 } },
+        });
       }
 
       return result;

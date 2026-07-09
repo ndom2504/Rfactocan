@@ -7,8 +7,8 @@ export type MatchTripInput = {
   fromCountry: string;
   fromCity: string;
   departAt: Date;
-  weightKg: FloatOrNumber;
-  pricePerKgCad: FloatOrNumber;
+  weightKg: number;
+  pricePerKgCad: number;
   user: {
     id: string;
     displayName: string;
@@ -16,6 +16,7 @@ export type MatchTripInput = {
     ratingCount: number;
     verifiedAt: Date | null;
     avatarUrl: string | null;
+    completedDeliveries?: number;
   };
 };
 
@@ -24,70 +25,102 @@ export type MatchRequestInput = {
   toCity: string;
   fromCountry: string;
   fromCity: string;
-  weightKg: FloatOrNumber;
-  maxPricePerKg: FloatOrNumber | null;
+  weightKg: number;
+  maxPricePerKg: number | null;
   desiredDate: Date | null;
 };
 
-type FloatOrNumber = number;
-
+/**
+ * Score Rfacto mondial (0–100)
+ * 40% route · 20% date · 15% prix · 15% réputation · 10% historique
+ * (+ bonus poids inclus dans route/compatibilité opérationnelle)
+ */
 export type MatchResult = {
   trip: MatchTripInput;
   score: number;
   breakdown: {
-    destination: number;
+    route: number;
     date: number;
-    weight: number;
     price: number;
-    rating: number;
+    reputation: number;
+    history: number;
   };
 };
+
+function normalizeCity(value: string) {
+  return value.trim().toLowerCase();
+}
 
 export function scoreTripAgainstRequest(
   trip: MatchTripInput,
   request: MatchRequestInput
 ): MatchResult {
-  let destination = 0;
-  if (trip.toCountry === request.toCountry && trip.toCity === request.toCity) {
-    destination = 40;
-  } else if (trip.toCountry === request.toCountry) {
-    destination = 25;
+  // Route 40%
+  let route = 0;
+  const sameToCountry = trip.toCountry === request.toCountry;
+  const sameToCity =
+    sameToCountry &&
+    normalizeCity(trip.toCity) === normalizeCity(request.toCity);
+  const sameFromCountry = trip.fromCountry === request.fromCountry;
+  const sameFromCity =
+    sameFromCountry &&
+    normalizeCity(trip.fromCity) === normalizeCity(request.fromCity);
+
+  if (sameToCity && sameFromCity) route = 40;
+  else if (sameToCity && sameFromCountry) route = 36;
+  else if (sameToCity) route = 32;
+  else if (sameToCountry && sameFromCountry) route = 28;
+  else if (sameToCountry) route = 22;
+  else if (sameFromCountry) route = 8;
+
+  // Poids : si insuffisant, pénalité forte sur le score route
+  if (trip.weightKg < request.weightKg) {
+    route = Math.max(0, route - 18);
   }
 
+  // Date 20%
   let date = 0;
   if (request.desiredDate) {
     const days = Math.abs(
       differenceInCalendarDays(trip.departAt, request.desiredDate)
     );
-    if (days <= 3) date = 25;
-    else if (days <= 7) date = 15;
-    else if (days <= 14) date = 8;
+    if (days === 0) date = 20;
+    else if (days <= 2) date = 18;
+    else if (days <= 5) date = 14;
+    else if (days <= 10) date = 8;
+    else if (days <= 20) date = 4;
   } else {
-    date = 12;
+    date = 10;
   }
 
-  const weight = trip.weightKg >= request.weightKg ? 20 : 0;
-
+  // Prix 15%
   let price = 0;
   if (request.maxPricePerKg == null) {
-    price = 5;
+    price = 8;
   } else if (trip.pricePerKgCad <= request.maxPricePerKg) {
-    price = 10;
-  } else if (trip.pricePerKgCad <= request.maxPricePerKg * 1.2) {
-    price = 4;
+    price = 15;
+  } else if (trip.pricePerKgCad <= request.maxPricePerKg * 1.15) {
+    price = 8;
+  } else if (trip.pricePerKgCad <= request.maxPricePerKg * 1.35) {
+    price = 3;
   }
 
-  const rating =
+  // Réputation 15%
+  const reputation =
     trip.user.ratingCount === 0
-      ? 2
-      : Math.min(5, Math.round((trip.user.ratingAvg / 5) * 5));
+      ? 6
+      : Math.round((trip.user.ratingAvg / 5) * 15);
 
-  const score = destination + date + weight + price + rating;
+  // Historique 10%
+  const deliveries = trip.user.completedDeliveries ?? 0;
+  const history = Math.min(10, Math.floor(deliveries / 2) + (deliveries > 0 ? 2 : 0));
+
+  const score = Math.min(100, route + date + price + reputation + history);
 
   return {
     trip,
     score,
-    breakdown: { destination, date, weight, price, rating },
+    breakdown: { route, date, price, reputation, history },
   };
 }
 

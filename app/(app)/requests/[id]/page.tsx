@@ -10,11 +10,19 @@ import { formatCad, formatDate, formatKg } from "@/lib/utils";
 
 type Match = {
   score: number;
-  breakdown: Record<string, number>;
+  breakdown: {
+    route: number;
+    date: number;
+    price: number;
+    reputation: number;
+    history: number;
+  };
   trip: {
     id: string;
     fromCity: string;
     toCity: string;
+    fromCountry?: string;
+    toCountry?: string;
     departAt: string;
     weightKg: number;
     pricePerKgCad: number;
@@ -163,9 +171,9 @@ export default function RequestDetailPage({
                       : ""}
                   </p>
                   <p className="mt-1 text-xs text-[var(--muted)]">
-                    Dest. {m.breakdown.destination} · Date {m.breakdown.date} ·
-                    Poids {m.breakdown.weight} · Prix {m.breakdown.price} · Note{" "}
-                    {m.breakdown.rating}
+                    Route {m.breakdown.route}% · Date {m.breakdown.date}% · Prix{" "}
+                    {m.breakdown.price}% · Réputation {m.breakdown.reputation}% ·
+                    Historique {m.breakdown.history}%
                   </p>
                 </div>
                 <div className="flex gap-2">

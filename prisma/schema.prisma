@@ -70,29 +70,81 @@ enum PaymentStatus {
   FAILED
 }
 
+model Currency {
+  id           String  @id @default(cuid())
+  code         String  @unique
+  name         String
+  symbol       String
+  exchangeRate Float   @default(1)
+  active       Boolean @default(true)
+
+  countries Country[]
+}
+
+model Language {
+  id     String  @id @default(cuid())
+  code   String  @unique
+  name   String
+  active Boolean @default(true)
+}
+
+model Country {
+  id           String  @id @default(cuid())
+  code         String  @unique
+  name         String
+  continent    String
+  flagEmoji    String?
+  currencyCode String?
+  active       Boolean @default(true)
+
+  currency Currency? @relation(fields: [currencyCode], references: [code])
+  cities   City[]
+
+  @@index([continent])
+  @@index([name])
+}
+
+model City {
+  id          String  @id @default(cuid())
+  countryCode String
+  name        String
+  latitude    Float?
+  longitude   Float?
+  active      Boolean @default(true)
+
+  country Country @relation(fields: [countryCode], references: [code], onDelete: Cascade)
+
+  @@unique([countryCode, name])
+  @@index([name])
+}
+
 model User {
-  id                         String     @id @default(cuid())
-  email                      String     @unique
-  passwordHash               String?
-  googleId                   String?    @unique
-  displayName                String
-  avatarUrl                  String?
-  country                    String?
-  bio                        String?
-  role                       UserRole   @default(BOTH)
-  status                     UserStatus @default(ACTIVE)
-  verifiedAt                 DateTime?
-  ratingAvg                  Float      @default(0)
-  ratingCount                Int        @default(0)
-  stripeCustomerId           String?    @unique
-  stripeConnectAccountId     String?    @unique
-  stripeConnectChargesEnabled Boolean   @default(false)
-  stripeConnectPayoutsEnabled Boolean   @default(false)
-  kycStatus                  KycStatus  @default(NONE)
-  kycSessionId               String?
-  kycVerifiedAt              DateTime?
-  createdAt                  DateTime   @default(now())
-  updatedAt                  DateTime   @updatedAt
+  id                          String     @id @default(cuid())
+  email                       String     @unique
+  passwordHash                String?
+  googleId                    String?    @unique
+  displayName                 String
+  avatarUrl                   String?
+  country                     String?
+  phone                       String?
+  language                    String     @default("fr")
+  preferredCurrency           String     @default("CAD")
+  bio                         String?
+  role                        UserRole   @default(BOTH)
+  status                      UserStatus @default(ACTIVE)
+  verifiedAt                  DateTime?
+  ratingAvg                   Float      @default(0)
+  ratingCount                 Int        @default(0)
+  completedDeliveries         Int        @default(0)
+  stripeCustomerId            String?    @unique
+  stripeConnectAccountId      String?    @unique
+  stripeConnectChargesEnabled Boolean    @default(false)
+  stripeConnectPayoutsEnabled Boolean    @default(false)
+  kycStatus                   KycStatus  @default(NONE)
+  kycSessionId                String?
+  kycVerifiedAt               DateTime?
+  createdAt                   DateTime   @default(now())
+  updatedAt                   DateTime   @updatedAt
 
   trips            Trip[]
   parcelRequests   ParcelRequest[]
@@ -114,6 +166,7 @@ model Trip {
   departAt      DateTime
   weightKg      Float
   pricePerKgCad Float
+  currency      String     @default("CAD")
   acceptedGoods String
   notes         String?
   airline       String?
@@ -125,6 +178,7 @@ model Trip {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]
 
+  @@index([fromCountry, toCountry, departAt])
   @@index([toCountry, toCity, departAt])
   @@index([userId])
 }
