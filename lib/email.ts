@@ -213,3 +213,22 @@ export async function emailDelivered(input: {
     }),
   ]);
 }
+
+export async function emailPasswordReset(input: {
+  email: string;
+  displayName: string;
+  resetUrl: string;
+}) {
+  return sendEmail({
+    to: input.email,
+    subject: "Réinitialisation de votre mot de passe Rfacto",
+    html: layout(
+      "Mot de passe oublié",
+      `<p>Bonjour ${input.displayName},</p>
+       <p>Vous avez demandé à réinitialiser votre mot de passe Rfacto.</p>
+       <p>Ce lien est valable <strong>1 heure</strong> et ne peut être utilisé qu'une fois.</p>
+       <p><a href="${input.resetUrl}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Choisir un nouveau mot de passe</a></p>
+       <p style="font-size:13px;color:#5f6f68;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`
+    ),
+  });
+}

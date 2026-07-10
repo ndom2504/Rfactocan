@@ -192,6 +192,23 @@ const dict = {
     have_account: "Déjà un compte ?",
     sign_in: "Se connecter",
     create_account: "Créer mon compte",
+    forgot_password: "Mot de passe oublié ?",
+    forgot_title: "Mot de passe oublié",
+    forgot_subtitle:
+      "Indiquez votre email : nous vous enverrons un lien de réinitialisation.",
+    forgot_submit: "Envoyer le lien",
+    forgot_sent:
+      "Si un compte existe pour cet email, un lien a été envoyé. Vérifiez votre boîte de réception.",
+    back_to_login: "Retour à la connexion",
+    reset_title: "Nouveau mot de passe",
+    reset_subtitle: "Choisissez un mot de passe d'au moins 8 caractères.",
+    new_password: "Nouveau mot de passe",
+    confirm_password: "Confirmer le mot de passe",
+    reset_submit: "Enregistrer",
+    reset_success: "Mot de passe mis à jour. Vous pouvez vous connecter.",
+    reset_password_short: "Le mot de passe doit contenir au moins 8 caractères.",
+    reset_password_mismatch: "Les mots de passe ne correspondent pas.",
+    reset_token_missing: "Lien invalide. Demandez un nouveau reset.",
 
     // Trips
     trips_title: "Voyages",
@@ -563,6 +580,23 @@ const dict = {
     have_account: "Already have an account?",
     sign_in: "Sign in",
     create_account: "Create my account",
+    forgot_password: "Forgot password?",
+    forgot_title: "Forgot password",
+    forgot_subtitle:
+      "Enter your email and we will send a reset link.",
+    forgot_submit: "Send reset link",
+    forgot_sent:
+      "If an account exists for this email, a link was sent. Check your inbox.",
+    back_to_login: "Back to login",
+    reset_title: "New password",
+    reset_subtitle: "Choose a password with at least 8 characters.",
+    new_password: "New password",
+    confirm_password: "Confirm password",
+    reset_submit: "Save",
+    reset_success: "Password updated. You can sign in.",
+    reset_password_short: "Password must be at least 8 characters.",
+    reset_password_mismatch: "Passwords do not match.",
+    reset_token_missing: "Invalid link. Request a new reset.",
 
     trips_title: "Trips",
     trips_subtitle: "Travelers available on international corridors.",

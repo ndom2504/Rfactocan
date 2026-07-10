@@ -104,7 +104,15 @@ function LoginForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">{t("password")}</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="password">{t("password")}</Label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-[var(--accent)] underline"
+            >
+              {t("forgot_password")}
+            </Link>
+          </div>
           <Input
             id="password"
             type="password"
@@ -113,6 +121,9 @@ function LoginForm() {
             required
           />
         </div>
+        {params.get("reset") === "1" && !error && (
+          <p className="text-sm text-[var(--accent)]">{t("reset_success")}</p>
+        )}
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? t("loading") : t("sign_in")}
