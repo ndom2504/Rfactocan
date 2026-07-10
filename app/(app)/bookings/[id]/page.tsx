@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { BookingChat } from "@/components/booking-chat";
 import { BookingTracker } from "@/components/booking-tracker";
 import { HandoverQrPanel } from "@/components/handover-qr";
+import { DisputePanel } from "@/components/dispute-panel";
 import { formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
@@ -457,6 +458,21 @@ export default function BookingDetailPage({
         <Link href="/bookings" className="text-sm text-[var(--muted)] underline">
           {t("back_bookings")}
         </Link>
+        {(isSender || isTraveler) &&
+          [
+            "ACCEPTED",
+            "HANDED_OVER",
+            "IN_TRANSIT",
+            "DELIVERED",
+            "CANCELLED",
+          ].includes(booking.status) && (
+            <DisputePanel
+              bookingId={id}
+              canOpen={!["REFUSED", "PROPOSED", "AWAITING_PAYMENT"].includes(
+                booking.status
+              )}
+            />
+          )}
         <BookingTracker bookingId={id} />
       </div>
 

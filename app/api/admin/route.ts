@@ -19,6 +19,7 @@ export async function GET() {
     paymentsCaptured,
     feeAgg,
     kycVerified,
+    openDisputesCount,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.trip.count(),
@@ -32,6 +33,7 @@ export async function GET() {
       _sum: { platformFeeCents: true, amountCadCents: true },
     }),
     prisma.user.count({ where: { kycStatus: "VERIFIED" } }),
+    prisma.dispute.count({ where: { status: { in: ["OPEN", "IN_REVIEW"] } } }),
   ]);
 
   const openReports = await prisma.report.findMany({
@@ -41,6 +43,23 @@ export async function GET() {
       targetUser: { select: { id: true, displayName: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
+  });
+
+  const openDisputes = await prisma.dispute.findMany({
+    where: { status: { in: ["OPEN", "IN_REVIEW"] } },
+    include: {
+      openedBy: { select: { id: true, displayName: true, email: true } },
+      againstUser: { select: { id: true, displayName: true, email: true } },
+      booking: {
+        select: {
+          id: true,
+          status: true,
+          request: { select: { fromCity: true, toCity: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 40,
   });
 
   const allUsers = await prisma.user.findMany({
@@ -89,6 +108,7 @@ export async function GET() {
       requests,
       delivered,
       openReports: reports,
+      openDisputes: openDisputesCount,
       bookingsByStatus: bookings,
       paymentsCaptured,
       kycVerified,
@@ -96,6 +116,7 @@ export async function GET() {
       volumeCadCents: feeAgg._sum.amountCadCents ?? 0,
     },
     openReports,
+    openDisputes,
     users: allUsers,
     payments: recentPayments,
   });

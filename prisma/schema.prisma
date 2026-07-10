@@ -70,6 +70,13 @@ enum PaymentStatus {
   FAILED
 }
 
+enum DisputeStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+}
+
 model Currency {
   id           String  @id @default(cuid())
   code         String  @unique
@@ -154,6 +161,8 @@ model User {
   reviewsReceived  Review[]        @relation("ReviewsReceived")
   reportsFiled     Report[]        @relation("ReportsFiled")
   reportsAgainst   Report[]        @relation("ReportsAgainst")
+  disputesOpened   Dispute[]       @relation("DisputesOpened")
+  disputesAgainst  Dispute[]       @relation("DisputesAgainst")
   notifications    Notification[]
 }
 
@@ -250,6 +259,7 @@ model Booking {
   payment   Payment?
   events    BookingEvent[]
   locations BookingLocation[]
+  disputes  Dispute[]
 
   @@unique([requestId, tripId])
   @@index([senderId])
@@ -371,4 +381,26 @@ model Report {
   targetUser User @relation("ReportsAgainst", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@index([resolved])
+}
+
+model Dispute {
+  id            String        @id @default(cuid())
+  bookingId     String
+  openedById    String
+  againstUserId String
+  reason        String
+  details       String?
+  status        DisputeStatus @default(OPEN)
+  adminNote     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  resolvedAt    DateTime?
+
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  openedBy    User    @relation("DisputesOpened", fields: [openedById], references: [id], onDelete: Cascade)
+  againstUser User    @relation("DisputesAgainst", fields: [againstUserId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+  @@index([status])
+  @@index([openedById])
 }

@@ -18,6 +18,7 @@ type AdminData = {
     requests: number;
     delivered: number;
     openReports: number;
+    openDisputes: number;
     paymentsCaptured: number;
     kycVerified: number;
     platformFeesCadCents: number;
@@ -42,6 +43,21 @@ type AdminData = {
     createdAt: string;
     reporter: { displayName: string; email: string };
     targetUser: { id: string; displayName: string; email: string };
+  }>;
+  openDisputes: Array<{
+    id: string;
+    reason: string;
+    details: string | null;
+    status: string;
+    adminNote: string | null;
+    createdAt: string;
+    openedBy: { displayName: string; email: string };
+    againstUser: { id: string; displayName: string; email: string };
+    booking: {
+      id: string;
+      status: string;
+      request: { fromCity: string; toCity: string };
+    };
   }>;
   payments: Array<{
     id: string;
@@ -102,6 +118,18 @@ export default function AdminPage() {
     await load();
   }
 
+  async function updateDispute(
+    disputeId: string,
+    status: "IN_REVIEW" | "RESOLVED" | "CLOSED"
+  ) {
+    await fetch("/api/disputes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ disputeId, status }),
+    });
+    await load();
+  }
+
   if (error) {
     return <p className="text-sm text-red-700">{error}</p>;
   }
@@ -130,6 +158,7 @@ export default function AdminPage() {
           ["Livrés", data.stats.delivered],
           ["Voyages", data.stats.trips],
           ["Signalements", data.stats.openReports],
+          ["Litiges ouverts", data.stats.openDisputes ?? 0],
         ].map(([label, value]) => (
           <Card key={String(label)}>
             <CardDescription>{label}</CardDescription>
@@ -227,6 +256,57 @@ export default function AdminPage() {
                   </Button>
                 )}
               </div>
+            </div>
+          </Card>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Litiges ouverts
+        </h2>
+        {(data.openDisputes ?? []).length === 0 && (
+          <p className="text-sm text-[var(--muted)]">Aucun litige ouvert.</p>
+        )}
+        {(data.openDisputes ?? []).map((d) => (
+          <Card key={d.id}>
+            <CardTitle className="text-base">
+              {d.booking.request.fromCity} → {d.booking.request.toCity} ·{" "}
+              {d.reason}
+            </CardTitle>
+            <CardDescription>
+              {d.openedBy.displayName} vs {d.againstUser.displayName} ·{" "}
+              {d.status}
+              {d.details ? ` — ${d.details}` : ""}
+            </CardDescription>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href={`/bookings/${d.booking.id}`}>
+                <Button size="sm" variant="outline">
+                  Voir réservation
+                </Button>
+              </a>
+              {d.status === "OPEN" && (
+                <Button
+                  size="sm"
+                  onClick={() => updateDispute(d.id, "IN_REVIEW")}
+                >
+                  Prendre en charge
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => updateDispute(d.id, "RESOLVED")}
+              >
+                Résoudre
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => updateDispute(d.id, "CLOSED")}
+              >
+                Fermer
+              </Button>
             </div>
           </Card>
         ))}
