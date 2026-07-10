@@ -7,7 +7,9 @@ import { isStripeConfigured } from "@/lib/stripe";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TravelerSearch } from "@/components/traveler-search";
+import { RequestSearch } from "@/components/request-search";
 import { PaymentReadinessCard } from "@/components/payment-readiness";
+import { ResponsibilityNotice } from "@/components/responsibility-notice";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -15,6 +17,11 @@ export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) return null;
   const locale = await getRequestLocale();
+
+  const showTravelerSearch =
+    user.role === "SENDER" || user.role === "BOTH" || user.role === "ADMIN";
+  const showRequestSearch =
+    user.role === "TRAVELER" || user.role === "BOTH" || user.role === "ADMIN";
 
   const [trips, requests, bookings, dbUser] = await Promise.all([
     prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
@@ -80,15 +87,32 @@ export default async function DashboardPage() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <Link href="/trips/new">
-          <Button>{t(locale, "publish_trip")}</Button>
-        </Link>
-        <Link href="/requests/new">
-          <Button variant="secondary">{t(locale, "publish_request")}</Button>
-        </Link>
+        {(user.role === "TRAVELER" ||
+          user.role === "BOTH" ||
+          user.role === "ADMIN") && (
+          <Link href="/trips/new">
+            <Button>{t(locale, "publish_trip")}</Button>
+          </Link>
+        )}
+        {(user.role === "SENDER" ||
+          user.role === "BOTH" ||
+          user.role === "ADMIN") && (
+          <Link href="/requests/new">
+            <Button
+              variant={
+                user.role === "SENDER" ? "default" : "secondary"
+              }
+            >
+              {t(locale, "publish_request")}
+            </Button>
+          </Link>
+        )}
       </div>
 
-      <TravelerSearch />
+      {showTravelerSearch && <TravelerSearch />}
+      {showRequestSearch && <RequestSearch />}
+
+      <ResponsibilityNotice locale={locale} />
 
       <section>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">

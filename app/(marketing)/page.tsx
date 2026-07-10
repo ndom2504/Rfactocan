@@ -107,6 +107,25 @@ export default async function HomePage() {
         </p>
       </section>
 
+      <section className="mx-auto max-w-6xl px-6 pb-10">
+        <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] px-8 py-8">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+            {t(locale, "liability_title")}
+          </h2>
+          <p className="mt-2 max-w-2xl text-[var(--muted)]">
+            {t(locale, "liability_page_lead")}
+          </p>
+          <p className="mt-4 text-sm text-[var(--muted)]">
+            {t(locale, "liability_compact")}
+          </p>
+          <div className="mt-5">
+            <Link href="/responsibility">
+              <Button variant="outline">{t(locale, "liability_learn_more")}</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 pb-20">
         <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] px-8 py-10">
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">

@@ -87,6 +87,14 @@ const dict = {
     search_travelers_hint:
       "Filtrez par nom, pays, ville ou région (départ ou arrivée).",
     search_placeholder: "Nom, ville, compagnie…",
+    search_requests: "Recherche rapide de demandes",
+    search_requests_hint:
+      "Filtrez les colis à transporter par nom, pays, ville ou région.",
+    search_requests_placeholder: "Nom, ville, description…",
+    requests_found: "demande(s) trouvée(s)",
+    no_requests_found:
+      "Aucune demande pour ces critères. Élargissez la région ou la ville.",
+    view_request: "Voir la demande",
     publish_trip: "Publier un voyage",
     publish_request: "Publier une demande",
     recent_activity: "Activité récente",
@@ -107,6 +115,42 @@ const dict = {
     kyc_step: "Identité vérifiée (KYC)",
     bank_step: "Compte bancaire lié (Stripe Express)",
     payouts_step: "Virements activés",
+
+    liability_title: "Notre rôle, clairement",
+    liability_intro:
+      "Rfacto met en relation et sécurise les comptes. Le colis reste sous la responsabilité des parties.",
+    liability_we_do: "Ce que Rfacto fait",
+    liability_we_do_1: "Mettre en relation voyageurs et expéditeurs",
+    liability_we_do_2: "Vérifier les identités (KYC) et sécuriser les paiements",
+    liability_we_do_3: "Messagerie, suivi et signalement entre utilisateurs",
+    liability_you_do: "Ce que vous faites",
+    liability_you_do_1: "Décrire honnêtement le colis et le voyage",
+    liability_you_do_2: "Respecter les règles douanières et les lois locales",
+    liability_you_do_3: "Inspecter, remettre et réceptionner le colis",
+    liability_we_dont: "Ce que Rfacto n'est pas",
+    liability_we_dont_1: "Pas un transporteur ni un commissionnaire de transport",
+    liability_we_dont_2: "Pas responsable du contenu, de la perte ou des dommages du colis",
+    liability_we_dont_3: "Pas garant des délais aériens ou douaniers",
+    liability_learn_more: "Comprendre notre responsabilité",
+    liability_compact:
+      "Rfacto connecte et sécurise les utilisateurs, mais n'est pas responsable des colis.",
+    liability_page_title: "Politique de responsabilité",
+    liability_page_lead:
+      "Comme une place de marché : nous facilitons la rencontre et la confiance. Nous ne transportons pas vos colis.",
+    liability_analogy_title: "Une image simple",
+    liability_analogy_text:
+      "Pensez à une plateforme qui met en relation un conducteur et un passager : elle organise la rencontre et le paiement sécurisé, mais ce n'est pas elle qui conduit. Sur Rfacto, c'est pareil : nous connectons un voyageur qui a de la place et un expéditeur qui a un colis. Le transport physique reste un accord entre vous deux.",
+    liability_page_we_do_4: "Bloquer les fonds en séquestre jusqu'à confirmation de livraison",
+    liability_page_you_do_4: "Ne transporter que des biens autorisés et déclarés",
+    liability_page_we_dont_4: "Pas d'assurance colis automatique incluse dans le service",
+    liability_safety_title: "Sécurité des utilisateurs",
+    liability_safety_text:
+      "Nous investissons dans la vérification d'identité, les paiements sécurisés, la messagerie liée à chaque réservation et les outils de signalement. Cela protège les personnes et les transactions — pas le contenu matériel du bagage.",
+    liability_remember_title: "À retenir",
+    liability_remember_text:
+      "En utilisant Rfacto, vous acceptez que la plateforme soit un intermédiaire technologique. Toute responsabilité liée au colis (contenu, emballage, perte, vol, dommages, retards, douanes) incombe aux utilisateurs concernés, dans le respect des lois applicables.",
+    back_home: "Retour à l'accueil",
+    nav_responsibility: "Responsabilité",
 
     // Marketing
     hero_tagline:
@@ -370,6 +414,14 @@ const dict = {
     search_travelers_hint:
       "Filter by name, country, city or region (origin or destination).",
     search_placeholder: "Name, city, airline…",
+    search_requests: "Quick request search",
+    search_requests_hint:
+      "Filter parcels to carry by name, country, city or region.",
+    search_requests_placeholder: "Name, city, description…",
+    requests_found: "request(s) found",
+    no_requests_found:
+      "No requests for these filters. Broaden the region or city.",
+    view_request: "View request",
     publish_trip: "Post a trip",
     publish_request: "Post a request",
     recent_activity: "Recent activity",
@@ -390,6 +442,42 @@ const dict = {
     kyc_step: "Identity verified (KYC)",
     bank_step: "Bank account linked (Stripe Express)",
     payouts_step: "Payouts enabled",
+
+    liability_title: "Our role, clearly",
+    liability_intro:
+      "Rfacto matches people and secures accounts. The parcel remains the parties' responsibility.",
+    liability_we_do: "What Rfacto does",
+    liability_we_do_1: "Connect travelers and senders",
+    liability_we_do_2: "Verify identities (KYC) and secure payments",
+    liability_we_do_3: "Messaging, tracking and user reporting",
+    liability_you_do: "What you do",
+    liability_you_do_1: "Describe the parcel and trip honestly",
+    liability_you_do_2: "Follow customs rules and local laws",
+    liability_you_do_3: "Inspect, hand over and receive the parcel",
+    liability_we_dont: "What Rfacto is not",
+    liability_we_dont_1: "Not a carrier or freight forwarder",
+    liability_we_dont_2: "Not liable for parcel content, loss or damage",
+    liability_we_dont_3: "Not a guarantor of airline or customs delays",
+    liability_learn_more: "Understand our responsibility",
+    liability_compact:
+      "Rfacto connects and secures users, but is not responsible for parcels.",
+    liability_page_title: "Responsibility policy",
+    liability_page_lead:
+      "Like a marketplace: we enable matching and trust. We do not carry your parcels.",
+    liability_analogy_title: "A simple picture",
+    liability_analogy_text:
+      "Think of a platform that matches a driver and a rider: it organizes the meeting and secure payment, but it does not drive. On Rfacto it is the same: we connect a traveler with spare space and a sender with a parcel. Physical transport remains an agreement between you two.",
+    liability_page_we_do_4: "Hold funds in escrow until delivery confirmation",
+    liability_page_you_do_4: "Only carry allowed and declared goods",
+    liability_page_we_dont_4: "No automatic parcel insurance included in the service",
+    liability_safety_title: "User safety",
+    liability_safety_text:
+      "We invest in identity verification, secure payments, booking-linked messaging and reporting tools. That protects people and transactions — not the physical contents of the bag.",
+    liability_remember_title: "Remember",
+    liability_remember_text:
+      "By using Rfacto, you accept that the platform is a technology intermediary. Any liability related to the parcel (content, packaging, loss, theft, damage, delays, customs) rests with the users involved, subject to applicable law.",
+    back_home: "Back to home",
+    nav_responsibility: "Responsibility",
 
     hero_tagline:
       "The global network connecting travelers and senders worldwide.",

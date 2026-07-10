@@ -309,6 +309,12 @@ export default function BookingDetailPage({
                   {t("nav_profile")}
                 </Link>
               </p>
+              <p className="text-xs text-[var(--muted)]">
+                {t("liability_compact")}{" "}
+                <Link href="/responsibility" className="underline">
+                  {t("liability_learn_more")}
+                </Link>
+              </p>
             </div>
           )}
 

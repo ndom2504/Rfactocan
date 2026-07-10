@@ -46,6 +46,17 @@ export default async function MarketingLayout({
           </nav>
         </header>
         {children}
+        <footer className="mx-auto max-w-6xl border-t border-[var(--border)] px-6 py-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
+            <p>© {new Date().getFullYear()} Rfacto · RapidFacto</p>
+            <Link
+              href="/responsibility"
+              className="hover:text-[var(--foreground)]"
+            >
+              {t(locale, "nav_responsibility")}
+            </Link>
+          </div>
+        </footer>
       </div>
     </LocaleProvider>
   );
