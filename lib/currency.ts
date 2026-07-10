@@ -87,25 +87,57 @@ export function resolveCheckoutCurrency(
 }
 
 /**
- * Checkout currency for the payer: preferred account currency first,
- * then trip currency, then corridor/route fallback.
+ * Convert a trip price (weight × price/kg in trip currency) into the
+ * payer's preferred account currency for Stripe presentment.
+ */
+export function convertTripPriceToPayerCurrency(input: {
+  weightKg: number;
+  pricePerKg: number;
+  tripCurrency?: string | null;
+  preferredCurrency?: string | null;
+  fromCountry?: string;
+  toCountry?: string;
+  corridorCurrency?: string | null;
+}): {
+  amountCents: number;
+  currency: MoneyCurrency;
+  sourceCurrency: MoneyCurrency;
+  sourceMajor: number;
+  payerMajor: number;
+} {
+  const sourceCurrency =
+    normalizeCurrency(input.tripCurrency) ||
+    resolveCheckoutCurrency(
+      input.fromCountry ?? "CA",
+      input.toCountry ?? "CA",
+      input.corridorCurrency
+    );
+  const currency = normalizeCurrency(input.preferredCurrency) ?? "CAD";
+  const sourceMajor = Math.max(0, input.weightKg * input.pricePerKg);
+  const payerMajor = convertAmount(sourceMajor, sourceCurrency, currency);
+  const amountCents = toStripeAmountUnits(payerMajor, currency);
+  return {
+    amountCents,
+    currency,
+    sourceCurrency,
+    sourceMajor,
+    payerMajor,
+  };
+}
+
+/**
+ * Presentment currency for Stripe Checkout: always the payer's preferred
+ * account currency. Never fall back to trip/corridor.
  */
 export function resolvePayerCurrency(input: {
   preferredCurrency?: string | null;
+  /** @deprecated Ignored — kept for call-site compatibility */
   tripCurrency?: string | null;
-  fromCountry: string;
-  toCountry: string;
+  fromCountry?: string;
+  toCountry?: string;
   corridorCurrency?: string | null;
 }): MoneyCurrency {
-  return (
-    normalizeCurrency(input.preferredCurrency) ||
-    normalizeCurrency(input.tripCurrency) ||
-    resolveCheckoutCurrency(
-      input.fromCountry,
-      input.toCountry,
-      input.corridorCurrency
-    )
-  );
+  return normalizeCurrency(input.preferredCurrency) ?? "CAD";
 }
 
 export function normalizeCurrency(code?: string | null): MoneyCurrency | null {

@@ -17,6 +17,7 @@ export type SessionUser = {
   avatarUrl: string | null;
   ratingAvg: number;
   ratingCount: number;
+  preferredCurrency: string;
 };
 
 function getSecret() {
@@ -83,6 +84,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       avatarUrl: user.avatarUrl,
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,
+      preferredCurrency: user.preferredCurrency || "CAD",
     };
   } catch {
     return null;

@@ -14,7 +14,12 @@ import { BookingTracker } from "@/components/booking-tracker";
 import { HandoverQrPanel } from "@/components/handover-qr";
 import { DisputePanel } from "@/components/dispute-panel";
 import { formatDate, formatKg } from "@/lib/utils";
-import { formatMoneyFromCents } from "@/lib/currency";
+import {
+  formatMoney,
+  formatMoneyFromCents,
+  normalizeCurrency,
+  type MoneyCurrency,
+} from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
 
 type Payment = {
@@ -29,6 +34,9 @@ type Payment = {
 type PaymentQuote = {
   amountCents: number;
   currency: string;
+  sourceCurrency?: string;
+  sourceMajor?: number;
+  payerMajor?: number;
 };
 
 type Booking = {
@@ -382,12 +390,27 @@ export default function BookingDetailPage({
                   </p>
                   <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)]">
                     {formatCents(
-                      payment?.amountCadCents ??
-                        paymentQuote?.amountCents ??
+                      paymentQuote?.amountCents ??
+                        payment?.amountCadCents ??
                         0,
-                      payment?.currency ?? paymentQuote?.currency ?? "CAD"
+                      paymentQuote?.currency ?? payment?.currency ?? "CAD"
                     )}
                   </p>
+                  {paymentQuote?.sourceCurrency &&
+                    paymentQuote.sourceCurrency !==
+                      (paymentQuote.currency || "").toUpperCase() &&
+                    paymentQuote.sourceMajor != null && (
+                      <p className="mt-2 text-xs text-[var(--muted)]">
+                        Converti depuis{" "}
+                        {formatMoney(
+                          paymentQuote.sourceMajor,
+                          (normalizeCurrency(paymentQuote.sourceCurrency) ??
+                            "CAD") as MoneyCurrency
+                        )}{" "}
+                        → devise de votre compte (
+                        {(paymentQuote.currency || "CAD").toUpperCase()})
+                      </p>
+                    )}
                   <p className="mt-2 text-xs text-[var(--muted)]">
                     {t("funds_held_until")}
                   </p>

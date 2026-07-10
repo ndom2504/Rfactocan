@@ -103,15 +103,28 @@ export async function GET(_request: Request, { params }: Params) {
       },
     },
   });
+
+  // Payer currency = logged-in sender's profile preference (auto FX from trip).
+  const payerPreferred =
+    session.id === booking.senderId
+      ? session.preferredCurrency
+      : booking.sender.preferredCurrency;
+
   const quote = quotePaymentAmount({
     weightKg: booking.request.weightKg,
     pricePerKg: booking.trip.pricePerKgCad,
     tripCurrency: booking.trip.currency,
-    preferredCurrency: booking.sender.preferredCurrency,
+    preferredCurrency: payerPreferred,
     fromCountry: booking.request.fromCountry,
     toCountry: booking.request.toCountry,
     corridorCurrency: corridor?.currency,
   });
+
+  // Only lock to stored Payment once funds are authorized/captured.
+  // REQUIRES_PAYMENT rows may still hold a stale corridor currency (e.g. EUR).
+  const paymentLocked =
+    booking.payment != null &&
+    ["AUTHORIZED", "CAPTURED", "REFUNDED"].includes(booking.payment.status);
 
   return NextResponse.json({
     booking: {
@@ -121,10 +134,21 @@ export async function GET(_request: Request, { params }: Params) {
         photos: JSON.parse(booking.request.photosJson || "[]") as string[],
       },
     },
-    paymentQuote: {
-      amountCents: booking.payment?.amountCadCents ?? quote.amountCents,
-      currency: (booking.payment?.currency ?? quote.currency).toUpperCase(),
-    },
+    paymentQuote: paymentLocked
+      ? {
+          amountCents: booking.payment!.amountCadCents,
+          currency: booking.payment!.currency.toUpperCase(),
+          sourceCurrency: quote.sourceCurrency,
+          sourceMajor: quote.sourceMajor,
+          payerMajor: booking.payment!.amountCadCents,
+        }
+      : {
+          amountCents: quote.amountCents,
+          currency: quote.currency,
+          sourceCurrency: quote.sourceCurrency,
+          sourceMajor: quote.sourceMajor,
+          payerMajor: quote.payerMajor,
+        },
     stripeConfigured: isStripeConfigured(),
   });
 }

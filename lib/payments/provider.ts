@@ -1,11 +1,7 @@
 import type { PaymentStatus } from "@prisma/client";
 import { getAppUrl } from "@/lib/app-url";
 import {
-  convertAmount,
-  normalizeCurrency,
-  resolveCheckoutCurrency,
-  resolvePayerCurrency,
-  toStripeAmountUnits,
+  convertTripPriceToPayerCurrency,
   toStripeCurrency,
   type MoneyCurrency,
 } from "@/lib/currency";
@@ -56,25 +52,14 @@ export function quotePaymentAmount(input: {
   fromCountry: string;
   toCountry: string;
   corridorCurrency?: string | null;
-}): { amountCents: number; currency: MoneyCurrency } {
-  const sourceCurrency =
-    normalizeCurrency(input.tripCurrency) ||
-    resolveCheckoutCurrency(
-      input.fromCountry,
-      input.toCountry,
-      input.corridorCurrency
-    );
-  const currency = resolvePayerCurrency({
-    preferredCurrency: input.preferredCurrency,
-    tripCurrency: input.tripCurrency,
-    fromCountry: input.fromCountry,
-    toCountry: input.toCountry,
-    corridorCurrency: input.corridorCurrency,
-  });
-  const baseMajor = Math.max(0, input.weightKg * input.pricePerKg);
-  const converted = convertAmount(baseMajor, sourceCurrency, currency);
-  const amountCents = toStripeAmountUnits(converted, currency);
-  return { amountCents, currency };
+}): {
+  amountCents: number;
+  currency: MoneyCurrency;
+  sourceCurrency: MoneyCurrency;
+  sourceMajor: number;
+  payerMajor: number;
+} {
+  return convertTripPriceToPayerCurrency(input);
 }
 
 export const stripePaymentProvider: PaymentProvider = {

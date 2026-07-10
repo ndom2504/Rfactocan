@@ -77,18 +77,25 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   try {
+    // Always convert into the logged-in payer's profile currency.
+    const payer = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { preferredCurrency: true, email: true },
+    });
+    const preferredCurrency = payer?.preferredCurrency || "CAD";
+
     const provider = getPaymentProvider();
     const result = await provider.createAuthorization({
       bookingId: booking.id,
       weightKg: booking.request.weightKg,
       pricePerKgCad: booking.trip.pricePerKgCad,
       tripCurrency: booking.trip.currency,
-      senderEmail: booking.sender.email,
+      senderEmail: payer?.email ?? booking.sender.email,
       senderId: booking.senderId,
       travelerConnectAccountId: traveler.stripeConnectAccountId,
       fromCountry: booking.request.fromCountry,
       toCountry: booking.request.toCountry,
-      preferredCurrency: booking.sender.preferredCurrency,
+      preferredCurrency,
     });
 
     return NextResponse.json(result);
