@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
-import { FlightFields } from "@/components/flight-fields";
+import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { CURRENCY_OPTIONS, resolveCheckoutCurrency } from "@/lib/currency";
+import type { TransportMode } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
 
 function toLocalInput(iso: string) {
@@ -37,6 +38,7 @@ export default function EditTripPage({
     weightKg: number;
     pricePerKgCad: number;
     currency: string;
+    transportMode?: string;
     acceptedGoods: string;
     notes: string | null;
     airline: string | null;
@@ -51,6 +53,7 @@ export default function EditTripPage({
   const [forbidden, setForbidden] = useState(false);
   const [fromCountry, setFromCountry] = useState("CA");
   const [toCountry, setToCountry] = useState("FR");
+  const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
 
   useEffect(() => {
     void params.then((p) => setId(p.id));
@@ -81,6 +84,9 @@ export default function EditTripPage({
       setTrip(tripData.trip);
       setFromCountry(tripData.trip.fromCountry);
       setToCountry(tripData.trip.toCountry);
+      setTransportMode(
+        (tripData.trip.transportMode as TransportMode) || "AIR"
+      );
     })();
   }, [id]);
 
@@ -104,6 +110,7 @@ export default function EditTripPage({
       weightKg: Number(fd.get("weightKg")),
       pricePerKgCad: Number(fd.get("pricePerKgCad")),
       currency,
+      transportMode: String(fd.get("transportMode") || transportMode),
       acceptedGoods: String(fd.get("acceptedGoods")),
       notes: String(fd.get("notes") || "") || null,
       airline: String(fd.get("airline") || "") || null,
@@ -208,9 +215,11 @@ export default function EditTripPage({
             defaultValue={trip.acceptedGoods}
           />
         </div>
-        <FlightFields
+        <TransportFields
           fromCountry={fromCountry}
           toCountry={toCountry}
+          transportMode={transportMode}
+          onModeChange={setTransportMode}
           airline={trip.airline ?? ""}
           flightNumber={trip.flightNumber ?? ""}
           fromAirportCode={trip.fromAirportCode ?? ""}

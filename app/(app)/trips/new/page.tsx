@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
-import { FlightFields } from "@/components/flight-fields";
+import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { CURRENCY_OPTIONS, resolveCheckoutCurrency } from "@/lib/currency";
+import { maxWeightForMode, type TransportMode } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
 
 export default function NewTripPage() {
@@ -20,6 +21,7 @@ export default function NewTripPage() {
   const [loading, setLoading] = useState(false);
   const [fromCountry, setFromCountry] = useState("CA");
   const [toCountry, setToCountry] = useState("FR");
+  const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,6 +36,8 @@ export default function NewTripPage() {
     const weightKg = Number(fd.get("weightKg"));
     const pricePerKgCad = Number(fd.get("pricePerKgCad"));
     const acceptedGoods = String(fd.get("acceptedGoods") || "").trim();
+    const mode = (String(fd.get("transportMode") || transportMode) ||
+      "AIR") as TransportMode;
     const currency =
       String(fd.get("currency") || "").trim() ||
       resolveCheckoutCurrency(fromCountryValue, toCountryValue);
@@ -64,6 +68,12 @@ export default function NewTripPage() {
       setError("Indiquez un poids disponible valide.");
       return;
     }
+    const maxKg = maxWeightForMode(mode);
+    if (weightKg > maxKg) {
+      setLoading(false);
+      setError(`Poids max ${maxKg} kg pour ce mode de transport.`);
+      return;
+    }
     if (!Number.isFinite(pricePerKgCad) || pricePerKgCad <= 0) {
       setLoading(false);
       setError("Indiquez un prix par kg valide.");
@@ -84,6 +94,7 @@ export default function NewTripPage() {
       weightKg,
       pricePerKgCad,
       currency,
+      transportMode: mode,
       acceptedGoods,
       notes: String(fd.get("notes") || "").trim() || undefined,
       airline: String(fd.get("airline") || "").trim() || undefined,
@@ -132,8 +143,20 @@ export default function NewTripPage() {
               type="number"
               step="0.5"
               min="0.5"
+              max={maxWeightForMode(transportMode)}
               required
             />
+            <p className="text-xs text-[var(--muted)]">
+              Max {maxWeightForMode(transportMode)} kg (
+              {transportMode === "AIR"
+                ? "avion"
+                : transportMode === "SEA"
+                  ? "maritime"
+                  : transportMode === "RAIL"
+                    ? "rail"
+                    : "route"}
+              )
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="pricePerKgCad">{t("price_per_kg")}</Label>
@@ -168,7 +191,12 @@ export default function NewTripPage() {
             required
           />
         </div>
-        <FlightFields fromCountry={fromCountry} toCountry={toCountry} />
+        <TransportFields
+          fromCountry={fromCountry}
+          toCountry={toCountry}
+          transportMode={transportMode}
+          onModeChange={setTransportMode}
+        />
         <div className="space-y-2">
           <Label htmlFor="notes">{t("notes")}</Label>
           <Textarea id="notes" name="notes" />

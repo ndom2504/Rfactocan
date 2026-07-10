@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { api } from "@/lib/api";
 import {
   Button,
@@ -10,6 +10,14 @@ import {
   Screen,
   Title,
 } from "@/components/ui";
+import { colors } from "@/lib/theme";
+
+const MODES = [
+  { code: "AIR", label: "Avion" },
+  { code: "SEA", label: "Maritime" },
+  { code: "RAIL", label: "Ferroviaire" },
+  { code: "ROAD", label: "Route" },
+] as const;
 
 export default function NewTripScreen() {
   const router = useRouter();
@@ -21,6 +29,10 @@ export default function NewTripScreen() {
   const [weightKg, setWeightKg] = useState("10");
   const [pricePerKgCad, setPricePerKgCad] = useState("20");
   const [currency, setCurrency] = useState("CAD");
+  const [transportMode, setTransportMode] =
+    useState<(typeof MODES)[number]["code"]>("AIR");
+  const [carrier, setCarrier] = useState("");
+  const [reference, setReference] = useState("");
   const [acceptedGoods, setAcceptedGoods] = useState(
     "Vêtements, documents, produits non périssables"
   );
@@ -45,6 +57,9 @@ export default function NewTripScreen() {
           weightKg: Number(weightKg),
           pricePerKgCad: Number(pricePerKgCad),
           currency: currency.trim().toUpperCase(),
+          transportMode,
+          airline: carrier.trim() || undefined,
+          flightNumber: reference.trim() || undefined,
           acceptedGoods: acceptedGoods.trim(),
         }),
       });
@@ -65,8 +80,42 @@ export default function NewTripScreen() {
         <ScrollView keyboardShouldPersistTaps="handled">
           <Title>Nouveau voyage</Title>
           <Muted>
-            Date : AAAA-MM-JJ ou AAAA-MM-JJTHH:mm (sinon +7 jours).
+            Avion, maritime, ferroviaire ou route. Date : AAAA-MM-JJTHH:mm.
           </Muted>
+          <Muted>Mode de transport</Muted>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 8,
+              marginBottom: 12,
+              marginTop: 6,
+            }}
+          >
+            {MODES.map((m) => (
+              <Pressable
+                key={m.code}
+                onPress={() => setTransportMode(m.code)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 999,
+                  backgroundColor:
+                    transportMode === m.code ? colors.accent : colors.surface2,
+                }}
+              >
+                <Text
+                  style={{
+                    color:
+                      transportMode === m.code ? "#fff" : colors.foreground,
+                    fontWeight: "600",
+                  }}
+                >
+                  {m.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
           <Field label="Pays départ (ISO)" value={fromCountry} onChangeText={setFromCountry} />
           <Field label="Ville départ" value={fromCity} onChangeText={setFromCity} />
           <Field label="Pays arrivée (ISO)" value={toCountry} onChangeText={setToCountry} />
@@ -94,6 +143,16 @@ export default function NewTripScreen() {
             autoCapitalize="characters"
             value={currency}
             onChangeText={setCurrency}
+          />
+          <Field
+            label="Compagnie / transporteur"
+            value={carrier}
+            onChangeText={setCarrier}
+          />
+          <Field
+            label="Réf. (vol / navire / train / véhicule)"
+            value={reference}
+            onChangeText={setReference}
           />
           <Field
             label="Objets acceptés"

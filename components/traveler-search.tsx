@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
+import { transportModeLabel } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
 
 type TravelerHit = {
@@ -24,6 +25,7 @@ type TravelerHit = {
   weightKg: number;
   pricePerKgCad: number;
   currency?: string;
+  transportMode?: string;
   user: {
     id: string;
     displayName: string;
@@ -38,7 +40,7 @@ type TravelerHit = {
 };
 
 export function TravelerSearch() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("");
   const [country, setCountry] = useState("");
@@ -233,6 +235,9 @@ export function TravelerSearch() {
                       {getCountryName(hit.toCountry)}
                     </CardDescription>
                     <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge>
+                      {transportModeLabel(hit.transportMode, locale)}
+                    </Badge>
                       <Badge>{formatDate(hit.departAt)}</Badge>
                       <Badge>{formatKg(hit.weightKg)}</Badge>
                       <Badge>

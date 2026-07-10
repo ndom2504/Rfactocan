@@ -28,6 +28,13 @@ enum TripStatus {
   CANCELLED
 }
 
+enum TransportMode {
+  AIR
+  SEA
+  RAIL
+  ROAD
+}
+
 enum RequestStatus {
   OPEN
   MATCHED
@@ -209,6 +216,7 @@ model Trip {
   currency      String     @default("CAD")
   acceptedGoods String
   notes           String?
+  transportMode   TransportMode @default(AIR)
   airline         String?
   flightNumber    String?
   fromAirportCode String?
@@ -223,6 +231,7 @@ model Trip {
   @@index([fromCountry, toCountry, departAt])
   @@index([toCountry, toCity, departAt])
   @@index([userId])
+  @@index([transportMode])
 }
 
 model ParcelRequest {

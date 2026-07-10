@@ -10,20 +10,30 @@ import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
+import { TRANSPORT_MODES, transportModeLabel } from "@/lib/transport";
 
-type Props = { searchParams: Promise<{ mine?: string }> };
+type Props = {
+  searchParams: Promise<{ mine?: string; transportMode?: string }>;
+};
 
 export default async function TripsPage({ searchParams }: Props) {
   const user = await getSessionUser();
   if (!user) return null;
   const locale = await getRequestLocale();
-  const { mine } = await searchParams;
+  const { mine, transportMode: modeFilter } = await searchParams;
   const mineOnly = mine === "1";
+  const mode =
+    modeFilter && ["AIR", "SEA", "RAIL", "ROAD"].includes(modeFilter)
+      ? modeFilter
+      : undefined;
 
   const trips = await prisma.trip.findMany({
-    where: mineOnly
-      ? { userId: user.id, status: { not: "CANCELLED" } }
-      : { status: "OPEN" },
+    where: {
+      ...(mineOnly
+        ? { userId: user.id, status: { not: "CANCELLED" as const } }
+        : { status: "OPEN" as const }),
+      ...(mode ? { transportMode: mode as "AIR" | "SEA" | "RAIL" | "ROAD" } : {}),
+    },
     include: {
       user: {
         select: {
@@ -63,6 +73,39 @@ export default async function TripsPage({ searchParams }: Props) {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        <Link href={mineOnly ? "/trips?mine=1" : "/trips"}>
+          <Badge
+            className={
+              !mode
+                ? "bg-[var(--accent)] text-white"
+                : "bg-[var(--surface-2)] text-[var(--foreground)]"
+            }
+          >
+            {locale === "en" ? "All modes" : "Tous les modes"}
+          </Badge>
+        </Link>
+        {TRANSPORT_MODES.map((m) => {
+          const href = mineOnly
+            ? `/trips?mine=1&transportMode=${m.code}`
+            : `/trips?transportMode=${m.code}`;
+          const active = mode === m.code;
+          return (
+            <Link key={m.code} href={href}>
+              <Badge
+                className={
+                  active
+                    ? "bg-[var(--accent)] text-white"
+                    : "bg-[var(--surface-2)] text-[var(--foreground)]"
+                }
+              >
+                {locale === "en" ? m.labelEn : m.labelFr}
+              </Badge>
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="grid gap-4">
         {trips.map((trip) => {
           const isOwner = trip.userId === user.id;
@@ -86,6 +129,9 @@ export default async function TripsPage({ searchParams }: Props) {
                     {formatDate(trip.departAt)}
                   </CardDescription>
                   <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      {transportModeLabel(trip.transportMode, locale)}
+                    </Badge>
                     <Badge>
                       {formatKg(trip.weightKg)}{" "}
                       {t(locale, "weight_available_badge")}

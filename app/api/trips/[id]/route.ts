@@ -11,9 +11,10 @@ const patchSchema = z.object({
   toCountry: z.string().min(2).optional(),
   toCity: z.string().min(2).optional(),
   departAt: z.string().datetime().or(z.string().min(8)).optional(),
-  weightKg: z.coerce.number().positive().max(100).optional(),
+  weightKg: z.coerce.number().positive().max(5000).optional(),
   pricePerKgCad: z.coerce.number().positive().max(500).optional(),
   currency: z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional(),
+  transportMode: z.enum(["AIR", "SEA", "RAIL", "ROAD"]).optional(),
   acceptedGoods: z.string().min(2).optional(),
   notes: z.string().optional().nullable(),
   airline: z.string().optional().nullable(),
@@ -96,6 +97,9 @@ export async function PATCH(request: Request, { params }: Params) {
           ? { pricePerKgCad: body.pricePerKgCad }
           : {}),
         ...(body.currency !== undefined ? { currency: body.currency } : {}),
+        ...(body.transportMode !== undefined
+          ? { transportMode: body.transportMode }
+          : {}),
         ...(body.acceptedGoods !== undefined
           ? { acceptedGoods: body.acceptedGoods }
           : {}),

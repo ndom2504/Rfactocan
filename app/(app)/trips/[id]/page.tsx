@@ -12,6 +12,7 @@ import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { TripSuggestedRequests } from "@/components/traveler-apply-panel";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
+import { transportModeLabel } from "@/lib/transport";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -59,6 +60,9 @@ export default async function TripDetailPage({ params }: Props) {
               {getCountryName(trip.toCountry)}
             </CardDescription>
             <div className="mt-4 flex flex-wrap gap-2">
+              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                {transportModeLabel(trip.transportMode, locale)}
+              </Badge>
               <Badge>{formatDate(trip.departAt)}</Badge>
               <Badge>{formatKg(trip.weightKg)}</Badge>
               <Badge>

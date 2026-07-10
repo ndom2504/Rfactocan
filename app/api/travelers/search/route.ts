@@ -90,6 +90,7 @@ export async function GET(request: Request) {
       weightKg: t.weightKg,
       pricePerKgCad: t.pricePerKgCad,
       currency: t.currency,
+      transportMode: t.transportMode,
       user: t.user,
     })),
   });

@@ -59,6 +59,9 @@ const dict = {
       "Devise de paiement sur Stripe. CAD = dollar canadien ($ CA), USD = dollar américain ($ US) — ce ne sont pas la même monnaie.",
     trip_currency_hint:
       "Devise du prix / kg. CAD ($ CA) ≠ USD ($ US). L’expéditeur paiera dans sa devise préférée (conversion auto).",
+    transport_mode: "Mode de transport",
+    transport_mode_hint:
+      "Avion, maritime, ferroviaire ou route — voyageurs et transporteurs professionnels.",
     airline: "Compagnie",
     flight_number: "N° de vol",
     airport_from: "Aéroport de départ",
@@ -218,14 +221,14 @@ const dict = {
     // Trips
     trips_title: "Voyages",
     trips_subtitle:
-      "Voyageurs disponibles sur tous les corridors internationaux.",
+      "Voyageurs et transporteurs (avion, mer, rail, route) sur tous les corridors.",
     no_trips: "Aucun voyage publié.",
     new_trip_title: "Publier un voyage",
     new_trip_subtitle:
-      "Indiquez votre itinéraire et le poids disponible dans vos bagages.",
+      "Déclarez un trajet aérien, maritime, ferroviaire ou routier et la capacité disponible.",
     goods_placeholder: "Vêtements, documents, produits non périssables…",
-    traveler: "Voyageur",
-    flight: "Vol",
+    traveler: "Voyageur / transporteur",
+    flight: "Trajet",
     see_requests: "Voir les demandes / matcher",
     weight_available_badge: "dispo",
     see_requests_short: "Parcourir les demandes",
@@ -476,6 +479,9 @@ const dict = {
       "Stripe checkout currency. CAD = Canadian dollar (CA$), USD = US dollar (US$) — they are different currencies.",
     trip_currency_hint:
       "Currency for your price per kg. CAD (CA$) ≠ USD (US$). The sender pays in their preferred currency (auto-converted).",
+    transport_mode: "Transport mode",
+    transport_mode_hint:
+      "Air, sea, rail or road — travelers and professional carriers.",
     airline: "Airline",
     flight_number: "Flight number",
     airport_from: "Departure airport",
@@ -630,14 +636,14 @@ const dict = {
     reset_token_missing: "Invalid link. Request a new reset.",
 
     trips_title: "Trips",
-    trips_subtitle: "Travelers available on international corridors.",
+    trips_subtitle: "Travelers and carriers (air, sea, rail, road) on all corridors.",
     no_trips: "No trips published.",
     new_trip_title: "Post a trip",
     new_trip_subtitle:
-      "Enter your itinerary and available baggage weight.",
+      "Declare an air, sea, rail or road itinerary and available capacity.",
     goods_placeholder: "Clothes, documents, non-perishable goods…",
-    traveler: "Traveler",
-    flight: "Flight",
+    traveler: "Traveler / carrier",
+    flight: "Trip details",
     see_requests: "See requests / match",
     weight_available_badge: "available",
     see_requests_short: "Browse requests",
