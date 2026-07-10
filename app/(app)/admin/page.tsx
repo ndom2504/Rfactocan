@@ -10,6 +10,7 @@ import {
   PAYMENT_STATUS_LABELS,
 } from "@/lib/corridors";
 import { formatDate } from "@/lib/utils";
+import { formatMoneyFromCents } from "@/lib/currency";
 
 type AdminData = {
   stats: {
@@ -65,6 +66,7 @@ type AdminData = {
     amountCadCents: number;
     platformFeeCents: number;
     travelerPayoutCents: number;
+    currency?: string;
     createdAt: string;
     booking: {
       id: string;
@@ -75,11 +77,8 @@ type AdminData = {
   }>;
 };
 
-function formatCents(cents: number) {
-  return new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(cents / 100);
+function formatCents(cents: number, currency = "CAD") {
+  return formatMoneyFromCents(cents, currency, "fr-CA");
 }
 
 export default function AdminPage() {
@@ -184,8 +183,8 @@ export default function AdminPage() {
                 <CardDescription>
                   {p.booking.sender.displayName} →{" "}
                   {p.booking.trip.user.displayName} ·{" "}
-                  {formatCents(p.amountCadCents)} · frais{" "}
-                  {formatCents(p.platformFeeCents)}
+                  {formatCents(p.amountCadCents, p.currency)} · frais{" "}
+                  {formatCents(p.platformFeeCents, p.currency)}
                 </CardDescription>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge>

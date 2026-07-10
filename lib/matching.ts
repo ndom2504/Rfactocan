@@ -9,6 +9,7 @@ export type MatchTripInput = {
   departAt: Date;
   weightKg: number;
   pricePerKgCad: number;
+  currency?: string;
   user: {
     id: string;
     displayName: string;

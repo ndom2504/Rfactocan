@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
-import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
 type Props = { searchParams: Promise<{ mine?: string }> };
@@ -90,7 +90,10 @@ export default async function TripsPage({ searchParams }: Props) {
                       {formatKg(trip.weightKg)}{" "}
                       {t(locale, "weight_available_badge")}
                     </Badge>
-                    <Badge>{formatCad(trip.pricePerKgCad)}/kg</Badge>
+                    <Badge>
+                      {formatMoney(trip.pricePerKgCad, trip.currency || "CAD")}
+                      /kg
+                    </Badge>
                     {(trip.user.verifiedAt ||
                       trip.user.kycStatus === "VERIFIED") && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">

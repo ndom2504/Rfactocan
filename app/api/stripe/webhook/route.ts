@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { formatMoneyFromCents } from "@/lib/currency";
 import { syncConnectAccount } from "@/lib/connect";
 import { emailPaymentAuthorized } from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
@@ -78,10 +79,10 @@ async function handlePaymentIntent(
     });
 
     if (booking) {
-      const amountLabel = new Intl.NumberFormat("fr-CA", {
-        style: "currency",
-        currency: (payment.currency || "cad").toUpperCase(),
-      }).format(payment.amountCadCents / 100);
+      const amountLabel = formatMoneyFromCents(
+        payment.amountCadCents,
+        payment.currency || "CAD"
+      );
       const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
       void emailPaymentAuthorized({
         senderEmail: booking.sender.email,

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { TravelerApplyPanel } from "@/components/traveler-apply-panel";
-import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { formatCad, formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
 type Match = {
@@ -29,6 +29,7 @@ type Match = {
     departAt: string;
     weightKg: number;
     pricePerKgCad: number;
+    currency?: string;
     acceptedGoods: string;
     user: {
       id: string;
@@ -226,7 +227,11 @@ export default function RequestDetailPage({
                   </div>
                   <CardDescription>
                     {formatDate(m.trip.departAt)} · {formatKg(m.trip.weightKg)} ·{" "}
-                    {formatCad(m.trip.pricePerKgCad)}/kg
+                    {formatMoney(
+                      m.trip.pricePerKgCad,
+                      m.trip.currency || "CAD"
+                    )}
+                    /kg
                   </CardDescription>
                   <p className="mt-1 text-xs text-[var(--muted)]">
                     Route {m.breakdown.route}% · Date {m.breakdown.date}% ·

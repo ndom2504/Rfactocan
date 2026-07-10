@@ -65,6 +65,7 @@ export async function GET(_request: Request, { params }: Params) {
       departAt: trip.departAt,
       weightKg: trip.weightKg,
       pricePerKgCad: trip.pricePerKgCad,
+      currency: trip.currency,
       user: trip.user,
     },
     requests.map((r) => ({

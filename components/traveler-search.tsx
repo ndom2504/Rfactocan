@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
 type TravelerHit = {
@@ -23,6 +23,7 @@ type TravelerHit = {
   departAt: string;
   weightKg: number;
   pricePerKgCad: number;
+  currency?: string;
   user: {
     id: string;
     displayName: string;
@@ -234,7 +235,13 @@ export function TravelerSearch() {
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge>{formatDate(hit.departAt)}</Badge>
                       <Badge>{formatKg(hit.weightKg)}</Badge>
-                      <Badge>{formatCad(hit.pricePerKgCad)}/kg</Badge>
+                      <Badge>
+                        {formatMoney(
+                          hit.pricePerKgCad,
+                          hit.currency || "CAD"
+                        )}
+                        /kg
+                      </Badge>
                       {hit.user.kycStatus === "VERIFIED" && (
                         <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                           {t("verified")}

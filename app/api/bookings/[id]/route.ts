@@ -5,6 +5,7 @@ import { travelerCanReceivePayments } from "@/lib/connect";
 import { emailDelivered, emailPaymentRequested } from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
 import { getPaymentProvider, quotePaymentAmount } from "@/lib/payments/provider";
+import { formatMoneyFromCents } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
@@ -387,9 +388,30 @@ export async function PATCH(request: Request, { params }: Params) {
     const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
 
     if (nextStatus === "AWAITING_PAYMENT") {
+      const corridor = await prisma.corridorConfig.findUnique({
+        where: {
+          fromCountry_toCountry: {
+            fromCountry: booking.request.fromCountry,
+            toCountry: booking.request.toCountry,
+          },
+        },
+      });
+      const payQuote = quotePaymentAmount({
+        weightKg: booking.request.weightKg,
+        pricePerKg: booking.trip.pricePerKgCad,
+        tripCurrency: booking.trip.currency,
+        preferredCurrency: booking.sender.preferredCurrency,
+        fromCountry: booking.request.fromCountry,
+        toCountry: booking.request.toCountry,
+        corridorCurrency: corridor?.currency,
+      });
+      const amountLabel = formatMoneyFromCents(
+        payQuote.amountCents,
+        payQuote.currency
+      );
       const paymentBody = proposedByTraveler
-        ? `Candidature acceptée · ${route}`
-        : `${booking.trip.user.displayName} a accepté · ${route}`;
+        ? `Candidature acceptée · ${route} · ${amountLabel}`
+        : `${booking.trip.user.displayName} a accepté · ${route} · ${amountLabel}`;
       void emailPaymentRequested({
         senderEmail: booking.sender.email,
         senderName: booking.sender.displayName,
@@ -397,6 +419,7 @@ export async function PATCH(request: Request, { params }: Params) {
         route,
         bookingId: booking.id,
         acceptedBySender: proposedByTraveler,
+        amountLabel,
       });
       void notifyUser({
         userId: booking.senderId,
@@ -434,10 +457,10 @@ export async function PATCH(request: Request, { params }: Params) {
         (await prisma.payment.findUnique({ where: { bookingId: booking.id } }))
           ?.travelerPayoutCents ??
         0;
-      const payoutLabel = new Intl.NumberFormat("fr-CA", {
-        style: "currency",
-        currency: (booking.payment?.currency ?? "cad").toUpperCase(),
-      }).format(payoutCents / 100);
+      const payoutLabel = formatMoneyFromCents(
+        payoutCents,
+        booking.payment?.currency ?? "CAD"
+      );
       void emailDelivered({
         senderEmail: booking.sender.email,
         travelerEmail: booking.trip.user.email,

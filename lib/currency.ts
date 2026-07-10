@@ -71,6 +71,32 @@ export function isZeroDecimalCurrency(code: MoneyCurrency | string) {
   return ZERO_DECIMAL.has(code.toUpperCase() as MoneyCurrency);
 }
 
+/** Map ISO country → default account/trip currency. */
+export function currencyForCountry(country?: string | null): MoneyCurrency {
+  if (!country) return "CAD";
+  const code = country.trim().toUpperCase();
+  if (code.length === 2 && COUNTRY_CURRENCY[code]) {
+    return COUNTRY_CURRENCY[code];
+  }
+  // Accept full names used on some profiles (e.g. "Canada", "France")
+  const byName: Record<string, MoneyCurrency> = {
+    CANADA: "CAD",
+    FRANCE: "EUR",
+    "ÉTATS-UNIS": "USD",
+    "ETATS-UNIS": "USD",
+    "UNITED STATES": "USD",
+    USA: "USD",
+    SÉNÉGAL: "XOF",
+    SENEGAL: "XOF",
+    "CÔTE D'IVOIRE": "XOF",
+    "COTE D'IVOIRE": "XOF",
+    CAMEROUN: "XAF",
+    CAMEROON: "XAF",
+    GABON: "XAF",
+  };
+  return byName[code] ?? "CAD";
+}
+
 /** Prefer destination corridor currency, else origin, else CAD. */
 export function resolveCheckoutCurrency(
   fromCountry: string,

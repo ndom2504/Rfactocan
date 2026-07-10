@@ -18,23 +18,24 @@ export function formatKg(value: number) {
 }
 
 export function formatCad(value: number) {
-  return new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(value);
+  return formatMoney(value, "CAD");
 }
 
+/** Format a major-unit price in the given ISO currency (CAD, USD, EUR, XOF…). */
 export function formatMoney(
   value: number,
   currency: string = "CAD",
   locale = "fr-CA"
 ) {
+  const code = (currency || "CAD").toUpperCase();
+  const zeroDecimal = code === "XOF" || code === "XAF";
   try {
     return new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: currency.toUpperCase(),
+      currency: code,
+      maximumFractionDigits: zeroDecimal ? 0 : 2,
     }).format(value);
   } catch {
-    return formatCad(value);
+    return `${value.toFixed(zeroDecimal ? 0 : 2)} ${code}`;
   }
 }

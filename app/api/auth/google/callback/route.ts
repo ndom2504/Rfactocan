@@ -90,10 +90,11 @@ export async function GET(request: Request) {
       await prisma.$executeRaw`
         INSERT INTO "User" (
           id, email, "googleId", "displayName", "avatarUrl", role, status,
-          "verifiedAt", "ratingAvg", "ratingCount", "createdAt", "updatedAt"
+          "preferredCurrency", "verifiedAt", "ratingAvg", "ratingCount",
+          "createdAt", "updatedAt"
         ) VALUES (
           ${id}, ${email}, ${profile.sub}, ${displayName}, ${profile.picture ?? null},
-          'BOTH', 'ACTIVE', NOW(), 0, 0, NOW(), NOW()
+          'BOTH', 'ACTIVE', 'CAD', NOW(), 0, 0, NOW(), NOW()
         )
       `;
       const created = await prisma.$queryRaw<UserRow[]>`

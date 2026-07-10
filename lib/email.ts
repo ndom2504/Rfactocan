@@ -147,11 +147,15 @@ export async function emailPaymentRequested(input: {
   route: string;
   bookingId: string;
   acceptedBySender?: boolean;
+  amountLabel?: string;
 }) {
   const url = `${getAppUrl()}/bookings/${input.bookingId}`;
   const acceptLine = input.acceptedBySender
     ? `<p>Vous avez accepté la candidature de <strong>${input.travelerName}</strong> sur <strong>${input.route}</strong>.</p>`
     : `<p><strong>${input.travelerName}</strong> a accepté votre colis sur <strong>${input.route}</strong>.</p>`;
+  const amountLine = input.amountLabel
+    ? `<p>Montant à payer : <strong>${input.amountLabel}</strong> (devise de votre compte).</p>`
+    : "";
   return sendEmail({
     to: input.senderEmail,
     subject: `Paiement requis — ${input.route}`,
@@ -159,6 +163,7 @@ export async function emailPaymentRequested(input: {
       "Paiement sécurisé requis",
       `<p>Bonjour ${input.senderName},</p>
        ${acceptLine}
+       ${amountLine}
        <p>Payez maintenant : les fonds restent bloqués jusqu'à la livraison.</p>
        <p><a href="${url}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Payer avec Stripe</a></p>`
     ),

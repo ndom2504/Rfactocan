@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { UserAvatar } from "@/components/user-avatar";
-import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
 type MyTrip = {
@@ -19,6 +19,7 @@ type MyTrip = {
   departAt: string;
   weightKg: number;
   pricePerKgCad: number;
+  currency?: string;
 };
 
 type Props = {
@@ -179,7 +180,8 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
               {trips.map((trip) => (
                 <option key={trip.id} value={trip.id}>
                   {trip.fromCity} → {trip.toCity} · {formatDate(trip.departAt)} ·{" "}
-                  {formatKg(trip.weightKg)} · {formatCad(trip.pricePerKgCad)}/kg
+                  {formatKg(trip.weightKg)} ·{" "}
+                  {formatMoney(trip.pricePerKgCad, trip.currency || "CAD")}/kg
                 </option>
               ))}
             </Select>

@@ -89,6 +89,7 @@ export async function GET(request: Request) {
       departAt: t.departAt,
       weightKg: t.weightKg,
       pricePerKgCad: t.pricePerKgCad,
+      currency: t.currency,
       user: t.user,
     })),
   });

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { TripSuggestedRequests } from "@/components/traveler-apply-panel";
-import { formatCad, formatDate, formatKg } from "@/lib/utils";
+import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
 type Props = { params: Promise<{ id: string }> };
@@ -61,7 +61,9 @@ export default async function TripDetailPage({ params }: Props) {
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge>{formatDate(trip.departAt)}</Badge>
               <Badge>{formatKg(trip.weightKg)}</Badge>
-              <Badge>{formatCad(trip.pricePerKgCad)}/kg</Badge>
+              <Badge>
+                {formatMoney(trip.pricePerKgCad, trip.currency || "CAD")}/kg
+              </Badge>
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
