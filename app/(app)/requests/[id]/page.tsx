@@ -17,7 +17,6 @@ type Match = {
   breakdown: {
     route: number;
     date: number;
-    price: number;
     reputation: number;
     history: number;
   };
@@ -51,6 +50,7 @@ type RequestData = {
   description: string;
   urgency: string;
   desiredDate: string | null;
+  declaredValue: number | null;
   photos: string[];
   userId: string;
   user: { displayName: string; avatarUrl?: string | null };
@@ -134,6 +134,9 @@ export default function RequestDetailPage({
               {request.desiredDate
                 ? ` · ${t("desired_date")} ${formatDate(request.desiredDate)}`
                 : ""}
+              {request.declaredValue != null
+                ? ` · ${t("declared_value")} ${formatCad(request.declaredValue)}`
+                : ""}
             </CardDescription>
             <p className="mt-4 text-sm leading-relaxed">{request.description}</p>
           </div>
@@ -213,9 +216,9 @@ export default function RequestDetailPage({
                     {formatCad(m.trip.pricePerKgCad)}/kg
                   </CardDescription>
                   <p className="mt-1 text-xs text-[var(--muted)]">
-                    Route {m.breakdown.route}% · Date {m.breakdown.date}% · Prix{" "}
-                    {m.breakdown.price}% · Réputation {m.breakdown.reputation}% ·
-                    Historique {m.breakdown.history}%
+                    Route {m.breakdown.route}% · Date {m.breakdown.date}% ·
+                    Réputation {m.breakdown.reputation}% · Historique{" "}
+                    {m.breakdown.history}%
                   </p>
                 </div>
                 <div className="flex gap-2">

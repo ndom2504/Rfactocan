@@ -75,7 +75,6 @@ CREATE TABLE "ParcelRequest" (
     "photosJson" TEXT NOT NULL DEFAULT '[]',
     "urgency" "Urgency" NOT NULL DEFAULT 'NORMAL',
     "declaredValue" DOUBLE PRECISION,
-    "maxPricePerKg" DOUBLE PRECISION,
     "desiredDate" TIMESTAMP(3),
     "status" "RequestStatus" NOT NULL DEFAULT 'OPEN',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

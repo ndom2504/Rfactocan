@@ -35,7 +35,6 @@ export default function EditRequestPage({
     description: string;
     urgency: string;
     declaredValue: number | null;
-    maxPricePerKg: number | null;
     desiredDate: string | null;
     photos: string[];
     userId: string;
@@ -108,9 +107,6 @@ export default function EditRequestPage({
       declaredValue: fd.get("declaredValue")
         ? Number(fd.get("declaredValue"))
         : null,
-      maxPricePerKg: fd.get("maxPricePerKg")
-        ? Number(fd.get("maxPricePerKg"))
-        : null,
       desiredDate: desired ? new Date(desired).toISOString() : null,
       photos,
     };
@@ -182,27 +178,15 @@ export default function EditRequestPage({
             req.desiredDate ? toLocalInput(req.desiredDate) : undefined
           }
         />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="declaredValue">Valeur déclarée</Label>
-            <Input
-              id="declaredValue"
-              name="declaredValue"
-              type="number"
-              min="0"
-              defaultValue={req.declaredValue ?? undefined}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="maxPricePerKg">Prix max / kg</Label>
-            <Input
-              id="maxPricePerKg"
-              name="maxPricePerKg"
-              type="number"
-              min="1"
-              defaultValue={req.maxPricePerKg ?? undefined}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="declaredValue">{t("declared_value")}</Label>
+          <Input
+            id="declaredValue"
+            name="declaredValue"
+            type="number"
+            min="0"
+            defaultValue={req.declaredValue ?? undefined}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="description">{t("description")}</Label>

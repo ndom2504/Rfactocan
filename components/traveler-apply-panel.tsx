@@ -163,7 +163,6 @@ type RequestMatch = {
   breakdown: {
     route: number;
     date: number;
-    price: number;
     reputation: number;
     history: number;
   };

@@ -79,7 +79,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO "ParcelRequest" (
   id, "userId", "fromCountry", "fromCity", "toCountry", "toCity",
   "weightKg", description, "photosJson", urgency, "declaredValue",
-  "maxPricePerKg", "desiredDate", status, "createdAt", "updatedAt"
+  "desiredDate", status, "createdAt", "updatedAt"
 ) VALUES (
   'seed_request_001',
   'seed_sender_001',
@@ -92,7 +92,6 @@ INSERT INTO "ParcelRequest" (
   '[]',
   'HIGH',
   150,
-  20,
   NOW() + INTERVAL '18 days',
   'OPEN',
   NOW(),

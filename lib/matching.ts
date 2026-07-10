@@ -26,14 +26,13 @@ export type MatchRequestInput = {
   fromCountry: string;
   fromCity: string;
   weightKg: number;
-  maxPricePerKg: number | null;
   desiredDate: Date | null;
 };
 
 /**
  * Score Rfacto mondial (0–100)
- * 40% route · 20% date · 15% prix · 15% réputation · 10% historique
- * (+ bonus poids inclus dans route/compatibilité opérationnelle)
+ * 45% route · 25% date · 18% réputation · 12% historique
+ * (le prix est fixé uniquement par le voyageur, hors score demande)
  */
 export type MatchResult = {
   trip: MatchTripInput;
@@ -41,7 +40,6 @@ export type MatchResult = {
   breakdown: {
     route: number;
     date: number;
-    price: number;
     reputation: number;
     history: number;
   };
@@ -55,7 +53,7 @@ export function scoreTripAgainstRequest(
   trip: MatchTripInput,
   request: MatchRequestInput
 ): MatchResult {
-  // Route 40%
+  // Route 45%
   let route = 0;
   const sameToCountry = trip.toCountry === request.toCountry;
   const sameToCity =
@@ -66,61 +64,52 @@ export function scoreTripAgainstRequest(
     sameFromCountry &&
     normalizeCity(trip.fromCity) === normalizeCity(request.fromCity);
 
-  if (sameToCity && sameFromCity) route = 40;
-  else if (sameToCity && sameFromCountry) route = 36;
-  else if (sameToCity) route = 32;
-  else if (sameToCountry && sameFromCountry) route = 28;
-  else if (sameToCountry) route = 22;
-  else if (sameFromCountry) route = 8;
+  if (sameToCity && sameFromCity) route = 45;
+  else if (sameToCity && sameFromCountry) route = 40;
+  else if (sameToCity) route = 36;
+  else if (sameToCountry && sameFromCountry) route = 32;
+  else if (sameToCountry) route = 24;
+  else if (sameFromCountry) route = 10;
 
   // Poids : si insuffisant, pénalité forte sur le score route
   if (trip.weightKg < request.weightKg) {
     route = Math.max(0, route - 18);
   }
 
-  // Date 20%
+  // Date 25%
   let date = 0;
   if (request.desiredDate) {
     const days = Math.abs(
       differenceInCalendarDays(trip.departAt, request.desiredDate)
     );
-    if (days === 0) date = 20;
-    else if (days <= 2) date = 18;
-    else if (days <= 5) date = 14;
-    else if (days <= 10) date = 8;
-    else if (days <= 20) date = 4;
+    if (days === 0) date = 25;
+    else if (days <= 2) date = 22;
+    else if (days <= 5) date = 17;
+    else if (days <= 10) date = 10;
+    else if (days <= 20) date = 5;
   } else {
-    date = 10;
+    date = 12;
   }
 
-  // Prix 15%
-  let price = 0;
-  if (request.maxPricePerKg == null) {
-    price = 8;
-  } else if (trip.pricePerKgCad <= request.maxPricePerKg) {
-    price = 15;
-  } else if (trip.pricePerKgCad <= request.maxPricePerKg * 1.15) {
-    price = 8;
-  } else if (trip.pricePerKgCad <= request.maxPricePerKg * 1.35) {
-    price = 3;
-  }
-
-  // Réputation 15%
+  // Réputation 18%
   const reputation =
     trip.user.ratingCount === 0
-      ? 6
-      : Math.round((trip.user.ratingAvg / 5) * 15);
+      ? 7
+      : Math.round((trip.user.ratingAvg / 5) * 18);
 
-  // Historique 10%
+  // Historique 12%
   const deliveries = trip.user.completedDeliveries ?? 0;
-  const history = Math.min(10, Math.floor(deliveries / 2) + (deliveries > 0 ? 2 : 0));
+  const history = Math.min(
+    12,
+    Math.floor(deliveries / 2) + (deliveries > 0 ? 2 : 0)
+  );
 
-  const score = Math.min(100, route + date + price + reputation + history);
+  const score = Math.min(100, route + date + reputation + history);
 
   return {
     trip,
     score,
-    breakdown: { route, date, price, reputation, history },
+    breakdown: { route, date, reputation, history },
   };
 }
 

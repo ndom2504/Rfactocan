@@ -187,7 +187,6 @@ async function main() {
       photosJson: "[]",
       urgency: "HIGH",
       declaredValue: 150,
-      maxPricePerKg: 20,
       desiredDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 18),
       status: "OPEN",
     },

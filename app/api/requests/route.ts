@@ -13,7 +13,6 @@ const schema = z.object({
   photos: z.array(z.string()).max(5).optional(),
   urgency: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
   declaredValue: z.coerce.number().nonnegative().optional(),
-  maxPricePerKg: z.coerce.number().positive().optional(),
   desiredDate: z.string().optional(),
 });
 
@@ -69,7 +68,6 @@ export async function POST(request: Request) {
         photosJson: JSON.stringify(body.photos ?? []),
         urgency: body.urgency,
         declaredValue: body.declaredValue,
-        maxPricePerKg: body.maxPricePerKg,
         desiredDate: body.desiredDate ? new Date(body.desiredDate) : null,
       },
     });

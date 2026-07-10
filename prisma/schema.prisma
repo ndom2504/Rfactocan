@@ -237,7 +237,6 @@ model ParcelRequest {
   photosJson    String        @default("[]")
   urgency       Urgency       @default(NORMAL)
   declaredValue Float?
-  maxPricePerKg Float?
   desiredDate   DateTime?
   status        RequestStatus @default(OPEN)
   createdAt     DateTime      @default(now())

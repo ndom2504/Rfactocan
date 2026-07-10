@@ -15,7 +15,6 @@ const patchSchema = z.object({
   photos: z.array(z.string()).max(5).optional(),
   urgency: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
   declaredValue: z.coerce.number().nonnegative().optional().nullable(),
-  maxPricePerKg: z.coerce.number().positive().optional().nullable(),
   desiredDate: z.string().optional().nullable(),
   status: z.enum(["OPEN", "MATCHED", "CLOSED", "CANCELLED"]).optional(),
 });
@@ -108,9 +107,6 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(body.urgency !== undefined ? { urgency: body.urgency } : {}),
         ...(body.declaredValue !== undefined
           ? { declaredValue: body.declaredValue }
-          : {}),
-        ...(body.maxPricePerKg !== undefined
-          ? { maxPricePerKg: body.maxPricePerKg }
           : {}),
         ...(body.desiredDate !== undefined
           ? {

@@ -167,7 +167,7 @@ const dict = {
       "Annoncez votre trajet ou votre besoin de colis — d'un pays à un autre.",
     step_match: "Match mondial",
     step_match_text:
-      "Score Rfacto : route, date, prix, réputation et historique de livraisons.",
+      "Score Rfacto : route, date, réputation et historique de livraisons.",
     step_trust: "Confiance",
     step_trust_text:
       "KYC, paiement séquestre, messagerie et notations mutuelles.",
@@ -234,6 +234,7 @@ const dict = {
     description: "Description",
     urgency: "Urgence",
     desired_date: "Date souhaitée",
+    declared_value: "Valeur déclarée",
     parcel_photos: "Photos du colis (max 5, 2 Mo)",
     suggested_travelers: "Voyageurs suggérés",
     no_matches: "Aucun voyageur compatible pour le moment.",
@@ -571,7 +572,7 @@ const dict = {
       "List your trip or parcel need — from any country to another.",
     step_match: "Global match",
     step_match_text:
-      "Rfacto score: route, date, price, reputation and delivery history.",
+      "Rfacto score: route, date, reputation and delivery history.",
     step_trust: "Trust",
     step_trust_text:
       "KYC, escrow payment, messaging and mutual ratings.",
@@ -634,6 +635,7 @@ const dict = {
     description: "Description",
     urgency: "Urgency",
     desired_date: "Desired date",
+    declared_value: "Declared value",
     parcel_photos: "Parcel photos (max 5, 2 MB)",
     suggested_travelers: "Suggested travelers",
     no_matches: "No matching travelers right now.",

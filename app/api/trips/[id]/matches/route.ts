@@ -74,7 +74,6 @@ export async function GET(_request: Request, { params }: Params) {
       fromCountry: r.fromCountry,
       fromCity: r.fromCity,
       weightKg: r.weightKg,
-      maxPricePerKg: r.maxPricePerKg,
       desiredDate: r.desiredDate,
       description: r.description,
       urgency: r.urgency,

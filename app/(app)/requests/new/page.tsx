@@ -52,9 +52,6 @@ export default function NewRequestPage() {
       declaredValue: fd.get("declaredValue")
         ? Number(fd.get("declaredValue"))
         : undefined,
-      maxPricePerKg: fd.get("maxPricePerKg")
-        ? Number(fd.get("maxPricePerKg"))
-        : undefined,
       desiredDate: desired ? new Date(desired).toISOString() : undefined,
       photos,
     };
@@ -103,25 +100,14 @@ export default function NewRequestPage() {
           </div>
         </div>
         <DateField name="desiredDate" label={t("desired_date")} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="declaredValue">Valeur déclarée (CAD)</Label>
-            <Input
-              id="declaredValue"
-              name="declaredValue"
-              type="number"
-              min="0"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="maxPricePerKg">Prix max / kg (CAD)</Label>
-            <Input
-              id="maxPricePerKg"
-              name="maxPricePerKg"
-              type="number"
-              min="1"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="declaredValue">{t("declared_value")}</Label>
+          <Input
+            id="declaredValue"
+            name="declaredValue"
+            type="number"
+            min="0"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="description">{t("description")}</Label>
