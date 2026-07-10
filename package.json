@@ -12,7 +12,10 @@
     "db:setup": "prisma db push && tsx prisma/seed.ts",
     "db:migrate": "prisma migrate deploy",
     "db:set-admin": "tsx scripts/set-admin.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "mobile": "npm --prefix mobile start",
+    "mobile:android": "npm --prefix mobile run android",
+    "mobile:prebuild": "npm --prefix mobile run prebuild"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",

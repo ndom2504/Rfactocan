@@ -94,4 +94,8 @@ Origins : `https://rfacto.com`, `http://localhost:3000`
 
 ## Hors scope (V2.1+)
 
-Mobile Money, assurance, litiges automatisés, Expo Android.
+Mobile Money, assurance, litiges automatisés, Google Sign-In natif, Stripe Payment Sheet.
+
+## App mobile Android (Expo)
+
+Voir [`mobile/README.md`](mobile/README.md) — Expo Router + Bearer auth, ouvrable dans Android Studio via `npx expo prebuild`.

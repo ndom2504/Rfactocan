@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { User, UserRole, UserStatus } from "@prisma/client";
@@ -36,7 +36,9 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function createSessionToken(user: Pick<User, "id" | "email" | "role">) {
+export async function createSessionToken(
+  user: Pick<User, "id" | "email" | "role">
+) {
   return new SignJWT({ email: user.email, role: user.role })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
@@ -61,11 +63,27 @@ export async function clearSessionCookie() {
   cookieStore.delete(COOKIE_NAME);
 }
 
-export async function getSessionUser(): Promise<SessionUser | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
+/** Extract Bearer token from an Authorization header value. */
+export function getBearerTokenFromHeader(
+  authorization?: string | null
+): string | null {
+  if (!authorization) return null;
+  const match = /^Bearer\s+(.+)$/i.exec(authorization.trim());
+  return match?.[1]?.trim() || null;
+}
 
+async function resolveSessionToken(): Promise<string | null> {
+  const headerStore = await headers();
+  const bearer = getBearerTokenFromHeader(headerStore.get("authorization"));
+  if (bearer) return bearer;
+
+  const cookieStore = await cookies();
+  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+}
+
+async function sessionUserFromToken(
+  token: string
+): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
     const userId = payload.sub;
@@ -89,6 +107,15 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolve the current user from Bearer token (mobile) or session cookie (web).
+ */
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const token = await resolveSessionToken();
+  if (!token) return null;
+  return sessionUserFromToken(token);
 }
 
 export async function requireUser() {
