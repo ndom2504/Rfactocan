@@ -8,6 +8,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
+import { TravelerApplyPanel } from "@/components/traveler-apply-panel";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
@@ -183,6 +184,8 @@ export default function RequestDetailPage({
           </div>
         </div>
       </Card>
+
+      {!isOwner && meId && <TravelerApplyPanel requestId={request.id} />}
 
       {isOwner && (
         <section className="space-y-4">

@@ -148,13 +148,22 @@ export async function PATCH(request: Request, { params }: Params) {
       );
     }
 
+    const proposedByTraveler = booking.proposedBy === "TRAVELER";
+    // Sender proposes → traveler accepts/refuses.
+    // Traveler applies → sender accepts/refuses.
+    const canDecideProposal = proposedByTraveler ? isSender : isTraveler;
+
     if (
       body.status === "REFUSED" ||
       (booking.status === "PROPOSED" && body.status === "ACCEPTED")
     ) {
-      if (!isTraveler) {
+      if (!canDecideProposal) {
         return NextResponse.json(
-          { error: "Seul le voyageur peut accepter ou refuser." },
+          {
+            error: proposedByTraveler
+              ? "Seul l'expéditeur peut accepter ou refuser cette candidature."
+              : "Seul le voyageur peut accepter ou refuser.",
+          },
           { status: 403 }
         );
       }
@@ -163,6 +172,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (
       booking.status === "PROPOSED" &&
       body.status === "ACCEPTED" &&
+      !proposedByTraveler &&
       isTraveler
     ) {
       if (!body.goodsCertified || !body.customsAcknowledged) {
@@ -330,18 +340,43 @@ export async function PATCH(request: Request, { params }: Params) {
     const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
 
     if (nextStatus === "AWAITING_PAYMENT") {
+      const paymentBody = proposedByTraveler
+        ? `Candidature acceptée · ${route}`
+        : `${booking.trip.user.displayName} a accepté · ${route}`;
       void emailPaymentRequested({
         senderEmail: booking.sender.email,
         senderName: booking.sender.displayName,
         travelerName: booking.trip.user.displayName,
         route,
         bookingId: booking.id,
+        acceptedBySender: proposedByTraveler,
       });
       void notifyUser({
         userId: booking.senderId,
         type: "payment_requested",
         title: "Paiement requis",
-        body: `${booking.trip.user.displayName} a accepté · ${route}`,
+        body: paymentBody,
+        href: `/bookings/${booking.id}`,
+      });
+      if (proposedByTraveler) {
+        void notifyUser({
+          userId: booking.trip.userId,
+          type: "booking_accepted",
+          title: "Candidature acceptée",
+          body: `${booking.sender.displayName} · ${route}`,
+          href: `/bookings/${booking.id}`,
+        });
+      }
+    } else if (
+      nextStatus === "ACCEPTED" &&
+      booking.status === "PROPOSED" &&
+      proposedByTraveler
+    ) {
+      void notifyUser({
+        userId: booking.trip.userId,
+        type: "booking_accepted",
+        title: "Candidature acceptée",
+        body: `${booking.sender.displayName} · ${route}`,
         href: `/bookings/${booking.id}`,
       });
     }

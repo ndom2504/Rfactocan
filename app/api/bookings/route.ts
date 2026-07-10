@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { emailBookingProposed } from "@/lib/email";
+import { travelerCanReceivePayments } from "@/lib/connect";
+import {
+  emailBookingApplication,
+  emailBookingProposed,
+} from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
+import { isStripeConfigured } from "@/lib/stripe";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
 const createSchema = z.object({
   requestId: z.string().min(1),
   tripId: z.string().min(1),
+  goodsCertified: z.boolean().optional(),
+  customsAcknowledged: z.boolean().optional(),
 });
 
 export async function GET(request: Request) {
@@ -73,6 +80,7 @@ export async function POST(request: Request) {
     const body = createSchema.parse(await request.json());
     const parcel = await prisma.parcelRequest.findUnique({
       where: { id: body.requestId },
+      include: { user: true },
     });
     const trip = await prisma.trip.findUnique({
       where: { id: body.tripId },
@@ -82,13 +90,20 @@ export async function POST(request: Request) {
     if (!parcel || !trip) {
       return NextResponse.json({ error: "Ressource introuvable" }, { status: 404 });
     }
-    if (parcel.userId !== session.id) {
+
+    const isSender = parcel.userId === session.id;
+    const isTraveler = trip.userId === session.id;
+
+    if (!isSender && !isTraveler) {
       return NextResponse.json(
-        { error: "Seule l'expéditeur peut proposer une réservation." },
+        {
+          error:
+            "Seuls l'expéditeur de la demande ou le voyageur du trajet peuvent proposer.",
+        },
         { status: 403 }
       );
     }
-    if (trip.userId === session.id) {
+    if (isSender && isTraveler) {
       return NextResponse.json(
         { error: "Vous ne pouvez pas réserver votre propre voyage." },
         { status: 400 }
@@ -101,13 +116,53 @@ export async function POST(request: Request) {
       );
     }
 
+    const proposedBy = isTraveler ? "TRAVELER" : "SENDER";
+
+    if (proposedBy === "TRAVELER") {
+      if (!body.goodsCertified || !body.customsAcknowledged) {
+        return NextResponse.json(
+          {
+            error:
+              "Vous devez certifier l'inspection du colis et la conformité douanière.",
+          },
+          { status: 400 }
+        );
+      }
+      if (isStripeConfigured()) {
+        if (trip.user.kycStatus !== "VERIFIED") {
+          return NextResponse.json(
+            {
+              error:
+                "Vérifiez votre identité (KYC) avant de postuler sur une demande.",
+              code: "KYC_REQUIRED",
+            },
+            { status: 400 }
+          );
+        }
+        if (!travelerCanReceivePayments(trip.user)) {
+          return NextResponse.json(
+            {
+              error:
+                "Configurez la réception de vos gains (compte bancaire Stripe) dans Profil avant de postuler.",
+              code: "CONNECT_REQUIRED",
+            },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const booking = await prisma.$transaction(async (tx) => {
       const created = await tx.booking.create({
         data: {
           requestId: body.requestId,
           tripId: body.tripId,
-          senderId: session.id,
+          senderId: parcel.userId,
+          proposedBy,
           status: "PROPOSED",
+          ...(proposedBy === "TRAVELER"
+            ? { goodsCertified: true, customsAcknowledged: true }
+            : {}),
         },
       });
       await recordBookingEvent(tx, {
@@ -116,26 +171,48 @@ export async function POST(request: Request) {
         status: "PROPOSED",
         label: statusEventLabel("PROPOSED"),
         actorId: session.id,
-        meta: { requestId: body.requestId, tripId: body.tripId },
+        meta: {
+          requestId: body.requestId,
+          tripId: body.tripId,
+          proposedBy,
+        },
       });
       return created;
     });
 
     const route = `${parcel.fromCity} → ${parcel.toCity}`;
-    void emailBookingProposed({
-      travelerEmail: trip.user.email,
-      travelerName: trip.user.displayName,
-      senderName: session.displayName,
-      route,
-      bookingId: booking.id,
-    });
-    void notifyUser({
-      userId: trip.userId,
-      type: "booking_proposed",
-      title: "Nouvelle proposition de colis",
-      body: `${session.displayName} · ${route}`,
-      href: `/bookings/${booking.id}`,
-    });
+
+    if (proposedBy === "SENDER") {
+      void emailBookingProposed({
+        travelerEmail: trip.user.email,
+        travelerName: trip.user.displayName,
+        senderName: session.displayName,
+        route,
+        bookingId: booking.id,
+      });
+      void notifyUser({
+        userId: trip.userId,
+        type: "booking_proposed",
+        title: "Nouvelle proposition de colis",
+        body: `${session.displayName} · ${route}`,
+        href: `/bookings/${booking.id}`,
+      });
+    } else {
+      void emailBookingApplication({
+        senderEmail: parcel.user.email,
+        senderName: parcel.user.displayName,
+        travelerName: session.displayName,
+        route,
+        bookingId: booking.id,
+      });
+      void notifyUser({
+        userId: parcel.userId,
+        type: "booking_application",
+        title: "Un voyageur a postulé",
+        body: `${session.displayName} · ${route}`,
+        href: `/bookings/${booking.id}`,
+      });
+    }
 
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {

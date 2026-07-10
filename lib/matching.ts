@@ -135,3 +135,44 @@ export function rankMatches(
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
+
+export type MatchRequestWithMeta = MatchRequestInput & {
+  id: string;
+  description: string;
+  urgency: string;
+  photosJson?: string;
+  user: {
+    id: string;
+    displayName: string;
+    ratingAvg: number;
+    ratingCount: number;
+    verifiedAt: Date | null;
+    avatarUrl: string | null;
+  };
+};
+
+export type RequestMatchResult = {
+  request: MatchRequestWithMeta;
+  score: number;
+  breakdown: MatchResult["breakdown"];
+};
+
+/** Inverse matching: rank open requests against a traveler's trip. */
+export function rankRequestsForTrip(
+  trip: MatchTripInput,
+  requests: MatchRequestWithMeta[],
+  limit = 10
+): RequestMatchResult[] {
+  return requests
+    .map((request) => {
+      const scored = scoreTripAgainstRequest(trip, request);
+      return {
+        request,
+        score: scored.score,
+        breakdown: scored.breakdown,
+      };
+    })
+    .filter((m) => m.score >= 25)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}

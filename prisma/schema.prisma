@@ -255,6 +255,8 @@ model Booking {
   requestId           String
   tripId              String
   senderId            String
+  /// Who started the mise en relation: SENDER (propose) or TRAVELER (apply)
+  proposedBy          String        @default("SENDER")
   status              BookingStatus @default(PROPOSED)
   goodsCertified      Boolean       @default(false)
   customsAcknowledged Boolean       @default(false)

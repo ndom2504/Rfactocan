@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
+import { TripSuggestedRequests } from "@/components/traveler-apply-panel";
 import { formatCad, formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -137,6 +138,10 @@ export default async function TripDetailPage({ params }: Props) {
           </div>
         </div>
       </Card>
+
+      {isOwner && me?.id === trip.userId && (
+        <TripSuggestedRequests tripId={trip.id} />
+      )}
     </div>
   );
 }

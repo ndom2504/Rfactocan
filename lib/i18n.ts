@@ -223,6 +223,7 @@ const dict = {
     flight: "Vol",
     see_requests: "Voir les demandes / matcher",
     weight_available_badge: "dispo",
+    see_requests_short: "Parcourir les demandes",
 
     // Requests
     requests_title: "Demandes de colis",
@@ -237,6 +238,19 @@ const dict = {
     suggested_travelers: "Voyageurs suggérés",
     no_matches: "Aucun voyageur compatible pour le moment.",
     propose: "Proposer",
+    apply: "Postuler",
+    apply_hint:
+      "Choisissez l'un de vos voyages ouverts, certifiez le colis, puis envoyez votre candidature à l'expéditeur.",
+    apply_no_trips:
+      "Vous n'avez aucun voyage ouvert. Publiez un trajet pour postuler.",
+    select_trip: "Votre voyage",
+    suggested_requests: "Demandes suggérées",
+    no_request_matches: "Aucune demande compatible pour le moment.",
+    accept_application: "Accepter la candidature",
+    accept_application_hint:
+      "En acceptant, vous pourrez payer en séquestre. Les fonds ne seront versés au voyageur qu'après livraison.",
+    application_pending_traveler:
+      "Candidature envoyée — en attente de la réponse de l'expéditeur.",
     no_parcel_photo: "Pas de photo",
     parcel_photo: "Colis",
     profile_photo: "Profil",
@@ -244,7 +258,8 @@ const dict = {
     // Bookings
     bookings_title: "Réservations",
     bookings_subtitle: "Suivez vos propositions, paiements et livraisons.",
-    no_bookings: "Aucune réservation. Proposez un voyageur depuis une demande.",
+    no_bookings:
+      "Aucune réservation. Proposez un voyageur depuis une demande, ou postulez depuis un voyage.",
     to_pay: "À payer",
     funds_held: "Fonds bloqués",
     paid: "Payé",
@@ -609,6 +624,7 @@ const dict = {
     flight: "Flight",
     see_requests: "See requests / match",
     weight_available_badge: "available",
+    see_requests_short: "Browse requests",
 
     requests_title: "Parcel requests",
     requests_subtitle: "Shipping needs posted by individuals.",
@@ -622,13 +638,26 @@ const dict = {
     suggested_travelers: "Suggested travelers",
     no_matches: "No matching travelers right now.",
     propose: "Propose",
+    apply: "Apply",
+    apply_hint:
+      "Choose one of your open trips, certify the parcel, then send your application to the sender.",
+    apply_no_trips: "You have no open trips. Publish a trip to apply.",
+    select_trip: "Your trip",
+    suggested_requests: "Suggested requests",
+    no_request_matches: "No matching requests right now.",
+    accept_application: "Accept application",
+    accept_application_hint:
+      "After you accept, you can pay into escrow. Funds are released to the traveler only after delivery.",
+    application_pending_traveler:
+      "Application sent — waiting for the sender's response.",
     no_parcel_photo: "No photo",
     parcel_photo: "Parcel",
     profile_photo: "Profile",
 
     bookings_title: "Bookings",
     bookings_subtitle: "Track proposals, payments and deliveries.",
-    no_bookings: "No bookings. Propose a traveler from a request.",
+    no_bookings:
+      "No bookings. Propose a traveler from a request, or apply from a trip.",
     to_pay: "To pay",
     funds_held: "Funds held",
     paid: "Paid",

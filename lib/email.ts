@@ -120,7 +120,7 @@ export async function emailBookingProposed(input: {
   });
 }
 
-export async function emailPaymentRequested(input: {
+export async function emailBookingApplication(input: {
   senderEmail: string;
   senderName: string;
   travelerName: string;
@@ -130,11 +130,35 @@ export async function emailPaymentRequested(input: {
   const url = `${getAppUrl()}/bookings/${input.bookingId}`;
   return sendEmail({
     to: input.senderEmail,
+    subject: `Un voyageur a postulé — ${input.route}`,
+    html: layout(
+      "Candidature voyageur",
+      `<p>Bonjour ${input.senderName},</p>
+       <p><strong>${input.travelerName}</strong> souhaite transporter votre colis sur <strong>${input.route}</strong>.</p>
+       <p><a href="${url}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la candidature</a></p>`
+    ),
+  });
+}
+
+export async function emailPaymentRequested(input: {
+  senderEmail: string;
+  senderName: string;
+  travelerName: string;
+  route: string;
+  bookingId: string;
+  acceptedBySender?: boolean;
+}) {
+  const url = `${getAppUrl()}/bookings/${input.bookingId}`;
+  const acceptLine = input.acceptedBySender
+    ? `<p>Vous avez accepté la candidature de <strong>${input.travelerName}</strong> sur <strong>${input.route}</strong>.</p>`
+    : `<p><strong>${input.travelerName}</strong> a accepté votre colis sur <strong>${input.route}</strong>.</p>`;
+  return sendEmail({
+    to: input.senderEmail,
     subject: `Paiement requis — ${input.route}`,
     html: layout(
       "Paiement sécurisé requis",
       `<p>Bonjour ${input.senderName},</p>
-       <p><strong>${input.travelerName}</strong> a accepté votre colis sur <strong>${input.route}</strong>.</p>
+       ${acceptLine}
        <p>Payez maintenant : les fonds restent bloqués jusqu'à la livraison.</p>
        <p><a href="${url}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Payer avec Stripe</a></p>`
     ),

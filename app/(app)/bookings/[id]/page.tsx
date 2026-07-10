@@ -29,6 +29,7 @@ type Booking = {
   id: string;
   status: string;
   senderId: string;
+  proposedBy?: string;
   goodsCertified: boolean;
   customsAcknowledged: boolean;
   payment?: Payment | null;
@@ -215,6 +216,10 @@ export default function BookingDetailPage({
 
   const isTraveler = meId === booking.trip.userId;
   const isSender = meId === booking.senderId;
+  const proposedByTraveler = booking.proposedBy === "TRAVELER";
+  const canDecideProposal =
+    booking.status === "PROPOSED" &&
+    (proposedByTraveler ? isSender : isTraveler);
   const alreadyReviewed = booking.reviews.some((r) => r.fromUserId === meId);
   const payment = booking.payment;
   const paymentAuthorized =
@@ -269,7 +274,44 @@ export default function BookingDetailPage({
             </p>
           )}
 
-          {booking.status === "PROPOSED" && isTraveler && (
+          {booking.status === "PROPOSED" &&
+            isTraveler &&
+            proposedByTraveler && (
+              <p className="mt-4 text-sm text-[var(--muted)]">
+                {t("application_pending_traveler")}
+              </p>
+            )}
+
+          {canDecideProposal && proposedByTraveler && isSender && (
+            <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <p className="text-sm text-[var(--muted)]">
+                {t("accept_application_hint")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  disabled={loading}
+                  onClick={() => patchStatus("ACCEPTED")}
+                >
+                  {t("accept_application")}
+                </Button>
+                <Button
+                  variant="danger"
+                  disabled={loading}
+                  onClick={() => patchStatus("REFUSED")}
+                >
+                  {t("refuse")}
+                </Button>
+              </div>
+              <p className="text-xs text-[var(--muted)]">
+                {t("liability_compact")}{" "}
+                <Link href="/responsibility" className="underline">
+                  {t("liability_learn_more")}
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {canDecideProposal && !proposedByTraveler && isTraveler && (
             <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
               <p className="text-sm text-[var(--muted)]">{t("accept_hint")}</p>
               <label className="flex items-start gap-2 text-sm">
