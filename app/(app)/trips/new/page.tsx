@@ -145,6 +145,7 @@ export default function NewTripPage() {
               min="1"
               required
             />
+            <p className="text-xs text-[var(--muted)]">{t("price_per_kg_hint")}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">{t("currency")}</Label>
@@ -155,6 +156,7 @@ export default function NewTripPage() {
                 </option>
               ))}
             </Select>
+            <p className="text-xs text-[var(--muted)]">{t("trip_currency_hint")}</p>
           </div>
         </div>
         <div className="space-y-2">

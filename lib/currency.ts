@@ -4,9 +4,9 @@ export type MoneyCurrency = "CAD" | "USD" | "EUR" | "XOF" | "XAF";
 const ZERO_DECIMAL = new Set<MoneyCurrency>(["XOF", "XAF"]);
 
 export const CURRENCY_OPTIONS: { code: MoneyCurrency; label: string }[] = [
-  { code: "CAD", label: "CAD — Dollar canadien" },
-  { code: "USD", label: "USD — Dollar américain" },
-  { code: "EUR", label: "EUR — Euro" },
+  { code: "CAD", label: "CAD — Dollar canadien ($ CA)" },
+  { code: "USD", label: "USD — Dollar américain ($ US)" },
+  { code: "EUR", label: "EUR — Euro (€)" },
   { code: "XOF", label: "FCFA Ouest (XOF)" },
   { code: "XAF", label: "FCFA Centre (XAF)" },
 ];

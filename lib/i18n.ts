@@ -55,11 +55,16 @@ const dict = {
     language: "Langue",
     currency: "Devise",
     preferred_currency: "Devise préférée",
+    preferred_currency_hint:
+      "Devise de paiement sur Stripe. CAD = dollar canadien ($ CA), USD = dollar américain ($ US) — ce ne sont pas la même monnaie.",
+    trip_currency_hint:
+      "Devise du prix / kg. CAD ($ CA) ≠ USD ($ US). L’expéditeur paiera dans sa devise préférée (conversion auto).",
     airline: "Compagnie",
     flight_number: "N° de vol",
     airport_from: "Aéroport de départ",
     airport_to: "Aéroport d'arrivée",
     price_per_kg: "Prix / kg",
+    price_per_kg_hint: "Montant dans la devise choisie à droite (CAD ou USD, etc.).",
     weight_kg: "Poids (kg)",
     weight_available: "Poids disponible (kg)",
     departure_date: "Date de départ",
@@ -467,11 +472,16 @@ const dict = {
     language: "Language",
     currency: "Currency",
     preferred_currency: "Preferred currency",
+    preferred_currency_hint:
+      "Stripe checkout currency. CAD = Canadian dollar (CA$), USD = US dollar (US$) — they are different currencies.",
+    trip_currency_hint:
+      "Currency for your price per kg. CAD (CA$) ≠ USD (US$). The sender pays in their preferred currency (auto-converted).",
     airline: "Airline",
     flight_number: "Flight number",
     airport_from: "Departure airport",
     airport_to: "Arrival airport",
     price_per_kg: "Price / kg",
+    price_per_kg_hint: "Amount in the currency selected on the right (CAD, USD, etc.).",
     weight_kg: "Weight (kg)",
     weight_available: "Available weight (kg)",
     departure_date: "Departure date",

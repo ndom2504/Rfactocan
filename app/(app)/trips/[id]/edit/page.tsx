@@ -181,6 +181,7 @@ export default function EditTripPage({
               required
               defaultValue={trip.pricePerKgCad}
             />
+            <p className="text-xs text-[var(--muted)]">{t("price_per_kg_hint")}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">{t("currency")}</Label>
@@ -195,6 +196,7 @@ export default function EditTripPage({
                 </option>
               ))}
             </Select>
+            <p className="text-xs text-[var(--muted)]">{t("trip_currency_hint")}</p>
           </div>
         </div>
         <div className="space-y-2">

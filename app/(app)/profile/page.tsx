@@ -367,6 +367,9 @@ function ProfileForm() {
                   </option>
                 ))}
               </Select>
+              <p className="text-xs text-[var(--muted)]">
+                {t("preferred_currency_hint")}
+              </p>
             </div>
           </div>
 
