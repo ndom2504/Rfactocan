@@ -25,6 +25,11 @@ type Payment = {
   currency?: string;
 };
 
+type PaymentQuote = {
+  amountCents: number;
+  currency: string;
+};
+
 type Booking = {
   id: string;
   status: string;
@@ -47,6 +52,7 @@ type Booking = {
     fromCity: string;
     toCity: string;
     pricePerKgCad?: number;
+    currency?: string;
     user: {
       id: string;
       displayName: string;
@@ -55,7 +61,7 @@ type Booking = {
       stripeConnectPayoutsEnabled?: boolean;
     };
   };
-  sender: { id: string; displayName: string };
+  sender: { id: string; displayName: string; preferredCurrency?: string };
   reviews: { fromUserId: string }[];
 };
 
@@ -64,14 +70,6 @@ function formatCents(cents: number, currency = "CAD") {
     style: "currency",
     currency: currency.toUpperCase(),
   }).format(cents / 100);
-}
-
-function feePercentLabel(payment: Payment) {
-  if (!payment.amountCadCents) return "—";
-  const pct = Math.round(
-    (payment.platformFeeCents / payment.amountCadCents) * 1000
-  ) / 10;
-  return `${pct} %`;
 }
 
 export default function BookingDetailPage({
@@ -83,6 +81,7 @@ export default function BookingDetailPage({
   const { t, bookingStatus, paymentStatus } = useI18n();
   const [id, setId] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [paymentQuote, setPaymentQuote] = useState<PaymentQuote | null>(null);
   const [meId, setMeId] = useState("");
   const [goodsCertified, setGoodsCertified] = useState(false);
   const [customsAcknowledged, setCustomsAcknowledged] = useState(false);
@@ -114,6 +113,7 @@ export default function BookingDetailPage({
     const meData = await meRes.json();
     if (bRes.ok) {
       setBooking(bData.booking);
+      setPaymentQuote(bData.paymentQuote ?? null);
       setStripeConfigured(bData.stripeConfigured !== false);
       if (
         paymentReturn === "success" &&
@@ -363,8 +363,10 @@ export default function BookingDetailPage({
           )}
 
           {booking.status === "AWAITING_PAYMENT" && isSender && (
-            <div className="mt-4 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <h3 className="font-medium">{t("pay_secure")}</h3>
+            <div className="mt-4 space-y-4 rounded-xl border border-[var(--accent)]/25 bg-[var(--accent-soft)]/35 p-5">
+              <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">
+                {t("pay_secure")}
+              </h3>
               {awaitingConfirm && (
                 <p className="text-sm text-[var(--accent)]">
                   {t("payment_confirming")}
@@ -375,38 +377,31 @@ export default function BookingDetailPage({
                   {t("payment_failed_hint")}
                 </p>
               )}
-              {payment && !paymentAuthorized && (
-                <ul className="space-y-1 text-sm">
-                  <li>
-                    {t("total")} :{" "}
+              {!paymentAuthorized && (
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-4 text-center">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                    {t("amount_to_pay")}
+                  </p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)]">
                     {formatCents(
-                      payment.amountCadCents,
-                      payment.currency ?? "CAD"
+                      payment?.amountCadCents ??
+                        paymentQuote?.amountCents ??
+                        0,
+                      payment?.currency ?? paymentQuote?.currency ?? "CAD"
                     )}
-                  </li>
-                  <li>
-                    {t("commission")} ({feePercentLabel(payment)}) :{" "}
-                    {formatCents(
-                      payment.platformFeeCents,
-                      payment.currency ?? "CAD"
-                    )}
-                  </li>
-                  <li>
-                    {t("traveler_receives")} :{" "}
-                    {formatCents(
-                      payment.travelerPayoutCents,
-                      payment.currency ?? "CAD"
-                    )}
-                  </li>
-                </ul>
-              )}
-              {!payment && (
-                <p className="text-sm text-[var(--muted)]">
-                  {t("funds_held_until")}
-                </p>
+                  </p>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    {t("funds_held_until")}
+                  </p>
+                </div>
               )}
               {!awaitingConfirm && !paymentAuthorized && (
-                <Button disabled={loading} onClick={startCheckout}>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={loading}
+                  onClick={startCheckout}
+                >
                   {loading
                     ? t("loading")
                     : paymentFailed

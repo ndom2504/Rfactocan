@@ -6,10 +6,27 @@ import { notifyUser } from "@/lib/notifications";
 
 type Params = { params: Promise<{ id: string }> };
 
+const attachmentUrlSchema = z
+  .string()
+  .refine(
+    (value) => {
+      if (value.startsWith("/api/media") || value.startsWith("/uploads/")) {
+        return true;
+      }
+      try {
+        const parsed = new URL(value);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    },
+    { message: "URL de pièce jointe invalide." }
+  );
+
 const schema = z
   .object({
     body: z.string().max(4000).optional().nullable(),
-    attachmentUrl: z.string().url().optional().nullable(),
+    attachmentUrl: attachmentUrlSchema.optional().nullable(),
   })
   .refine(
     (v) => Boolean((v.body && v.body.trim()) || v.attachmentUrl),

@@ -1,7 +1,10 @@
 import type { PaymentStatus } from "@prisma/client";
 import { getAppUrl } from "@/lib/app-url";
 import {
+  convertAmount,
+  normalizeCurrency,
   resolveCheckoutCurrency,
+  resolvePayerCurrency,
   toStripeCurrency,
   type MoneyCurrency,
 } from "@/lib/currency";
@@ -12,6 +15,7 @@ export type CreateAuthorizationInput = {
   bookingId: string;
   weightKg: number;
   pricePerKgCad: number;
+  tripCurrency?: string | null;
   senderEmail: string;
   senderId: string;
   travelerConnectAccountId: string;
@@ -28,28 +32,48 @@ export type PaymentProvider = {
   cancelAuthorization: (bookingId: string) => Promise<void>;
 };
 
-async function resolveCorridor(
+async function resolveFeeBps(
   fromCountry: string,
   toCountry: string
-): Promise<{ feeBps: number; currency: MoneyCurrency }> {
+): Promise<number> {
   const corridor = await prisma.corridorConfig.findUnique({
     where: {
       fromCountry_toCountry: { fromCountry, toCountry },
     },
   });
-  const feeBps = corridor?.active
-    ? corridor.feeBps
-    : (() => {
-        const raw = process.env.PLATFORM_FEE_BPS;
-        const parsed = raw ? Number(raw) : 1000;
-        return Number.isFinite(parsed) ? Math.floor(parsed) : 1000;
-      })();
-  const currency = resolveCheckoutCurrency(
-    fromCountry,
-    toCountry,
-    corridor?.currency
-  );
-  return { feeBps, currency };
+  if (corridor?.active) return corridor.feeBps;
+  const raw = process.env.PLATFORM_FEE_BPS;
+  const parsed = raw ? Number(raw) : 1000;
+  return Number.isFinite(parsed) ? Math.floor(parsed) : 1000;
+}
+
+export function quotePaymentAmount(input: {
+  weightKg: number;
+  pricePerKg: number;
+  tripCurrency?: string | null;
+  preferredCurrency?: string | null;
+  fromCountry: string;
+  toCountry: string;
+  corridorCurrency?: string | null;
+}): { amountCents: number; currency: MoneyCurrency } {
+  const sourceCurrency =
+    normalizeCurrency(input.tripCurrency) ||
+    resolveCheckoutCurrency(
+      input.fromCountry,
+      input.toCountry,
+      input.corridorCurrency
+    );
+  const currency = resolvePayerCurrency({
+    preferredCurrency: input.preferredCurrency,
+    tripCurrency: input.tripCurrency,
+    fromCountry: input.fromCountry,
+    toCountry: input.toCountry,
+    corridorCurrency: input.corridorCurrency,
+  });
+  const baseMajor = Math.max(0, input.weightKg * input.pricePerKg);
+  const converted = convertAmount(baseMajor, sourceCurrency, currency);
+  const amountCents = Math.max(100, Math.round(converted * 100));
+  return { amountCents, currency };
 }
 
 export const stripePaymentProvider: PaymentProvider = {
@@ -58,14 +82,24 @@ export const stripePaymentProvider: PaymentProvider = {
       throw new Error("Stripe n'est pas configuré");
     }
 
-    const { feeBps, currency } = await resolveCorridor(
-      input.fromCountry,
-      input.toCountry
-    );
-    const amountCents = Math.max(
-      100,
-      Math.round(input.weightKg * input.pricePerKgCad * 100)
-    );
+    const corridor = await prisma.corridorConfig.findUnique({
+      where: {
+        fromCountry_toCountry: {
+          fromCountry: input.fromCountry,
+          toCountry: input.toCountry,
+        },
+      },
+    });
+    const feeBps = await resolveFeeBps(input.fromCountry, input.toCountry);
+    const { amountCents, currency } = quotePaymentAmount({
+      weightKg: input.weightKg,
+      pricePerKg: input.pricePerKgCad,
+      tripCurrency: input.tripCurrency,
+      preferredCurrency: input.preferredCurrency,
+      fromCountry: input.fromCountry,
+      toCountry: input.toCountry,
+      corridorCurrency: corridor?.currency,
+    });
     const platformFeeCents = Math.floor((amountCents * feeBps) / 10000);
     const travelerPayoutCents = amountCents - platformFeeCents;
     const stripeCurrency = toStripeCurrency(currency);
@@ -122,8 +156,8 @@ export const stripePaymentProvider: PaymentProvider = {
             currency: stripeCurrency,
             unit_amount: amountCents,
             product_data: {
-              name: "Rfacto parcel transport (escrow)",
-              description: `Booking ${input.bookingId} — funds held until delivery`,
+              name: "Rfacto — transport de colis (séquestre)",
+              description: `Réservation ${input.bookingId} — fonds bloqués jusqu'à livraison`,
             },
           },
         },

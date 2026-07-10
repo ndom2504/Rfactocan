@@ -4,7 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { travelerCanReceivePayments } from "@/lib/connect";
 import { emailDelivered, emailPaymentRequested } from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
-import { getPaymentProvider } from "@/lib/payments/provider";
+import { getPaymentProvider, quotePaymentAmount } from "@/lib/payments/provider";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
@@ -76,6 +76,7 @@ export async function GET(_request: Request, { params }: Params) {
           verifiedAt: true,
           avatarUrl: true,
           kycStatus: true,
+          preferredCurrency: true,
         },
       },
       reviews: true,
@@ -94,6 +95,24 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Interdit" }, { status: 403 });
   }
 
+  const corridor = await prisma.corridorConfig.findUnique({
+    where: {
+      fromCountry_toCountry: {
+        fromCountry: booking.request.fromCountry,
+        toCountry: booking.request.toCountry,
+      },
+    },
+  });
+  const quote = quotePaymentAmount({
+    weightKg: booking.request.weightKg,
+    pricePerKg: booking.trip.pricePerKgCad,
+    tripCurrency: booking.trip.currency,
+    preferredCurrency: booking.sender.preferredCurrency,
+    fromCountry: booking.request.fromCountry,
+    toCountry: booking.request.toCountry,
+    corridorCurrency: corridor?.currency,
+  });
+
   return NextResponse.json({
     booking: {
       ...booking,
@@ -101,6 +120,10 @@ export async function GET(_request: Request, { params }: Params) {
         ...booking.request,
         photos: JSON.parse(booking.request.photosJson || "[]") as string[],
       },
+    },
+    paymentQuote: {
+      amountCents: booking.payment?.amountCadCents ?? quote.amountCents,
+      currency: (booking.payment?.currency ?? quote.currency).toUpperCase(),
     },
     stripeConfigured: isStripeConfigured(),
   });
