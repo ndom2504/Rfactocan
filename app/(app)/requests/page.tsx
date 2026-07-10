@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t, urgencyLabel } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
@@ -33,6 +33,14 @@ export default async function RequestsPage({ searchParams }: Props) {
           kycStatus: true,
         },
       },
+      bookings: {
+        where: {
+          OR: [{ senderId: user.id }, { trip: { userId: user.id } }],
+          status: { notIn: ["CANCELLED", "REFUSED"] },
+        },
+        select: { id: true, status: true },
+        take: 1,
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -50,18 +58,22 @@ export default async function RequestsPage({ searchParams }: Props) {
         </div>
         <div className="flex flex-wrap gap-2">
           {mineOnly ? (
-            <Link href="/requests">
-              <Button variant="outline">
-                {t(locale, "show_all_requests")}
-              </Button>
+            <Link
+              href="/requests"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              {t(locale, "show_all_requests")}
             </Link>
           ) : (
-            <Link href="/requests?mine=1">
-              <Button variant="outline">{t(locale, "my_requests")}</Button>
+            <Link
+              href="/requests?mine=1"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              {t(locale, "my_requests")}
             </Link>
           )}
-          <Link href="/requests/new">
-            <Button>{t(locale, "publish_request")}</Button>
+          <Link href="/requests/new" className={buttonVariants()}>
+            {t(locale, "publish_request")}
           </Link>
         </div>
       </div>
@@ -71,6 +83,7 @@ export default async function RequestsPage({ searchParams }: Props) {
           const photos = JSON.parse(req.photosJson || "[]") as string[];
           const cover = photos[0];
           const isOwner = req.userId === user.id;
+          const existing = req.bookings[0];
           return (
             <Card key={req.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -108,9 +121,28 @@ export default async function RequestsPage({ searchParams }: Props) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <Link href={`/requests/${req.id}`}>
-                    <Button variant="outline">{t(locale, "match")}</Button>
-                  </Link>
+                  {existing ? (
+                    <Link
+                      href={`/bookings/${existing.id}`}
+                      className={buttonVariants()}
+                    >
+                      {t(locale, "open_booking")}
+                    </Link>
+                  ) : isOwner ? (
+                    <Link
+                      href={`/requests/${req.id}`}
+                      className={buttonVariants({ variant: "outline" })}
+                    >
+                      {t(locale, "details")}
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/requests/${req.id}#apply`}
+                      className={buttonVariants()}
+                    >
+                      {t(locale, "apply")}
+                    </Link>
+                  )}
                   {isOwner && (
                     <ListingOwnerActions
                       kind="request"

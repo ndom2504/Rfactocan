@@ -8,7 +8,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatDate, formatKg } from "@/lib/utils";
@@ -261,10 +261,11 @@ export function RequestSearch() {
                       </div>
                     </div>
                   </div>
-                  <Link href={`/requests/${hit.requestId}`}>
-                    <Button variant="outline" size="sm">
-                      {t("view_request")}
-                    </Button>
+                  <Link
+                    href={`/requests/${hit.requestId}#apply`}
+                    className={buttonVariants({ size: "sm" })}
+                  >
+                    {t("apply")}
                   </Link>
                 </div>
               </Card>

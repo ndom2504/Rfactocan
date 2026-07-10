@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -36,25 +36,53 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
   const [customsAcknowledged, setCustomsAcknowledged] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [loaded, setLoaded] = useState(Boolean(fixedTripId));
+  const [loaded, setLoaded] = useState(false);
+  const [existingBookingId, setExistingBookingId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    if (fixedTripId) {
-      setTripId(fixedTripId);
-      setLoaded(true);
-      return;
-    }
     void (async () => {
-      const res = await fetch("/api/trips?mine=1");
-      const data = await res.json();
-      if (res.ok) {
-        const list = (data.trips ?? []) as MyTrip[];
-        setTrips(list);
-        if (list.length === 1) setTripId(list[0].id);
+      const [tripsRes, bookingsRes] = await Promise.all([
+        fixedTripId
+          ? Promise.resolve(null)
+          : fetch("/api/trips?mine=1"),
+        fetch("/api/bookings?as=traveler"),
+      ]);
+
+      if (bookingsRes.ok) {
+        const bookingsData = await bookingsRes.json();
+        const hit = (bookingsData.bookings ?? []).find(
+          (b: { requestId?: string; request?: { id?: string }; id: string; status: string }) =>
+            (b.requestId === requestId || b.request?.id === requestId) &&
+            !["CANCELLED", "REFUSED"].includes(b.status)
+        );
+        if (hit) setExistingBookingId(hit.id);
+      }
+
+      if (fixedTripId) {
+        setTripId(fixedTripId);
+      } else if (tripsRes) {
+        const data = await tripsRes.json();
+        if (tripsRes.ok) {
+          const list = (data.trips ?? []) as MyTrip[];
+          setTrips(list);
+          if (list.length === 1) setTripId(list[0].id);
+        }
       }
       setLoaded(true);
     })();
-  }, [fixedTripId]);
+  }, [fixedTripId, requestId]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    if (typeof window !== "undefined" && window.location.hash === "#apply") {
+      document.getElementById("apply")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [loaded]);
 
   async function apply() {
     if (!tripId) return;
@@ -80,17 +108,40 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
   }
 
   if (!loaded) {
-    return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
+    return (
+      <p id="apply" className="text-sm text-[var(--muted)]">
+        {t("loading")}
+      </p>
+    );
+  }
+
+  if (existingBookingId) {
+    return (
+      <Card id="apply">
+        <CardTitle className="text-lg">{t("apply")}</CardTitle>
+        <CardDescription className="mt-2">
+          {t("application_pending_traveler")}
+        </CardDescription>
+        <div className="mt-4">
+          <Link
+            href={`/bookings/${existingBookingId}`}
+            className={buttonVariants()}
+          >
+            {t("open_booking")}
+          </Link>
+        </div>
+      </Card>
+    );
   }
 
   if (!fixedTripId && trips.length === 0) {
     return (
-      <Card>
+      <Card id="apply">
         <CardTitle className="text-lg">{t("apply")}</CardTitle>
         <CardDescription className="mt-2">{t("apply_no_trips")}</CardDescription>
         <div className="mt-4">
-          <Link href="/trips/new">
-            <Button>{t("new_trip_title")}</Button>
+          <Link href="/trips/new" className={buttonVariants()}>
+            {t("new_trip_title")}
           </Link>
         </div>
       </Card>
@@ -98,10 +149,22 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
   }
 
   return (
-    <Card>
+    <Card id="apply">
       <CardTitle className="text-lg">{t("apply")}</CardTitle>
       <CardDescription className="mt-2">{t("apply_hint")}</CardDescription>
-      {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
+      {error && (
+        <p className="mt-3 text-sm text-red-700">
+          {error}{" "}
+          {(error.includes("Profil") ||
+            error.includes("identité") ||
+            error.includes("gains") ||
+            error.includes("KYC")) && (
+            <Link href="/profile" className="underline">
+              {t("nav_profile")}
+            </Link>
+          )}
+        </p>
+      )}
       <div className="mt-4 space-y-3">
         {!fixedTripId && (
           <div className="space-y-1.5">
@@ -239,14 +302,14 @@ export function TripSuggestedRequests({ tripId }: { tripId: string }) {
               </p>
             </div>
             <div className="flex gap-2">
-              <Link href={`/requests/${m.request.id}`}>
-                <Button variant="outline" size="sm">
-                  {t("view_request")}
-                </Button>
+              <Link
+                href={`/requests/${m.request.id}`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                {t("view_request")}
               </Link>
               <Button
                 size="sm"
-                variant="outline"
                 onClick={() =>
                   setApplyingId(applyingId === m.request.id ? null : m.request.id)
                 }

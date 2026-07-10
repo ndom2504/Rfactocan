@@ -240,6 +240,7 @@ const dict = {
     no_matches: "Aucun voyageur compatible pour le moment.",
     propose: "Proposer",
     apply: "Postuler",
+    open_booking: "Voir la réservation",
     apply_hint:
       "Choisissez l'un de vos voyages ouverts, certifiez le colis, puis envoyez votre candidature à l'expéditeur.",
     apply_no_trips:
@@ -641,6 +642,7 @@ const dict = {
     no_matches: "No matching travelers right now.",
     propose: "Propose",
     apply: "Apply",
+    open_booking: "Open booking",
     apply_hint:
       "Choose one of your open trips, certify the parcel, then send your application to the sender.",
     apply_no_trips: "You have no open trips. Publish a trip to apply.",
