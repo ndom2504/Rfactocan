@@ -94,4 +94,4 @@ Origins : `https://rfacto.com`, `http://localhost:3000`
 
 ## Hors scope (V2.1+)
 
-Mobile Money, assurance, litiges automatisés, QR scan, Expo Android, multi-devises.
+Mobile Money, assurance, litiges automatisés, Expo Android.

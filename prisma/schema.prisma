@@ -235,6 +235,10 @@ model Booking {
   status              BookingStatus @default(PROPOSED)
   goodsCertified      Boolean       @default(false)
   customsAcknowledged Boolean       @default(false)
+  handoverToken       String?       @unique
+  handoverCode        String?
+  handoverExpiresAt   DateTime?
+  handedOverAt        DateTime?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
@@ -250,6 +254,7 @@ model Booking {
   @@unique([requestId, tripId])
   @@index([senderId])
   @@index([status])
+  @@index([handoverCode])
 }
 
 model BookingEvent {

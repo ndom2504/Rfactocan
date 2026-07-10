@@ -272,6 +272,28 @@ const dict = {
     accept_ask_payment: "Accepter (demander paiement)",
     refuse: "Refuser",
     handed_over: "Colis remis",
+    handover_title: "Remise du colis (QR)",
+    handover_hint:
+      "L'expéditeur affiche le QR. Le voyageur le scanne ou saisit le code pour confirmer la prise en charge.",
+    handover_generate: "Générer le QR de remise",
+    handover_refresh: "Régénérer le QR",
+    handover_code: "Code",
+    handover_expires: "Expire le",
+    handover_show_traveler: "Montrez ce QR (ou le code) au voyageur.",
+    handover_traveler_hint:
+      "Scannez le QR de l'expéditeur avec l'appareil photo, ou saisissez le code ci-dessous.",
+    handover_enter_code: "Code de remise",
+    handover_confirm: "Confirmer la remise",
+    handover_confirm_prompt:
+      "Confirmez uniquement si vous avez physiquement reçu le colis.",
+    handover_done: "Remise confirmée.",
+    handover_expired: "Ce QR a expiré. Demandez un nouveau code à l'expéditeur.",
+    handover_wrong_role:
+      "Connectez-vous avec le compte voyageur de cette réservation pour confirmer.",
+    handover_login_required:
+      "Connectez-vous pour confirmer la remise du colis.",
+    handover_manual: "Confirmer sans QR",
+    handover_qr_alt: "QR code de remise",
     in_transit: "En transit",
     mark_delivered: "Marquer livré (libère le paiement)",
     leave_review: "Noter l'autre partie",
@@ -593,6 +615,27 @@ const dict = {
     accept_ask_payment: "Accept (request payment)",
     refuse: "Decline",
     handed_over: "Parcel handed over",
+    handover_title: "Parcel handover (QR)",
+    handover_hint:
+      "The sender shows the QR. The traveler scans it or enters the code to confirm pickup.",
+    handover_generate: "Generate handover QR",
+    handover_refresh: "Regenerate QR",
+    handover_code: "Code",
+    handover_expires: "Expires",
+    handover_show_traveler: "Show this QR (or code) to the traveler.",
+    handover_traveler_hint:
+      "Scan the sender's QR with your camera, or enter the code below.",
+    handover_enter_code: "Handover code",
+    handover_confirm: "Confirm handover",
+    handover_confirm_prompt:
+      "Confirm only if you have physically received the parcel.",
+    handover_done: "Handover confirmed.",
+    handover_expired: "This QR expired. Ask the sender for a new code.",
+    handover_wrong_role:
+      "Sign in with the traveler account for this booking to confirm.",
+    handover_login_required: "Sign in to confirm the parcel handover.",
+    handover_manual: "Confirm without QR",
+    handover_qr_alt: "Handover QR code",
     in_transit: "In transit",
     mark_delivered: "Mark delivered (release payment)",
     leave_review: "Rate the other party",

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookingChat } from "@/components/booking-chat";
 import { BookingTracker } from "@/components/booking-tracker";
+import { HandoverQrPanel } from "@/components/handover-qr";
 import { formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
 
@@ -384,15 +385,20 @@ export default function BookingDetailPage({
             </p>
           )}
 
+          {booking.status === "ACCEPTED" && (isSender || isTraveler) && (
+            <HandoverQrPanel bookingId={id} onConfirmed={() => void load()} />
+          )}
+
           {["ACCEPTED", "HANDED_OVER", "IN_TRANSIT"].includes(booking.status) &&
             (isSender || isTraveler) && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {booking.status === "ACCEPTED" && (
                   <Button
+                    variant="outline"
                     disabled={loading}
                     onClick={() => patchStatus("HANDED_OVER")}
                   >
-                    {t("handed_over")}
+                    {t("handover_manual")}
                   </Button>
                 )}
                 {booking.status === "HANDED_OVER" && (

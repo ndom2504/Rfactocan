@@ -70,7 +70,10 @@ function LoginForm() {
       setError(data.error ?? "Connexion impossible");
       return;
     }
-    router.push("/dashboard");
+    const next = params.get("next");
+    const safeNext =
+      next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    router.push(safeNext);
     router.refresh();
   }
 
