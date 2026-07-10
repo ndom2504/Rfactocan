@@ -33,6 +33,20 @@ export function NotificationBell({ locale }: { locale: Locale }) {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   async function markAllRead() {
     await fetch("/api/notifications", {
       method: "PATCH",
@@ -42,8 +56,12 @@ export function NotificationBell({ locale }: { locale: Locale }) {
     await load();
   }
 
+  function close() {
+    setOpen(false);
+  }
+
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
         onClick={() => {
@@ -52,6 +70,7 @@ export function NotificationBell({ locale }: { locale: Locale }) {
         }}
         className="relative rounded-md border border-[var(--border)] px-2 py-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
         aria-label={t(locale, "notifications")}
+        aria-expanded={open}
       >
         🔔
         {unread > 0 && (
@@ -60,52 +79,77 @@ export function NotificationBell({ locale }: { locale: Locale }) {
           </span>
         )}
       </button>
+
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-80 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-lg">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium">{t(locale, "notifications")}</p>
-            {unread > 0 && (
-              <button
-                type="button"
-                onClick={() => void markAllRead()}
-                className="text-xs text-[var(--accent)] underline"
-              >
-                {t(locale, "mark_all_read")}
-              </button>
-            )}
-          </div>
-          <div className="max-h-72 space-y-2 overflow-y-auto">
-            {items.length === 0 && (
-              <p className="text-xs text-[var(--muted)]">
-                {t(locale, "no_notifications")}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t(locale, "notifications")}
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45"
+            aria-label="Close"
+            onClick={close}
+          />
+          <div className="relative z-10 flex max-h-[min(80vh,32rem)] w-full max-w-md flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-base font-semibold">
+                {t(locale, "notifications")}
               </p>
-            )}
-            {items.map((n) => (
-              <div
-                key={n.id}
-                className={`rounded-md border px-2 py-2 text-xs ${
-                  n.readAt
-                    ? "border-[var(--border)]"
-                    : "border-[var(--accent)] bg-[var(--accent-soft)]/40"
-                }`}
-              >
-                {n.href ? (
-                  <Link
-                    href={n.href}
-                    onClick={() => setOpen(false)}
-                    className="font-medium hover:underline"
+              <div className="flex items-center gap-3">
+                {unread > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void markAllRead()}
+                    className="text-xs text-[var(--accent)] underline"
                   >
-                    {n.title}
-                  </Link>
-                ) : (
-                  <p className="font-medium">{n.title}</p>
+                    {t(locale, "mark_all_read")}
+                  </button>
                 )}
-                <p className="mt-0.5 text-[var(--muted)]">{n.body}</p>
+                <button
+                  type="button"
+                  onClick={close}
+                  className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+                >
+                  ✕
+                </button>
               </div>
-            ))}
+            </div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+              {items.length === 0 && (
+                <p className="py-6 text-center text-sm text-[var(--muted)]">
+                  {t(locale, "no_notifications")}
+                </p>
+              )}
+              {items.map((n) => (
+                <div
+                  key={n.id}
+                  className={`rounded-lg border px-3 py-2.5 text-sm ${
+                    n.readAt
+                      ? "border-[var(--border)]"
+                      : "border-[var(--accent)] bg-[var(--accent-soft)]/40"
+                  }`}
+                >
+                  {n.href ? (
+                    <Link
+                      href={n.href}
+                      onClick={close}
+                      className="font-medium hover:underline"
+                    >
+                      {n.title}
+                    </Link>
+                  ) : (
+                    <p className="font-medium">{n.title}</p>
+                  )}
+                  <p className="mt-1 text-xs text-[var(--muted)]">{n.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
