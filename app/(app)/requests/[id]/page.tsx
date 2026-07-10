@@ -67,6 +67,7 @@ export default function RequestDetailPage({
   const [request, setRequest] = useState<RequestData | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [meId, setMeId] = useState<string>("");
+  const [meLoaded, setMeLoaded] = useState(false);
   const [error, setError] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -88,6 +89,7 @@ export default function RequestDetailPage({
       if (reqRes.ok) setRequest(reqData.request);
       if (matchRes.ok) setMatches(matchData.matches ?? []);
       if (meRes.ok) setMeId(meData.user?.id ?? "");
+      setMeLoaded(true);
     })();
   }, [id]);
 
@@ -112,10 +114,23 @@ export default function RequestDetailPage({
     return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
 
-  const isOwner = meId === request.userId;
+  const isOwner = Boolean(meId) && meId === request.userId;
+  const showApply = meLoaded && Boolean(meId) && !isOwner;
 
   return (
     <div className="space-y-8">
+      {showApply && (
+        <section className="space-y-3">
+          <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+            {t("apply_section_title")}
+          </h2>
+          <TravelerApplyPanel requestId={request.id} />
+        </section>
+      )}
+      {!meLoaded && (
+        <p className="text-sm text-[var(--muted)]">{t("loading")}</p>
+      )}
+
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -187,8 +202,6 @@ export default function RequestDetailPage({
           </div>
         </div>
       </Card>
-
-      {!isOwner && meId && <TravelerApplyPanel requestId={request.id} />}
 
       {isOwner && (
         <section className="space-y-4">

@@ -122,7 +122,6 @@ export function CountryCodeSelect({ name, label, value, onChange }: CodeProps) {
         }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         autoComplete="off"
-        required
       />
       {open && (
         <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-md">

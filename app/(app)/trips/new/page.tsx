@@ -26,48 +26,98 @@ export default function NewTripPage() {
     setLoading(true);
     setError("");
     const fd = new FormData(e.currentTarget);
-    const departLocal = String(fd.get("departAt"));
-    const fromCountry = String(fd.get("fromCountry"));
-    const toCountry = String(fd.get("toCountry"));
-    const currency = String(fd.get("currency") || "") ||
-      resolveCheckoutCurrency(fromCountry, toCountry);
-    const payload = {
-      fromCountry,
-      fromCity: String(fd.get("fromCity")),
-      toCountry,
-      toCity: String(fd.get("toCity")),
-      departAt: new Date(departLocal).toISOString(),
-      weightKg: Number(fd.get("weightKg")),
-      pricePerKgCad: Number(fd.get("pricePerKgCad")),
-      currency,
-      acceptedGoods: String(fd.get("acceptedGoods")),
-      notes: String(fd.get("notes") || "") || undefined,
-      airline: String(fd.get("airline") || "") || undefined,
-      flightNumber: String(fd.get("flightNumber") || "") || undefined,
-      fromAirportCode: String(fd.get("fromAirportCode") || "") || undefined,
-      toAirportCode: String(fd.get("toAirportCode") || "") || undefined,
-    };
+    const departLocal = String(fd.get("departAt") || "").trim();
+    const fromCountryValue = String(fd.get("fromCountry") || "").trim();
+    const toCountryValue = String(fd.get("toCountry") || "").trim();
+    const fromCity = String(fd.get("fromCity") || "").trim();
+    const toCity = String(fd.get("toCity") || "").trim();
+    const weightKg = Number(fd.get("weightKg"));
+    const pricePerKgCad = Number(fd.get("pricePerKgCad"));
+    const acceptedGoods = String(fd.get("acceptedGoods") || "").trim();
+    const currency =
+      String(fd.get("currency") || "").trim() ||
+      resolveCheckoutCurrency(fromCountryValue, toCountryValue);
 
-    const res = await fetch("/api/trips", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError(data.error ?? "Erreur");
+    if (!fromCountryValue || !toCountryValue) {
+      setLoading(false);
+      setError("Sélectionnez les pays de départ et d'arrivée.");
       return;
     }
-    router.push(`/trips/${data.trip.id}`);
-    router.refresh();
+    if (!fromCity || !toCity) {
+      setLoading(false);
+      setError("Indiquez les villes de départ et d'arrivée.");
+      return;
+    }
+    if (!departLocal) {
+      setLoading(false);
+      setError("Indiquez la date de départ.");
+      return;
+    }
+    const departAt = new Date(departLocal);
+    if (Number.isNaN(departAt.getTime())) {
+      setLoading(false);
+      setError("Date de départ invalide.");
+      return;
+    }
+    if (!Number.isFinite(weightKg) || weightKg <= 0) {
+      setLoading(false);
+      setError("Indiquez un poids disponible valide.");
+      return;
+    }
+    if (!Number.isFinite(pricePerKgCad) || pricePerKgCad <= 0) {
+      setLoading(false);
+      setError("Indiquez un prix par kg valide.");
+      return;
+    }
+    if (acceptedGoods.length < 2) {
+      setLoading(false);
+      setError("Décrivez les objets acceptés.");
+      return;
+    }
+
+    const payload = {
+      fromCountry: fromCountryValue,
+      fromCity,
+      toCountry: toCountryValue,
+      toCity,
+      departAt: departAt.toISOString(),
+      weightKg,
+      pricePerKgCad,
+      currency,
+      acceptedGoods,
+      notes: String(fd.get("notes") || "").trim() || undefined,
+      airline: String(fd.get("airline") || "").trim() || undefined,
+      flightNumber: String(fd.get("flightNumber") || "").trim() || undefined,
+      fromAirportCode:
+        String(fd.get("fromAirportCode") || "").trim() || undefined,
+      toAirportCode: String(fd.get("toAirportCode") || "").trim() || undefined,
+    };
+
+    try {
+      const res = await fetch("/api/trips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) {
+        setError(data.error ?? "Erreur lors de la publication");
+        return;
+      }
+      router.push(`/trips/${data.trip.id}`);
+      router.refresh();
+    } catch {
+      setLoading(false);
+      setError("Erreur réseau. Réessayez.");
+    }
   }
 
   return (
     <Card className="max-w-2xl">
       <CardTitle>{t("new_trip_title")}</CardTitle>
       <CardDescription>{t("new_trip_subtitle")}</CardDescription>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
         <CorridorFields
           onFromCountryChange={setFromCountry}
           onToCountryChange={setToCountry}

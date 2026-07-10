@@ -243,8 +243,11 @@ const dict = {
     open_booking: "Voir la réservation",
     apply_hint:
       "Choisissez l'un de vos voyages ouverts, certifiez le colis, puis envoyez votre candidature à l'expéditeur.",
+    apply_check_required:
+      "Cochez les deux cases ci-dessous, puis cliquez sur Postuler.",
     apply_no_trips:
-      "Vous n'avez aucun voyage ouvert. Publiez un trajet pour postuler.",
+      "Vous n'avez aucun voyage ouvert. Publiez d'abord un trajet pour pouvoir postuler.",
+    apply_section_title: "Postuler sur cette demande",
     select_trip: "Votre voyage",
     suggested_requests: "Demandes suggérées",
     no_request_matches: "Aucune demande compatible pour le moment.",
@@ -645,7 +648,11 @@ const dict = {
     open_booking: "Open booking",
     apply_hint:
       "Choose one of your open trips, certify the parcel, then send your application to the sender.",
-    apply_no_trips: "You have no open trips. Publish a trip to apply.",
+    apply_check_required:
+      "Check both boxes below, then click Apply.",
+    apply_no_trips:
+      "You have no open trips. Publish a trip first so you can apply.",
+    apply_section_title: "Apply to this request",
     select_trip: "Your trip",
     suggested_requests: "Suggested requests",
     no_request_matches: "No matching requests right now.",

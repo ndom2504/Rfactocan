@@ -136,7 +136,7 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
 
   if (!fixedTripId && trips.length === 0) {
     return (
-      <Card id="apply">
+      <Card id="apply" className="border-[var(--accent)]/30">
         <CardTitle className="text-lg">{t("apply")}</CardTitle>
         <CardDescription className="mt-2">{t("apply_no_trips")}</CardDescription>
         <div className="mt-4">
@@ -149,7 +149,7 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
   }
 
   return (
-    <Card id="apply">
+    <Card id="apply" className="border-[var(--accent)]/30 bg-[var(--accent-soft)]/30">
       <CardTitle className="text-lg">{t("apply")}</CardTitle>
       <CardDescription className="mt-2">{t("apply_hint")}</CardDescription>
       {error && (
@@ -158,7 +158,8 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
           {(error.includes("Profil") ||
             error.includes("identité") ||
             error.includes("gains") ||
-            error.includes("KYC")) && (
+            error.includes("KYC") ||
+            error.includes("postuler")) && (
             <Link href="/profile" className="underline">
               {t("nav_profile")}
             </Link>
@@ -184,7 +185,7 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
             </Select>
           </div>
         )}
-        <label className="flex items-start gap-2 text-sm">
+        <label className="flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">
           <input
             type="checkbox"
             checked={goodsCertified}
@@ -193,7 +194,7 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
           />
           {t("goods_cert")}
         </label>
-        <label className="flex items-start gap-2 text-sm">
+        <label className="flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 text-sm">
           <input
             type="checkbox"
             checked={customsAcknowledged}
@@ -202,6 +203,11 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
           />
           {t("customs_ack")}
         </label>
+        {(!goodsCertified || !customsAcknowledged || !tripId) && (
+          <p className="text-sm text-[var(--muted)]">
+            {!tripId ? t("select_trip") : t("apply_check_required")}
+          </p>
+        )}
         <p className="text-xs text-[var(--muted)]">
           {t("kyc_connect_hint")}{" "}
           <Link href="/profile" className="underline">
@@ -209,6 +215,7 @@ export function TravelerApplyPanel({ requestId, fixedTripId }: Props) {
           </Link>
         </p>
         <Button
+          className="w-full sm:w-auto"
           disabled={
             loading || !tripId || !goodsCertified || !customsAcknowledged
           }
