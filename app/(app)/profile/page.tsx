@@ -12,6 +12,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CountrySelect } from "@/components/country-select";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
+import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
 
 type User = {
@@ -360,9 +361,11 @@ function ProfileForm() {
                 value={preferredCurrency}
                 onChange={(e) => setPreferredCurrency(e.target.value)}
               >
-                <option value="CAD">CAD</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
+                {CURRENCY_OPTIONS.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.label}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>

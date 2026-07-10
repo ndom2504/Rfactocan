@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { resolveCheckoutCurrency } from "@/lib/currency";
+import { CURRENCY_OPTIONS, resolveCheckoutCurrency } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
 
 export default function NewTripPage() {
@@ -149,9 +149,11 @@ export default function NewTripPage() {
           <div className="space-y-2">
             <Label htmlFor="currency">{t("currency")}</Label>
             <Select id="currency" name="currency" defaultValue="CAD">
-              <option value="CAD">CAD</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
+              {CURRENCY_OPTIONS.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
             </Select>
           </div>
         </div>

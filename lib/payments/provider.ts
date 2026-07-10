@@ -5,6 +5,7 @@ import {
   normalizeCurrency,
   resolveCheckoutCurrency,
   resolvePayerCurrency,
+  toStripeAmountUnits,
   toStripeCurrency,
   type MoneyCurrency,
 } from "@/lib/currency";
@@ -72,7 +73,7 @@ export function quotePaymentAmount(input: {
   });
   const baseMajor = Math.max(0, input.weightKg * input.pricePerKg);
   const converted = convertAmount(baseMajor, sourceCurrency, currency);
-  const amountCents = Math.max(100, Math.round(converted * 100));
+  const amountCents = toStripeAmountUnits(converted, currency);
   return { amountCents, currency };
 }
 

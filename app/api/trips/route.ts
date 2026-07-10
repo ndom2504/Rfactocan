@@ -28,7 +28,7 @@ const schema = z.object({
     .max(500, "Prix max 500 / kg"),
   currency: z.preprocess(
     emptyToUndefined,
-    z.enum(["CAD", "USD", "EUR"]).optional()
+    z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional()
   ),
   acceptedGoods: z.string().trim().min(2, "Objets acceptés requis"),
   notes: z.preprocess(emptyToUndefined, z.string().optional()),

@@ -14,6 +14,7 @@ import { BookingTracker } from "@/components/booking-tracker";
 import { HandoverQrPanel } from "@/components/handover-qr";
 import { DisputePanel } from "@/components/dispute-panel";
 import { formatDate, formatKg } from "@/lib/utils";
+import { formatMoneyFromCents } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
 
 type Payment = {
@@ -66,10 +67,7 @@ type Booking = {
 };
 
 function formatCents(cents: number, currency = "CAD") {
-  return new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(cents / 100);
+  return formatMoneyFromCents(cents, currency, "fr-CA");
 }
 
 export default function BookingDetailPage({

@@ -212,15 +212,18 @@ async function main() {
 
   for (const [fromCountry, toCountry] of corridors) {
     const currency =
-      ["FR", "BE", "DE", "ES", "IT", "NL", "PT", "SN", "CI", "CM", "GA", "MA", "TN"].includes(
-        toCountry
-      ) ||
-      ["FR", "BE", "DE"].includes(fromCountry)
-        ? "eur"
-        : ["US", "NG", "GH", "KE", "AE", "IN", "ZA"].includes(toCountry) ||
-            fromCountry === "US"
-          ? "usd"
-          : "cad";
+      ["SN", "CI"].includes(toCountry) || ["SN", "CI"].includes(fromCountry)
+        ? "xof"
+        : ["CM", "GA"].includes(toCountry) || ["CM", "GA"].includes(fromCountry)
+          ? "xaf"
+          : ["FR", "BE", "DE", "ES", "IT", "NL", "PT", "MA", "TN"].includes(
+                toCountry
+              ) || ["FR", "BE", "DE"].includes(fromCountry)
+            ? "eur"
+            : ["US", "NG", "GH", "KE", "AE", "IN", "ZA"].includes(toCountry) ||
+                fromCountry === "US"
+              ? "usd"
+              : "cad";
     await prisma.corridorConfig.upsert({
       where: {
         fromCountry_toCountry: { fromCountry, toCountry },

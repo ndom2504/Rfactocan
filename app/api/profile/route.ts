@@ -22,7 +22,7 @@ const schema = z.object({
     .nullable(),
   role: z.enum(["SENDER", "TRAVELER", "BOTH"]).optional(),
   language: z.enum(["fr", "en"]).optional(),
-  preferredCurrency: z.enum(["CAD", "USD", "EUR"]).optional(),
+  preferredCurrency: z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional(),
 });
 
 export async function GET() {
