@@ -21,6 +21,7 @@ const patchSchema = z.object({
   flightNumber: z.string().optional().nullable(),
   fromAirportCode: z.string().optional().nullable(),
   toAirportCode: z.string().optional().nullable(),
+  priceNegotiable: z.boolean().optional(),
   status: z.enum(["OPEN", "FULL", "COMPLETED", "CANCELLED"]).optional(),
 });
 
@@ -49,12 +50,28 @@ export async function GET(_request: Request, { params }: Params) {
           kycStatus: true,
         },
       },
+      _count: {
+        select: {
+          bookings: {
+            where: {
+              status: { in: ["PROPOSED", "AWAITING_PAYMENT"] },
+            },
+          },
+        },
+      },
     },
   });
   if (!trip) {
     return NextResponse.json({ error: "Voyage introuvable" }, { status: 404 });
   }
-  return NextResponse.json({ trip });
+
+  const { _count, ...rest } = trip;
+  return NextResponse.json({
+    trip: {
+      ...rest,
+      discussionCount: _count.bookings,
+    },
+  });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -115,6 +132,9 @@ export async function PATCH(request: Request, { params }: Params) {
           : {}),
         ...(body.toAirportCode !== undefined
           ? { toAirportCode: body.toAirportCode || null }
+          : {}),
+        ...(body.priceNegotiable !== undefined
+          ? { priceNegotiable: body.priceNegotiable }
           : {}),
         ...(body.status !== undefined ? { status: body.status } : {}),
       },

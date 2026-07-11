@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import {
-  ensurePaymentNotExpired,
-  isPaymentExpired,
-} from "@/lib/payments/expiry";
+import { ensurePaymentNotExpired, isPaymentExpired } from "@/lib/payments/expiry";
 import { getPaymentProvider } from "@/lib/payments/provider";
+import { effectivePricePerKg } from "@/lib/negotiation";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
 
@@ -119,7 +117,7 @@ export async function POST(_request: Request, { params }: Params) {
     const result = await provider.createAuthorization({
       bookingId: booking.id,
       weightKg: booking.request.weightKg,
-      pricePerKgCad: booking.trip.pricePerKgCad,
+      pricePerKgCad: effectivePricePerKg(booking),
       tripCurrency: booking.trip.currency,
       senderEmail: payer?.email ?? booking.sender.email,
       senderId: booking.senderId,

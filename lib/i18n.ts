@@ -239,6 +239,23 @@ const dict = {
       "Vous n'avez aucune demande ouverte. Publiez d'abord un colis pour pouvoir proposer.",
     select_request: "Votre demande",
     match_short: "Matcher",
+    price_policy: "Politique de prix",
+    price_fixed: "Non négociable",
+    price_fixed_hint: "Le prix affiché est ferme. Pas de contre-offre.",
+    price_negotiable: "Négociable",
+    price_negotiable_hint:
+      "Vous pouvez discuter avec plusieurs expéditeurs et choisir le plus offrant.",
+    listed_price: "Prix affiché",
+    your_offer_per_kg: "Votre offre (par kg)",
+    offer_price_hint:
+      "Optionnel. Proposez un prix pour inciter le voyageur à vous choisir.",
+    offer_price_invalid: "Indiquez une offre de prix valide.",
+    update_offer: "Mettre à jour l'offre",
+    current_offer: "Offre actuelle",
+    listed_trip_price: "Prix du voyage",
+    negotiation_in_progress: "En négociation",
+    offers_ranked_hint:
+      "Classées du plus offrant au moins offrant. Discutez puis acceptez l'offre qui vous convient.",
 
     // Requests
     requests_title: "Demandes de colis",
@@ -661,6 +678,23 @@ const dict = {
       "You have no open requests. Publish a parcel request first to propose.",
     select_request: "Your request",
     match_short: "Match",
+    price_policy: "Pricing policy",
+    price_fixed: "Non-negotiable",
+    price_fixed_hint: "The listed price is firm. No counter-offers.",
+    price_negotiable: "Negotiable",
+    price_negotiable_hint:
+      "You can discuss with several senders and pick the highest offer.",
+    listed_price: "Listed price",
+    your_offer_per_kg: "Your offer (per kg)",
+    offer_price_hint:
+      "Optional. Propose a price to encourage the traveler to choose you.",
+    offer_price_invalid: "Enter a valid price offer.",
+    update_offer: "Update offer",
+    current_offer: "Current offer",
+    listed_trip_price: "Trip price",
+    negotiation_in_progress: "In negotiation",
+    offers_ranked_hint:
+      "Ranked from highest offer to lowest. Chat, then accept the offer that works for you.",
 
     requests_title: "Parcel requests",
     requests_subtitle: "Shipping needs posted by individuals.",

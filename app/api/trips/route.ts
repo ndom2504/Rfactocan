@@ -45,6 +45,7 @@ const schema = z
     flightNumber: z.preprocess(emptyToUndefined, z.string().optional()),
     fromAirportCode: z.preprocess(emptyToUndefined, z.string().optional()),
     toAirportCode: z.preprocess(emptyToUndefined, z.string().optional()),
+    priceNegotiable: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     const mode = normalizeTransportMode(data.transportMode);
@@ -92,11 +93,25 @@ export async function GET(request: Request) {
           avatarUrl: true,
         },
       },
+      _count: {
+        select: {
+          bookings: {
+            where: {
+              status: { in: ["PROPOSED", "AWAITING_PAYMENT"] },
+            },
+          },
+        },
+      },
     },
     orderBy: { departAt: "asc" },
   });
 
-  return NextResponse.json({ trips });
+  return NextResponse.json({
+    trips: trips.map(({ _count, ...trip }) => ({
+      ...trip,
+      discussionCount: _count.bookings,
+    })),
+  });
 }
 
 export async function POST(request: Request) {
@@ -128,6 +143,7 @@ export async function POST(request: Request) {
         flightNumber: body.flightNumber,
         fromAirportCode: body.fromAirportCode,
         toAirportCode: body.toAirportCode,
+        priceNegotiable: body.priceNegotiable ?? false,
       },
     });
     return NextResponse.json({ trip }, { status: 201 });

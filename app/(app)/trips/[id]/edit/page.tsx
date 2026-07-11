@@ -45,6 +45,7 @@ export default function EditTripPage({
     flightNumber: string | null;
     fromAirportCode: string | null;
     toAirportCode: string | null;
+    priceNegotiable?: boolean;
     userId: string;
     status: string;
   } | null>(null);
@@ -117,6 +118,7 @@ export default function EditTripPage({
       flightNumber: String(fd.get("flightNumber") || "") || null,
       fromAirportCode: String(fd.get("fromAirportCode") || "") || null,
       toAirportCode: String(fd.get("toAirportCode") || "") || null,
+      priceNegotiable: fd.get("priceNegotiable") === "true",
     };
 
     const res = await fetch(`/api/trips/${id}`, {
@@ -206,6 +208,41 @@ export default function EditTripPage({
             <p className="text-xs text-[var(--muted)]">{t("trip_currency_hint")}</p>
           </div>
         </div>
+        <fieldset className="space-y-2 rounded-lg border border-[var(--border)] p-4">
+          <legend className="px-1 text-sm font-medium">
+            {t("price_policy")}
+          </legend>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="radio"
+              name="priceNegotiable"
+              value="false"
+              defaultChecked={!trip.priceNegotiable}
+              className="mt-1"
+            />
+            <span>
+              <strong>{t("price_fixed")}</strong>
+              <span className="block text-[var(--muted)]">
+                {t("price_fixed_hint")}
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="radio"
+              name="priceNegotiable"
+              value="true"
+              defaultChecked={Boolean(trip.priceNegotiable)}
+              className="mt-1"
+            />
+            <span>
+              <strong>{t("price_negotiable")}</strong>
+              <span className="block text-[var(--muted)]">
+                {t("price_negotiable_hint")}
+              </span>
+            </span>
+          </label>
+        </fieldset>
         <div className="space-y-2">
           <Label htmlFor="acceptedGoods">{t("accepted_goods")}</Label>
           <Textarea

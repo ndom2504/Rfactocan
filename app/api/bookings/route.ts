@@ -16,6 +16,8 @@ const createSchema = z.object({
   tripId: z.string().min(1),
   goodsCertified: z.boolean().optional(),
   customsAcknowledged: z.boolean().optional(),
+  /** Sender counter-offer per kg (trip currency). Only if trip.priceNegotiable. */
+  offeredPricePerKg: z.coerce.number().positive().max(500).optional(),
 });
 
 export async function GET(request: Request) {
@@ -118,6 +120,28 @@ export async function POST(request: Request) {
 
     const proposedBy = isTraveler ? "TRAVELER" : "SENDER";
 
+    let offeredPricePerKg: number | undefined;
+    if (body.offeredPricePerKg != null) {
+      if (!trip.priceNegotiable) {
+        return NextResponse.json(
+          {
+            error:
+              "Ce voyage n'est pas négociable — le prix affiché est fixe.",
+          },
+          { status: 400 }
+        );
+      }
+      if (!isSender) {
+        return NextResponse.json(
+          {
+            error: "Seul l'expéditeur peut proposer un prix négocié.",
+          },
+          { status: 403 }
+        );
+      }
+      offeredPricePerKg = body.offeredPricePerKg;
+    }
+
     if (proposedBy === "TRAVELER") {
       if (!body.goodsCertified || !body.customsAcknowledged) {
         return NextResponse.json(
@@ -163,6 +187,7 @@ export async function POST(request: Request) {
           ...(proposedBy === "TRAVELER"
             ? { goodsCertified: true, customsAcknowledged: true }
             : {}),
+          ...(offeredPricePerKg != null ? { offeredPricePerKg } : {}),
         },
       });
       await recordBookingEvent(tx, {
@@ -175,6 +200,7 @@ export async function POST(request: Request) {
           requestId: body.requestId,
           tripId: body.tripId,
           proposedBy,
+          ...(offeredPricePerKg != null ? { offeredPricePerKg } : {}),
         },
       });
       return created;

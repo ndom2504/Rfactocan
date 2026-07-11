@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/components/locale-provider";
-import { formatDate, formatKg } from "@/lib/utils";
+import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 
 type OpenRequest = {
   id: string;
@@ -20,13 +21,22 @@ type OpenRequest = {
 
 type Props = {
   tripId: string;
+  priceNegotiable: boolean;
+  listedPricePerKg: number;
+  currency: string;
 };
 
-export function SenderProposePanel({ tripId }: Props) {
+export function SenderProposePanel({
+  tripId,
+  priceNegotiable,
+  listedPricePerKg,
+  currency,
+}: Props) {
   const { t } = useI18n();
   const router = useRouter();
   const [requests, setRequests] = useState<OpenRequest[]>([]);
   const [requestId, setRequestId] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
@@ -59,10 +69,26 @@ export function SenderProposePanel({ tripId }: Props) {
     if (!requestId) return;
     setLoading(true);
     setError("");
+    const offered = offerPrice.trim() ? Number(offerPrice) : undefined;
+    if (
+      priceNegotiable &&
+      offered != null &&
+      (!Number.isFinite(offered) || offered <= 0)
+    ) {
+      setLoading(false);
+      setError(t("offer_price_invalid"));
+      return;
+    }
     const res = await fetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId, tripId }),
+      body: JSON.stringify({
+        requestId,
+        tripId,
+        ...(priceNegotiable && offered != null
+          ? { offeredPricePerKg: offered }
+          : {}),
+      }),
     });
     const data = await res.json();
     setLoading(false);
@@ -104,6 +130,13 @@ export function SenderProposePanel({ tripId }: Props) {
     >
       <CardTitle className="text-lg">{t("propose_on_trip")}</CardTitle>
       <CardDescription className="mt-2">{t("propose_hint")}</CardDescription>
+      <p className="mt-2 text-sm text-[var(--muted)]">
+        {t("listed_price")}:{" "}
+        <strong>
+          {formatMoney(listedPricePerKg, currency)}/kg
+        </strong>
+        {priceNegotiable ? ` · ${t("price_negotiable")}` : ` · ${t("price_fixed")}`}
+      </p>
       {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
       <div className="mt-4 space-y-3">
         <div>
@@ -122,10 +155,24 @@ export function SenderProposePanel({ tripId }: Props) {
             ))}
           </Select>
         </div>
-        <Button
-          disabled={!requestId || loading}
-          onClick={() => void propose()}
-        >
+        {priceNegotiable && (
+          <div>
+            <Label htmlFor="offer-price">{t("your_offer_per_kg")}</Label>
+            <Input
+              id="offer-price"
+              type="number"
+              step="0.5"
+              min="1"
+              value={offerPrice}
+              onChange={(e) => setOfferPrice(e.target.value)}
+              placeholder={String(listedPricePerKg)}
+            />
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {t("offer_price_hint")}
+            </p>
+          </div>
+        )}
+        <Button disabled={!requestId || loading} onClick={() => void propose()}>
           {loading ? t("loading") : t("propose")}
         </Button>
       </div>

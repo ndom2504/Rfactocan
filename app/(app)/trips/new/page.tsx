@@ -102,6 +102,7 @@ export default function NewTripPage() {
       fromAirportCode:
         String(fd.get("fromAirportCode") || "").trim() || undefined,
       toAirportCode: String(fd.get("toAirportCode") || "").trim() || undefined,
+      priceNegotiable: fd.get("priceNegotiable") === "true",
     };
 
     try {
@@ -182,6 +183,40 @@ export default function NewTripPage() {
             <p className="text-xs text-[var(--muted)]">{t("trip_currency_hint")}</p>
           </div>
         </div>
+        <fieldset className="space-y-2 rounded-lg border border-[var(--border)] p-4">
+          <legend className="px-1 text-sm font-medium">
+            {t("price_policy")}
+          </legend>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="radio"
+              name="priceNegotiable"
+              value="false"
+              defaultChecked
+              className="mt-1"
+            />
+            <span>
+              <strong>{t("price_fixed")}</strong>
+              <span className="block text-[var(--muted)]">
+                {t("price_fixed_hint")}
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="radio"
+              name="priceNegotiable"
+              value="true"
+              className="mt-1"
+            />
+            <span>
+              <strong>{t("price_negotiable")}</strong>
+              <span className="block text-[var(--muted)]">
+                {t("price_negotiable_hint")}
+              </span>
+            </span>
+          </label>
+        </fieldset>
         <div className="space-y-2">
           <Label htmlFor="acceptedGoods">{t("accepted_goods")}</Label>
           <Textarea

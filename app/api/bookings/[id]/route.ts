@@ -9,6 +9,7 @@ import {
   ensurePaymentNotExpired,
   paymentDeadlineFrom,
 } from "@/lib/payments/expiry";
+import { effectivePricePerKg } from "@/lib/negotiation";
 import { formatMoneyFromCents } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
@@ -17,19 +18,27 @@ import type { BookingStatus } from "@prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
 
-const patchSchema = z.object({
-  status: z.enum([
-    "AWAITING_PAYMENT",
-    "ACCEPTED",
-    "REFUSED",
-    "HANDED_OVER",
-    "IN_TRANSIT",
-    "DELIVERED",
-    "CANCELLED",
-  ]),
-  goodsCertified: z.boolean().optional(),
-  customsAcknowledged: z.boolean().optional(),
-});
+const patchSchema = z
+  .object({
+    status: z
+      .enum([
+        "AWAITING_PAYMENT",
+        "ACCEPTED",
+        "REFUSED",
+        "HANDED_OVER",
+        "IN_TRANSIT",
+        "DELIVERED",
+        "CANCELLED",
+      ])
+      .optional(),
+    goodsCertified: z.boolean().optional(),
+    customsAcknowledged: z.boolean().optional(),
+    offeredPricePerKg: z.coerce.number().positive().max(500).optional(),
+  })
+  .refine(
+    (data) => data.status !== undefined || data.offeredPricePerKg !== undefined,
+    { message: "Aucune modification fournie" }
+  );
 
 const transitions: Record<BookingStatus, BookingStatus[]> = {
   PROPOSED: ["AWAITING_PAYMENT", "ACCEPTED", "REFUSED", "CANCELLED"],
@@ -119,7 +128,7 @@ export async function GET(_request: Request, { params }: Params) {
 
   const quote = quotePaymentAmount({
     weightKg: booking.request.weightKg,
-    pricePerKg: booking.trip.pricePerKgCad,
+    pricePerKg: effectivePricePerKg(booking),
     tripCurrency: booking.trip.currency,
     preferredCurrency: payerPreferred,
     fromCountry: booking.request.fromCountry,
@@ -185,6 +194,57 @@ export async function PATCH(request: Request, { params }: Params) {
 
     const isTraveler = booking.trip.userId === session.id;
     const isSender = booking.senderId === session.id;
+
+    // Sender counter-offer on a negotiable trip (no status change required).
+    if (body.offeredPricePerKg !== undefined && body.status === undefined) {
+      if (!isSender) {
+        return NextResponse.json(
+          { error: "Seul l'expéditeur peut proposer un prix." },
+          { status: 403 }
+        );
+      }
+      if (!booking.trip.priceNegotiable) {
+        return NextResponse.json(
+          { error: "Ce voyage n'est pas négociable." },
+          { status: 400 }
+        );
+      }
+      if (!["PROPOSED", "AWAITING_PAYMENT"].includes(booking.status)) {
+        return NextResponse.json(
+          {
+            error:
+              "Le prix ne peut plus être négocié à ce stade de la réservation.",
+          },
+          { status: 400 }
+        );
+      }
+      const updatedOffer = await prisma.booking.update({
+        where: { id },
+        data: { offeredPricePerKg: body.offeredPricePerKg },
+        include: {
+          trip: { include: { user: true } },
+          request: true,
+          payment: true,
+          sender: true,
+        },
+      });
+      void notifyUser({
+        userId: booking.trip.userId,
+        type: "price_offer",
+        title: "Nouvelle offre de prix",
+        body: `${booking.sender.displayName} propose ${body.offeredPricePerKg} ${booking.trip.currency || "CAD"}/kg`,
+        href: `/bookings/${booking.id}`,
+      });
+      return NextResponse.json({ booking: updatedOffer });
+    }
+
+    if (body.status === undefined) {
+      return NextResponse.json(
+        { error: "Statut requis" },
+        { status: 400 }
+      );
+    }
+
     const allowed = transitions[booking.status] ?? [];
 
     // Traveler "accept" → AWAITING_PAYMENT (Stripe) or ACCEPTED (demo sans Stripe)
@@ -416,7 +476,11 @@ export async function PATCH(request: Request, { params }: Params) {
       });
       const payQuote = quotePaymentAmount({
         weightKg: booking.request.weightKg,
-        pricePerKg: booking.trip.pricePerKgCad,
+        pricePerKg: effectivePricePerKg({
+          offeredPricePerKg:
+            body.offeredPricePerKg ?? booking.offeredPricePerKg,
+          trip: booking.trip,
+        }),
         tripCurrency: booking.trip.currency,
         preferredCurrency: booking.sender.preferredCurrency,
         fromCountry: booking.request.fromCountry,

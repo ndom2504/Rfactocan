@@ -214,6 +214,8 @@ model Trip {
   weightKg      Float
   pricePerKgCad Float
   currency      String     @default("CAD")
+  /// If true, senders can counter-offer a price per kg; traveler may talk to several parties.
+  priceNegotiable Boolean  @default(false)
   acceptedGoods String
   notes           String?
   transportMode   TransportMode @default(AIR)
@@ -268,6 +270,8 @@ model Booking {
   status              BookingStatus @default(PROPOSED)
   goodsCertified      Boolean       @default(false)
   customsAcknowledged Boolean       @default(false)
+  /// Sender counter-offer (per kg, same currency as trip). Used when trip.priceNegotiable.
+  offeredPricePerKg   Float?
   handoverToken       String?       @unique
   handoverCode        String?
   handoverExpiresAt   DateTime?

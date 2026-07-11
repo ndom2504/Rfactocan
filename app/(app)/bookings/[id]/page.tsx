@@ -48,6 +48,7 @@ type Booking = {
   customsAcknowledged: boolean;
   paymentExpiresAt?: string | null;
   cancelledReason?: string | null;
+  offeredPricePerKg?: number | null;
   payment?: Payment | null;
   request: {
     fromCity: string;
@@ -64,6 +65,7 @@ type Booking = {
     toCity: string;
     pricePerKgCad?: number;
     currency?: string;
+    priceNegotiable?: boolean;
     user: {
       id: string;
       displayName: string;
@@ -99,6 +101,7 @@ export default function BookingDetailPage({
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [stripeConfigured, setStripeConfigured] = useState(true);
+  const [offerPrice, setOfferPrice] = useState("");
   const [paymentReturn, setPaymentReturn] = useState<
     "success" | "cancel" | null
   >(null);
@@ -180,6 +183,30 @@ export default function BookingDetailPage({
     }
     await load();
     router.refresh();
+  }
+
+  async function submitOffer() {
+    const value = Number(offerPrice);
+    if (!Number.isFinite(value) || value <= 0) {
+      setError(t("offer_price_invalid"));
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const res = await fetch(`/api/bookings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ offeredPricePerKg: value }),
+    });
+    const data = await res.json();
+    setLoading(false);
+    if (!res.ok) {
+      setError(data.error ?? "Erreur");
+      return;
+    }
+    setMessage(t("update_offer"));
+    setOfferPrice("");
+    await load();
   }
 
   async function startCheckout() {
@@ -290,6 +317,35 @@ export default function BookingDetailPage({
             <br />
             {t("traveler")} : {booking.trip.user.displayName}
           </p>
+          <div className="mt-3 space-y-1 text-sm">
+            <p>
+              {t("listed_trip_price")}:{" "}
+              <strong>
+                {formatMoney(
+                  booking.trip.pricePerKgCad ?? 0,
+                  (normalizeCurrency(booking.trip.currency) ??
+                    "CAD") as MoneyCurrency
+                )}
+                /kg
+              </strong>
+              {booking.trip.priceNegotiable
+                ? ` · ${t("price_negotiable")}`
+                : ` · ${t("price_fixed")}`}
+            </p>
+            {booking.offeredPricePerKg != null && (
+              <p className="text-[var(--accent)]">
+                {t("current_offer")}:{" "}
+                <strong>
+                  {formatMoney(
+                    booking.offeredPricePerKg,
+                    (normalizeCurrency(booking.trip.currency) ??
+                      "CAD") as MoneyCurrency
+                  )}
+                  /kg
+                </strong>
+              </p>
+            )}
+          </div>
           {message && (
             <p className="mt-3 text-sm text-[var(--accent)]">{message}</p>
           )}
@@ -305,6 +361,39 @@ export default function BookingDetailPage({
               )}
             </p>
           )}
+
+          {booking.trip.priceNegotiable &&
+            isSender &&
+            ["PROPOSED", "AWAITING_PAYMENT"].includes(booking.status) && (
+              <div className="mt-4 space-y-3 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-soft)]/25 p-4">
+                <p className="text-sm font-medium">{t("your_offer_per_kg")}</p>
+                <p className="text-xs text-[var(--muted)]">{t("offer_price_hint")}</p>
+                <div className="flex flex-wrap items-end gap-2">
+                  <div className="min-w-[8rem] flex-1 space-y-1">
+                    <Label htmlFor="offer-kg">{t("your_offer_per_kg")}</Label>
+                    <Input
+                      id="offer-kg"
+                      type="number"
+                      step="0.5"
+                      min="1"
+                      value={offerPrice}
+                      onChange={(e) => setOfferPrice(e.target.value)}
+                      placeholder={String(
+                        booking.offeredPricePerKg ??
+                          booking.trip.pricePerKgCad ??
+                          ""
+                      )}
+                    />
+                  </div>
+                  <Button
+                    disabled={loading || !offerPrice}
+                    onClick={() => void submitOffer()}
+                  >
+                    {loading ? t("loading") : t("update_offer")}
+                  </Button>
+                </div>
+              </div>
+            )}
 
           {booking.status === "PROPOSED" &&
             isTraveler &&

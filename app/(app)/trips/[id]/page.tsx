@@ -11,9 +11,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { TripSuggestedRequests } from "@/components/traveler-apply-panel";
 import { SenderProposePanel } from "@/components/sender-propose-panel";
+import { TripActiveNegotiations } from "@/components/trip-active-negotiations";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 import { transportModeLabel } from "@/lib/transport";
+import { negotiationLabel } from "@/lib/negotiation";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -35,12 +37,27 @@ export default async function TripDetailPage({ params }: Props) {
           kycStatus: true,
         },
       },
+      _count: {
+        select: {
+          bookings: {
+            where: {
+              status: { in: ["PROPOSED", "AWAITING_PAYMENT"] },
+            },
+          },
+        },
+      },
     },
   });
   if (!trip) notFound();
 
   const isOwner = me?.id === trip.userId || me?.role === "ADMIN";
   const isTripOwner = me?.id === trip.userId;
+  const discussionCount = trip._count.bookings;
+  const nego = negotiationLabel({
+    priceNegotiable: trip.priceNegotiable,
+    discussionCount,
+    locale,
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -69,6 +86,17 @@ export default async function TripDetailPage({ params }: Props) {
               <Badge>{formatKg(trip.weightKg)}</Badge>
               <Badge>
                 {formatMoney(trip.pricePerKgCad, trip.currency || "CAD")}/kg
+              </Badge>
+              <Badge
+                className={
+                  trip.priceNegotiable && discussionCount > 0
+                    ? "bg-[var(--accent)] text-white"
+                    : trip.priceNegotiable
+                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      : undefined
+                }
+              >
+                {nego}
               </Badge>
             </div>
           </div>
@@ -153,13 +181,23 @@ export default async function TripDetailPage({ params }: Props) {
       </Card>
 
       {isTripOwner && (
-        <div id="matches">
-          <TripSuggestedRequests tripId={trip.id} />
-        </div>
+        <>
+          {trip.priceNegotiable && (
+            <TripActiveNegotiations tripId={trip.id} />
+          )}
+          <div id="matches">
+            <TripSuggestedRequests tripId={trip.id} />
+          </div>
+        </>
       )}
 
       {me && !isTripOwner && trip.status === "OPEN" && (
-        <SenderProposePanel tripId={trip.id} />
+        <SenderProposePanel
+          tripId={trip.id}
+          priceNegotiable={trip.priceNegotiable}
+          listedPricePerKg={trip.pricePerKgCad}
+          currency={trip.currency || "CAD"}
+        />
       )}
     </div>
   );

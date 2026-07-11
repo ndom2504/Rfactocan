@@ -11,6 +11,7 @@ import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 import { TRANSPORT_MODES, transportModeLabel } from "@/lib/transport";
+import { negotiationLabel } from "@/lib/negotiation";
 
 type Props = {
   searchParams: Promise<{ mine?: string; transportMode?: string }>;
@@ -42,6 +43,15 @@ export default async function TripsPage({ searchParams }: Props) {
           verifiedAt: true,
           ratingAvg: true,
           kycStatus: true,
+        },
+      },
+      _count: {
+        select: {
+          bookings: {
+            where: {
+              status: { in: ["PROPOSED", "AWAITING_PAYMENT"] },
+            },
+          },
         },
       },
     },
@@ -109,6 +119,12 @@ export default async function TripsPage({ searchParams }: Props) {
       <div className="grid gap-4">
         {trips.map((trip) => {
           const isOwner = trip.userId === user.id;
+          const discussionCount = trip._count.bookings;
+          const nego = negotiationLabel({
+            priceNegotiable: trip.priceNegotiable,
+            discussionCount,
+            locale,
+          });
           return (
             <Card key={trip.id}>
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -139,6 +155,17 @@ export default async function TripsPage({ searchParams }: Props) {
                     <Badge>
                       {formatMoney(trip.pricePerKgCad, trip.currency || "CAD")}
                       /kg
+                    </Badge>
+                    <Badge
+                      className={
+                        trip.priceNegotiable && discussionCount > 0
+                          ? "bg-[var(--accent)] text-white"
+                          : trip.priceNegotiable
+                            ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                            : undefined
+                      }
+                    >
+                      {nego}
                     </Badge>
                     {(trip.user.verifiedAt ||
                       trip.user.kycStatus === "VERIFIED") && (
