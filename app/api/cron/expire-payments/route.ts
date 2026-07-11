@@ -4,7 +4,8 @@ import { releaseExpiredPayments } from "@/lib/payments/expiry";
 export const runtime = "nodejs";
 
 /**
- * Hourly cron: expire unpaid AWAITING_PAYMENT bookings past 24h.
+ * Daily cron (Hobby plan): expire unpaid AWAITING_PAYMENT bookings past 24h.
+ * Lazy expiry on GET booking / POST checkout still covers most cases.
  * Protect with Authorization: Bearer $CRON_SECRET (Vercel Cron).
  */
 export async function GET(request: Request) {
