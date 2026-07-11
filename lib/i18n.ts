@@ -232,6 +232,13 @@ const dict = {
     see_requests: "Voir les demandes / matcher",
     weight_available_badge: "dispo",
     see_requests_short: "Parcourir les demandes",
+    propose_on_trip: "Proposer mon colis",
+    propose_hint:
+      "Choisissez l'une de vos demandes ouvertes pour la proposer à ce voyageur.",
+    propose_no_requests:
+      "Vous n'avez aucune demande ouverte. Publiez d'abord un colis pour pouvoir proposer.",
+    select_request: "Votre demande",
+    match_short: "Matcher",
 
     // Requests
     requests_title: "Demandes de colis",
@@ -647,6 +654,13 @@ const dict = {
     see_requests: "See requests / match",
     weight_available_badge: "available",
     see_requests_short: "Browse requests",
+    propose_on_trip: "Propose my parcel",
+    propose_hint:
+      "Choose one of your open requests to propose to this traveler.",
+    propose_no_requests:
+      "You have no open requests. Publish a parcel request first to propose.",
+    select_request: "Your request",
+    match_short: "Match",
 
     requests_title: "Parcel requests",
     requests_subtitle: "Shipping needs posted by individuals.",

@@ -275,6 +275,16 @@ export function TripSuggestedRequests({ tripId }: { tripId: string }) {
     })();
   }, [tripId]);
 
+  useEffect(() => {
+    if (!loaded) return;
+    if (typeof window !== "undefined" && window.location.hash === "#matches") {
+      document.getElementById("matches")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [loaded]);
+
   if (!loaded) {
     return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }

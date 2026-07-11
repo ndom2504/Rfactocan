@@ -272,6 +272,10 @@ model Booking {
   handoverCode        String?
   handoverExpiresAt   DateTime?
   handedOverAt        DateTime?
+  /// Deadline to complete Stripe checkout (24h after AWAITING_PAYMENT)
+  paymentExpiresAt    DateTime?
+  cancelledReason     String?
+  cancelledById       String?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
@@ -289,6 +293,7 @@ model Booking {
   @@index([senderId])
   @@index([status])
   @@index([handoverCode])
+  @@index([paymentExpiresAt])
 }
 
 model BookingEvent {

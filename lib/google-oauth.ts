@@ -73,3 +73,51 @@ export async function fetchGoogleProfile(accessToken: string) {
   }
   return res.json() as Promise<GoogleProfile>;
 }
+
+/** Allowed OAuth client IDs for ID token `aud` (web + mobile). */
+export function getGoogleAllowedAudiences() {
+  return [
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_ANDROID_CLIENT_ID,
+    process.env.GOOGLE_IOS_CLIENT_ID,
+  ].filter((v): v is string => Boolean(v?.trim()));
+}
+
+/**
+ * Verify a Google ID token from mobile (or other native clients).
+ * Uses tokeninfo; audience must match a configured client ID when any are set.
+ */
+export async function verifyGoogleIdToken(idToken: string): Promise<GoogleProfile> {
+  const res = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+  );
+  if (!res.ok) {
+    throw new Error("Invalid Google ID token");
+  }
+
+  const data = (await res.json()) as GoogleProfile & {
+    aud?: string;
+    error?: string;
+    error_description?: string;
+  };
+
+  if (data.error || !data.sub) {
+    throw new Error(data.error_description || data.error || "Invalid Google ID token");
+  }
+
+  const allowed = getGoogleAllowedAudiences();
+  if (allowed.length > 0 && data.aud && !allowed.includes(data.aud)) {
+    throw new Error("Google token audience mismatch");
+  }
+
+  return {
+    sub: data.sub,
+    email: data.email,
+    email_verified:
+      typeof data.email_verified === "boolean"
+        ? data.email_verified
+        : String(data.email_verified) === "true",
+    name: data.name,
+    picture: data.picture,
+  };
+}

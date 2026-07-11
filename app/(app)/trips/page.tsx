@@ -149,15 +149,29 @@ export default async function TripsPage({ searchParams }: Props) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <Link href={`/trips/${trip.id}`}>
-                    <Button variant="outline">{t(locale, "details")}</Button>
-                  </Link>
-                  {isOwner && (
-                    <ListingOwnerActions
-                      kind="trip"
-                      id={trip.id}
-                      editHref={`/trips/${trip.id}/edit`}
-                    />
+                  {isOwner ? (
+                    <>
+                      <Link href={`/trips/${trip.id}#matches`}>
+                        <Button>{t(locale, "match")}</Button>
+                      </Link>
+                      <Link href={`/trips/${trip.id}`}>
+                        <Button variant="outline">{t(locale, "details")}</Button>
+                      </Link>
+                      <ListingOwnerActions
+                        kind="trip"
+                        id={trip.id}
+                        editHref={`/trips/${trip.id}/edit`}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Link href={`/trips/${trip.id}#propose`}>
+                        <Button>{t(locale, "propose")}</Button>
+                      </Link>
+                      <Link href={`/trips/${trip.id}`}>
+                        <Button variant="outline">{t(locale, "details")}</Button>
+                      </Link>
+                    </>
                   )}
                 </div>
               </div>

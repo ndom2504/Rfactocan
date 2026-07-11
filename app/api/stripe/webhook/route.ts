@@ -4,6 +4,7 @@ import { formatMoneyFromCents } from "@/lib/currency";
 import { syncConnectAccount } from "@/lib/connect";
 import { emailPaymentAuthorized } from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
+import { markRequestMatchedOnPayment } from "@/lib/payments/expiry";
 import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
@@ -51,6 +52,44 @@ async function handlePaymentIntent(
         payment: true,
       },
     });
+
+    // Too late or already cancelled — cancel this PI and abort
+    if (
+      !booking ||
+      booking.status === "CANCELLED" ||
+      booking.status === "REFUSED" ||
+      (booking.paymentExpiresAt &&
+        booking.paymentExpiresAt.getTime() <= Date.now() &&
+        booking.status === "AWAITING_PAYMENT")
+    ) {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: "CANCELLED", stripePaymentIntentId: pi.id },
+      });
+      try {
+        const stripe = getStripe();
+        await stripe.paymentIntents.cancel(pi.id);
+      } catch {
+        /* already canceled */
+      }
+      return;
+    }
+
+    // Another booking already won this request
+    if (booking.request.status === "MATCHED" && booking.status !== "ACCEPTED") {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: "CANCELLED", stripePaymentIntentId: pi.id },
+      });
+      try {
+        const stripe = getStripe();
+        await stripe.paymentIntents.cancel(pi.id);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.payment.update({
         where: { id: payment.id },
@@ -63,20 +102,21 @@ async function handlePaymentIntent(
         where: { id: bookingId },
         data: { status: "ACCEPTED" },
       });
-      if (booking) {
-        await tx.parcelRequest.update({
-          where: { id: booking.requestId },
-          data: { status: "MATCHED" },
-        });
-        await recordBookingEvent(tx, {
-          bookingId,
-          type: "STATUS",
-          status: "ACCEPTED",
-          label: statusEventLabel("ACCEPTED"),
-          meta: { source: "stripe_webhook" },
-        });
-      }
+      await tx.parcelRequest.update({
+        where: { id: booking.requestId },
+        data: { status: "MATCHED" },
+      });
+      await recordBookingEvent(tx, {
+        bookingId,
+        type: "STATUS",
+        status: "ACCEPTED",
+        label: statusEventLabel("ACCEPTED"),
+        meta: { source: "stripe_webhook" },
+      });
     });
+
+    // Cancel rival offers on the same request (first-pay-wins)
+    await markRequestMatchedOnPayment(booking.requestId, bookingId);
 
     if (booking) {
       const amountLabel = formatMoneyFromCents(

@@ -46,6 +46,8 @@ type Booking = {
   proposedBy?: string;
   goodsCertified: boolean;
   customsAcknowledged: boolean;
+  paymentExpiresAt?: string | null;
+  cancelledReason?: string | null;
   payment?: Payment | null;
   request: {
     fromCity: string;
@@ -233,6 +235,30 @@ export default function BookingDetailPage({
   const paymentFailed = payment?.status === "FAILED";
   const awaitingConfirm =
     paymentReturn === "success" && booking.status === "AWAITING_PAYMENT";
+  const paymentExpired =
+    booking.status === "AWAITING_PAYMENT" &&
+    !!booking.paymentExpiresAt &&
+    new Date(booking.paymentExpiresAt).getTime() <= Date.now();
+  const paymentRemainingMs =
+    booking.paymentExpiresAt && booking.status === "AWAITING_PAYMENT"
+      ? Math.max(0, new Date(booking.paymentExpiresAt).getTime() - Date.now())
+      : null;
+  const paymentRemainingLabel =
+    paymentRemainingMs != null
+      ? `${Math.floor(paymentRemainingMs / (60 * 60 * 1000))}h ${Math.floor(
+          (paymentRemainingMs % (60 * 60 * 1000)) / (60 * 1000)
+        )}m`
+      : null;
+  const cancelledReasonMessage =
+    booking.status === "CANCELLED" && booking.cancelledReason
+      ? booking.cancelledReason === "PAYMENT_TIMEOUT"
+        ? "Délai de paiement de 24h dépassé. Vous pouvez postuler à nouveau si la demande est encore ouverte."
+        : booking.cancelledReason === "SUPERSEDED_BY_PAYMENT"
+          ? "Une autre offre a été payée en premier sur cette demande."
+          : booking.cancelledReason === "ADMIN_CHARTER"
+            ? "Offre annulée par l'administration (charte)."
+            : "Cette offre a été annulée."
+      : null;
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -373,6 +399,13 @@ export default function BookingDetailPage({
               <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">
                 {t("pay_secure")}
               </h3>
+              {booking.paymentExpiresAt && (
+                <p className="text-sm text-[var(--muted)]">
+                  {paymentExpired
+                    ? "Délai de paiement expiré."
+                    : `Paiement avant le ${formatDate(booking.paymentExpiresAt)} (reste ${paymentRemainingLabel}).`}
+                </p>
+              )}
               {awaitingConfirm && (
                 <p className="text-sm text-[var(--accent)]">
                   {t("payment_confirming")}
@@ -416,7 +449,7 @@ export default function BookingDetailPage({
                   </p>
                 </div>
               )}
-              {!awaitingConfirm && !paymentAuthorized && (
+              {!awaitingConfirm && !paymentAuthorized && !paymentExpired && (
                 <Button
                   className="w-full"
                   size="lg"
@@ -441,7 +474,16 @@ export default function BookingDetailPage({
           {booking.status === "AWAITING_PAYMENT" && isTraveler && (
             <p className="mt-4 text-sm text-[var(--muted)]">
               {t("awaiting_sender_payment")}
+              {booking.paymentExpiresAt && !paymentExpired
+                ? ` · Avant le ${formatDate(booking.paymentExpiresAt)} (reste ${paymentRemainingLabel})`
+                : paymentExpired
+                  ? " · Délai expiré"
+                  : ""}
             </p>
+          )}
+
+          {cancelledReasonMessage && (
+            <p className="mt-4 text-sm text-red-700">{cancelledReasonMessage}</p>
           )}
 
           {booking.status === "ACCEPTED" && (isSender || isTraveler) && (

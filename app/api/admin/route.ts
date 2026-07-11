@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { expireBookingPayment } from "@/lib/payments/expiry";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -88,6 +89,8 @@ export async function GET() {
         select: {
           id: true,
           status: true,
+          paymentExpiresAt: true,
+          cancelledReason: true,
           sender: { select: { displayName: true, email: true } },
           trip: {
             select: {
@@ -96,6 +99,33 @@ export async function GET() {
               user: { select: { displayName: true, email: true } },
             },
           },
+        },
+      },
+    },
+  });
+
+  const pendingOffers = await prisma.booking.findMany({
+    where: { status: { in: ["PROPOSED", "AWAITING_PAYMENT"] } },
+    orderBy: { updatedAt: "desc" },
+    take: 40,
+    include: {
+      payment: true,
+      sender: { select: { id: true, displayName: true, email: true } },
+      request: {
+        select: {
+          id: true,
+          status: true,
+          fromCity: true,
+          toCity: true,
+          weightKg: true,
+        },
+      },
+      trip: {
+        select: {
+          id: true,
+          fromCity: true,
+          toCity: true,
+          user: { select: { id: true, displayName: true, email: true } },
         },
       },
     },
@@ -114,16 +144,17 @@ export async function GET() {
       kycVerified,
       platformFeesCadCents: feeAgg._sum.platformFeeCents ?? 0,
       volumeCadCents: feeAgg._sum.amountCadCents ?? 0,
+      pendingOffers: pendingOffers.length,
     },
     openReports,
     openDisputes,
     users: allUsers,
     payments: recentPayments,
+    pendingOffers,
   });
 }
 
-const patchSchema = z.object({
-  userId: z.string(),
+const userPatchSchema = z.object({
   action: z.enum([
     "verify",
     "unverify",
@@ -132,6 +163,13 @@ const patchSchema = z.object({
     "make_admin",
     "mark_kyc_verified",
   ]),
+  userId: z.string(),
+});
+
+const bookingPatchSchema = z.object({
+  action: z.literal("cancel_booking"),
+  bookingId: z.string(),
+  reason: z.enum(["ADMIN_CHARTER"]).default("ADMIN_CHARTER"),
 });
 
 export async function PATCH(request: Request) {
@@ -141,7 +179,38 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const body = patchSchema.parse(await request.json());
+    const raw = await request.json();
+
+    if (raw.action === "cancel_booking") {
+      const body = bookingPatchSchema.parse(raw);
+      const existing = await prisma.booking.findUnique({
+        where: { id: body.bookingId },
+        select: { id: true, status: true },
+      });
+      if (!existing) {
+        return NextResponse.json(
+          { error: "Réservation introuvable" },
+          { status: 404 }
+        );
+      }
+      if (!["PROPOSED", "AWAITING_PAYMENT"].includes(existing.status)) {
+        return NextResponse.json(
+          {
+            error:
+              "Seules les offres proposées ou en attente de paiement peuvent être annulées.",
+          },
+          { status: 400 }
+        );
+      }
+      const booking = await expireBookingPayment(
+        body.bookingId,
+        body.reason,
+        session.id
+      );
+      return NextResponse.json({ booking });
+    }
+
+    const body = userPatchSchema.parse(raw);
     const data =
       body.action === "verify"
         ? {
@@ -178,6 +247,7 @@ export async function PATCH(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message }, { status: 400 });
     }
+    console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

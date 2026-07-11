@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { TripSuggestedRequests } from "@/components/traveler-apply-panel";
+import { SenderProposePanel } from "@/components/sender-propose-panel";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 import { transportModeLabel } from "@/lib/transport";
@@ -39,6 +40,7 @@ export default async function TripDetailPage({ params }: Props) {
   if (!trip) notFound();
 
   const isOwner = me?.id === trip.userId || me?.role === "ADMIN";
+  const isTripOwner = me?.id === trip.userId;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -71,15 +73,20 @@ export default async function TripDetailPage({ params }: Props) {
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
-            {isOwner ? (
-              <ListingOwnerActions
-                kind="trip"
-                id={trip.id}
-                editHref={`/trips/${trip.id}/edit`}
-              />
+            {isTripOwner ? (
+              <>
+                <Link href="#matches">
+                  <Button>{t(locale, "match")}</Button>
+                </Link>
+                <ListingOwnerActions
+                  kind="trip"
+                  id={trip.id}
+                  editHref={`/trips/${trip.id}/edit`}
+                />
+              </>
             ) : (
-              <Link href="/requests">
-                <Button>{t(locale, "see_requests")}</Button>
+              <Link href="#propose">
+                <Button>{t(locale, "propose")}</Button>
               </Link>
             )}
           </div>
@@ -145,8 +152,14 @@ export default async function TripDetailPage({ params }: Props) {
         </div>
       </Card>
 
-      {isOwner && me?.id === trip.userId && (
-        <TripSuggestedRequests tripId={trip.id} />
+      {isTripOwner && (
+        <div id="matches">
+          <TripSuggestedRequests tripId={trip.id} />
+        </div>
+      )}
+
+      {me && !isTripOwner && trip.status === "OPEN" && (
+        <SenderProposePanel tripId={trip.id} />
       )}
     </div>
   );

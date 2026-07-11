@@ -38,6 +38,8 @@ type BookingPayload = {
     status: string;
     senderId: string;
     proposedBy?: string;
+    paymentExpiresAt?: string | null;
+    cancelledReason?: string | null;
     request: {
       fromCity: string;
       toCity: string;
@@ -63,6 +65,15 @@ type BookingPayload = {
     currency: string;
   } | null;
 };
+
+function remainingLabel(expiresAt: string | null | undefined) {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Expiré";
+  const h = Math.floor(ms / (60 * 60 * 1000));
+  const m = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  return `${h}h ${m}m restantes`;
+}
 
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -185,6 +196,21 @@ export default function BookingDetailScreen() {
           booking.payment.currency || "CAD"
         )
       : null;
+  const paymentExpired =
+    booking.status === "AWAITING_PAYMENT" &&
+    !!booking.paymentExpiresAt &&
+    new Date(booking.paymentExpiresAt).getTime() <= Date.now();
+  const deadlineLabel = remainingLabel(booking.paymentExpiresAt);
+  const cancelledMsg =
+    booking.status === "CANCELLED" && booking.cancelledReason
+      ? booking.cancelledReason === "PAYMENT_TIMEOUT"
+        ? "Délai de paiement de 24h dépassé."
+        : booking.cancelledReason === "SUPERSEDED_BY_PAYMENT"
+          ? "Une autre offre a été payée en premier."
+          : booking.cancelledReason === "ADMIN_CHARTER"
+            ? "Offre annulée par l'admin (charte)."
+            : "Offre annulée."
+      : null;
 
   return (
     <Screen style={{ paddingBottom: 0 }}>
@@ -240,15 +266,30 @@ export default function BookingDetailScreen() {
 
               {booking.status === "AWAITING_PAYMENT" && isSender ? (
                 <View style={{ marginBottom: 12 }}>
-                  <Button
-                    label="Payer avec Stripe"
-                    onPress={pay}
-                    loading={busy}
-                  />
-                  <Muted>
-                    Le paiement s&apos;ouvre dans le navigateur (séquestre).
-                  </Muted>
+                  {deadlineLabel ? (
+                    <Muted>
+                      {paymentExpired
+                        ? "Délai de paiement expiré."
+                        : `Paiement sous 24h · ${deadlineLabel}`}
+                    </Muted>
+                  ) : null}
+                  {!paymentExpired ? (
+                    <Button
+                      label="Payer avec Stripe"
+                      onPress={pay}
+                      loading={busy}
+                    />
+                  ) : null}
+                  {!paymentExpired ? (
+                    <Muted>
+                      Le paiement s&apos;ouvre dans le navigateur (séquestre).
+                    </Muted>
+                  ) : null}
                 </View>
+              ) : null}
+
+              {cancelledMsg ? (
+                <ErrorText>{cancelledMsg}</ErrorText>
               ) : null}
 
               <Text

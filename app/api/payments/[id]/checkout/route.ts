@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
+import {
+  ensurePaymentNotExpired,
+  isPaymentExpired,
+} from "@/lib/payments/expiry";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
@@ -19,6 +23,8 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   const { id: bookingId } = await params;
+  await ensurePaymentNotExpired(bookingId);
+
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -40,7 +46,33 @@ export async function POST(_request: Request, { params }: Params) {
   }
   if (booking.status !== "AWAITING_PAYMENT") {
     return NextResponse.json(
-      { error: "Cette réservation n'attend pas de paiement." },
+      {
+        error: isPaymentExpired(booking)
+          ? "Le délai de paiement de 24h est dépassé. L'offre est à nouveau disponible."
+          : "Cette réservation n'attend pas de paiement.",
+      },
+      { status: 400 }
+    );
+  }
+  if (booking.request.status === "MATCHED") {
+    return NextResponse.json(
+      {
+        error:
+          "Cette demande a déjà été payée par une autre offre. Le lien de paiement n'est plus valide.",
+      },
+      { status: 409 }
+    );
+  }
+  if (
+    booking.paymentExpiresAt &&
+    booking.paymentExpiresAt.getTime() <= Date.now()
+  ) {
+    await ensurePaymentNotExpired(bookingId);
+    return NextResponse.json(
+      {
+        error:
+          "Le délai de paiement de 24h est dépassé. Le lien n'est plus disponible.",
+      },
       { status: 400 }
     );
   }
@@ -77,7 +109,6 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   try {
-    // Always convert into the logged-in payer's profile currency.
     const payer = await prisma.user.findUnique({
       where: { id: session.id },
       select: { preferredCurrency: true, email: true },

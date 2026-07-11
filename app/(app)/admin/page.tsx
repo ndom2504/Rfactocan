@@ -71,11 +71,45 @@ type AdminData = {
     booking: {
       id: string;
       status: string;
+      paymentExpiresAt?: string | null;
+      cancelledReason?: string | null;
       sender: { displayName: string };
       trip: { fromCity: string; toCity: string; user: { displayName: string } };
     };
   }>;
+  pendingOffers: Array<{
+    id: string;
+    status: string;
+    paymentExpiresAt: string | null;
+    updatedAt: string;
+    sender: { displayName: string; email: string };
+    request: {
+      fromCity: string;
+      toCity: string;
+      weightKg: number;
+      status: string;
+    };
+    trip: {
+      fromCity: string;
+      toCity: string;
+      user: { displayName: string; email: string };
+    };
+    payment: {
+      status: string;
+      amountCadCents: number;
+      currency?: string;
+    } | null;
+  }>;
 };
+
+function remainingLabel(expiresAt: string | null) {
+  if (!expiresAt) return "—";
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Expiré";
+  const h = Math.floor(ms / (60 * 60 * 1000));
+  const m = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  return `${h}h ${m}m`;
+}
 
 function formatCents(cents: number, currency = "CAD") {
   return formatMoneyFromCents(cents, currency, "fr-CA");
@@ -104,6 +138,26 @@ export default function AdminPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action: actionName }),
+    });
+    await load();
+  }
+
+  async function cancelBooking(bookingId: string) {
+    if (
+      !confirm(
+        "Annuler cette offre pour non-respect de la charte ? Les parties seront notifiées."
+      )
+    ) {
+      return;
+    }
+    await fetch("/api/admin", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "cancel_booking",
+        bookingId,
+        reason: "ADMIN_CHARTER",
+      }),
     });
     await load();
   }
@@ -158,6 +212,7 @@ export default function AdminPage() {
           ["Voyages", data.stats.trips],
           ["Signalements", data.stats.openReports],
           ["Litiges ouverts", data.stats.openDisputes ?? 0],
+          ["Offres en attente", data.pendingOffers?.length ?? 0],
         ].map(([label, value]) => (
           <Card key={String(label)}>
             <CardDescription>{label}</CardDescription>
@@ -165,6 +220,65 @@ export default function AdminPage() {
           </Card>
         ))}
       </div>
+
+      <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Offres / paiements en attente
+        </h2>
+        {(data.pendingOffers ?? []).length === 0 && (
+          <p className="text-sm text-[var(--muted)]">
+            Aucune offre proposée ou en attente de paiement.
+          </p>
+        )}
+        {(data.pendingOffers ?? []).map((b) => (
+          <Card key={b.id}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">
+                  {b.request.fromCity} → {b.request.toCity}
+                </CardTitle>
+                <CardDescription>
+                  {b.sender.displayName} ↔ {b.trip.user.displayName} ·{" "}
+                  {b.request.weightKg} kg
+                  {b.payment
+                    ? ` · ${formatCents(b.payment.amountCadCents, b.payment.currency)}`
+                    : ""}
+                </CardDescription>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge>
+                    {BOOKING_STATUS_LABELS[b.status] ?? b.status}
+                  </Badge>
+                  {b.payment && (
+                    <Badge>
+                      {PAYMENT_STATUS_LABELS[b.payment.status] ??
+                        b.payment.status}
+                    </Badge>
+                  )}
+                  {b.status === "AWAITING_PAYMENT" && (
+                    <Badge>
+                      Paiement : {remainingLabel(b.paymentExpiresAt)}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <a href={`/bookings/${b.id}`}>
+                  <Button size="sm" variant="outline">
+                    Voir
+                  </Button>
+                </a>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => cancelBooking(b.id)}
+                >
+                  Annuler (charte)
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">

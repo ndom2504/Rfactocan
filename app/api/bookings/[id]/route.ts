@@ -5,6 +5,10 @@ import { travelerCanReceivePayments } from "@/lib/connect";
 import { emailDelivered, emailPaymentRequested } from "@/lib/email";
 import { notifyUser } from "@/lib/notifications";
 import { getPaymentProvider, quotePaymentAmount } from "@/lib/payments/provider";
+import {
+  ensurePaymentNotExpired,
+  paymentDeadlineFrom,
+} from "@/lib/payments/expiry";
 import { formatMoneyFromCents } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
@@ -45,6 +49,8 @@ export async function GET(_request: Request, { params }: Params) {
   }
 
   const { id } = await params;
+  await ensurePaymentNotExpired(id);
+
   const booking = await prisma.booking.findUnique({
     where: { id },
     include: {
@@ -340,11 +346,24 @@ export async function PATCH(request: Request, { params }: Params) {
         where: { id },
         data: {
           status: nextStatus,
-          ...(nextStatus === "AWAITING_PAYMENT" ||
-          (nextStatus === "ACCEPTED" && booking.status === "PROPOSED")
+          ...(nextStatus === "AWAITING_PAYMENT"
             ? {
                 goodsCertified: true,
                 customsAcknowledged: true,
+                paymentExpiresAt: paymentDeadlineFrom(),
+              }
+            : {}),
+          ...(nextStatus === "ACCEPTED" && booking.status === "PROPOSED"
+            ? {
+                goodsCertified: true,
+                customsAcknowledged: true,
+              }
+            : {}),
+          ...(nextStatus === "CANCELLED" || nextStatus === "REFUSED"
+            ? {
+                cancelledReason:
+                  nextStatus === "REFUSED" ? "REFUSED" : "USER_CANCELLED",
+                cancelledById: session.id,
               }
             : {}),
         },
@@ -361,10 +380,9 @@ export async function PATCH(request: Request, { params }: Params) {
         });
       }
 
-      if (
-        nextStatus === "AWAITING_PAYMENT" ||
-        (nextStatus === "ACCEPTED" && booking.status === "PROPOSED")
-      ) {
+      // Request stays OPEN until Stripe payment succeeds (first-pay-wins).
+      // Only lock MATCHED when accepting without Stripe (demo mode).
+      if (nextStatus === "ACCEPTED" && booking.status === "PROPOSED") {
         await tx.parcelRequest.update({
           where: { id: booking.requestId },
           data: { status: "MATCHED" },
