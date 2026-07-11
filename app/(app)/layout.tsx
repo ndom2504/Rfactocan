@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import { LogoutButton } from "@/components/logout-button";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { NotificationBell } from "@/components/notification-bell";
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { LocaleProvider } from "@/components/locale-provider";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,6 +30,7 @@ export default async function AppLayout({
 
   return (
     <LocaleProvider locale={locale}>
+      <PresenceHeartbeat />
       <div className="min-h-screen">
         <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">

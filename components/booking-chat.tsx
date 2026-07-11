@@ -13,11 +13,21 @@ export type ChatMessage = {
   body: string;
   attachmentUrl: string | null;
   createdAt: string;
+  readAt?: string | null;
   senderId: string;
   sender: {
     displayName: string;
     avatarUrl?: string | null;
+    lastSeenAt?: string | null;
   };
+};
+
+type Peer = {
+  id: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  lastSeenAt?: string | null;
+  online: boolean;
 };
 
 type Props = {
@@ -55,6 +65,7 @@ function isAttachmentOnlyBody(body: string) {
 export function BookingChat({ bookingId, meId, closed, className }: Props) {
   const { t, locale } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [peer, setPeer] = useState<Peer | null>(null);
   const [body, setBody] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -68,7 +79,10 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
   async function loadMessages() {
     const res = await fetch(`/api/bookings/${bookingId}/messages`);
     const data = await res.json();
-    if (res.ok) setMessages(data.messages ?? []);
+    if (res.ok) {
+      setMessages(data.messages ?? []);
+      if (data.peer) setPeer(data.peer);
+    }
   }
 
   useEffect(() => {
@@ -153,8 +167,35 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
 
   return (
     <Card className={cn("flex min-h-[480px] flex-col", className)}>
-      <CardTitle>{t("messaging")}</CardTitle>
-      <CardDescription>{t("messaging_hint")}</CardDescription>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <CardTitle>{t("messaging")}</CardTitle>
+          <CardDescription>{t("messaging_hint")}</CardDescription>
+        </div>
+        {peer && (
+          <div className="flex items-center gap-2">
+            <UserAvatar
+              name={peer.displayName}
+              avatarUrl={peer.avatarUrl}
+              size="sm"
+              online={peer.online}
+            />
+            <div className="text-right">
+              <p className="text-sm font-medium leading-tight">
+                {peer.displayName}
+              </p>
+              <p
+                className={cn(
+                  "text-[11px]",
+                  peer.online ? "text-emerald-600" : "text-[var(--muted)]"
+                )}
+              >
+                {peer.online ? t("status_online") : t("status_offline")}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div
         ref={listRef}
@@ -174,6 +215,7 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
                 name={m.sender.displayName}
                 avatarUrl={m.sender.avatarUrl}
                 size="sm"
+                online={mine ? true : peer?.online}
               />
               <div
                 className={cn(
@@ -224,6 +266,18 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
                   )}
                 >
                   {formatMessageTime(m.createdAt, locale)}
+                  {mine && (
+                    <>
+                      {" · "}
+                      <span
+                        className={
+                          m.readAt ? "text-emerald-600" : "text-[var(--muted)]"
+                        }
+                      >
+                        {m.readAt ? t("message_read") : t("message_delivered")}
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
             </div>

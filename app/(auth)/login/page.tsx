@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { PasswordInput } from "@/components/password-input";
 import { useI18n } from "@/components/locale-provider";
 
 const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
@@ -113,12 +114,13 @@ function LoginForm() {
               {t("forgot_password")}
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            showLabel={t("show_password")}
+            hideLabel={t("hide_password")}
           />
         </div>
         {params.get("reset") === "1" && !error && (

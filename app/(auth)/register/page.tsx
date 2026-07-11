@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { PasswordInput } from "@/components/password-input";
 import { useI18n } from "@/components/locale-provider";
 
 function RegisterForm() {
@@ -85,13 +86,15 @@ function RegisterForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">{t("password")}</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="new-password"
+            showLabel={t("show_password")}
+            hideLabel={t("hide_password")}
           />
         </div>
         <div className="space-y-2">

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { PasswordInput } from "@/components/password-input";
 import { useI18n } from "@/components/locale-provider";
 
 function ResetForm() {
@@ -65,26 +65,28 @@ function ResetForm() {
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password">{t("new_password")}</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
               autoComplete="new-password"
+              showLabel={t("show_password")}
+              hideLabel={t("hide_password")}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirm">{t("confirm_password")}</Label>
-            <Input
+            <PasswordInput
               id="confirm"
-              type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               required
               minLength={8}
               autoComplete="new-password"
+              showLabel={t("show_password")}
+              hideLabel={t("hide_password")}
             />
           </div>
           {error && <p className="text-sm text-red-700">{error}</p>}

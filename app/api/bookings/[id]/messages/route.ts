@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
 import { notifyUser } from "@/lib/notifications";
 
@@ -41,8 +42,26 @@ async function assertBookingAccess(
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      trip: { include: { user: { select: { id: true, displayName: true } } } },
-      sender: { select: { id: true, displayName: true } },
+      trip: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+              avatarUrl: true,
+              lastSeenAt: true,
+            },
+          },
+        },
+      },
+      sender: {
+        select: {
+          id: true,
+          displayName: true,
+          avatarUrl: true,
+          lastSeenAt: true,
+        },
+      },
       request: { select: { fromCity: true, toCity: true } },
     },
   });
@@ -67,17 +86,63 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Interdit" }, { status: 403 });
   }
 
+  // Mark peer messages as read when the conversation is opened / polled.
+  await prisma.message.updateMany({
+    where: {
+      bookingId: id,
+      senderId: { not: session.id },
+      readAt: null,
+    },
+    data: { readAt: new Date() },
+  });
+
+  // Refresh own lastSeen while chatting
+  void prisma.user
+    .update({
+      where: { id: session.id },
+      data: { lastSeenAt: new Date() },
+    })
+    .catch(() => undefined);
+
   const messages = await prisma.message.findMany({
     where: { bookingId: id },
     include: {
       sender: {
-        select: { id: true, displayName: true, avatarUrl: true },
+        select: {
+          id: true,
+          displayName: true,
+          avatarUrl: true,
+          lastSeenAt: true,
+        },
       },
     },
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json({ messages });
+  const peerId =
+    session.id === booking.senderId ? booking.trip.userId : booking.senderId;
+  const peerUser = await prisma.user.findUnique({
+    where: { id: peerId },
+    select: {
+      id: true,
+      displayName: true,
+      avatarUrl: true,
+      lastSeenAt: true,
+    },
+  });
+
+  return NextResponse.json({
+    messages,
+    peer: peerUser
+      ? {
+          id: peerUser.id,
+          displayName: peerUser.displayName,
+          avatarUrl: peerUser.avatarUrl,
+          lastSeenAt: peerUser.lastSeenAt,
+          online: isUserOnline(peerUser.lastSeenAt),
+        }
+      : null,
+  });
 }
 
 export async function POST(request: Request, { params }: Params) {
@@ -106,8 +171,7 @@ export async function POST(request: Request, { params }: Params) {
     const parsed = schema.parse(await request.json());
     const text = (parsed.body ?? "").trim();
     const attachmentUrl = parsed.attachmentUrl ?? null;
-    const bodyText =
-      text || (attachmentUrl ? "Pièce jointe" : "");
+    const bodyText = text || (attachmentUrl ? "Pièce jointe" : "");
 
     const message = await prisma.message.create({
       data: {
@@ -118,7 +182,12 @@ export async function POST(request: Request, { params }: Params) {
       },
       include: {
         sender: {
-          select: { id: true, displayName: true, avatarUrl: true },
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+            lastSeenAt: true,
+          },
         },
       },
     });

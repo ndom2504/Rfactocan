@@ -76,16 +76,32 @@ export function Button({
 
 export function Field({
   label,
+  secureTextEntry,
   ...props
 }: { label: string } & TextInputProps) {
+  const [visible, setVisible] = React.useState(false);
+  const isPassword = secureTextEntry === true;
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholderTextColor={colors.muted}
-        style={styles.input}
-        {...props}
-      />
+      <View style={styles.inputRow}>
+        <TextInput
+          placeholderTextColor={colors.muted}
+          style={[styles.input, isPassword && styles.inputWithToggle]}
+          secureTextEntry={isPassword && !visible}
+          {...props}
+        />
+        {isPassword ? (
+          <Pressable
+            onPress={() => setVisible((v) => !v)}
+            style={styles.eyeBtn}
+            accessibilityLabel={visible ? "Masquer" : "Afficher"}
+          >
+            <Text style={styles.eyeText}>{visible ? "Masquer" : "Voir"}</Text>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -172,6 +188,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: colors.foreground,
+  },
+  inputRow: {
+    position: "relative",
+    justifyContent: "center",
+  },
+  inputWithToggle: {
+    paddingRight: 72,
+  },
+  eyeBtn: {
+    position: "absolute",
+    right: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+  },
+  eyeText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: "600",
   },
   error: {
     color: colors.danger,

@@ -157,6 +157,8 @@ model User {
   kycStatus                   KycStatus  @default(NONE)
   kycSessionId                String?
   kycVerifiedAt               DateTime?
+  /// Last presence heartbeat (for online/offline in chat)
+  lastSeenAt                  DateTime?
   createdAt                   DateTime   @default(now())
   updatedAt                   DateTime   @updatedAt
 
@@ -371,17 +373,20 @@ model StripeEvent {
 }
 
 model Message {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   bookingId     String
   senderId      String
   body          String
   attachmentUrl String?
-  createdAt     DateTime @default(now())
+  /// When the other party opened / loaded the conversation containing this message
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   sender  User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([bookingId, createdAt])
+  @@index([bookingId, readAt])
 }
 
 model Review {
