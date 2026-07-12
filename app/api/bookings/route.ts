@@ -47,6 +47,7 @@ export async function GET(request: Request) {
             select: {
               id: true,
               displayName: true,
+              avatarUrl: true,
               ratingAvg: true,
               verifiedAt: true,
             },
@@ -57,6 +58,7 @@ export async function GET(request: Request) {
         select: {
           id: true,
           displayName: true,
+          avatarUrl: true,
           ratingAvg: true,
           verifiedAt: true,
         },
