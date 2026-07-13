@@ -55,7 +55,7 @@ export default async function HomePage() {
               {t(locale, "hero_sub")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/register?role=SENDER">
+              <Link href="/register?intent=commander">
                 <Button
                   size="lg"
                   className="bg-white text-[var(--hero-from)] hover:bg-white/90"
@@ -63,7 +63,7 @@ export default async function HomePage() {
                   {t(locale, "cta_send")}
                 </Button>
               </Link>
-              <Link href="/register?role=TRAVELER">
+              <Link href="/register?intent=livrer">
                 <Button
                   size="lg"
                   variant="outline"

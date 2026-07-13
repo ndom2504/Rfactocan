@@ -2,34 +2,54 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { PasswordInput } from "@/components/password-input";
+import { IntentPicker } from "@/components/intent-picker";
 import { useI18n } from "@/components/locale-provider";
+import {
+  intentToApiRole,
+  saveUserIntent,
+  type CarrierType,
+  type OrderIntent,
+  type PrimaryIntent,
+} from "@/lib/user-intent";
+
+function initialIntentFromParams(role: string | null): PrimaryIntent {
+  if (role === "SENDER" || role === "commander") return "commander";
+  if (role === "TRAVELER" || role === "livrer") return "livrer";
+  return "both";
+}
 
 function RegisterForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { t, locale } = useI18n();
-  const initialRole = params.get("role");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(
-    initialRole === "SENDER" || initialRole === "TRAVELER" ? initialRole : "BOTH"
+  const [primaryIntent, setPrimaryIntent] = useState<PrimaryIntent>(() =>
+    initialIntentFromParams(params.get("role") ?? params.get("intent"))
   );
+  const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
+  const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const role = useMemo(
+    () => intentToApiRole(primaryIntent),
+    [primaryIntent]
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    saveUserIntent({ primaryIntent, carrierType, orderIntent });
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -97,18 +117,14 @@ function RegisterForm() {
             hideLabel={t("hide_password")}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="role">{t("role")}</Label>
-          <Select
-            id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="SENDER">{t("role_sender")}</option>
-            <option value="TRAVELER">{t("role_traveler")}</option>
-            <option value="BOTH">{t("role_both")}</option>
-          </Select>
-        </div>
+        <IntentPicker
+          primaryIntent={primaryIntent}
+          carrierType={carrierType}
+          orderIntent={orderIntent}
+          onPrimaryIntentChange={setPrimaryIntent}
+          onCarrierTypeChange={setCarrierType}
+          onOrderIntentChange={setOrderIntent}
+        />
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? t("loading") : t("create_account")}

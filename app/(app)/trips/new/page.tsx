@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
 import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,11 @@ import { Select } from "@/components/ui/select";
 import { CURRENCY_OPTIONS, resolveCheckoutCurrency } from "@/lib/currency";
 import { maxWeightForMode, type TransportMode } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
+import {
+  loadUserIntent,
+  saveUserIntent,
+  type CarrierType,
+} from "@/lib/user-intent";
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -22,11 +27,17 @@ export default function NewTripPage() {
   const [fromCountry, setFromCountry] = useState("CA");
   const [toCountry, setToCountry] = useState("FR");
   const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
+  const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
+
+  useEffect(() => {
+    setCarrierType(loadUserIntent().carrierType);
+  }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    saveUserIntent({ carrierType });
     const fd = new FormData(e.currentTarget);
     const departLocal = String(fd.get("departAt") || "").trim();
     const fromCountryValue = String(fd.get("fromCountry") || "").trim();
@@ -130,6 +141,20 @@ export default function NewTripPage() {
       <CardTitle>{t("new_trip_title")}</CardTitle>
       <CardDescription>{t("new_trip_subtitle")}</CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
+        <div className="space-y-2">
+          <Label htmlFor="carrierType">{t("carrier_type")}</Label>
+          <Select
+            id="carrierType"
+            value={carrierType}
+            onChange={(e) =>
+              setCarrierType(e.target.value as CarrierType)
+            }
+          >
+            <option value="particulier">{t("carrier_particulier")}</option>
+            <option value="commercial">{t("carrier_commercial")}</option>
+          </Select>
+          <p className="text-xs text-[var(--muted)]">{t("carrier_hint")}</p>
+        </div>
         <CorridorFields
           onFromCountryChange={setFromCountry}
           onToCountryChange={setToCountry}

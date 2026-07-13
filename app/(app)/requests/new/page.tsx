@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/locale-provider";
+import {
+  loadUserIntent,
+  saveUserIntent,
+  type OrderIntent,
+} from "@/lib/user-intent";
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -18,6 +23,11 @@ export default function NewRequestPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
+
+  useEffect(() => {
+    setOrderIntent(loadUserIntent().orderIntent);
+  }, []);
 
   async function onUpload(file: File) {
     setUploading(true);
@@ -39,6 +49,7 @@ export default function NewRequestPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    saveUserIntent({ orderIntent });
     const fd = new FormData(e.currentTarget);
     const desired = String(fd.get("desiredDate") || "");
     const payload = {
@@ -74,8 +85,28 @@ export default function NewRequestPage() {
   return (
     <Card className="max-w-2xl">
       <CardTitle>{t("new_request_title")}</CardTitle>
-      <CardDescription>{t("new_request_subtitle")}</CardDescription>
+      <CardDescription>
+        {orderIntent === "recevoir"
+          ? t("order_receive_hint")
+          : t("new_request_subtitle")}
+      </CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="orderIntent">{t("order_intent")}</Label>
+          <Select
+            id="orderIntent"
+            value={orderIntent}
+            onChange={(e) => setOrderIntent(e.target.value as OrderIntent)}
+          >
+            <option value="envoyer">{t("order_send")}</option>
+            <option value="recevoir">{t("order_receive")}</option>
+          </Select>
+          <p className="text-xs text-[var(--muted)]">
+            {orderIntent === "recevoir"
+              ? t("order_receive_hint")
+              : t("order_send_hint")}
+          </p>
+        </div>
         <CorridorFields />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">

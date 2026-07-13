@@ -11,9 +11,20 @@ import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CountrySelect } from "@/components/country-select";
+import { IntentPicker } from "@/components/intent-picker";
+import { PayoutChannelPicker } from "@/components/payout-channel-picker";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
 import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
+import {
+  apiRoleToIntent,
+  intentToApiRole,
+  loadUserIntent,
+  saveUserIntent,
+  type CarrierType,
+  type OrderIntent,
+  type PrimaryIntent,
+} from "@/lib/user-intent";
 
 type User = {
   id: string;
@@ -43,7 +54,9 @@ function ProfileForm() {
   const [bio, setBio] = useState("");
   const [country, setCountry] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [role, setRole] = useState("BOTH");
+  const [primaryIntent, setPrimaryIntent] = useState<PrimaryIntent>("both");
+  const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
+  const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [language, setLanguage] = useState("fr");
   const [preferredCurrency, setPreferredCurrency] = useState("CAD");
   const [message, setMessage] = useState("");
@@ -60,7 +73,14 @@ function ProfileForm() {
       setBio(data.user.bio ?? "");
       setCountry(data.user.country ?? "");
       setAvatarUrl(data.user.avatarUrl ?? null);
-      setRole(data.user.role === "ADMIN" ? "BOTH" : data.user.role);
+      const prefs = loadUserIntent();
+      setPrimaryIntent(
+        data.user.role === "ADMIN"
+          ? "both"
+          : apiRoleToIntent(data.user.role) || prefs.primaryIntent
+      );
+      setCarrierType(prefs.carrierType);
+      setOrderIntent(prefs.orderIntent);
       setLanguage(data.user.language ?? "fr");
       setPreferredCurrency(data.user.preferredCurrency ?? "CAD");
     }
@@ -101,7 +121,7 @@ function ProfileForm() {
       }
       if (connect === "refresh") {
         setError(
-          "Le lien a expiré. Relancez « Recevoir mes gains » pour configurer votre compte bancaire."
+          "Le lien a expiré. Relancez la configuration du compte bancaire."
         );
       }
     }
@@ -128,6 +148,8 @@ function ProfileForm() {
     e.preventDefault();
     setMessage("");
     setError("");
+    const role = intentToApiRole(primaryIntent);
+    saveUserIntent({ primaryIntent, carrierType, orderIntent });
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -206,6 +228,8 @@ function ProfileForm() {
 
   const kycLabel =
     KYC_STATUS_LABELS[user.kycStatus ?? "NONE"] ?? user.kycStatus;
+  const bankReady =
+    user.stripeConnectChargesEnabled && user.stripeConnectPayoutsEnabled;
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -224,19 +248,17 @@ function ProfileForm() {
           </Badge>
           <Badge
             className={
-              user.stripeConnectChargesEnabled &&
-              user.stripeConnectPayoutsEnabled
+              bankReady
                 ? "bg-[var(--accent-soft)] text-[var(--accent)]"
                 : undefined
             }
           >
             {t("payments_label")} :{" "}
-            {user.stripeConnectChargesEnabled && user.stripeConnectPayoutsEnabled
-              ? t("gains_ready")
-              : t("bank_to_setup")}
+            {bankReady ? t("gains_ready") : t("bank_to_setup")}
           </Badge>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+
+        <div className="mt-4 space-y-3">
           {user.kycStatus !== "VERIFIED" && (
             <div className="space-y-2">
               <Button disabled={busy} onClick={startKyc}>
@@ -244,31 +266,37 @@ function ProfileForm() {
               </Button>
               <p className="text-xs text-[var(--muted)]">
                 Redirection vers Stripe Identity (passeport / pièce + selfie).
-                Si Chrome refuse la caméra, autorisez{" "}
-                <span className="font-medium">verify.stripe.com</span> dans
-                Paramètres → Confidentialité → Caméra, ou utilisez Edge / votre
-                téléphone (option « autre appareil » dans Stripe).
               </p>
             </div>
           )}
-          {user.kycStatus === "VERIFIED" &&
-            !(
-              user.stripeConnectChargesEnabled &&
-              user.stripeConnectPayoutsEnabled
-            ) && (
-              <div className="space-y-2">
-                <Button disabled={busy} onClick={startConnect}>
-                  {busy ? t("loading") : t("receive_earnings")}
-                </Button>
+
+          <PayoutChannelPicker
+            bankSlot={
+              user.kycStatus === "VERIFIED" ? (
+                <div className="space-y-2">
+                  {!bankReady && (
+                    <>
+                      <Button disabled={busy} onClick={startConnect}>
+                        {busy ? t("loading") : t("receive_earnings")}
+                      </Button>
+                      <p className="text-xs text-[var(--muted)]">
+                        {t("receive_earnings_hint")}
+                      </p>
+                    </>
+                  )}
+                  {bankReady && (
+                    <p className="text-sm text-[var(--accent)]">
+                      {t("bank_ready")}
+                    </p>
+                  )}
+                </div>
+              ) : (
                 <p className="text-xs text-[var(--muted)]">
-                  {t("receive_earnings_hint")}
+                  {t("verify_identity")} — {t("kyc_step")}
                 </p>
-              </div>
-            )}
-          {user.stripeConnectChargesEnabled &&
-            user.stripeConnectPayoutsEnabled && (
-              <p className="text-sm text-[var(--accent)]">{t("bank_ready")}</p>
-            )}
+              )
+            }
+          />
         </div>
       </Card>
 
@@ -285,7 +313,13 @@ function ProfileForm() {
             ★ {user.ratingCount ? user.ratingAvg.toFixed(1) : "—"} (
             {user.ratingCount})
           </Badge>
-          <Badge>{user.role}</Badge>
+          <Badge>
+            {primaryIntent === "livrer"
+              ? t("intent_livrer")
+              : primaryIntent === "commander"
+                ? t("intent_commander")
+                : t("intent_both")}
+          </Badge>
         </div>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="space-y-3">
@@ -378,14 +412,14 @@ function ProfileForm() {
             <Textarea value={bio} onChange={(e) => setBio(e.target.value)} />
           </div>
           {user.role !== "ADMIN" && (
-            <div className="space-y-2">
-              <Label>{t("role")}</Label>
-              <Select value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="SENDER">{t("role_sender")}</option>
-                <option value="TRAVELER">{t("role_traveler")}</option>
-                <option value="BOTH">{t("role_both")}</option>
-              </Select>
-            </div>
+            <IntentPicker
+              primaryIntent={primaryIntent}
+              carrierType={carrierType}
+              orderIntent={orderIntent}
+              onPrimaryIntentChange={setPrimaryIntent}
+              onCarrierTypeChange={setCarrierType}
+              onOrderIntentChange={setOrderIntent}
+            />
           )}
           {error && <p className="text-sm text-red-700">{error}</p>}
           {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
