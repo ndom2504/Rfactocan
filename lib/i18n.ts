@@ -61,7 +61,16 @@ const dict = {
       "Devise du prix / kg. CAD ($ CA) ≠ USD ($ US). L’expéditeur paiera dans sa devise préférée (conversion auto).",
     transport_mode: "Mode de transport",
     transport_mode_hint:
-      "Avion, maritime, ferroviaire ou route — voyageurs et transporteurs professionnels.",
+      "Choisissez d’abord le mode — le formulaire s’adapte (avion, mer, rail, route).",
+    vehicle_section: "Véhicule (particulier terrestre)",
+    vehicle_section_hint:
+      "Plaque, photo du véhicule et numéro de permis de conduire requis.",
+    vehicle_plate: "Plaque d’immatriculation",
+    vehicle_license: "N° de permis de conduire",
+    vehicle_photo: "Photo du véhicule",
+    vehicle_photo_hint: "Une photo claire de la voiture (jpeg, png, webp).",
+    vehicle_required:
+      "Pour un particulier en transport terrestre : plaque, permis et photo du véhicule sont obligatoires.",
     airline: "Compagnie",
     flight_number: "N° de vol",
     airport_from: "Aéroport de départ",
@@ -128,6 +137,11 @@ const dict = {
     search_requests_hint:
       "Filtrez les colis à livrer par nom, pays, ville ou région.",
     search_requests_placeholder: "Nom, ville, description…",
+    dashboard_search_title: "Rechercher",
+    dashboard_search_hint:
+      "Cherchez des livreurs ou des commandes selon votre intention.",
+    search_mode_livreurs: "Chercher des livreurs",
+    search_mode_commandes: "Chercher des commandes",
     requests_found: "commande(s) trouvée(s)",
     no_requests_found:
       "Aucune commande pour ces critères. Élargissez la région ou la ville.",
@@ -540,7 +554,16 @@ const dict = {
       "Currency for your price per kg. CAD (CA$) ≠ USD (US$). The sender pays in their preferred currency (auto-converted).",
     transport_mode: "Transport mode",
     transport_mode_hint:
-      "Air, sea, rail or road — travelers and professional carriers.",
+      "Pick the mode first — the form adapts (air, sea, rail, road).",
+    vehicle_section: "Vehicle (individual road)",
+    vehicle_section_hint:
+      "License plate, vehicle photo and driver’s license number required.",
+    vehicle_plate: "License plate",
+    vehicle_license: "Driver’s license number",
+    vehicle_photo: "Vehicle photo",
+    vehicle_photo_hint: "A clear photo of the car (jpeg, png, webp).",
+    vehicle_required:
+      "For an individual on road transport: plate, license and vehicle photo are required.",
     airline: "Airline",
     flight_number: "Flight number",
     airport_from: "Departure airport",
@@ -606,6 +629,11 @@ const dict = {
     search_requests_hint:
       "Filter parcels to deliver by name, country, city or region.",
     search_requests_placeholder: "Name, city, description…",
+    dashboard_search_title: "Search",
+    dashboard_search_hint:
+      "Search for carriers or orders based on your intent.",
+    search_mode_livreurs: "Search carriers",
+    search_mode_commandes: "Search orders",
     requests_found: "order(s) found",
     no_requests_found:
       "No orders for these filters. Broaden the region or city.",

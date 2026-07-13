@@ -37,7 +37,7 @@ type RequestHit = {
   };
 };
 
-export function RequestSearch() {
+export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }) {
   const { t, urgency } = useI18n();
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("");
@@ -97,12 +97,14 @@ export function RequestSearch() {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-          {t("search_requests")}
-        </h2>
-        <p className="text-sm text-[var(--muted)]">{t("search_requests_hint")}</p>
-      </div>
+      {!hideHeading && (
+        <div>
+          <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+            {t("search_requests")}
+          </h2>
+          <p className="text-sm text-[var(--muted)]">{t("search_requests_hint")}</p>
+        </div>
+      )}
 
       <Card>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

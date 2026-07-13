@@ -18,20 +18,43 @@ import {
   saveUserIntent,
   type CarrierType,
 } from "@/lib/user-intent";
+import { encodeNotesWithVehicle } from "@/lib/vehicle-notes";
 
 export default function NewTripPage() {
   const router = useRouter();
   const { t } = useI18n();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [fromCountry, setFromCountry] = useState("CA");
   const [toCountry, setToCountry] = useState("FR");
   const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
+  const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleLicense, setVehicleLicense] = useState("");
+  const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState<string | null>(null);
+
+  const needsVehicle =
+    carrierType === "particulier" && transportMode === "ROAD";
 
   useEffect(() => {
     setCarrierType(loadUserIntent().carrierType);
   }, []);
+
+  async function onUploadVehiclePhoto(file: File) {
+    setUploading(true);
+    setError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    setUploading(false);
+    if (!res.ok) {
+      setError(data.error ?? "Upload échoué");
+      return;
+    }
+    setVehiclePhotoUrl(data.url as string);
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -96,6 +119,32 @@ export default function NewTripPage() {
       return;
     }
 
+    const needsVehicleNow =
+      carrierType === "particulier" && mode === "ROAD";
+    if (needsVehicleNow) {
+      if (
+        !vehiclePlate.trim() ||
+        !vehicleLicense.trim() ||
+        !vehiclePhotoUrl
+      ) {
+        setLoading(false);
+        setError(t("vehicle_required"));
+        return;
+      }
+    }
+
+    const userNotes = String(fd.get("notes") || "").trim();
+    const notes = encodeNotesWithVehicle(
+      userNotes,
+      needsVehicleNow
+        ? {
+            plate: vehiclePlate,
+            licenseNumber: vehicleLicense,
+            photoUrl: vehiclePhotoUrl!,
+          }
+        : null
+    );
+
     const payload = {
       fromCountry: fromCountryValue,
       fromCity,
@@ -107,7 +156,7 @@ export default function NewTripPage() {
       currency,
       transportMode: mode,
       acceptedGoods,
-      notes: String(fd.get("notes") || "").trim() || undefined,
+      notes,
       airline: String(fd.get("airline") || "").trim() || undefined,
       flightNumber: String(fd.get("flightNumber") || "").trim() || undefined,
       fromAirportCode:
@@ -155,6 +204,83 @@ export default function NewTripPage() {
           </Select>
           <p className="text-xs text-[var(--muted)]">{t("carrier_hint")}</p>
         </div>
+
+        <TransportFields
+          fromCountry={fromCountry}
+          toCountry={toCountry}
+          transportMode={transportMode}
+          onModeChange={setTransportMode}
+        />
+
+        {needsVehicle && (
+          <fieldset className="space-y-3 rounded-lg border border-[var(--border)] p-4">
+            <legend className="px-1 text-sm font-medium">
+              {t("vehicle_section")}
+            </legend>
+            <p className="text-xs text-[var(--muted)]">
+              {t("vehicle_section_hint")}
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="vehiclePlate">{t("vehicle_plate")}</Label>
+              <Input
+                id="vehiclePlate"
+                value={vehiclePlate}
+                onChange={(e) => setVehiclePlate(e.target.value)}
+                required={needsVehicle}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehicleLicense">{t("vehicle_license")}</Label>
+              <Input
+                id="vehicleLicense"
+                value={vehicleLicense}
+                onChange={(e) => setVehicleLicense(e.target.value)}
+                required={needsVehicle}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehiclePhoto">{t("vehicle_photo")}</Label>
+              <Input
+                id="vehiclePhoto"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                disabled={uploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void onUploadVehiclePhoto(file);
+                  e.target.value = "";
+                }}
+              />
+              <p className="text-xs text-[var(--muted)]">
+                {t("vehicle_photo_hint")}
+              </p>
+              {uploading && (
+                <p className="text-xs text-[var(--muted)]">{t("uploading")}</p>
+              )}
+              {vehiclePhotoUrl && (
+                <div className="mt-2 flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={vehiclePhotoUrl}
+                    alt={t("vehicle_photo")}
+                    className="h-20 w-28 rounded-md border border-[var(--border)] object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVehiclePhotoUrl(null)}
+                  >
+                    {t("remove_photo")}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </fieldset>
+        )}
+
         <CorridorFields
           onFromCountryChange={setFromCountry}
           onToCountryChange={setToCountry}
@@ -251,18 +377,12 @@ export default function NewTripPage() {
             required
           />
         </div>
-        <TransportFields
-          fromCountry={fromCountry}
-          toCountry={toCountry}
-          transportMode={transportMode}
-          onModeChange={setTransportMode}
-        />
         <div className="space-y-2">
           <Label htmlFor="notes">{t("notes")}</Label>
           <Textarea id="notes" name="notes" />
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || uploading}>
           {loading ? t("loading") : t("publish")}
         </Button>
       </form>

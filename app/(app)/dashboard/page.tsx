@@ -3,12 +3,9 @@ import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t, bookingStatusLabel } from "@/lib/i18n";
-import { isStripeConfigured } from "@/lib/stripe";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TravelerSearch } from "@/components/traveler-search";
-import { RequestSearch } from "@/components/request-search";
-import { PaymentReadinessCard } from "@/components/payment-readiness";
+import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { ResponsibilityNotice } from "@/components/responsibility-notice";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
@@ -18,12 +15,12 @@ export default async function DashboardPage() {
   if (!user) return null;
   const locale = await getRequestLocale();
 
-  const showTravelerSearch =
+  const canSearchLivreurs =
     user.role === "SENDER" || user.role === "BOTH" || user.role === "ADMIN";
-  const showRequestSearch =
+  const canSearchCommandes =
     user.role === "TRAVELER" || user.role === "BOTH" || user.role === "ADMIN";
 
-  const [trips, requests, bookings, dbUser] = await Promise.all([
+  const [trips, requests, bookings] = await Promise.all([
     prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
     prisma.parcelRequest.count({
       where: { userId: user.id, status: "OPEN" },
@@ -40,14 +37,6 @@ export default async function DashboardPage() {
       orderBy: { updatedAt: "desc" },
       take: 5,
     }),
-    prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        kycStatus: true,
-        stripeConnectChargesEnabled: true,
-        stripeConnectPayoutsEnabled: true,
-      },
-    }),
   ]);
 
   return (
@@ -60,6 +49,11 @@ export default async function DashboardPage() {
           {t(locale, "dashboard_subtitle")}
         </p>
       </div>
+
+      <DashboardSearchHub
+        canSearchLivreurs={canSearchLivreurs}
+        canSearchCommandes={canSearchCommandes}
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
@@ -78,14 +72,6 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <PaymentReadinessCard
-        locale={locale}
-        kycStatus={dbUser?.kycStatus ?? "NONE"}
-        connectCharges={Boolean(dbUser?.stripeConnectChargesEnabled)}
-        connectPayouts={Boolean(dbUser?.stripeConnectPayoutsEnabled)}
-        stripeConfigured={isStripeConfigured()}
-      />
-
       <div className="flex flex-wrap gap-3">
         {(user.role === "TRAVELER" ||
           user.role === "BOTH" ||
@@ -99,18 +85,13 @@ export default async function DashboardPage() {
           user.role === "ADMIN") && (
           <Link href="/requests/new">
             <Button
-              variant={
-                user.role === "SENDER" ? "default" : "secondary"
-              }
+              variant={user.role === "SENDER" ? "default" : "secondary"}
             >
               {t(locale, "publish_request")}
             </Button>
           </Link>
         )}
       </div>
-
-      {showTravelerSearch && <TravelerSearch />}
-      {showRequestSearch && <RequestSearch />}
 
       <ResponsibilityNotice locale={locale} />
 
