@@ -78,6 +78,7 @@ export function PayoutChannelPicker({ bankSlot }: Props) {
             >
               <option value="mobile_money">{t("payout_mobile_money")}</option>
               <option value="orange_money">{t("payout_orange")}</option>
+              <option value="moov_money">{t("payout_moov")}</option>
               <option value="airtel_money">{t("payout_airtel")}</option>
               <option value="interac">{t("payout_interac")}</option>
             </Select>

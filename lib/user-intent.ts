@@ -10,6 +10,7 @@ export type PayoutChannel = "bank" | "mobile";
 export type PayoutProvider =
   | "mobile_money"
   | "orange_money"
+  | "moov_money"
   | "airtel_money"
   | "interac";
 
@@ -71,6 +72,8 @@ export function payoutProviderLabelKey(provider: PayoutProvider): string {
   switch (provider) {
     case "orange_money":
       return "payout_orange";
+    case "moov_money":
+      return "payout_moov";
     case "airtel_money":
       return "payout_airtel";
     case "interac":
