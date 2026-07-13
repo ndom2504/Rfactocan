@@ -3,11 +3,11 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
-import { LogoutButton } from "@/components/logout-button";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { LocaleProvider } from "@/components/locale-provider";
+import { ProfileMenu } from "@/components/profile-menu";
 import { Badge } from "@/components/ui/badge";
 
 export default async function AppLayout({
@@ -25,7 +25,6 @@ export default async function AppLayout({
     { href: "/requests", label: t(locale, "nav_requests") },
     { href: "/bookings", label: t(locale, "nav_bookings") },
     { href: "/messages", label: t(locale, "nav_messages") },
-    { href: "/profile", label: t(locale, "nav_profile") },
   ];
 
   return (
@@ -69,22 +68,10 @@ export default async function AppLayout({
                   {t(locale, "verified")}
                 </Badge>
               )}
-              <Link href="/profile" className="flex items-center gap-2">
-                {user.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.avatarUrl}
-                    alt=""
-                    className="h-8 w-8 rounded-full border border-[var(--border)] object-cover"
-                  />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-2)] text-xs font-medium">
-                    {user.displayName.slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-                <span className="text-sm">{user.displayName}</span>
-              </Link>
-              <LogoutButton />
+              <ProfileMenu
+                displayName={user.displayName}
+                avatarUrl={user.avatarUrl}
+              />
             </div>
           </div>
           <nav className="mx-auto flex max-w-6xl gap-3 overflow-x-auto px-6 pb-3 md:hidden">
