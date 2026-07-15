@@ -31,6 +31,8 @@ export const TRANSPORT_TYPES_BY_MODE: Record<
     { code: "CARGO_SHIP", labelFr: "Cargo", labelEn: "Cargo ship" },
     { code: "FERRY", labelFr: "Ferry", labelEn: "Ferry" },
     { code: "CONTAINER", labelFr: "Porte-conteneurs", labelEn: "Container ship" },
+    { code: "OUTBOARD", labelFr: "Hors-bord", labelEn: "Outboard boat" },
+    { code: "PIROGUE", labelFr: "Pirogue", labelEn: "Pirogue" },
   ],
   RAIL: [
     { code: "PASSENGER_TRAIN", labelFr: "Train voyageurs", labelEn: "Passenger train" },
@@ -42,6 +44,8 @@ export const TRANSPORT_TYPES_BY_MODE: Record<
     { code: "TRUCK", labelFr: "Camion", labelEn: "Truck" },
     { code: "BUS", labelFr: "Bus", labelEn: "Bus" },
     { code: "MOTORCYCLE", labelFr: "Moto", labelEn: "Motorcycle" },
+    { code: "BICYCLE", labelFr: "Vélo", labelEn: "Bicycle" },
+    { code: "TRICYCLE", labelFr: "Tricycle", labelEn: "Tricycle" },
   ],
 };
 
