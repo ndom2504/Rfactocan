@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CorridorFields, DateField } from "@/components/corridor-fields";
+import { CorridorFields, DateField, toDateInput } from "@/components/corridor-fields";
+import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/locale-provider";
-
-function toLocalInput(iso: string) {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+import type { TransportMode } from "@/lib/transport";
 
 export default function EditRequestPage({
   params,
@@ -36,6 +32,8 @@ export default function EditRequestPage({
     urgency: string;
     declaredValue: number | null;
     desiredDate: string | null;
+    transportMode?: string | null;
+    transportType?: string | null;
     photos: string[];
     userId: string;
     status: string;
@@ -45,6 +43,7 @@ export default function EditRequestPage({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
 
   useEffect(() => {
     void params.then((p) => setId(p.id));
@@ -74,6 +73,9 @@ export default function EditRequestPage({
       }
       setReq(reqData.request);
       setPhotos(reqData.request.photos ?? []);
+      setTransportMode(
+        (reqData.request.transportMode as TransportMode) || "AIR"
+      );
     })();
   }, [id]);
 
@@ -108,6 +110,8 @@ export default function EditRequestPage({
         ? Number(fd.get("declaredValue"))
         : null,
       desiredDate: desired ? new Date(desired).toISOString() : null,
+      transportMode: String(fd.get("transportMode") || transportMode),
+      transportType: String(fd.get("transportType") || "") || null,
       photos,
     };
 
@@ -140,6 +144,12 @@ export default function EditRequestPage({
         {req.fromCity} → {req.toCity}
       </CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <TransportFields
+          transportMode={transportMode}
+          transportType={req.transportType ?? ""}
+          onModeChange={setTransportMode}
+          showCarrierDetails={false}
+        />
         <CorridorFields
           defaults={{
             fromCountry: req.fromCountry,
@@ -174,8 +184,9 @@ export default function EditRequestPage({
         <DateField
           name="desiredDate"
           label={t("desired_date")}
+          type="date"
           defaultValue={
-            req.desiredDate ? toLocalInput(req.desiredDate) : undefined
+            req.desiredDate ? toDateInput(req.desiredDate) : undefined
           }
         />
         <div className="space-y-2">

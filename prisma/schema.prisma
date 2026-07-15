@@ -213,6 +213,7 @@ model Trip {
   toCountry     String
   toCity        String
   departAt      DateTime
+  arriveAt      DateTime?
   weightKg      Float
   pricePerKgCad Float
   currency      String     @default("CAD")
@@ -221,6 +222,8 @@ model Trip {
   acceptedGoods String
   notes           String?
   transportMode   TransportMode @default(AIR)
+  /// Specific vehicle/means within the mode (e.g. PLANE, TRUCK).
+  transportType   String?
   airline         String?
   flightNumber    String?
   fromAirportCode String?
@@ -251,6 +254,8 @@ model ParcelRequest {
   urgency       Urgency       @default(NORMAL)
   declaredValue Float?
   desiredDate   DateTime?
+  transportMode TransportMode?
+  transportType String?
   status        RequestStatus @default(OPEN)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -260,6 +265,7 @@ model ParcelRequest {
 
   @@index([toCountry, toCity])
   @@index([userId])
+  @@index([transportMode])
 }
 
 model Booking {

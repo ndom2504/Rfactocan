@@ -61,7 +61,14 @@ const dict = {
       "Devise du prix / kg. CAD ($ CA) ≠ USD ($ US). L’expéditeur paiera dans sa devise préférée (conversion auto).",
     transport_mode: "Mode de transport",
     transport_mode_hint:
-      "Choisissez d’abord le mode — le formulaire s’adapte (avion, mer, rail, route).",
+      "Choisissez d’abord le mode — le type de transport se filtre automatiquement (aérien, mer, rail, route).",
+    transport_type: "Type de transport",
+    transport_type_hint:
+      "Options proposées selon le mode choisi (ex. aérien → avion, hélicoptère…).",
+    departure_date: "Date de départ",
+    departure_time: "Heure de départ",
+    arrival_date: "Date d'arrivée",
+    arrival_time: "Heure d'arrivée",
     vehicle_section: "Véhicule (particulier terrestre)",
     vehicle_section_hint:
       "Plaque, photo du véhicule et numéro de permis de conduire requis.",
@@ -79,7 +86,6 @@ const dict = {
     price_per_kg_hint: "Montant dans la devise choisie à droite (CAD ou USD, etc.).",
     weight_kg: "Poids (kg)",
     weight_available: "Poids disponible (kg)",
-    departure_date: "Date de départ",
     accepted_goods: "Objets acceptés",
     notes: "Notes",
     display_name: "Nom affiché",
@@ -311,7 +317,7 @@ const dict = {
     new_request_subtitle: "Décrivez le colis à envoyer ou à recevoir.",
     description: "Description",
     urgency: "Urgence",
-    desired_date: "Date souhaitée",
+    desired_date: "Date de livraison souhaitée",
     declared_value: "Valeur déclarée",
     parcel_photos: "Photos du colis (max 5, 2 Mo)",
     suggested_travelers: "Voyageurs suggérés",
@@ -363,6 +369,7 @@ const dict = {
     attachment_label: "Pièce jointe",
     attachment_ready: "Prêt à envoyer",
     open_attachment: "Ouvrir la pièce jointe",
+    download_attachment: "Télécharger",
     chat_closed: "Cette conversation est fermée.",
     tracking_title: "Suivi de commande",
     tracking_hint:
@@ -555,7 +562,14 @@ const dict = {
       "Currency for your price per kg. CAD (CA$) ≠ USD (US$). The sender pays in their preferred currency (auto-converted).",
     transport_mode: "Transport mode",
     transport_mode_hint:
-      "Pick the mode first — the form adapts (air, sea, rail, road).",
+      "Pick the mode first — the transport type list filters automatically (air, sea, rail, road).",
+    transport_type: "Transport type",
+    transport_type_hint:
+      "Options depend on the selected mode (e.g. air → plane, helicopter…).",
+    departure_date: "Departure date",
+    departure_time: "Departure time",
+    arrival_date: "Arrival date",
+    arrival_time: "Arrival time",
     vehicle_section: "Vehicle (individual road)",
     vehicle_section_hint:
       "License plate, vehicle photo and driver’s license number required.",
@@ -573,7 +587,6 @@ const dict = {
     price_per_kg_hint: "Amount in the currency selected on the right (CAD, USD, etc.).",
     weight_kg: "Weight (kg)",
     weight_available: "Available weight (kg)",
-    departure_date: "Departure date",
     accepted_goods: "Accepted items",
     notes: "Notes",
     display_name: "Display name",
@@ -799,7 +812,7 @@ const dict = {
     new_request_subtitle: "Describe the parcel to send or receive.",
     description: "Description",
     urgency: "Urgency",
-    desired_date: "Desired date",
+    desired_date: "Desired delivery date",
     declared_value: "Declared value",
     parcel_photos: "Parcel photos (max 5, 2 MB)",
     suggested_travelers: "Suggested travelers",
@@ -850,6 +863,7 @@ const dict = {
     attachment_label: "Attachment",
     attachment_ready: "Ready to send",
     open_attachment: "Open attachment",
+    download_attachment: "Download",
     chat_closed: "This conversation is closed.",
     tracking_title: "Order tracking",
     tracking_hint:

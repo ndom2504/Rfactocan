@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CorridorFields, DateField } from "@/components/corridor-fields";
+import {
+  CorridorFields,
+  DateField,
+  combineDateAndTime,
+  toDateInput,
+  toTimeInput,
+} from "@/components/corridor-fields";
 import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +20,6 @@ import { Select } from "@/components/ui/select";
 import { CURRENCY_OPTIONS, resolveCheckoutCurrency } from "@/lib/currency";
 import type { TransportMode } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
-
-function toLocalInput(iso: string) {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 export default function EditTripPage({
   params,
@@ -35,10 +35,12 @@ export default function EditTripPage({
     toCountry: string;
     toCity: string;
     departAt: string;
+    arriveAt?: string | null;
     weightKg: number;
     pricePerKgCad: number;
     currency: string;
     transportMode?: string;
+    transportType?: string | null;
     acceptedGoods: string;
     notes: string | null;
     airline: string | null;
@@ -102,16 +104,36 @@ export default function EditTripPage({
     const currency =
       String(fd.get("currency") || "") ||
       resolveCheckoutCurrency(fromCountry, toCountry);
+    const departAt = combineDateAndTime(
+      String(fd.get("departDate") || ""),
+      String(fd.get("departTime") || "")
+    );
+    const arriveAt = combineDateAndTime(
+      String(fd.get("arriveDate") || ""),
+      String(fd.get("arriveTime") || "")
+    );
+    if (!departAt || !arriveAt) {
+      setLoading(false);
+      setError("Indiquez date et heure de départ et d'arrivée.");
+      return;
+    }
+    if (arriveAt.getTime() < departAt.getTime()) {
+      setLoading(false);
+      setError("La date d'arrivée doit être après le départ.");
+      return;
+    }
     const payload = {
       fromCountry,
       fromCity: String(fd.get("fromCity")),
       toCountry,
       toCity: String(fd.get("toCity")),
-      departAt: new Date(String(fd.get("departAt"))).toISOString(),
+      departAt: departAt.toISOString(),
+      arriveAt: arriveAt.toISOString(),
       weightKg: Number(fd.get("weightKg")),
       pricePerKgCad: Number(fd.get("pricePerKgCad")),
       currency,
       transportMode: String(fd.get("transportMode") || transportMode),
+      transportType: String(fd.get("transportType") || "") || null,
       acceptedGoods: String(fd.get("acceptedGoods")),
       notes: String(fd.get("notes") || "") || null,
       airline: String(fd.get("airline") || "") || null,
@@ -143,6 +165,8 @@ export default function EditTripPage({
     return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
 
+  const arriveSource = trip.arriveAt || trip.departAt;
+
   return (
     <Card className="max-w-2xl">
       <CardTitle>{t("edit_trip")}</CardTitle>
@@ -160,12 +184,36 @@ export default function EditTripPage({
           onFromCountryChange={setFromCountry}
           onToCountryChange={setToCountry}
         />
-        <DateField
-          name="departAt"
-          label={t("departure_date")}
-          required
-          defaultValue={toLocalInput(trip.departAt)}
-        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <DateField
+            name="departDate"
+            label={t("departure_date")}
+            type="date"
+            required
+            defaultValue={toDateInput(trip.departAt)}
+          />
+          <DateField
+            name="departTime"
+            label={t("departure_time")}
+            type="time"
+            required
+            defaultValue={toTimeInput(trip.departAt)}
+          />
+          <DateField
+            name="arriveDate"
+            label={t("arrival_date")}
+            type="date"
+            required
+            defaultValue={toDateInput(arriveSource)}
+          />
+          <DateField
+            name="arriveTime"
+            label={t("arrival_time")}
+            type="time"
+            required
+            defaultValue={toTimeInput(arriveSource)}
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="weightKg">{t("weight_available")}</Label>
@@ -256,6 +304,7 @@ export default function EditTripPage({
           fromCountry={fromCountry}
           toCountry={toCountry}
           transportMode={transportMode}
+          transportType={trip.transportType ?? ""}
           onModeChange={setTransportMode}
           airline={trip.airline ?? ""}
           flightNumber={trip.flightNumber ?? ""}

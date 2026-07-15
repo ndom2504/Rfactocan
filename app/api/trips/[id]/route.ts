@@ -11,10 +11,12 @@ const patchSchema = z.object({
   toCountry: z.string().min(2).optional(),
   toCity: z.string().min(2).optional(),
   departAt: z.string().datetime().or(z.string().min(8)).optional(),
+  arriveAt: z.string().datetime().or(z.string().min(8)).optional().nullable(),
   weightKg: z.coerce.number().positive().max(5000).optional(),
   pricePerKgCad: z.coerce.number().positive().max(500).optional(),
   currency: z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional(),
   transportMode: z.enum(["AIR", "SEA", "RAIL", "ROAD"]).optional(),
+  transportType: z.string().optional().nullable(),
   acceptedGoods: z.string().min(2).optional(),
   notes: z.string().optional().nullable(),
   airline: z.string().optional().nullable(),
@@ -109,6 +111,11 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(body.departAt !== undefined
           ? { departAt: new Date(body.departAt) }
           : {}),
+        ...(body.arriveAt !== undefined
+          ? {
+              arriveAt: body.arriveAt ? new Date(body.arriveAt) : null,
+            }
+          : {}),
         ...(body.weightKg !== undefined ? { weightKg: body.weightKg } : {}),
         ...(body.pricePerKgCad !== undefined
           ? { pricePerKgCad: body.pricePerKgCad }
@@ -116,6 +123,9 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(body.currency !== undefined ? { currency: body.currency } : {}),
         ...(body.transportMode !== undefined
           ? { transportMode: body.transportMode }
+          : {}),
+        ...(body.transportType !== undefined
+          ? { transportType: body.transportType || null }
           : {}),
         ...(body.acceptedGoods !== undefined
           ? { acceptedGoods: body.acceptedGoods }

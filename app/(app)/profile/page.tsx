@@ -135,13 +135,26 @@ function ProfileForm() {
     fd.append("file", file);
     const res = await fetch("/api/upload", { method: "POST", body: fd });
     const data = await res.json();
-    setUploading(false);
     if (!res.ok) {
+      setUploading(false);
       setError(data.error ?? "Upload échoué");
       return;
     }
-    setAvatarUrl(data.url);
-    setMessage("Photo importée — cliquez sur Enregistrer pour confirmer.");
+    const url = data.url as string;
+    setAvatarUrl(url);
+    const saveRes = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatarUrl: url }),
+    });
+    const saveData = await saveRes.json();
+    setUploading(false);
+    if (!saveRes.ok) {
+      setError(saveData.error ?? "Photo uploadée mais non enregistrée");
+      return;
+    }
+    setUser(saveData.user);
+    setMessage(t("profile_saved"));
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -355,7 +368,27 @@ function ProfileForm() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setAvatarUrl(null)}
+                    disabled={uploading}
+                    onClick={() => {
+                      void (async () => {
+                        setUploading(true);
+                        setError("");
+                        const saveRes = await fetch("/api/profile", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ avatarUrl: null }),
+                        });
+                        const saveData = await saveRes.json();
+                        setUploading(false);
+                        if (!saveRes.ok) {
+                          setError(saveData.error ?? "Impossible de retirer la photo");
+                          return;
+                        }
+                        setAvatarUrl(null);
+                        setUser(saveData.user);
+                        setMessage(t("profile_saved"));
+                      })();
+                    }}
                   >
                     {t("remove_photo")}
                   </Button>

@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  normalizeTransportMode,
+  normalizeTransportType,
+} from "@/lib/transport";
+
+const emptyToUndefined = (value: unknown) => {
+  if (value == null) return undefined;
+  if (typeof value === "string" && value.trim() === "") return undefined;
+  return value;
+};
 
 const schema = z.object({
   fromCountry: z.string().min(2),
@@ -14,6 +24,11 @@ const schema = z.object({
   urgency: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
   declaredValue: z.coerce.number().nonnegative().optional(),
   desiredDate: z.string().optional(),
+  transportMode: z.preprocess(
+    emptyToUndefined,
+    z.enum(["AIR", "SEA", "RAIL", "ROAD"]).optional()
+  ),
+  transportType: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export async function GET(request: Request) {
@@ -56,6 +71,12 @@ export async function POST(request: Request) {
 
   try {
     const body = schema.parse(await request.json());
+    const transportMode = body.transportMode
+      ? normalizeTransportMode(body.transportMode)
+      : null;
+    const transportType = transportMode
+      ? normalizeTransportType(transportMode, body.transportType)
+      : null;
     const parcel = await prisma.parcelRequest.create({
       data: {
         userId: session.id,
@@ -69,6 +90,8 @@ export async function POST(request: Request) {
         urgency: body.urgency,
         declaredValue: body.declaredValue,
         desiredDate: body.desiredDate ? new Date(body.desiredDate) : null,
+        transportMode: transportMode ?? undefined,
+        transportType,
       },
     });
     return NextResponse.json({ request: parcel }, { status: 201 });

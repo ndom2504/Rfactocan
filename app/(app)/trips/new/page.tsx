@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CorridorFields, DateField } from "@/components/corridor-fields";
+import { CorridorFields, DateField, combineDateAndTime } from "@/components/corridor-fields";
 import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +62,10 @@ export default function NewTripPage() {
     setError("");
     saveUserIntent({ carrierType });
     const fd = new FormData(e.currentTarget);
-    const departLocal = String(fd.get("departAt") || "").trim();
+    const departDate = String(fd.get("departDate") || "").trim();
+    const departTime = String(fd.get("departTime") || "").trim();
+    const arriveDate = String(fd.get("arriveDate") || "").trim();
+    const arriveTime = String(fd.get("arriveTime") || "").trim();
     const fromCountryValue = String(fd.get("fromCountry") || "").trim();
     const toCountryValue = String(fd.get("toCountry") || "").trim();
     const fromCity = String(fd.get("fromCity") || "").trim();
@@ -72,6 +75,8 @@ export default function NewTripPage() {
     const acceptedGoods = String(fd.get("acceptedGoods") || "").trim();
     const mode = (String(fd.get("transportMode") || transportMode) ||
       "AIR") as TransportMode;
+    const transportType =
+      String(fd.get("transportType") || "").trim() || undefined;
     const currency =
       String(fd.get("currency") || "").trim() ||
       resolveCheckoutCurrency(fromCountryValue, toCountryValue);
@@ -86,15 +91,21 @@ export default function NewTripPage() {
       setError("Indiquez les villes de départ et d'arrivée.");
       return;
     }
-    if (!departLocal) {
+    const departAt = combineDateAndTime(departDate, departTime);
+    if (!departAt) {
       setLoading(false);
-      setError("Indiquez la date de départ.");
+      setError("Indiquez la date et l'heure de départ.");
       return;
     }
-    const departAt = new Date(departLocal);
-    if (Number.isNaN(departAt.getTime())) {
+    const arriveAt = combineDateAndTime(arriveDate, arriveTime);
+    if (!arriveAt) {
       setLoading(false);
-      setError("Date de départ invalide.");
+      setError("Indiquez la date et l'heure d'arrivée.");
+      return;
+    }
+    if (arriveAt.getTime() < departAt.getTime()) {
+      setLoading(false);
+      setError("La date d'arrivée doit être après le départ.");
       return;
     }
     if (!Number.isFinite(weightKg) || weightKg <= 0) {
@@ -151,10 +162,12 @@ export default function NewTripPage() {
       toCountry: toCountryValue,
       toCity,
       departAt: departAt.toISOString(),
+      arriveAt: arriveAt.toISOString(),
       weightKg,
       pricePerKgCad,
       currency,
       transportMode: mode,
+      transportType,
       acceptedGoods,
       notes,
       airline: String(fd.get("airline") || "").trim() || undefined,
@@ -285,7 +298,32 @@ export default function NewTripPage() {
           onFromCountryChange={setFromCountry}
           onToCountryChange={setToCountry}
         />
-        <DateField name="departAt" label={t("departure_date")} required />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <DateField
+            name="departDate"
+            label={t("departure_date")}
+            type="date"
+            required
+          />
+          <DateField
+            name="departTime"
+            label={t("departure_time")}
+            type="time"
+            required
+          />
+          <DateField
+            name="arriveDate"
+            label={t("arrival_date")}
+            type="date"
+            required
+          />
+          <DateField
+            name="arriveTime"
+            label={t("arrival_time")}
+            type="time"
+            required
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="weightKg">{t("weight_available")}</Label>
@@ -301,7 +339,7 @@ export default function NewTripPage() {
             <p className="text-xs text-[var(--muted)]">
               Max {maxWeightForMode(transportMode)} kg (
               {transportMode === "AIR"
-                ? "avion"
+                ? "aérien"
                 : transportMode === "SEA"
                   ? "maritime"
                   : transportMode === "RAIL"

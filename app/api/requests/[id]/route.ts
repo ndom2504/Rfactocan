@@ -16,6 +16,8 @@ const patchSchema = z.object({
   urgency: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
   declaredValue: z.coerce.number().nonnegative().optional().nullable(),
   desiredDate: z.string().optional().nullable(),
+  transportMode: z.enum(["AIR", "SEA", "RAIL", "ROAD"]).optional().nullable(),
+  transportType: z.string().optional().nullable(),
   status: z.enum(["OPEN", "MATCHED", "CLOSED", "CANCELLED"]).optional(),
 });
 
@@ -114,6 +116,12 @@ export async function PATCH(request: Request, { params }: Params) {
                 ? new Date(body.desiredDate)
                 : null,
             }
+          : {}),
+        ...(body.transportMode !== undefined
+          ? { transportMode: body.transportMode || null }
+          : {}),
+        ...(body.transportType !== undefined
+          ? { transportType: body.transportType || null }
           : {}),
         ...(body.status !== undefined ? { status: body.status } : {}),
       },

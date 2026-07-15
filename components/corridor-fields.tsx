@@ -117,11 +117,13 @@ export function DateField({
   label,
   required,
   defaultValue,
+  type = "datetime-local",
 }: {
   name: string;
   label: string;
   required?: boolean;
   defaultValue?: string;
+  type?: "datetime-local" | "date" | "time";
 }) {
   return (
     <div className="space-y-2">
@@ -129,10 +131,40 @@ export function DateField({
       <Input
         id={name}
         name={name}
-        type="datetime-local"
+        type={type}
         required={required}
         defaultValue={defaultValue}
       />
     </div>
   );
+}
+
+/** Combine HTML date + time into an ISO string (local → Date). */
+export function combineDateAndTime(date: string, time: string): Date | null {
+  const d = date.trim();
+  const t = (time.trim() || "00:00").slice(0, 5);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+  if (!/^\d{2}:\d{2}$/.test(t)) return null;
+  const parsed = new Date(`${d}T${t}:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+export function toDateInput(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export function toTimeInput(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${h}:${min}`;
 }

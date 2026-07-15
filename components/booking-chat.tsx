@@ -237,23 +237,35 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
                     </p>
                   )}
                   {m.attachmentUrl && (
-                    <a
-                      href={m.attachmentUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mb-2 block overflow-hidden rounded-lg"
-                    >
-                      {isImageUrl(m.attachmentUrl) ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={m.attachmentUrl}
-                          alt={t("attachment_label")}
-                          className="max-h-48 w-full object-cover"
-                        />
-                      ) : (
-                        <span className="underline">{t("open_attachment")}</span>
-                      )}
-                    </a>
+                    <div className="mb-2 space-y-2">
+                      <a
+                        href={m.attachmentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block overflow-hidden rounded-lg"
+                      >
+                        {isImageUrl(m.attachmentUrl) ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={m.attachmentUrl}
+                            alt={t("attachment_label")}
+                            className="max-h-48 w-full object-cover"
+                          />
+                        ) : (
+                          <span className="underline">{t("open_attachment")}</span>
+                        )}
+                      </a>
+                      <a
+                        href={m.attachmentUrl}
+                        download
+                        className={cn(
+                          "inline-flex text-xs font-medium underline",
+                          mine ? "text-white/90" : "text-[var(--accent)]"
+                        )}
+                      >
+                        {t("download_attachment")}
+                      </a>
+                    </div>
                   )}
                   {m.body && !isAttachmentOnlyBody(m.body) && (
                     <p className="whitespace-pre-wrap break-words">{m.body}</p>

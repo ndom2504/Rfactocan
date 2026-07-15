@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
+import { TransportFields } from "@/components/transport-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   saveUserIntent,
   type OrderIntent,
 } from "@/lib/user-intent";
+import type { TransportMode } from "@/lib/transport";
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function NewRequestPage() {
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
+  const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
 
   useEffect(() => {
     setOrderIntent(loadUserIntent().orderIntent);
@@ -64,6 +67,8 @@ export default function NewRequestPage() {
         ? Number(fd.get("declaredValue"))
         : undefined,
       desiredDate: desired ? new Date(desired).toISOString() : undefined,
+      transportMode: String(fd.get("transportMode") || transportMode),
+      transportType: String(fd.get("transportType") || "").trim() || undefined,
       photos,
     };
 
@@ -107,6 +112,11 @@ export default function NewRequestPage() {
               : t("order_send_hint")}
           </p>
         </div>
+        <TransportFields
+          transportMode={transportMode}
+          onModeChange={setTransportMode}
+          showCarrierDetails={false}
+        />
         <CorridorFields />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -130,7 +140,7 @@ export default function NewRequestPage() {
             </Select>
           </div>
         </div>
-        <DateField name="desiredDate" label={t("desired_date")} />
+        <DateField name="desiredDate" label={t("desired_date")} type="date" />
         <div className="space-y-2">
           <Label htmlFor="declaredValue">{t("declared_value")}</Label>
           <Input

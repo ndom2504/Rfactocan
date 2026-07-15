@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import {
   maxWeightForMode,
   normalizeTransportMode,
+  normalizeTransportType,
   type TransportMode,
 } from "@/lib/transport";
 
@@ -24,6 +25,10 @@ const schema = z
       .string()
       .min(1, "Date de départ requise")
       .refine((v) => !Number.isNaN(Date.parse(v)), "Date de départ invalide"),
+    arriveAt: z
+      .string()
+      .min(1, "Date d'arrivée requise")
+      .refine((v) => !Number.isNaN(Date.parse(v)), "Date d'arrivée invalide"),
     weightKg: z.coerce
       .number({ error: "Poids invalide" })
       .positive("Poids invalide"),
@@ -39,6 +44,7 @@ const schema = z
       emptyToUndefined,
       z.enum(["AIR", "SEA", "RAIL", "ROAD"]).optional()
     ),
+    transportType: z.preprocess(emptyToUndefined, z.string().optional()),
     acceptedGoods: z.string().trim().min(2, "Objets acceptés requis"),
     notes: z.preprocess(emptyToUndefined, z.string().optional()),
     airline: z.preprocess(emptyToUndefined, z.string().optional()),
@@ -55,6 +61,15 @@ const schema = z
         code: "custom",
         message: `Poids max ${max} kg pour ce mode de transport`,
         path: ["weightKg"],
+      });
+    }
+    const depart = Date.parse(data.departAt);
+    const arrive = Date.parse(data.arriveAt);
+    if (!Number.isNaN(depart) && !Number.isNaN(arrive) && arrive < depart) {
+      ctx.addIssue({
+        code: "custom",
+        message: "La date d'arrivée doit être après le départ",
+        path: ["arriveAt"],
       });
     }
   });
@@ -125,6 +140,10 @@ export async function POST(request: Request) {
     const transportMode = normalizeTransportMode(
       body.transportMode
     ) as TransportMode;
+    const transportType = normalizeTransportType(
+      transportMode,
+      body.transportType
+    );
     const trip = await prisma.trip.create({
       data: {
         userId: session.id,
@@ -133,10 +152,12 @@ export async function POST(request: Request) {
         toCountry: body.toCountry,
         toCity: body.toCity,
         departAt: new Date(body.departAt),
+        arriveAt: new Date(body.arriveAt),
         weightKg: body.weightKg,
         pricePerKgCad: body.pricePerKgCad,
         currency: body.currency ?? "CAD",
         transportMode,
+        transportType,
         acceptedGoods: body.acceptedGoods,
         notes: body.notes,
         airline: body.airline,

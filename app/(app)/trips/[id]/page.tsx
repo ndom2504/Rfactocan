@@ -14,7 +14,7 @@ import { SenderProposePanel } from "@/components/sender-propose-panel";
 import { TripActiveNegotiations } from "@/components/trip-active-negotiations";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
-import { transportModeLabel } from "@/lib/transport";
+import { transportModeLabel, transportTypeLabel } from "@/lib/transport";
 import { negotiationLabel } from "@/lib/negotiation";
 
 type Props = { params: Promise<{ id: string }> };
@@ -82,7 +82,23 @@ export default async function TripDetailPage({ params }: Props) {
               <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                 {transportModeLabel(trip.transportMode, locale)}
               </Badge>
-              <Badge>{formatDate(trip.departAt)}</Badge>
+              {trip.transportType && (
+                <Badge>
+                  {transportTypeLabel(
+                    trip.transportMode,
+                    trip.transportType,
+                    locale
+                  )}
+                </Badge>
+              )}
+              <Badge>
+                {t(locale, "departure_date")}: {formatDate(trip.departAt)}
+              </Badge>
+              {trip.arriveAt && (
+                <Badge>
+                  {t(locale, "arrival_date")}: {formatDate(trip.arriveAt)}
+                </Badge>
+              )}
               <Badge>{formatKg(trip.weightKg)}</Badge>
               <Badge>
                 {formatMoney(trip.pricePerKgCad, trip.currency || "CAD")}/kg

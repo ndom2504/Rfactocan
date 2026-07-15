@@ -84,6 +84,14 @@ export default async function AppLayout({
                 {l.label}
               </Link>
             ))}
+            {user.role === "ADMIN" && (
+              <Link
+                href="/admin"
+                className="whitespace-nowrap text-sm font-medium text-[var(--highlight)]"
+              >
+                {t(locale, "nav_admin")}
+              </Link>
+            )}
           </nav>
         </header>
         <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
