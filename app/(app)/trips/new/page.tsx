@@ -223,6 +223,7 @@ export default function NewTripPage() {
           toCountry={toCountry}
           transportMode={transportMode}
           onModeChange={setTransportMode}
+          showCarrierDetails={false}
         />
 
         {needsVehicle && (

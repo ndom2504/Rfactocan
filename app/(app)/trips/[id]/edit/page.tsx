@@ -306,10 +306,7 @@ export default function EditTripPage({
           transportMode={transportMode}
           transportType={trip.transportType ?? ""}
           onModeChange={setTransportMode}
-          airline={trip.airline ?? ""}
-          flightNumber={trip.flightNumber ?? ""}
-          fromAirportCode={trip.fromAirportCode ?? ""}
-          toAirportCode={trip.toAirportCode ?? ""}
+          showCarrierDetails={false}
         />
         <div className="space-y-2">
           <Label htmlFor="notes">{t("notes")}</Label>
