@@ -15,13 +15,50 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Rfacto — Réseau mondial voyageurs & expéditeurs",
+  metadataBase: new URL("https://www.rfacto.com"),
+  title: {
+    default: "Rfacto — Transport collaboratif de colis",
+    template: "%s · Rfacto",
+  },
   description:
-    "Rfacto (RapidFacto) : le réseau mondial qui connecte les voyageurs et les expéditeurs partout dans le monde. Marketplace P2P de transport collaboratif de colis.",
+    "Envoyez vos colis plus simplement, plus rapidement et à moindre coût. Mise en relation entre expéditeurs et voyageurs, paiement sécurisé et suivi des livraisons.",
   applicationName: "Rfacto",
+  keywords: [
+    "Rfacto",
+    "transport collaboratif",
+    "colis",
+    "voyageurs",
+    "Gabon",
+    "livraison",
+  ],
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: ["/favicon.svg"],
+    apple: [{ url: "/favicon.svg" }],
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: "https://www.rfacto.com",
+    siteName: "Rfacto",
+    title: "Rfacto — Transport collaboratif de colis",
+    description:
+      "Envoyez vos colis plus simplement, plus rapidement et à moindre coût grâce à la communauté Rfacto. Paiement sécurisé et suivi des livraisons.",
+    images: [
+      {
+        url: "/og-rfacto.png",
+        width: 1200,
+        height: 675,
+        alt: "Rfacto — Transport collaboratif de colis",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rfacto — Transport collaboratif de colis",
+    description:
+      "Mise en relation expéditeurs et voyageurs. Paiement sécurisé. Suivi des livraisons.",
+    images: ["/og-rfacto.png"],
   },
 };
 
