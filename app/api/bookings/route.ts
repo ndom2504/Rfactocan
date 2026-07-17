@@ -17,7 +17,7 @@ const createSchema = z.object({
   goodsCertified: z.boolean().optional(),
   customsAcknowledged: z.boolean().optional(),
   /** Sender counter-offer per kg (trip currency). Only if trip.priceNegotiable. */
-  offeredPricePerKg: z.coerce.number().positive().max(500).optional(),
+  offeredPricePerKg: z.coerce.number().positive().max(100000).optional(),
 });
 
 export async function GET(request: Request) {

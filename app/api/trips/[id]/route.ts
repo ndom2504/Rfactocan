@@ -13,7 +13,7 @@ const patchSchema = z.object({
   departAt: z.string().datetime().or(z.string().min(8)).optional(),
   arriveAt: z.string().datetime().or(z.string().min(8)).optional().nullable(),
   weightKg: z.coerce.number().positive().max(5000).optional(),
-  pricePerKgCad: z.coerce.number().positive().max(500).optional(),
+  pricePerKgCad: z.coerce.number().positive().max(100000).optional(),
   currency: z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional(),
   transportMode: z.enum(["AIR", "SEA", "RAIL", "ROAD"]).optional(),
   transportType: z.string().optional().nullable(),

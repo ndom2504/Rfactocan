@@ -33,7 +33,7 @@ const patchSchema = z
       .optional(),
     goodsCertified: z.boolean().optional(),
     customsAcknowledged: z.boolean().optional(),
-    offeredPricePerKg: z.coerce.number().positive().max(500).optional(),
+    offeredPricePerKg: z.coerce.number().positive().max(100000).optional(),
   })
   .refine(
     (data) => data.status !== undefined || data.offeredPricePerKg !== undefined,

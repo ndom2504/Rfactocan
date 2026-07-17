@@ -18,7 +18,7 @@ import {
   saveUserIntent,
   type CarrierType,
 } from "@/lib/user-intent";
-import { encodeNotesWithVehicle } from "@/lib/vehicle-notes";
+import { encodeNotesWithVehicle, encodeNotesWithCommercial } from "@/lib/vehicle-notes";
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -33,9 +33,14 @@ export default function NewTripPage() {
   const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleLicense, setVehicleLicense] = useState("");
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("");
+  const [companyMatricule, setCompanyMatricule] = useState("");
+  const [companyInsurance, setCompanyInsurance] = useState("");
+  const [companyBase, setCompanyBase] = useState("");
 
   const needsVehicle =
     carrierType === "particulier" && transportMode === "ROAD";
+  const needsCommercial = carrierType === "commercial";
 
   useEffect(() => {
     setCarrierType(loadUserIntent().carrierType);
@@ -144,14 +149,37 @@ export default function NewTripPage() {
       }
     }
 
+    if (carrierType === "commercial") {
+      if (
+        !companyName.trim() ||
+        !companyMatricule.trim() ||
+        !companyBase.trim()
+      ) {
+        setLoading(false);
+        setError(t("commercial_required"));
+        return;
+      }
+    }
+
     const userNotes = String(fd.get("notes") || "").trim();
-    const notes = encodeNotesWithVehicle(
+    let notes = encodeNotesWithVehicle(
       userNotes,
       needsVehicleNow
         ? {
             plate: vehiclePlate,
             licenseNumber: vehicleLicense,
             photoUrl: vehiclePhotoUrl!,
+          }
+        : null
+    );
+    notes = encodeNotesWithCommercial(
+      notes,
+      carrierType === "commercial"
+        ? {
+            company: companyName,
+            matricule: companyMatricule,
+            insurance: companyInsurance,
+            base: companyBase,
           }
         : null
     );
@@ -231,9 +259,6 @@ export default function NewTripPage() {
             <legend className="px-1 text-sm font-medium">
               {t("vehicle_section")}
             </legend>
-            <p className="text-xs text-[var(--muted)]">
-              {t("vehicle_section_hint")}
-            </p>
             <div className="space-y-2">
               <Label htmlFor="vehiclePlate">{t("vehicle_plate")}</Label>
               <Input
@@ -267,9 +292,6 @@ export default function NewTripPage() {
                   e.target.value = "";
                 }}
               />
-              <p className="text-xs text-[var(--muted)]">
-                {t("vehicle_photo_hint")}
-              </p>
               {uploading && (
                 <p className="text-xs text-[var(--muted)]">{t("uploading")}</p>
               )}
@@ -291,6 +313,57 @@ export default function NewTripPage() {
                   </Button>
                 </div>
               )}
+            </div>
+          </fieldset>
+        )}
+
+        {needsCommercial && (
+          <fieldset className="space-y-3 rounded-lg border border-[var(--border)] p-4">
+            <legend className="px-1 text-sm font-medium">
+              {t("commercial_section")}
+            </legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="companyName">{t("commercial_company")}</Label>
+                <Input
+                  id="companyName"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyMatricule">
+                  {t("commercial_matricule")}
+                </Label>
+                <Input
+                  id="companyMatricule"
+                  value={companyMatricule}
+                  onChange={(e) => setCompanyMatricule(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyInsurance">
+                  {t("commercial_insurance")}
+                </Label>
+                <Input
+                  id="companyInsurance"
+                  value={companyInsurance}
+                  onChange={(e) => setCompanyInsurance(e.target.value)}
+                  placeholder={t("optional")}
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="companyBase">{t("commercial_base")}</Label>
+                <Input
+                  id="companyBase"
+                  value={companyBase}
+                  onChange={(e) => setCompanyBase(e.target.value)}
+                  placeholder={t("commercial_base_ph")}
+                  required
+                />
+              </div>
             </div>
           </fieldset>
         )}

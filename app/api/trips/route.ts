@@ -35,7 +35,7 @@ const schema = z
     pricePerKgCad: z.coerce
       .number({ error: "Prix invalide" })
       .positive("Prix invalide")
-      .max(500, "Prix max 500 / kg"),
+      .max(100000, "Prix max 100 000 / kg"),
     currency: z.preprocess(
       emptyToUndefined,
       z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional()

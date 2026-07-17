@@ -15,6 +15,7 @@ import { TripActiveNegotiations } from "@/components/trip-active-negotiations";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 import { transportModeLabel, transportTypeLabel } from "@/lib/transport";
+import { parseCarrierFromNotes } from "@/lib/vehicle-notes";
 import { negotiationLabel } from "@/lib/negotiation";
 
 type Props = { params: Promise<{ id: string }> };
@@ -31,6 +32,8 @@ export default async function TripDetailPage({ params }: Props) {
           displayName: true,
           avatarUrl: true,
           bio: true,
+          phone: true,
+          country: true,
           verifiedAt: true,
           ratingAvg: true,
           ratingCount: true,
@@ -58,6 +61,7 @@ export default async function TripDetailPage({ params }: Props) {
     discussionCount,
     locale,
   });
+  const { vehicle, commercial, userNotes } = parseCarrierFromNotes(trip.notes);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -141,12 +145,67 @@ export default async function TripDetailPage({ params }: Props) {
             <dt className="text-[var(--muted)]">{t(locale, "accepted_goods")}</dt>
             <dd>{trip.acceptedGoods}</dd>
           </div>
-          {trip.notes && (
+          {vehicle && (
             <div>
-              <dt className="text-[var(--muted)]">{t(locale, "notes")}</dt>
-              <dd>{trip.notes}</dd>
+              <dt className="text-[var(--muted)]">{t(locale, "vehicle_section")}</dt>
+              <dd className="mt-1 space-y-2">
+                <p>
+                  {t(locale, "vehicle_plate")}: <strong>{vehicle.plate}</strong>
+                </p>
+                <p>
+                  {t(locale, "vehicle_license")}:{" "}
+                  <strong>{vehicle.licenseNumber}</strong>
+                </p>
+                {vehicle.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={vehicle.photoUrl}
+                    alt={t(locale, "vehicle_photo")}
+                    className="mt-2 h-28 w-40 rounded-md border border-[var(--border)] object-cover"
+                  />
+                ) : null}
+              </dd>
             </div>
           )}
+          {commercial && (
+            <div>
+              <dt className="text-[var(--muted)]">
+                {t(locale, "commercial_section")}
+              </dt>
+              <dd className="mt-1 space-y-1">
+                {commercial.company ? (
+                  <p>
+                    {t(locale, "commercial_company")}:{" "}
+                    <strong>{commercial.company}</strong>
+                  </p>
+                ) : null}
+                {commercial.matricule ? (
+                  <p>
+                    {t(locale, "commercial_matricule")}:{" "}
+                    <strong>{commercial.matricule}</strong>
+                  </p>
+                ) : null}
+                {commercial.insurance ? (
+                  <p>
+                    {t(locale, "commercial_insurance")}:{" "}
+                    <strong>{commercial.insurance}</strong>
+                  </p>
+                ) : null}
+                {commercial.base ? (
+                  <p>
+                    {t(locale, "commercial_base")}:{" "}
+                    <strong>{commercial.base}</strong>
+                  </p>
+                ) : null}
+              </dd>
+            </div>
+          )}
+          {userNotes ? (
+            <div>
+              <dt className="text-[var(--muted)]">{t(locale, "notes")}</dt>
+              <dd>{userNotes}</dd>
+            </div>
+          ) : null}
           {(trip.airline ||
             trip.flightNumber ||
             trip.fromAirportCode ||
@@ -175,23 +234,27 @@ export default async function TripDetailPage({ params }: Props) {
             size="xl"
           />
           <div className="min-w-0">
-            <p className="text-xs text-[var(--muted)]">
-              {t(locale, "profile_photo")}
-            </p>
             <p className="font-medium">
               {trip.user.displayName}
               {trip.user.verifiedAt || trip.user.kycStatus === "VERIFIED"
                 ? ` · ${t(locale, "verified")}`
                 : ""}
             </p>
+            {trip.user.phone ? (
+              <p className="text-sm">
+                {t(locale, "phone")}: {trip.user.phone}
+              </p>
+            ) : null}
+            {trip.user.country ? (
+              <p className="text-sm text-[var(--muted)]">
+                {t(locale, "country")}: {trip.user.country}
+              </p>
+            ) : null}
             {trip.user.ratingCount ? (
               <p className="text-sm text-[var(--muted)]">
                 ★ {trip.user.ratingAvg.toFixed(1)} ({trip.user.ratingCount})
               </p>
             ) : null}
-            {trip.user.bio && (
-              <p className="mt-1 text-sm text-[var(--muted)]">{trip.user.bio}</p>
-            )}
           </div>
         </div>
       </Card>
