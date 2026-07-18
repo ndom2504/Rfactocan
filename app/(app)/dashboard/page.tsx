@@ -59,7 +59,7 @@ export default async function DashboardPage() {
           </Button>
         </Link>
         <Link href="/services/new" className="w-full">
-          <Button className="h-12 w-full text-base" variant="secondary">
+          <Button className="h-12 w-full text-base">
             {t(locale, "publish_service_cta")}
           </Button>
         </Link>
