@@ -273,11 +273,27 @@ const dict = {
 
     // Marketing
     hero_tagline:
-      "Le réseau mondial qui connecte ceux qui livrent et ceux qui commandent partout dans le monde.",
+      "Voyageurs, services et clients — connectés en un seul réseau.",
     hero_sub:
       "Voyageurs, transitaires et particuliers peuvent livrer. Envoyez ou recevez un colis en toute confiance.",
+    cta_start_here: "Commencer ici",
     cta_send: "Commander",
     cta_travel: "Livrer",
+    vision_title: "Vision & objectif",
+    vision_lead:
+      "Rfacto met en relation ceux qui ont de la capacité et ceux qui ont besoin d’un envoi ou d’un service.",
+    vision_actor_travelers: "Voyageurs",
+    vision_actor_travelers_text:
+      "transportent des colis via leur bagage ou leur trajet.",
+    vision_actor_business: "Services",
+    vision_actor_business_text:
+      "offrent fret, cargo, transport et prestations locales.",
+    vision_actor_clients: "Clients",
+    vision_actor_clients_text:
+      "commandent un voyage, une livraison ou un service.",
+    vision_goal:
+      "Objectif : une place de marché de confiance — KYC, paiements sécurisés, messagerie et suivi.",
+    close: "Fermer",
     section_airbnb_title: "L'Airbnb du bagage international",
     section_airbnb_text:
       "Une marketplace P2P : comme Uber connecte conducteurs et passagers, Rfacto connecte l'espace bagage des livreurs aux besoins d'envoi et de réception.",
@@ -832,11 +848,27 @@ const dict = {
     nav_responsibility: "Responsibility",
 
     hero_tagline:
-      "The global network connecting those who deliver and those who order worldwide.",
+      "Travelers, services and clients — connected in one network.",
     hero_sub:
       "Travelers, freight forwarders and individuals can deliver. Send or receive a parcel with confidence.",
+    cta_start_here: "Start here",
     cta_send: "Order",
     cta_travel: "Deliver",
+    vision_title: "Vision & purpose",
+    vision_lead:
+      "Rfacto matches people who have capacity with people who need a shipment or a service.",
+    vision_actor_travelers: "Travelers",
+    vision_actor_travelers_text:
+      "carry parcels via their luggage or itinerary.",
+    vision_actor_business: "Services",
+    vision_actor_business_text:
+      "offer freight, cargo, transport and local services.",
+    vision_actor_clients: "Clients",
+    vision_actor_clients_text:
+      "order a trip, a delivery or a service.",
+    vision_goal:
+      "Goal: a trusted marketplace — KYC, secure payments, messaging and tracking.",
+    close: "Close",
     section_airbnb_title: "The Airbnb of international baggage",
     section_airbnb_text:
       "A P2P marketplace: like Uber connects drivers and riders, Rfacto connects carriers' spare space with send and receive needs.",
