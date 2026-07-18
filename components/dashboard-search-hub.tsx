@@ -1,42 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { TravelerSearch } from "@/components/traveler-search";
 import { RequestSearch } from "@/components/request-search";
-import { Button } from "@/components/ui/button";
+import { ServiceSearch } from "@/components/service-search";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { useI18n } from "@/components/locale-provider";
-import { cn } from "@/lib/utils";
 
-type SearchMode = "livreurs" | "commandes";
+export type SearchMode = "voyageurs" | "services" | "clients";
 
 type Props = {
-  canSearchLivreurs: boolean;
-  canSearchCommandes: boolean;
+  /** Kept for compatibility — all modes are available. */
+  canSearchLivreurs?: boolean;
+  canSearchCommandes?: boolean;
 };
 
-export function DashboardSearchHub({
-  canSearchLivreurs,
-  canSearchCommandes,
-}: Props) {
+export function DashboardSearchHub(_props: Props) {
   const { t } = useI18n();
-  const defaultMode = useMemo<SearchMode>(() => {
-    if (canSearchLivreurs) return "livreurs";
-    if (canSearchCommandes) return "commandes";
-    return "livreurs";
-  }, [canSearchLivreurs, canSearchCommandes]);
-  const [mode, setMode] = useState<SearchMode>(defaultMode);
-
-  if (!canSearchLivreurs && !canSearchCommandes) return null;
-
-  const active: SearchMode =
-    mode === "livreurs" && !canSearchLivreurs
-      ? "commandes"
-      : mode === "commandes" && !canSearchCommandes
-        ? "livreurs"
-        : mode;
+  const [mode, setMode] = useState<SearchMode>("voyageurs");
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <div>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
           {t("dashboard_search_title")}
@@ -46,36 +32,24 @@ export function DashboardSearchHub({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {canSearchLivreurs && (
-          <Button
-            type="button"
-            size="sm"
-            variant={active === "livreurs" ? "default" : "outline"}
-            className={cn(active === "livreurs" && "pointer-events-none")}
-            onClick={() => setMode("livreurs")}
+      <Card className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="search-mode">{t("search_filter_type")}</Label>
+          <Select
+            id="search-mode"
+            value={mode}
+            onChange={(e) => setMode(e.target.value as SearchMode)}
           >
-            {t("search_mode_livreurs")}
-          </Button>
-        )}
-        {canSearchCommandes && (
-          <Button
-            type="button"
-            size="sm"
-            variant={active === "commandes" ? "default" : "outline"}
-            className={cn(active === "commandes" && "pointer-events-none")}
-            onClick={() => setMode("commandes")}
-          >
-            {t("search_mode_commandes")}
-          </Button>
-        )}
-      </div>
+            <option value="voyageurs">{t("search_mode_voyageurs")}</option>
+            <option value="services">{t("search_mode_services")}</option>
+            <option value="clients">{t("search_mode_clients")}</option>
+          </Select>
+        </div>
 
-      {active === "livreurs" ? (
-        <TravelerSearch hideHeading />
-      ) : (
-        <RequestSearch hideHeading />
-      )}
+        {mode === "voyageurs" && <TravelerSearch hideHeading plain />}
+        {mode === "services" && <ServiceSearch hideHeading plain />}
+        {mode === "clients" && <RequestSearch hideHeading plain />}
+      </Card>
     </section>
   );
 }

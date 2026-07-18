@@ -37,7 +37,13 @@ type RequestHit = {
   };
 };
 
-export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }) {
+export function RequestSearch({
+  hideHeading = false,
+  plain = false,
+}: {
+  hideHeading?: boolean;
+  plain?: boolean;
+}) {
   const { t, urgency } = useI18n();
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("");
@@ -108,7 +114,9 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
         </div>
       )}
 
-      <Card>
+      {(() => {
+        const filters = (
+        <div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
             <Label htmlFor="request-q">{t("search")}</Label>
@@ -219,7 +227,10 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
           </Button>
         </div>
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
-      </Card>
+        </div>
+        );
+        return plain ? filters : <Card>{filters}</Card>;
+      })()}
 
       {searched && (
         <div className="space-y-3">

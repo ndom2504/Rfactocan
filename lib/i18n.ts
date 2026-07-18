@@ -197,9 +197,18 @@ const dict = {
     search_requests_placeholder: "Nom, ville, description…",
     dashboard_search_title: "Rechercher",
     dashboard_search_hint:
-      "Cherchez des livreurs ou des commandes selon votre intention.",
+      "Choisissez le type de recherche, puis affinez vos critères.",
+    search_filter_type: "Type de recherche",
+    search_mode_voyageurs: "Voyageurs",
+    search_mode_services: "Services",
+    search_mode_clients: "Clients",
     search_mode_livreurs: "Chercher des livreurs",
     search_mode_commandes: "Chercher des commandes",
+    search_services: "Trouver un service",
+    search_services_hint:
+      "Filtrez les offres commerciales par mot-clé, pays ou ville.",
+    search_services_placeholder: "Titre, type, prestataire…",
+    services_found: "service(s) trouvé(s)",
     search_travel_date: "Date du voyage",
     requests_found: "commande(s) trouvée(s)",
     no_requests_found:
@@ -748,9 +757,18 @@ const dict = {
     search_requests_placeholder: "Name, city, description…",
     dashboard_search_title: "Search",
     dashboard_search_hint:
-      "Search for carriers or orders based on your intent.",
+      "Choose a search type, then refine your filters.",
+    search_filter_type: "Search type",
+    search_mode_voyageurs: "Travelers",
+    search_mode_services: "Services",
+    search_mode_clients: "Clients",
     search_mode_livreurs: "Search carriers",
     search_mode_commandes: "Search orders",
+    search_services: "Find a service",
+    search_services_hint:
+      "Filter business offers by keyword, country or city.",
+    search_services_placeholder: "Title, type, provider…",
+    services_found: "service(s) found",
     search_travel_date: "Travel date",
     requests_found: "order(s) found",
     no_requests_found:

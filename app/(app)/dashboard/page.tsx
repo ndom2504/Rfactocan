@@ -6,7 +6,6 @@ import { t, bookingStatusLabel } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardSearchHub } from "@/components/dashboard-search-hub";
-import { ResponsibilityNotice } from "@/components/responsibility-notice";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -65,7 +64,10 @@ export default async function DashboardPage() {
           </Button>
         </Link>
         <Link href="/requests/new" className="w-full">
-          <Button className="h-12 w-full text-base" variant="outline">
+          <Button
+            className="h-12 w-full border-[var(--accent)]/25 bg-[var(--accent-soft)] text-base text-[var(--accent)] hover:bg-[#c5e6d6]"
+            variant="outline"
+          >
             {t(locale, "publish_order_cta")}
           </Button>
         </Link>
@@ -92,8 +94,6 @@ export default async function DashboardPage() {
           </CardTitle>
         </Card>
       </div>
-
-      <ResponsibilityNotice locale={locale} />
 
       <section>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
