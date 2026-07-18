@@ -164,6 +164,7 @@ model User {
 
   trips            Trip[]
   parcelRequests   ParcelRequest[]
+  serviceListings  ServiceListing[]
   bookingsAsSender Booking[]       @relation("BookingSender")
   messages         Message[]
   reviewsGiven     Review[]        @relation("ReviewsGiven")
@@ -266,6 +267,34 @@ model ParcelRequest {
   @@index([toCountry, toCity])
   @@index([userId])
   @@index([transportMode])
+}
+
+/// Offre de service collaboratif (hors flux colis Trip/ParcelRequest).
+model ServiceListing {
+  id            String   @id @default(cuid())
+  userId        String
+  category      String
+  serviceType   String
+  title         String
+  description   String
+  country       String
+  city          String
+  priceAmount   Float?
+  priceUnit     String   @default("forfait")
+  currency      String   @default("CAD")
+  availableFrom DateTime?
+  availableTo   DateTime?
+  photosJson    String   @default("[]")
+  status        String   @default("OPEN")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([category, country, city])
+  @@index([serviceType])
+  @@index([userId])
+  @@index([status])
 }
 
 model Booking {

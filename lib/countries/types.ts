@@ -1,14 +1,10 @@
 import type { MoneyCurrency } from "@/lib/currency";
+import type { ServiceCategoryId } from "@/lib/services-catalog";
 import type { TransportMode } from "@/lib/transport";
 import type { PayoutProvider } from "@/lib/user-intent";
 
-/** Catégories de services collaboratifs (vision Rfacto). */
-export type ServiceCategory =
-  | "colis"
-  | "transport"
-  | "transitaire"
-  | "hotel"
-  | "autre";
+/** Catégories de services activées pour un pays. */
+export type ServiceCategory = ServiceCategoryId;
 
 /** Moyens de paiement / réception activés pour un pays. */
 export type CountryPayment =

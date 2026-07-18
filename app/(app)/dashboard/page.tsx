@@ -73,22 +73,24 @@ export default async function DashboardPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
+        <Link href="/services">
+          <Button>{t(locale, "nav_services")}</Button>
+        </Link>
+        <Link href="/services/new">
+          <Button variant="secondary">{t(locale, "services_publish")}</Button>
+        </Link>
         {(user.role === "TRAVELER" ||
           user.role === "BOTH" ||
           user.role === "ADMIN") && (
           <Link href="/trips/new">
-            <Button>{t(locale, "publish_trip")}</Button>
+            <Button variant="outline">{t(locale, "publish_trip")}</Button>
           </Link>
         )}
         {(user.role === "SENDER" ||
           user.role === "BOTH" ||
           user.role === "ADMIN") && (
           <Link href="/requests/new">
-            <Button
-              variant={user.role === "SENDER" ? "default" : "secondary"}
-            >
-              {t(locale, "publish_request")}
-            </Button>
+            <Button variant="outline">{t(locale, "publish_request")}</Button>
           </Link>
         )}
       </div>
