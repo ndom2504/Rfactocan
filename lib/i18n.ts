@@ -19,7 +19,7 @@ const dict = {
       "Parcourez les catégories ou publiez une offre : hébergement, artisanat, beauté, famille, événements…",
     services_publish: "Publier un service",
     services_publish_hint:
-      "Décrivez votre offre. Les demandeurs vous trouveront par catégorie et ville.",
+      "Pour les commerciaux : fret, cargo, transport et autres services par catégorie.",
     services_see_list: "Voir les offres",
     services_back: "Toutes les catégories",
     services_type: "Métier / type",
@@ -181,7 +181,12 @@ const dict = {
     // Dashboard
     hello: "Bonjour",
     dashboard_subtitle:
-      "Livrez, commandez et gérez vos réservations internationales.",
+      "Rfacto met en relation voyageurs, commerciaux et clients — colis et services.",
+    dashboard_actors_hint:
+      "Voyageur (bagages) · Commercial (fret, cargo, services) · Client (commandes)",
+    publish_trip_cta: "Publier un voyage",
+    publish_service_cta: "Publier un service",
+    publish_order_cta: "Publier une commande",
     search_travelers: "Trouver un livreur",
     search_travelers_hint:
       "Filtrez par nom, pays, ville ou région (départ ou arrivée).",
@@ -200,8 +205,8 @@ const dict = {
     no_requests_found:
       "Aucune commande pour ces critères. Élargissez la région ou la ville.",
     view_request: "Voir la commande",
-    publish_trip: "Proposer une livraison",
-    publish_request: "Créer une commande",
+    publish_trip: "Publier un voyage",
+    publish_request: "Publier une commande",
     recent_activity: "Activité récente",
     open_trips: "Livraisons ouvertes",
     open_requests: "Commandes ouvertes",
@@ -572,7 +577,7 @@ const dict = {
       "Browse categories or publish an offer: lodging, trades, beauty, family, events…",
     services_publish: "Publish a service",
     services_publish_hint:
-      "Describe your offer. Seekers will find you by category and city.",
+      "For businesses: freight, cargo, transport and other services by category.",
     services_see_list: "See offers",
     services_back: "All categories",
     services_type: "Trade / type",
@@ -727,7 +732,12 @@ const dict = {
 
     hello: "Hello",
     dashboard_subtitle:
-      "Deliver, order, and manage your international bookings.",
+      "Rfacto connects travelers, businesses and clients — parcels and services.",
+    dashboard_actors_hint:
+      "Traveler (luggage) · Business (freight, cargo, services) · Client (orders)",
+    publish_trip_cta: "Publish a trip",
+    publish_service_cta: "Publish a service",
+    publish_order_cta: "Publish an order",
     search_travelers: "Find a carrier",
     search_travelers_hint:
       "Filter by name, country, city or region (origin or destination).",
@@ -746,8 +756,8 @@ const dict = {
     no_requests_found:
       "No orders for these filters. Broaden the region or city.",
     view_request: "View order",
-    publish_trip: "Offer a delivery",
-    publish_request: "Create an order",
+    publish_trip: "Publish a trip",
+    publish_request: "Publish an order",
     recent_activity: "Recent activity",
     open_trips: "Open deliveries",
     open_requests: "Open orders",

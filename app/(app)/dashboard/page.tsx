@@ -41,13 +41,34 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="text-center">
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
           {t(locale, "hello")}, {user.displayName}
         </h1>
-        <p className="mt-1 text-[var(--muted)]">
+        <p className="mx-auto mt-2 max-w-xl text-[var(--muted)]">
           {t(locale, "dashboard_subtitle")}
         </p>
+        <p className="mx-auto mt-1 max-w-xl text-sm text-[var(--muted)]">
+          {t(locale, "dashboard_actors_hint")}
+        </p>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3">
+        <Link href="/trips/new" className="w-full">
+          <Button className="h-12 w-full text-base">
+            {t(locale, "publish_trip_cta")}
+          </Button>
+        </Link>
+        <Link href="/services/new" className="w-full">
+          <Button className="h-12 w-full text-base" variant="secondary">
+            {t(locale, "publish_service_cta")}
+          </Button>
+        </Link>
+        <Link href="/requests/new" className="w-full">
+          <Button className="h-12 w-full text-base" variant="outline">
+            {t(locale, "publish_order_cta")}
+          </Button>
+        </Link>
       </div>
 
       <DashboardSearchHub
@@ -70,29 +91,6 @@ export default async function DashboardPage() {
             {user.ratingCount ? user.ratingAvg.toFixed(1) : "—"}
           </CardTitle>
         </Card>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <Link href="/services">
-          <Button>{t(locale, "nav_services")}</Button>
-        </Link>
-        <Link href="/services/new">
-          <Button variant="secondary">{t(locale, "services_publish")}</Button>
-        </Link>
-        {(user.role === "TRAVELER" ||
-          user.role === "BOTH" ||
-          user.role === "ADMIN") && (
-          <Link href="/trips/new">
-            <Button variant="outline">{t(locale, "publish_trip")}</Button>
-          </Link>
-        )}
-        {(user.role === "SENDER" ||
-          user.role === "BOTH" ||
-          user.role === "ADMIN") && (
-          <Link href="/requests/new">
-            <Button variant="outline">{t(locale, "publish_request")}</Button>
-          </Link>
-        )}
       </div>
 
       <ResponsibilityNotice locale={locale} />
