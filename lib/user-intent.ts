@@ -13,6 +13,7 @@ export type PayoutProvider =
   | "moov_money"
   | "mtn_momo"
   | "airtel_money"
+  | "mpesa_vodacom"
   | "interac";
 
 export type ApiUserRole = "SENDER" | "TRAVELER" | "BOTH";
@@ -69,7 +70,18 @@ export function saveUserIntent(prefs: Partial<UserIntentPrefs>): UserIntentPrefs
   return next;
 }
 
-export function payoutProviderLabelKey(provider: PayoutProvider): string {
+export type PayoutProviderLabelKey =
+  | "payout_mobile_money"
+  | "payout_orange"
+  | "payout_moov"
+  | "payout_mtn"
+  | "payout_airtel"
+  | "payout_mpesa"
+  | "payout_interac";
+
+export function payoutProviderLabelKey(
+  provider: PayoutProvider
+): PayoutProviderLabelKey {
   switch (provider) {
     case "orange_money":
       return "payout_orange";
@@ -79,6 +91,8 @@ export function payoutProviderLabelKey(provider: PayoutProvider): string {
       return "payout_mtn";
     case "airtel_money":
       return "payout_airtel";
+    case "mpesa_vodacom":
+      return "payout_mpesa";
     case "interac":
       return "payout_interac";
     default:

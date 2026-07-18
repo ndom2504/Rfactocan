@@ -1,3 +1,5 @@
+import { getConfiguredCurrency } from "@/lib/countries/registry";
+
 export type MoneyCurrency = "CAD" | "USD" | "EUR" | "XOF" | "XAF";
 
 /** Stripe zero-decimal currencies: amount is in whole francs, not cents. */
@@ -52,6 +54,8 @@ const COUNTRY_CURRENCY: Record<string, MoneyCurrency> = {
   AE: "USD",
   NG: "USD",
   GH: "USD",
+  GN: "USD",
+  CN: "USD",
   KE: "USD",
   ZA: "USD",
   IN: "USD",
@@ -75,6 +79,8 @@ export function isZeroDecimalCurrency(code: MoneyCurrency | string) {
 export function currencyForCountry(country?: string | null): MoneyCurrency {
   if (!country) return "CAD";
   const code = country.trim().toUpperCase();
+  const fromConfig = getConfiguredCurrency(code);
+  if (fromConfig) return fromConfig;
   if (code.length === 2 && COUNTRY_CURRENCY[code]) {
     return COUNTRY_CURRENCY[code];
   }

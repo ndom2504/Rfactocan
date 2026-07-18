@@ -1,13 +1,19 @@
+import { getConfiguredCities } from "@/lib/countries/registry";
+
 export type Country = {
   code: string;
   name: string;
   cities: string[];
 };
 
-/** Corridors internationaux — n'importe quel pays vers n'importe quel autre. */
-export const COUNTRIES: Country[] = [
+/**
+ * Catalogue pays (noms + villes de base).
+ * Pour CA / GA / CM / CI : les villes font foi dans `lib/countries/*.ts`
+ * et sont fusionnées via `getCities` / export `COUNTRIES`.
+ */
+const COUNTRIES_BASE: Country[] = [
   // Amérique du Nord
-  { code: "CA", name: "Canada", cities: ["Montréal", "Toronto", "Ottawa", "Vancouver", "Calgary", "Québec", "Edmonton", "Winnipeg"] },
+  { code: "CA", name: "Canada", cities: [] },
   { code: "US", name: "États-Unis", cities: ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Washington", "Boston", "San Francisco", "Atlanta", "Seattle"] },
   { code: "MX", name: "Mexique", cities: ["Mexico", "Guadalajara", "Monterrey", "Cancún", "Tijuana"] },
   // Caraïbes / Amérique centrale
@@ -27,15 +33,15 @@ export const COUNTRIES: Country[] = [
   { code: "VE", name: "Venezuela", cities: ["Caracas", "Maracaibo", "Valencia"] },
   { code: "EC", name: "Équateur", cities: ["Quito", "Guayaquil"] },
   // Afrique de l'Ouest
-  { code: "SN", name: "Sénégal", cities: ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack", "Mbour", "Touba"] },
-  { code: "CI", name: "Côte d'Ivoire", cities: ["Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro", "Korhogo", "Daloa", "Man"] },
+  { code: "SN", name: "Sénégal", cities: [] },
+  { code: "CI", name: "Côte d'Ivoire", cities: [] },
   { code: "ML", name: "Mali", cities: ["Bamako", "Sikasso", "Kayes", "Mopti", "Ségou"] },
   { code: "BF", name: "Burkina Faso", cities: ["Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora"] },
-  { code: "GN", name: "Guinée", cities: ["Conakry", "Kankan", "Labé", "Nzérékoré", "Kindia"] },
+  { code: "GN", name: "Guinée", cities: [] },
   { code: "BJ", name: "Bénin", cities: ["Cotonou", "Porto-Novo", "Parakou", "Abomey-Calavi", "Abomey", "Bohicon", "Natitingou", "Djougou"] },
   { code: "TG", name: "Togo", cities: ["Lomé", "Sokodé", "Kara", "Kpalimé", "Atakpamé"] },
   { code: "NE", name: "Niger", cities: ["Niamey", "Zinder", "Maradi", "Agadez", "Tahoua"] },
-  { code: "GH", name: "Ghana", cities: ["Accra", "Kumasi", "Tamale", "Tema", "Cape Coast", "Takoradi"] },
+  { code: "GH", name: "Ghana", cities: [] },
   { code: "NG", name: "Nigeria", cities: ["Lagos", "Abuja", "Port Harcourt", "Kano", "Ibadan", "Benin City", "Enugu"] },
   { code: "MR", name: "Mauritanie", cities: ["Nouakchott", "Nouadhibou", "Rosso"] },
   { code: "SL", name: "Sierra Leone", cities: ["Freetown", "Bo", "Kenema"] },
@@ -44,10 +50,10 @@ export const COUNTRIES: Country[] = [
   { code: "GW", name: "Guinée-Bissau", cities: ["Bissau", "Bafatá"] },
   { code: "CV", name: "Cap-Vert", cities: ["Praia", "Mindelo"] },
   // Afrique centrale
-  { code: "CM", name: "Cameroun", cities: ["Douala", "Yaoundé", "Bafoussam", "Garoua", "Bamenda", "Maroua", "Kribi", "Limbé"] },
-  { code: "GA", name: "Gabon", cities: ["Libreville", "Port-Gentil", "Franceville", "Oyem", "Moanda", "Lambaréné", "Tchibanga", "Makokou"] },
-  { code: "CG", name: "Congo-Brazzaville", cities: ["Brazzaville", "Pointe-Noire", "Dolisie", "Nkayi"] },
-  { code: "CD", name: "RDC", cities: ["Kinshasa", "Lubumbashi", "Goma", "Kisangani", "Bukavu", "Mbuji-Mayi", "Kananga"] },
+  { code: "CM", name: "Cameroun", cities: [] },
+  { code: "GA", name: "Gabon", cities: [] },
+  { code: "CG", name: "Congo-Brazzaville", cities: [] },
+  { code: "CD", name: "RDC", cities: [] },
   { code: "CF", name: "Centrafrique", cities: ["Bangui", "Bambari", "Berbérati"] },
   { code: "TD", name: "Tchad", cities: ["N'Djamena", "Moundou", "Sarh", "Abéché"] },
   { code: "GQ", name: "Guinée équatoriale", cities: ["Malabo", "Bata", "Ebebiyín"] },
@@ -71,7 +77,7 @@ export const COUNTRIES: Country[] = [
   { code: "NA", name: "Namibie", cities: ["Windhoek", "Swakopmund", "Walvis Bay"] },
   { code: "MZ", name: "Mozambique", cities: ["Maputo", "Beira", "Nampula"] },
   { code: "MW", name: "Malawi", cities: ["Lilongwe", "Blantyre"] },
-  { code: "MA", name: "Maroc", cities: ["Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir"] },
+  { code: "MA", name: "Maroc", cities: [] },
   { code: "DZ", name: "Algérie", cities: ["Alger", "Oran", "Constantine", "Annaba"] },
   { code: "TN", name: "Tunisie", cities: ["Tunis", "Sfax", "Sousse", "Monastir"] },
   { code: "EG", name: "Égypte", cities: ["Le Caire", "Alexandrie", "Gizeh", "Louxor", "Charm el-Cheikh"] },
@@ -82,7 +88,7 @@ export const COUNTRIES: Country[] = [
   { code: "ER", name: "Érythrée", cities: ["Asmara"] },
   { code: "LY", name: "Libye", cities: ["Tripoli", "Benghazi"] },
   // Europe
-  { code: "FR", name: "France", cities: ["Paris", "Lyon", "Marseille", "Toulouse", "Lille", "Bordeaux", "Nantes"] },
+  { code: "FR", name: "France", cities: [] },
   { code: "BE", name: "Belgique", cities: ["Bruxelles", "Anvers", "Liège", "Gand"] },
   { code: "CH", name: "Suisse", cities: ["Genève", "Zurich", "Lausanne", "Berne"] },
   { code: "LU", name: "Luxembourg", cities: ["Luxembourg"] },
@@ -107,7 +113,7 @@ export const COUNTRIES: Country[] = [
   { code: "IN", name: "Inde", cities: ["Mumbai", "New Delhi", "Bangalore", "Hyderabad", "Chennai"] },
   { code: "PK", name: "Pakistan", cities: ["Karachi", "Lahore", "Islamabad"] },
   { code: "BD", name: "Bangladesh", cities: ["Dhaka", "Chittagong"] },
-  { code: "CN", name: "Chine", cities: ["Pékin", "Shanghai", "Guangzhou", "Shenzhen", "Hong Kong"] },
+  { code: "CN", name: "Chine", cities: [] },
   { code: "HK", name: "Hong Kong", cities: ["Hong Kong"] },
   { code: "JP", name: "Japon", cities: ["Tokyo", "Osaka", "Kyoto", "Yokohama"] },
   { code: "KR", name: "Corée du Sud", cities: ["Séoul", "Busan", "Incheon"] },
@@ -120,7 +126,13 @@ export const COUNTRIES: Country[] = [
   // Océanie
   { code: "AU", name: "Australie", cities: ["Sydney", "Melbourne", "Brisbane", "Perth"] },
   { code: "NZ", name: "Nouvelle-Zélande", cities: ["Auckland", "Wellington", "Christchurch"] },
-].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+];
+
+/** Corridors internationaux — n'importe quel pays vers n'importe quel autre. */
+export const COUNTRIES: Country[] = COUNTRIES_BASE.map((c) => ({
+  ...c,
+  cities: getConfiguredCities(c.code) ?? c.cities,
+})).sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
 export type CountryCode = string;
 
@@ -129,7 +141,11 @@ export function getCountryName(code: string) {
 }
 
 export function getCities(code: string) {
-  return COUNTRIES.find((c) => c.code === code)?.cities ?? [];
+  return (
+    getConfiguredCities(code) ??
+    COUNTRIES.find((c) => c.code === code)?.cities ??
+    []
+  );
 }
 
 export function findCountryByName(name: string) {

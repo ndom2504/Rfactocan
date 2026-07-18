@@ -1,28 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/components/locale-provider";
+import { paymentsForCountry } from "@/lib/countries";
+import { resolveCountryCode } from "@/lib/detect-country";
 import {
   loadUserIntent,
+  payoutProviderLabelKey,
   saveUserIntent,
   type PayoutChannel,
   type PayoutProvider,
 } from "@/lib/user-intent";
 
+const ALL_MOBILE_PROVIDERS: PayoutProvider[] = [
+  "mobile_money",
+  "orange_money",
+  "moov_money",
+  "mtn_momo",
+  "airtel_money",
+  "mpesa_vodacom",
+  "interac",
+];
+
 type Props = {
   /** When true, show bank Stripe CTA slot via children when channel is bank */
   bankSlot?: React.ReactNode;
+  /** ISO country code — filtre les opérateurs selon `lib/countries`. */
+  countryCode?: string | null;
 };
 
-export function PayoutChannelPicker({ bankSlot }: Props) {
+export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
   const { t } = useI18n();
   const [channel, setChannel] = useState<PayoutChannel>("bank");
   const [provider, setProvider] = useState<PayoutProvider>("mobile_money");
   const [identifier, setIdentifier] = useState("");
   const [ready, setReady] = useState(false);
+
+  const resolvedCode = useMemo(
+    () => resolveCountryCode(countryCode) ?? countryCode ?? null,
+    [countryCode]
+  );
+
+  const countryPayments = useMemo(
+    () => (resolvedCode ? paymentsForCountry(resolvedCode) : null),
+    [resolvedCode]
+  );
+
+  const mobileProviders = useMemo(() => {
+    if (!countryPayments) return ALL_MOBILE_PROVIDERS;
+    const allowed = ALL_MOBILE_PROVIDERS.filter((p) =>
+      countryPayments.includes(p)
+    );
+    return allowed.length > 0 ? allowed : ALL_MOBILE_PROVIDERS;
+  }, [countryPayments]);
+
+  const allowBank =
+    !countryPayments ||
+    countryPayments.includes("bank") ||
+    countryPayments.includes("stripe");
+
+  const allowMobile =
+    !countryPayments ||
+    mobileProviders.some((p) => countryPayments.includes(p));
+
+  function persist(partial: {
+    payoutChannel?: PayoutChannel;
+    payoutProvider?: PayoutProvider;
+    payoutIdentifier?: string;
+  }) {
+    saveUserIntent(partial);
+  }
 
   useEffect(() => {
     const prefs = loadUserIntent();
@@ -32,13 +82,24 @@ export function PayoutChannelPicker({ bankSlot }: Props) {
     setReady(true);
   }, []);
 
-  function persist(partial: {
-    payoutChannel?: PayoutChannel;
-    payoutProvider?: PayoutProvider;
-    payoutIdentifier?: string;
-  }) {
-    saveUserIntent(partial);
-  }
+  useEffect(() => {
+    if (!ready) return;
+    if (!mobileProviders.includes(provider)) {
+      const next = mobileProviders[0];
+      if (next) {
+        setProvider(next);
+        persist({ payoutProvider: next });
+      }
+    }
+    if (channel === "bank" && !allowBank && allowMobile) {
+      setChannel("mobile");
+      persist({ payoutChannel: "mobile" });
+    }
+    if (channel === "mobile" && !allowMobile && allowBank) {
+      setChannel("bank");
+      persist({ payoutChannel: "bank" });
+    }
+  }, [ready, mobileProviders, provider, channel, allowBank, allowMobile]);
 
   if (!ready) return null;
 
@@ -55,8 +116,8 @@ export function PayoutChannelPicker({ bankSlot }: Props) {
             persist({ payoutChannel: v });
           }}
         >
-          <option value="bank">{t("payout_bank")}</option>
-          <option value="mobile">{t("payout_mobile")}</option>
+          {allowBank && <option value="bank">{t("payout_bank")}</option>}
+          {allowMobile && <option value="mobile">{t("payout_mobile")}</option>}
         </Select>
         <p className="text-xs text-[var(--muted)]">{t("payout_channel_hint")}</p>
       </div>
@@ -76,12 +137,11 @@ export function PayoutChannelPicker({ bankSlot }: Props) {
                 persist({ payoutProvider: v });
               }}
             >
-              <option value="mobile_money">{t("payout_mobile_money")}</option>
-              <option value="orange_money">{t("payout_orange")}</option>
-              <option value="moov_money">{t("payout_moov")}</option>
-              <option value="mtn_momo">{t("payout_mtn")}</option>
-              <option value="airtel_money">{t("payout_airtel")}</option>
-              <option value="interac">{t("payout_interac")}</option>
+              {mobileProviders.map((p) => (
+                <option key={p} value={p}>
+                  {t(payoutProviderLabelKey(p))}
+                </option>
+              ))}
             </Select>
           </div>
           <div className="space-y-2">

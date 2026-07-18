@@ -11,6 +11,9 @@ import { Select } from "@/components/ui/select";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CountrySelect } from "@/components/country-select";
+import { CountrySuggest } from "@/components/country-suggest";
+import { resolveCountryCode } from "@/lib/detect-country";
+import { currencyForCountry } from "@/lib/currency";
 import { IntentPicker } from "@/components/intent-picker";
 import { PayoutChannelPicker } from "@/components/payout-channel-picker";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
@@ -284,6 +287,7 @@ function ProfileForm() {
           )}
 
           <PayoutChannelPicker
+            countryCode={resolveCountryCode(country)}
             bankSlot={
               user.kycStatus === "VERIFIED" ? (
                 <div className="space-y-2">
@@ -409,7 +413,17 @@ function ProfileForm() {
             />
           </div>
 
-          <CountrySelect value={country} onChange={setCountry} />
+          <div className="space-y-2">
+            <CountrySelect value={country} onChange={setCountry} />
+            <CountrySuggest
+              value={country}
+              onlyIfEmpty
+              onApply={(name, code) => {
+                setCountry(name);
+                setPreferredCurrency(currencyForCountry(code));
+              }}
+            />
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

@@ -43,6 +43,7 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
   const [region, setRegion] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
+  const [date, setDate] = useState("");
   const [results, setResults] = useState<RequestHit[]>([]);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState("");
@@ -83,6 +84,7 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
       if (region) params.set("region", region);
       if (country) params.set("country", country);
       if (city.trim()) params.set("city", city.trim());
+      if (date) params.set("date", date);
       const res = await fetch(`/api/requests/search?${params}`);
       const data = await res.json();
       setSearched(true);
@@ -107,7 +109,7 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
       )}
 
       <Card>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
             <Label htmlFor="request-q">{t("search")}</Label>
             <Input
@@ -184,6 +186,15 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
               />
             )}
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="request-date">{t("search_travel_date")}</Label>
+            <Input
+              id="request-date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button disabled={pending} onClick={runSearch}>
@@ -198,6 +209,7 @@ export function RequestSearch({ hideHeading = false }: { hideHeading?: boolean }
               setRegion("");
               setCountry("");
               setCity("");
+              setDate("");
               setResults([]);
               setSearched(false);
               setError("");

@@ -10,6 +10,8 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { PasswordInput } from "@/components/password-input";
 import { IntentPicker } from "@/components/intent-picker";
+import { CountrySelect } from "@/components/country-select";
+import { CountrySuggest } from "@/components/country-suggest";
 import { useI18n } from "@/components/locale-provider";
 import {
   intentToApiRole,
@@ -37,6 +39,7 @@ function RegisterForm() {
   );
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
   const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
+  const [country, setCountry] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -53,7 +56,13 @@ function RegisterForm() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName, email, password, role }),
+      body: JSON.stringify({
+        displayName,
+        email,
+        password,
+        role,
+        country: country || undefined,
+      }),
     });
     const data = await res.json();
     setLoading(false);
@@ -125,6 +134,14 @@ function RegisterForm() {
           onCarrierTypeChange={setCarrierType}
           onOrderIntentChange={setOrderIntent}
         />
+        <div className="space-y-2">
+          <CountrySelect value={country} onChange={setCountry} />
+          <CountrySuggest
+            value={country}
+            onApply={(name) => setCountry(name)}
+            onlyIfEmpty
+          />
+        </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? t("loading") : t("create_account")}

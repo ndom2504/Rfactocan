@@ -18,14 +18,26 @@ export async function GET(request: Request) {
   const country = (searchParams.get("country") ?? "").trim().toUpperCase();
   const city = (searchParams.get("city") ?? "").trim();
   const region = (searchParams.get("region") ?? "").trim();
+  const date = (searchParams.get("date") ?? "").trim();
   const limit = Math.min(Number(searchParams.get("limit") ?? 20) || 20, 50);
 
   const regionCodes = region ? countryCodesForRegion(region) : [];
+
+  let dateFilter: { gte: Date; lt: Date } | undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const start = new Date(`${date}T00:00:00.000Z`);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 1);
+    if (!Number.isNaN(start.getTime())) {
+      dateFilter = { gte: start, lt: end };
+    }
+  }
 
   const trips = await prisma.trip.findMany({
     where: {
       status: "OPEN",
       userId: { not: session.id },
+      ...(dateFilter ? { departAt: dateFilter } : {}),
       ...(country
         ? {
             OR: [{ toCountry: country }, { fromCountry: country }],

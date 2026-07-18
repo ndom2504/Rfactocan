@@ -6,6 +6,7 @@ import {
   setSessionCookie,
 } from "@/lib/auth";
 import { currencyForCountry } from "@/lib/currency";
+import { resolveCountryCode } from "@/lib/detect-country";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
         displayName: body.displayName,
         role: body.role,
         country: body.country,
-        preferredCurrency: currencyForCountry(body.country),
+        preferredCurrency: currencyForCountry(
+          resolveCountryCode(body.country) ?? body.country
+        ),
       },
     });
 
