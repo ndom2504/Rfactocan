@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { UserAvatar } from "@/components/user-avatar";
+import { ServicePhotosButton } from "@/components/service-photos-button";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 import {
   categoryLabel,
@@ -33,6 +35,7 @@ type Listing = {
     ratingAvg: number;
     ratingCount: number;
     verifiedAt: string | null;
+    avatarUrl?: string | null;
   };
 };
 
@@ -123,28 +126,27 @@ export default function ServiceListingDetailPage() {
           </p>
         )}
 
-        {listing.photos?.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {listing.photos.map((url) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={url}
-                src={url}
-                alt=""
-                className="h-36 w-full rounded-md object-cover"
-              />
-            ))}
+        {(listing.photos?.length ?? 0) > 0 && (
+          <div className="mt-4">
+            <ServicePhotosButton photos={listing.photos} />
           </div>
         )}
 
-        <div className="mt-6 border-t border-[var(--border)] pt-4">
-          <p className="font-medium">{listing.user.displayName}</p>
-          <p className="text-sm text-[var(--muted)]">
-            {listing.user.ratingCount
-              ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
-              : t("services_no_rating")}
-            {listing.user.verifiedAt ? ` · ${t("verified")}` : ""}
-          </p>
+        <div className="mt-6 flex items-center gap-3 border-t border-[var(--border)] pt-4">
+          <UserAvatar
+            name={listing.user.displayName}
+            avatarUrl={listing.user.avatarUrl}
+            size="lg"
+          />
+          <div>
+            <p className="font-medium">{listing.user.displayName}</p>
+            <p className="text-sm text-[var(--muted)]">
+              {listing.user.ratingCount
+                ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
+                : t("services_no_rating")}
+              {listing.user.verifiedAt ? ` · ${t("verified")}` : ""}
+            </p>
+          </div>
         </div>
 
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}

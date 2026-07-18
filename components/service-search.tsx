@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/locale-provider";
+import { UserAvatar } from "@/components/user-avatar";
+import { ServicePhotosButton } from "@/components/service-photos-button";
 import { categoryLabel, serviceTypeLabel } from "@/lib/services-catalog";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 
@@ -21,7 +23,13 @@ type ServiceHit = {
   priceAmount: number | null;
   priceUnit: string;
   currency: string;
-  user?: { displayName: string; ratingAvg: number; ratingCount: number };
+  photos?: string[];
+  user?: {
+    displayName: string;
+    ratingAvg: number;
+    ratingCount: number;
+    avatarUrl?: string | null;
+  };
 };
 
 type Props = {
@@ -136,22 +144,41 @@ export function ServiceSearch({ hideHeading = false, plain = false }: Props) {
           {results.map((item) => (
             <Link key={item.id} href={`/services/listing/${item.id}`}>
               <Card className="mb-2 transition hover:border-[var(--accent)]">
-                <CardTitle className="text-base">{item.title}</CardTitle>
-                <CardDescription>
-                  {serviceTypeLabel(item.category, item.serviceType, locale)} ·{" "}
-                  {categoryLabel(item.category, locale)} · {item.city},{" "}
-                  {item.country}
-                  {item.priceAmount != null && (
-                    <>
-                      {" · "}
-                      {formatMoney(
-                        item.priceAmount,
-                        (item.currency as MoneyCurrency) || "CAD",
-                        locale === "en" ? "en-CA" : "fr-CA"
+                <div className="flex items-start gap-3">
+                  <UserAvatar
+                    name={item.user?.displayName ?? "?"}
+                    avatarUrl={item.user?.avatarUrl}
+                    size="md"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base">{item.title}</CardTitle>
+                    <CardDescription>
+                      {serviceTypeLabel(item.category, item.serviceType, locale)} ·{" "}
+                      {categoryLabel(item.category, locale)} · {item.city},{" "}
+                      {item.country}
+                      {item.priceAmount != null && (
+                        <>
+                          {" · "}
+                          {formatMoney(
+                            item.priceAmount,
+                            (item.currency as MoneyCurrency) || "CAD",
+                            locale === "en" ? "en-CA" : "fr-CA"
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </CardDescription>
+                    </CardDescription>
+                    {item.user?.displayName && (
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {item.user.displayName}
+                      </p>
+                    )}
+                    {(item.photos?.length ?? 0) > 0 && (
+                      <div className="mt-2">
+                        <ServicePhotosButton photos={item.photos ?? []} />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </Card>
             </Link>
           ))}

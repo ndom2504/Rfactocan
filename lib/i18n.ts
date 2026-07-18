@@ -294,6 +294,7 @@ const dict = {
     vision_goal:
       "Objectif : une place de marché de confiance — KYC, paiements sécurisés, messagerie et suivi.",
     close: "Fermer",
+    view_photos: "Voir photos",
     section_airbnb_title: "L'Airbnb du bagage international",
     section_airbnb_text:
       "Une marketplace P2P : comme Uber connecte conducteurs et passagers, Rfacto connecte l'espace bagage des livreurs aux besoins d'envoi et de réception.",
@@ -869,6 +870,7 @@ const dict = {
     vision_goal:
       "Goal: a trusted marketplace — KYC, secure payments, messaging and tracking.",
     close: "Close",
+    view_photos: "View photos",
     section_airbnb_title: "The Airbnb of international baggage",
     section_airbnb_text:
       "A P2P marketplace: like Uber connects drivers and riders, Rfacto connects carriers' spare space with send and receive needs.",
