@@ -11,6 +11,7 @@ export type PayoutProvider =
   | "mobile_money"
   | "orange_money"
   | "moov_money"
+  | "mtn_momo"
   | "airtel_money"
   | "interac";
 
@@ -74,6 +75,8 @@ export function payoutProviderLabelKey(provider: PayoutProvider): string {
       return "payout_orange";
     case "moov_money":
       return "payout_moov";
+    case "mtn_momo":
+      return "payout_mtn";
     case "airtel_money":
       return "payout_airtel";
     case "interac":

@@ -20,22 +20,22 @@ export const REGIONS = [
   {
     id: "west_africa",
     name: "Afrique de l'Ouest",
-    codes: ["SN", "CI", "ML", "BF", "GN", "BJ", "TG", "NE", "GH", "NG", "MR"],
+    codes: ["SN", "CI", "ML", "BF", "GN", "BJ", "TG", "NE", "GH", "NG", "MR", "SL", "LR", "GM", "GW", "CV"],
   },
   {
     id: "central_africa",
     name: "Afrique centrale",
-    codes: ["CM", "GA", "CG", "CD", "CF", "TD", "GQ"],
+    codes: ["CM", "GA", "CG", "CD", "CF", "TD", "GQ", "ST", "AO"],
   },
   {
     id: "east_southern_africa",
     name: "Afrique de l'Est & Australe",
-    codes: ["KE", "TZ", "UG", "ET", "RW", "BI", "MG", "MU", "RE", "ZA"],
+    codes: ["KE", "TZ", "UG", "ET", "RW", "BI", "MG", "MU", "SC", "RE", "ZA", "ZW", "ZM", "BW", "NA", "MZ", "MW", "DJ", "ER", "SO", "SS"],
   },
   {
     id: "north_africa",
     name: "Afrique du Nord",
-    codes: ["MA", "DZ", "TN", "EG"],
+    codes: ["MA", "DZ", "TN", "EG", "LY", "SD"],
   },
   {
     id: "europe",
