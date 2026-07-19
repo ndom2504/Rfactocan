@@ -14,6 +14,15 @@ function fromAddress() {
   );
 }
 
+/** Public helper so auth routes can show which sender is configured. */
+export function getEmailFromAddress() {
+  return fromAddress();
+}
+
+export function isUsingResendTestSender() {
+  return fromAddress().toLowerCase().includes("resend.dev");
+}
+
 export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY?.trim());
 }

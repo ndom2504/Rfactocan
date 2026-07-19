@@ -1,6 +1,6 @@
 import { createHash, randomInt } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
-import { emailLoginOtp, isEmailConfigured } from "@/lib/email";
+import { emailLoginOtp, getEmailFromAddress, isEmailConfigured, isUsingResendTestSender } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 
@@ -53,7 +53,10 @@ export async function verifyMfaToken(token: string): Promise<string | null> {
  */
 export async function issueLoginOtp(
   user: Pick<User, "id" | "email" | "displayName">
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true }
+  | { ok: false; error: string; detail?: string; from?: string }
+> {
   if (!isEmailConfigured()) {
     return { ok: false, error: "EMAIL_NOT_CONFIGURED" };
   }
@@ -81,14 +84,26 @@ export async function issueLoginOtp(
     minutes: MFA_MINUTES,
   });
 
+  const from = getEmailFromAddress();
+
   if (!result.ok) {
     if ("skipped" in result && result.skipped) {
-      return { ok: false, error: "EMAIL_NOT_CONFIGURED" };
+      return { ok: false, error: "EMAIL_NOT_CONFIGURED", from };
     }
     if ("code" in result && result.code === "DOMAIN_NOT_VERIFIED") {
-      return { ok: false, error: "DOMAIN_NOT_VERIFIED" };
+      return {
+        ok: false,
+        error: "DOMAIN_NOT_VERIFIED",
+        detail: result.error,
+        from,
+      };
     }
-    return { ok: false, error: "EMAIL_SEND_FAILED" };
+    return {
+      ok: false,
+      error: "EMAIL_SEND_FAILED",
+      detail: "error" in result ? result.error : undefined,
+      from,
+    };
   }
 
   return { ok: true };
@@ -103,10 +118,28 @@ export async function startEmailOtpChallenge(
 ): Promise<
   | { ok: true; mfaToken: string; emailHint: string }
   | { ok: false; skipped: true }
-  | { ok: false; skipped: false; error: string }
+  | {
+      ok: false;
+      skipped: false;
+      error: string;
+      detail?: string;
+      from?: string;
+    }
 > {
   if (!isEmailConfigured()) {
     return { ok: false, skipped: true };
+  }
+
+  // Fail fast with a clear signal if still on Resend sandbox sender.
+  if (isUsingResendTestSender()) {
+    return {
+      ok: false,
+      skipped: false,
+      error: "DOMAIN_NOT_VERIFIED",
+      detail:
+        "EMAIL_FROM utilise encore onboarding@resend.dev. Sur Vercel, mettez Rfacto <noreply@rfacto.com> (Production) puis Redeploy.",
+      from: getEmailFromAddress(),
+    };
   }
 
   const issued = await issueLoginOtp(user);
@@ -115,6 +148,8 @@ export async function startEmailOtpChallenge(
       ok: false,
       skipped: false,
       error: issued.error,
+      detail: issued.detail,
+      from: issued.from,
     };
   }
 

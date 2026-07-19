@@ -79,16 +79,23 @@ export async function GET(request: Request) {
     }
 
     if (!challenge.skipped) {
-      return NextResponse.redirect(
-        new URL(
-          `/login?error=${
-            challenge.error === "DOMAIN_NOT_VERIFIED"
-              ? "otp_domain_not_verified"
-              : "otp_send_failed"
-          }`,
-          appUrl
-        )
+      const loginUrl = new URL("/login", appUrl);
+      loginUrl.searchParams.set(
+        "error",
+        challenge.error === "DOMAIN_NOT_VERIFIED"
+          ? "otp_domain_not_verified"
+          : "otp_send_failed"
       );
+      if (challenge.from) {
+        loginUrl.searchParams.set("from", challenge.from);
+      }
+      if (challenge.detail) {
+        loginUrl.searchParams.set(
+          "detail",
+          challenge.detail.slice(0, 180)
+        );
+      }
+      return NextResponse.redirect(loginUrl);
     }
 
     console.warn(

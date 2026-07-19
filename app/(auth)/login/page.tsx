@@ -55,16 +55,22 @@ function LoginForm() {
   const params = useSearchParams();
   const { t, locale } = useI18n();
   const oauthError = params.get("error");
+  const errorDetail = params.get("detail");
+  const errorFrom = params.get("from");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [emailHint, setEmailHint] = useState("");
-  const [error, setError] = useState(
-    oauthError
-      ? ERROR_MESSAGES[oauthError]?.[locale] || oauthError
-      : ""
-  );
+  const [error, setError] = useState(() => {
+    if (!oauthError) return "";
+    const base =
+      ERROR_MESSAGES[oauthError]?.[locale] || oauthError;
+    const extras = [errorFrom ? `From: ${errorFrom}` : "", errorDetail || ""]
+      .filter(Boolean)
+      .join(" — ");
+    return extras ? `${base} (${extras})` : base;
+  });
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [info, setInfo] = useState("");

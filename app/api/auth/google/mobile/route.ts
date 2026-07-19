@@ -71,9 +71,19 @@ export async function POST(request: Request) {
     if (!challenge.skipped) {
       const message =
         challenge.error === "DOMAIN_NOT_VERIFIED"
-          ? "Vérification indisponible pour le moment : le domaine d'envoi email n'est pas encore configuré pour tous les comptes. Contactez le support."
-          : "Impossible d'envoyer le code de vérification. Réessayez dans un instant.";
-      return NextResponse.json({ error: message }, { status: 502 });
+          ? challenge.detail ||
+            "Vérification indisponible : EMAIL_FROM doit utiliser votre domaine Resend vérifié."
+          : challenge.detail
+            ? `Impossible d'envoyer le code (${challenge.from || "from?"}): ${challenge.detail}`
+            : "Impossible d'envoyer le code de vérification. Réessayez dans un instant.";
+      return NextResponse.json(
+        {
+          error: message,
+          from: challenge.from,
+          detail: challenge.detail,
+        },
+        { status: 502 }
+      );
     }
 
     console.warn(
