@@ -89,15 +89,16 @@ export function GuidedTour() {
 
   useEffect(() => {
     if (!active || !step) return;
+    const current = step;
     let cancelled = false;
 
     async function place() {
       setReady(false);
-      if (pathname !== step.route) {
-        router.push(step.route);
+      if (pathname !== current.route) {
+        router.push(current.route);
         return;
       }
-      const el = await waitForSelector(step.selector);
+      const el = await waitForSelector(current.selector);
       if (cancelled) return;
       if (!el) {
         // Skip missing targets (empty lists, etc.)
@@ -127,9 +128,10 @@ export function GuidedTour() {
 
   useLayoutEffect(() => {
     if (!active || !step || pathname !== step.route) return;
+    const current = step;
 
     function update() {
-      const el = findVisible(step.selector);
+      const el = findVisible(current.selector);
       if (!el) return;
       const r = el.getBoundingClientRect();
       setRect({
