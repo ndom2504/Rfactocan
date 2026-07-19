@@ -8,6 +8,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { LocaleProvider } from "@/components/locale-provider";
 import { ProfileMenu } from "@/components/profile-menu";
+import { PublishMenu } from "@/components/publish-menu";
 import { Badge } from "@/components/ui/badge";
 
 export default async function AppLayout({
@@ -21,9 +22,6 @@ export default async function AppLayout({
 
   const links = [
     { href: "/dashboard", label: t(locale, "nav_dashboard") },
-    { href: "/services", label: t(locale, "nav_services") },
-    { href: "/trips", label: t(locale, "nav_trips") },
-    { href: "/requests", label: t(locale, "nav_requests") },
     { href: "/bookings", label: t(locale, "nav_bookings") },
     { href: "/messages", label: t(locale, "nav_messages") },
   ];
@@ -62,6 +60,7 @@ export default async function AppLayout({
               </nav>
             </div>
             <div className="flex items-center gap-3">
+              <PublishMenu />
               <LocaleToggle locale={locale} />
               <NotificationBell locale={locale} />
               {user.verifiedAt && (

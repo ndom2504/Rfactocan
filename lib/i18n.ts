@@ -7,9 +7,10 @@ const dict = {
   fr: {
     // Nav
     nav_dashboard: "Tableau de bord",
-    nav_trips: "Livrer",
+    nav_trips: "Voyager",
     nav_requests: "Commander",
     nav_services: "Services",
+    nav_publish: "Publier",
     nav_bookings: "Réservations",
     nav_messages: "Messages",
     nav_profile: "Profil",
@@ -350,7 +351,7 @@ const dict = {
     reset_token_missing: "Lien invalide. Demandez un nouveau reset.",
 
     // Trips
-    trips_title: "Livrer",
+    trips_title: "Voyager",
     trips_subtitle:
       "Voyageurs et transporteurs (avion, mer, rail, route) sur tous les corridors.",
     no_trips: "Aucune livraison publiée.",
@@ -589,9 +590,10 @@ const dict = {
   },
   en: {
     nav_dashboard: "Dashboard",
-    nav_trips: "Deliver",
+    nav_trips: "Travel",
     nav_requests: "Order",
     nav_services: "Services",
+    nav_publish: "Publish",
     nav_bookings: "Bookings",
     nav_messages: "Messages",
     nav_profile: "Profile",
@@ -925,7 +927,7 @@ const dict = {
     reset_password_mismatch: "Passwords do not match.",
     reset_token_missing: "Invalid link. Request a new reset.",
 
-    trips_title: "Deliver",
+    trips_title: "Travel",
     trips_subtitle: "Travelers and carriers (air, sea, rail, road) on all corridors.",
     no_trips: "No deliveries published.",
     new_trip_title: "Offer a delivery",
