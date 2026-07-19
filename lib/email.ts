@@ -8,10 +8,28 @@ function getResend() {
 }
 
 function fromAddress() {
-  return (
+  const raw =
     process.env.EMAIL_FROM?.trim() ||
-    "Rfacto <onboarding@resend.dev>"
-  );
+    "Rfacto <onboarding@resend.dev>";
+  return normalizeEmailFrom(raw);
+}
+
+/**
+ * Resend requires `email@domain` or `Name <email@domain>`.
+ * Common Vercel mistake: missing closing `>`.
+ */
+export function normalizeEmailFrom(value: string) {
+  const v = value.trim().replace(/^["']|["']$/g, "");
+  // Already plain email
+  if (/^[^\s<>]+@[^\s<>]+$/.test(v)) return v;
+  // Name <email> with optional missing >
+  const m = v.match(/^(.+?)\s*<\s*([^<>@\s]+@[^<>@\s]+)\s*>?$/);
+  if (m) {
+    const name = m[1].trim();
+    const email = m[2].trim();
+    return name ? `${name} <${email}>` : email;
+  }
+  return v;
 }
 
 /** Public helper so auth routes can show which sender is configured. */
