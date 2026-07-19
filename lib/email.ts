@@ -21,7 +21,26 @@ export function isEmailConfigured() {
 export type SendEmailResult =
   | { ok: true; id: string }
   | { ok: false; skipped: true; reason: string }
-  | { ok: false; skipped: false; error: string };
+  | { ok: false; skipped: false; error: string; code?: "DOMAIN_NOT_VERIFIED" };
+
+function classifyResendError(message: string): {
+  error: string;
+  code?: "DOMAIN_NOT_VERIFIED";
+} {
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("only send testing emails to your own") ||
+    lower.includes("verify a domain") ||
+    (lower.includes("resend.dev") && lower.includes("domain"))
+  ) {
+    return {
+      error:
+        "L'envoi d'emails aux autres comptes nécessite un domaine vérifié sur Resend (pas onboarding@resend.dev).",
+      code: "DOMAIN_NOT_VERIFIED",
+    };
+  }
+  return { error: message };
+}
 
 async function sendEmail(opts: {
   to: string;
@@ -51,12 +70,19 @@ async function sendEmail(opts: {
     });
 
     if (error) {
-      const message =
+      const raw =
         (error as { message?: string }).message ||
         (error as { error?: string }).error ||
         JSON.stringify(error);
-      console.error("[email resend error]", opts.subject, opts.to, message);
-      return { ok: false, skipped: false, error: message };
+      const classified = classifyResendError(raw);
+      console.error(
+        "[email resend error]",
+        opts.subject,
+        opts.to,
+        classified.error,
+        { from: fromAddress() }
+      );
+      return { ok: false, skipped: false, ...classified };
     }
 
     const id = data?.id ?? "unknown";
@@ -65,8 +91,9 @@ async function sendEmail(opts: {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Erreur réseau Resend";
-    console.error("[email exception]", opts.subject, message);
-    return { ok: false, skipped: false, error: message };
+    const classified = classifyResendError(message);
+    console.error("[email exception]", opts.subject, classified.error);
+    return { ok: false, skipped: false, ...classified };
   }
 }
 

@@ -85,6 +85,9 @@ export async function issueLoginOtp(
     if ("skipped" in result && result.skipped) {
       return { ok: false, error: "EMAIL_NOT_CONFIGURED" };
     }
+    if ("code" in result && result.code === "DOMAIN_NOT_VERIFIED") {
+      return { ok: false, error: "DOMAIN_NOT_VERIFIED" };
+    }
     return { ok: false, error: "EMAIL_SEND_FAILED" };
   }
 

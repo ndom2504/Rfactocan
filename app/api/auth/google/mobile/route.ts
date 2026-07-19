@@ -69,13 +69,11 @@ export async function POST(request: Request) {
     }
 
     if (!challenge.skipped) {
-      return NextResponse.json(
-        {
-          error:
-            "Impossible d'envoyer le code de vérification. Réessayez dans un instant.",
-        },
-        { status: 502 }
-      );
+      const message =
+        challenge.error === "DOMAIN_NOT_VERIFIED"
+          ? "Vérification indisponible pour le moment : le domaine d'envoi email n'est pas encore configuré pour tous les comptes. Contactez le support."
+          : "Impossible d'envoyer le code de vérification. Réessayez dans un instant.";
+      return NextResponse.json({ error: message }, { status: 502 });
     }
 
     console.warn(

@@ -44,6 +44,10 @@ const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
     fr: "Impossible d'envoyer le code de vérification. Réessayez.",
     en: "Could not send the verification code. Try again.",
   },
+  otp_domain_not_verified: {
+    fr: "Vérification indisponible pour les autres comptes : configurez un domaine vérifié sur Resend (EMAIL_FROM), pas onboarding@resend.dev.",
+    en: "Verification unavailable for other accounts: verify a domain on Resend and set EMAIL_FROM (not onboarding@resend.dev).",
+  },
 };
 
 function LoginForm() {

@@ -80,7 +80,14 @@ export async function GET(request: Request) {
 
     if (!challenge.skipped) {
       return NextResponse.redirect(
-        new URL("/login?error=otp_send_failed", appUrl)
+        new URL(
+          `/login?error=${
+            challenge.error === "DOMAIN_NOT_VERIFIED"
+              ? "otp_domain_not_verified"
+              : "otp_send_failed"
+          }`,
+          appUrl
+        )
       );
     }
 
