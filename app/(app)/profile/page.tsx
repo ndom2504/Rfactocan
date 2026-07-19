@@ -321,11 +321,16 @@ function ProfileForm() {
       <Card>
         <CardTitle>{t("liability_title")}</CardTitle>
         <CardDescription>{t("liability_compact")}</CardDescription>
-        <Link href="/responsibility" className="mt-4 block">
-          <Button variant="outline" className="w-full">
-            {t("liability_learn_more")}
-          </Button>
-        </Link>
+        <div className="mt-4 space-y-2">
+          <Link href="/trust" className="block">
+            <Button className="w-full">{t("trust_program_cta")}</Button>
+          </Link>
+          <Link href="/responsibility" className="block">
+            <Button variant="outline" className="w-full">
+              {t("liability_learn_more")}
+            </Button>
+          </Link>
+        </div>
       </Card>
 
       <Card>

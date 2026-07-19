@@ -40,7 +40,7 @@ export default async function HomePage() {
             {t(locale, "hero_tagline")}
           </p>
 
-          <div className="mt-10 flex w-full max-w-sm flex-col items-center gap-4">
+          <div className="mt-10 flex w-full max-w-sm flex-col items-center gap-3">
             <Link href={startHref} className="w-full">
               <Button
                 size="lg"
@@ -50,6 +50,15 @@ export default async function HomePage() {
               </Button>
             </Link>
             <HomeVisionButton />
+            <Link href="/trust" className="w-full">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 w-full border-white/45 bg-transparent text-sm font-medium text-white/95 hover:bg-white/10"
+              >
+                {t(locale, "trust_program_cta")}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

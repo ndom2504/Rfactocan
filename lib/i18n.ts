@@ -272,6 +272,64 @@ const dict = {
       "En utilisant Rfacto, vous acceptez que la plateforme soit un intermédiaire technologique. Toute responsabilité liée au colis (contenu, emballage, perte, vol, dommages, retards, douanes) incombe aux utilisateurs concernés, dans le respect des lois applicables.",
     back_home: "Retour à l'accueil",
     nav_responsibility: "Responsabilité",
+    trust_program_cta: "Notre programme de crédibilité et confiance",
+    trust_program_title: "Programme de crédibilité et confiance",
+    trust_program_lead:
+      "Ce que Rfacto met déjà en place pour sécuriser vos échanges — et ce qui arrive ensuite. Transparent, adapté à notre rôle de place de marché.",
+    trust_status_live: "Disponible",
+    trust_status_partial: "En place (partiel)",
+    trust_status_soon: "Bientôt",
+    trust_s1_title: "1. Assurance de colis",
+    trust_s1_lead:
+      "Aujourd’hui, Rfacto n’inclut pas d’assurance automatique sur le contenu du colis. Nous construisons des options pour mieux protéger les envois de valeur.",
+    trust_s1_i1_title: "Valeur déclarée + prime",
+    trust_s1_i1_text:
+      "À venir : l’expéditeur déclare une valeur et paie une petite prime ; en cas de perte ou dommage prouvé, un remboursement selon les conditions.",
+    trust_s1_i2_title: "Partenariat assureur",
+    trust_s1_i2_text:
+      "À venir : couverture via un assureur partenaire (local ou international), intégrée au parcours de réservation.",
+    trust_s1_i3_title: "Option premium (objets sensibles)",
+    trust_s1_i3_text:
+      "À venir : suivi renforcé et garantie étendue pour colis fragiles ou de valeur — en complément des preuves déjà disponibles dans l’app.",
+    trust_s2_title: "2. Sécurisation des paiements",
+    trust_s2_lead:
+      "Le cœur actuel de la confiance Rfacto : identité, argent bloqué jusqu’à livraison, et réputation visible.",
+    trust_s2_i1_title: "Paiement en séquestre",
+    trust_s2_i1_text:
+      "Disponible : les fonds sont bloqués à l’acceptation / paiement, puis versés au livreur seulement après confirmation de livraison.",
+    trust_s2_i2_title: "Vérification d’identité (KYC)",
+    trust_s2_i2_text:
+      "Disponible : pour accepter des colis et recevoir des gains, le livreur vérifie son identité (Stripe Identity) et configure son canal de paiement.",
+    trust_s2_i3_title: "Notation et historique",
+    trust_s2_i3_text:
+      "Disponible : notes et historique de livraisons pour choisir des profils fiables et renforcer la transparence.",
+    trust_s3_title: "3. Suivi et preuve de livraison",
+    trust_s3_lead:
+      "Chaque réservation a une timeline et des preuves de remise — pour limiter les « il a dit / elle a dit ».",
+    trust_s3_i1_title: "QR / code de remise",
+    trust_s3_i1_text:
+      "Disponible : l’expéditeur génère un QR (ou code) ; le livreur le confirme pour passer le statut à « remis ».",
+    trust_s3_i2_title: "Preuves dans la messagerie",
+    trust_s3_i2_text:
+      "Disponible : photos et pièces jointes liées à la réservation (jpeg, png, webp, gif) pour documenter l’état du colis.",
+    trust_s3_i3_title: "Position pendant le transit",
+    trust_s3_i3_text:
+      "Partiel : le livreur peut partager sa position GPS pendant le transit. Un suivi premium temps réel arrivera avec les options assurance.",
+    trust_s4_title: "4. Garantie de service",
+    trust_s4_lead:
+      "Rfacto reste un intermédiaire technologique. Nous sécurisons la relation et traitons les incidents — sans remplacer l’assureur ni le transporteur.",
+    trust_s4_i1_title: "Programme Confiance Rfacto",
+    trust_s4_i1_text:
+      "En place : litiges dans l’app, équipe notifiée, médiation et règles claires sur ce que la plateforme fait / ne fait pas.",
+    trust_s4_i2_title: "Assistance incidents",
+    trust_s4_i2_text:
+      "En place : ouverture de litige depuis la réservation + ambassadeurs qualité sur le terrain. Pas de hotline 24/7 pour l’instant — réponses via l’app et le support.",
+    trust_s4_i3_title: "Charte de responsabilité",
+    trust_s4_i3_text:
+      "Disponible : politique publique (rôle de la plateforme, devoirs des utilisateurs, douane, contenus autorisés).",
+    trust_program_liability_link: "Lire la politique de responsabilité",
+    trust_program_footnote:
+      "Les volets marqués « Bientôt » sont en préparation. Nous n’affichons comme disponible que ce qui fonctionne déjà dans l’application.",
 
     // Marketing
     hero_tagline:
@@ -901,6 +959,64 @@ const dict = {
       "By using Rfacto, you accept that the platform is a technology intermediary. Any liability related to the parcel (content, packaging, loss, theft, damage, delays, customs) rests with the users involved, subject to applicable law.",
     back_home: "Back to home",
     nav_responsibility: "Responsibility",
+    trust_program_cta: "Our credibility & trust program",
+    trust_program_title: "Credibility & trust program",
+    trust_program_lead:
+      "What Rfacto already does to secure your exchanges — and what comes next. Transparent, matched to our role as a marketplace.",
+    trust_status_live: "Available",
+    trust_status_partial: "Live (partial)",
+    trust_status_soon: "Coming soon",
+    trust_s1_title: "1. Parcel insurance",
+    trust_s1_lead:
+      "Today Rfacto does not include automatic insurance on parcel contents. We are building options to better protect higher-value shipments.",
+    trust_s1_i1_title: "Declared value + premium",
+    trust_s1_i1_text:
+      "Coming soon: the sender declares a value and pays a small premium; proven loss or damage can be reimbursed under the policy terms.",
+    trust_s1_i2_title: "Insurer partnership",
+    trust_s1_i2_text:
+      "Coming soon: coverage via a partner insurer (local or international), built into the booking flow.",
+    trust_s1_i3_title: "Premium option (sensitive items)",
+    trust_s1_i3_text:
+      "Coming soon: stronger tracking and extended cover for fragile or valuable parcels — on top of proof tools already in the app.",
+    trust_s2_title: "2. Payment security",
+    trust_s2_lead:
+      "The core of Rfacto trust today: identity, funds held until delivery, and visible reputation.",
+    trust_s2_i1_title: "Escrow payment",
+    trust_s2_i1_text:
+      "Available: funds are held after payment, then released to the traveler only after delivery confirmation.",
+    trust_s2_i2_title: "Identity verification (KYC)",
+    trust_s2_i2_text:
+      "Available: to accept parcels and receive payouts, travelers verify identity (Stripe Identity) and set up their payout channel.",
+    trust_s2_i3_title: "Ratings and history",
+    trust_s2_i3_text:
+      "Available: ratings and delivery history help you choose reliable profiles and keep things transparent.",
+    trust_s3_title: "3. Tracking & delivery proof",
+    trust_s3_lead:
+      "Every booking has a timeline and handover proofs — to reduce he-said / she-said disputes.",
+    trust_s3_i1_title: "Handover QR / code",
+    trust_s3_i1_text:
+      "Available: the sender generates a QR (or code); the traveler confirms it to mark the parcel as handed over.",
+    trust_s3_i2_title: "Proof in messaging",
+    trust_s3_i2_text:
+      "Available: photos and attachments tied to the booking (jpeg, png, webp, gif) to document parcel condition.",
+    trust_s3_i3_title: "Location during transit",
+    trust_s3_i3_text:
+      "Partial: the traveler can share GPS location during transit. Premium real-time tracking will come with insurance options.",
+    trust_s4_title: "4. Service guarantee",
+    trust_s4_lead:
+      "Rfacto remains a technology intermediary. We secure the relationship and handle incidents — we do not replace an insurer or a carrier.",
+    trust_s4_i1_title: "Rfacto Trust program",
+    trust_s4_i1_text:
+      "Live: in-app disputes, team notified, mediation, and clear rules on what the platform does / does not do.",
+    trust_s4_i2_title: "Incident assistance",
+    trust_s4_i2_text:
+      "Live: open a dispute from the booking + quality ambassadors on the ground. No 24/7 hotline yet — support via the app.",
+    trust_s4_i3_title: "Responsibility charter",
+    trust_s4_i3_text:
+      "Available: public policy (platform role, user duties, customs, allowed goods).",
+    trust_program_liability_link: "Read the responsibility policy",
+    trust_program_footnote:
+      "Items marked “Coming soon” are in preparation. We only label as available what already works in the app.",
 
     hero_tagline:
       "Travelers, services and clients — connected in one network.",
