@@ -10,6 +10,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { PasswordInput } from "@/components/password-input";
 import { useI18n } from "@/components/locale-provider";
+import { isTourDone, markTourPendingIfNeeded } from "@/lib/guided-tour";
 
 const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
   google_not_configured: {
@@ -88,9 +89,13 @@ function LoginForm() {
   }, [params, t]);
 
   function goNext() {
+    markTourPendingIfNeeded();
     const next = params.get("next");
-    const safeNext =
+    let safeNext =
       next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    if (!isTourDone() && safeNext === "/dashboard") {
+      safeNext = "/dashboard?tour=1";
+    }
     router.push(safeNext);
     router.refresh();
   }

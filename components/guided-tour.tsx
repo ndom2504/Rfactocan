@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import {
   TOUR_START_EVENT,
   TOUR_STEPS,
+  consumeTourPending,
+  hasTourPending,
   isTourDone,
   markTourDone,
   type TourStep,
@@ -24,7 +26,7 @@ function findVisible(selector: string): Element | null {
   );
 }
 
-function waitForSelector(selector: string, timeoutMs = 4000) {
+function waitForSelector(selector: string, timeoutMs = 5000) {
   return new Promise<Element | null>((resolve) => {
     const existing = findVisible(selector);
     if (existing) {
@@ -51,6 +53,7 @@ export function GuidedTour() {
   const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [active, setActive] = useState(false);
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
@@ -80,12 +83,42 @@ export function GuidedTour() {
     return () => window.removeEventListener(TOUR_START_EVENT, onStart);
   }, []);
 
+  // Auto-start after first login (?tour=1, session pending) or first dashboard visit.
   useEffect(() => {
-    if (pathname !== "/dashboard") return;
-    if (isTourDone()) return;
-    const timer = window.setTimeout(() => start(), 600);
+    if (active) return;
+
+    const fromQuery = searchParams.get("tour") === "1";
+    const pending = hasTourPending();
+    // Never auto-restart if the user already finished/skipped the tour.
+    // Manual replay uses requestTourStart() → start() directly.
+    const shouldStart =
+      !isTourDone() &&
+      (fromQuery || pending || pathname === "/dashboard");
+
+    if (!shouldStart) {
+      if (fromQuery && pathname === "/dashboard") {
+        router.replace("/dashboard");
+      }
+      return;
+    }
+
+    if (pathname !== "/dashboard") {
+      router.replace("/dashboard?tour=1");
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (fromQuery || pending) {
+        consumeTourPending();
+      }
+      if (fromQuery) {
+        router.replace("/dashboard");
+      }
+      start();
+    }, 700);
+
     return () => window.clearTimeout(timer);
-  }, [pathname]);
+  }, [pathname, searchParams, active, router]);
 
   useEffect(() => {
     if (!active || !step) return;
@@ -101,7 +134,6 @@ export function GuidedTour() {
       const el = await waitForSelector(current.selector);
       if (cancelled) return;
       if (!el) {
-        // Skip missing targets (empty lists, etc.)
         if (index < TOUR_STEPS.length - 1) {
           setIndex((i) => i + 1);
         } else {
@@ -191,19 +223,10 @@ export function GuidedTour() {
         <div className="absolute inset-0 bg-black/45" />
       )}
 
-      {/* Click catcher outside tooltip */}
-      <button
-        type="button"
-        aria-label={t("tour_skip")}
-        className="absolute inset-0 z-[100] cursor-default"
-        onClick={finish}
-      />
-
       {ready && (
         <div
           className="absolute z-[101] w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl"
           style={{ top: tooltipTop, left: tooltipLeft }}
-          onClick={(e) => e.stopPropagation()}
         >
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--accent)]">
             {t("tour_label")} · {index + 1}/{TOUR_STEPS.length}

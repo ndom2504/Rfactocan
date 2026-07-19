@@ -13,6 +13,7 @@ import { IntentPicker } from "@/components/intent-picker";
 import { CountrySelect } from "@/components/country-select";
 import { CountrySuggest } from "@/components/country-suggest";
 import { useI18n } from "@/components/locale-provider";
+import { markTourPendingIfNeeded } from "@/lib/guided-tour";
 import {
   intentToApiRole,
   saveUserIntent,
@@ -70,7 +71,8 @@ function RegisterForm() {
       setError(data.error ?? "Inscription impossible");
       return;
     }
-    router.push("/dashboard");
+    markTourPendingIfNeeded();
+    router.push("/dashboard?tour=1");
     router.refresh();
   }
 

@@ -74,7 +74,7 @@ export async function GET(request: Request) {
       loginUrl.searchParams.set("mfa", "1");
       loginUrl.searchParams.set("mfaToken", challenge.mfaToken);
       loginUrl.searchParams.set("emailHint", challenge.emailHint);
-      loginUrl.searchParams.set("next", next);
+      loginUrl.searchParams.set("next", next === "/dashboard" ? "/dashboard?tour=1" : next);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -109,7 +109,11 @@ export async function GET(request: Request) {
     });
     await setSessionCookie(token);
 
-    return NextResponse.redirect(new URL(next, appUrl));
+    const dest =
+      next === "/dashboard" || next.startsWith("/dashboard?")
+        ? "/dashboard?tour=1"
+        : next;
+    return NextResponse.redirect(new URL(dest, appUrl));
   } catch (error) {
     console.error("Google OAuth callback error:", error);
     return NextResponse.redirect(

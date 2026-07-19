@@ -1,6 +1,7 @@
 import type { DictKey } from "@/lib/i18n";
 
 export const TOUR_STORAGE_KEY = "rfacto_tour_v1_done";
+export const TOUR_PENDING_KEY = "rfacto_tour_pending";
 export const TOUR_START_EVENT = "rfacto:start-tour";
 
 export type TourStep = {
@@ -106,8 +107,40 @@ export function isTourDone() {
 export function markTourDone() {
   try {
     localStorage.setItem(TOUR_STORAGE_KEY, "1");
+    sessionStorage.removeItem(TOUR_PENDING_KEY);
   } catch {
     /* ignore */
+  }
+}
+
+/** Call right after a successful login/register so the tour starts on first entry. */
+export function markTourPendingIfNeeded() {
+  if (typeof window === "undefined") return;
+  try {
+    if (localStorage.getItem(TOUR_STORAGE_KEY) === "1") return;
+    sessionStorage.setItem(TOUR_PENDING_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function consumeTourPending() {
+  if (typeof window === "undefined") return false;
+  try {
+    if (sessionStorage.getItem(TOUR_PENDING_KEY) !== "1") return false;
+    sessionStorage.removeItem(TOUR_PENDING_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function hasTourPending() {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(TOUR_PENDING_KEY) === "1";
+  } catch {
+    return false;
   }
 }
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
@@ -103,7 +104,9 @@ export default async function AppLayout({
           </nav>
         </header>
         <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
-        <GuidedTour />
+        <Suspense fallback={null}>
+          <GuidedTour />
+        </Suspense>
       </div>
     </LocaleProvider>
   );
