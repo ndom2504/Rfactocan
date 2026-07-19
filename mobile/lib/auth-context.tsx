@@ -22,7 +22,15 @@ export type AuthUser = {
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<
+    | { mfaRequired: false }
+    | { mfaRequired: true; mfaToken: string; emailHint: string }
+  >;
+  verifyLoginOtp: (mfaToken: string, code: string) => Promise<void>;
+  resendLoginOtp: (mfaToken: string) => Promise<string>;
   register: (input: {
     email: string;
     password: string;
@@ -63,15 +71,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const data = await api<{ token: string; user: AuthUser }>(
-      "/api/auth/login",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      }
-    );
+    const data = await api<{
+      token?: string;
+      user?: AuthUser;
+      mfaRequired?: boolean;
+      mfaToken?: string;
+      emailHint?: string;
+    }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (data.mfaRequired && data.mfaToken) {
+      return {
+        mfaRequired: true as const,
+        mfaToken: data.mfaToken,
+        emailHint: data.emailHint || email,
+      };
+    }
+
+    if (!data.token || !data.user) {
+      throw new Error("Connexion impossible");
+    }
     await setToken(data.token);
     setUser(data.user);
+    return { mfaRequired: false as const };
+  }, []);
+
+  const verifyLoginOtp = useCallback(
+    async (mfaToken: string, code: string) => {
+      const data = await api<{ token: string; user: AuthUser }>(
+        "/api/auth/login/verify-otp",
+        {
+          method: "POST",
+          body: JSON.stringify({ mfaToken, code }),
+        }
+      );
+      await setToken(data.token);
+      setUser(data.user);
+    },
+    []
+  );
+
+  const resendLoginOtp = useCallback(async (mfaToken: string) => {
+    const data = await api<{ emailHint?: string }>(
+      "/api/auth/login/resend-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ mfaToken }),
+      }
+    );
+    return data.emailHint || "";
   }, []);
 
   const register = useCallback(
@@ -101,8 +151,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refresh }),
-    [user, loading, login, register, logout, refresh]
+    () => ({
+      user,
+      loading,
+      login,
+      verifyLoginOtp,
+      resendLoginOtp,
+      register,
+      logout,
+      refresh,
+    }),
+    [user, loading, login, verifyLoginOtp, resendLoginOtp, register, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

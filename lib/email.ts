@@ -261,3 +261,23 @@ export async function emailPasswordReset(input: {
     ),
   });
 }
+
+export async function emailLoginOtp(input: {
+  email: string;
+  displayName: string;
+  code: string;
+  minutes: number;
+}) {
+  return sendEmail({
+    to: input.email,
+    subject: "Code de connexion Rfacto",
+    html: layout(
+      "Code de vérification",
+      `<p>Bonjour ${input.displayName},</p>
+       <p>Voici votre code pour finaliser la connexion à Rfacto :</p>
+       <p style="font-size:32px;letter-spacing:0.25em;font-weight:700;text-align:center;margin:24px 0;color:#0f6b4c;">${input.code}</p>
+       <p>Ce code est valable <strong>${input.minutes} minutes</strong>. Ne le partagez avec personne.</p>
+       <p style="font-size:13px;color:#5f6f68;">Si vous n'êtes pas à l'origine de cette connexion, ignorez cet email et changez votre mot de passe.</p>`
+    ),
+  });
+}

@@ -49,17 +49,31 @@ function LoginForm() {
   const oauthError = params.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [emailHint, setEmailHint] = useState("");
   const [error, setError] = useState(
     oauthError
       ? ERROR_MESSAGES[oauthError]?.[locale] || oauthError
       : ""
   );
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [info, setInfo] = useState("");
+
+  function goNext() {
+    const next = params.get("next");
+    const safeNext =
+      next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    router.push(safeNext);
+    router.refresh();
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setInfo("");
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,11 +85,111 @@ function LoginForm() {
       setError(data.error ?? "Connexion impossible");
       return;
     }
-    const next = params.get("next");
-    const safeNext =
-      next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
-    router.push(safeNext);
-    router.refresh();
+    if (data.mfaRequired && data.mfaToken) {
+      setMfaToken(data.mfaToken);
+      setEmailHint(data.emailHint || email);
+      setInfo(t("otp_sent"));
+      return;
+    }
+    goNext();
+  }
+
+  async function onVerifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaToken) return;
+    setLoading(true);
+    setError("");
+    setInfo("");
+    const res = await fetch("/api/auth/login/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mfaToken, code: otpCode }),
+    });
+    const data = await res.json();
+    setLoading(false);
+    if (!res.ok) {
+      setError(data.error ?? t("otp_invalid"));
+      return;
+    }
+    goNext();
+  }
+
+  async function onResend() {
+    if (!mfaToken) return;
+    setResendLoading(true);
+    setError("");
+    setInfo("");
+    const res = await fetch("/api/auth/login/resend-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mfaToken }),
+    });
+    const data = await res.json();
+    setResendLoading(false);
+    if (!res.ok) {
+      setError(data.error ?? t("otp_resend_error"));
+      return;
+    }
+    setInfo(t("otp_resent"));
+  }
+
+  if (mfaToken) {
+    return (
+      <Card className="w-full">
+        <CardTitle>{t("otp_title")}</CardTitle>
+        <CardDescription>
+          {t("otp_subtitle")} {emailHint}
+        </CardDescription>
+
+        <form onSubmit={onVerifyOtp} className="mt-6 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="otp">{t("otp_code")}</Label>
+            <Input
+              id="otp"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={otpCode}
+              onChange={(e) =>
+                setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              placeholder="000000"
+              required
+              className="tracking-[0.35em] text-center text-lg"
+            />
+          </div>
+          {info && !error && (
+            <p className="text-sm text-[var(--accent)]">{info}</p>
+          )}
+          {error && <p className="text-sm text-red-700">{error}</p>}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? t("loading") : t("otp_verify")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={resendLoading}
+            onClick={onResend}
+          >
+            {resendLoading ? t("loading") : t("otp_resend")}
+          </Button>
+          <button
+            type="button"
+            className="w-full text-sm text-[var(--muted)] underline"
+            onClick={() => {
+              setMfaToken(null);
+              setOtpCode("");
+              setInfo("");
+              setError("");
+            }}
+          >
+            {t("otp_back")}
+          </button>
+        </form>
+      </Card>
+    );
   }
 
   return (
