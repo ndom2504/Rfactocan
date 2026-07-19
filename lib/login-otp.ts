@@ -91,6 +91,38 @@ export async function issueLoginOtp(
   return { ok: true };
 }
 
+/**
+ * Start email OTP when Resend is configured.
+ * Returns `skipped` if email is not configured (caller may issue session directly).
+ */
+export async function startEmailOtpChallenge(
+  user: Pick<User, "id" | "email" | "displayName">
+): Promise<
+  | { ok: true; mfaToken: string; emailHint: string }
+  | { ok: false; skipped: true }
+  | { ok: false; skipped: false; error: string }
+> {
+  if (!isEmailConfigured()) {
+    return { ok: false, skipped: true };
+  }
+
+  const issued = await issueLoginOtp(user);
+  if (!issued.ok) {
+    return {
+      ok: false,
+      skipped: false,
+      error: issued.error,
+    };
+  }
+
+  const mfaToken = await createMfaToken(user.id);
+  return {
+    ok: true,
+    mfaToken,
+    emailHint: maskEmail(user.email),
+  };
+}
+
 export async function consumeLoginOtp(
   userId: string,
   code: string

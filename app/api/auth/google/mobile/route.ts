@@ -3,14 +3,16 @@ import { z } from "zod";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
 import { upsertUserFromGoogleProfile } from "@/lib/google-auth-user";
 import { verifyGoogleIdToken } from "@/lib/google-oauth";
+import { startEmailOtpChallenge } from "@/lib/login-otp";
 
 const schema = z.object({
   idToken: z.string().min(10),
 });
 
 /**
- * Mobile Google Sign-In: verify ID token, upsert user, return Bearer session token.
- * POST { idToken: string } → { token, user }
+ * Mobile Google Sign-In: verify ID token, upsert user, return Bearer session token
+ * or MFA challenge when Resend is configured.
+ * POST { idToken: string } → { token, user } | { mfaRequired, mfaToken, emailHint }
  */
 export async function POST(request: Request) {
   if (!process.env.GOOGLE_CLIENT_ID && !process.env.GOOGLE_ANDROID_CLIENT_ID) {
@@ -51,6 +53,35 @@ export async function POST(request: Request) {
     }
 
     const { user } = result;
+
+    const challenge = await startEmailOtpChallenge({
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+    });
+
+    if (challenge.ok) {
+      return NextResponse.json({
+        mfaRequired: true,
+        mfaToken: challenge.mfaToken,
+        emailHint: challenge.emailHint,
+      });
+    }
+
+    if (!challenge.skipped) {
+      return NextResponse.json(
+        {
+          error:
+            "Impossible d'envoyer le code de vérification. Réessayez dans un instant.",
+        },
+        { status: 502 }
+      );
+    }
+
+    console.warn(
+      "[google/mobile] RESEND_API_KEY missing — OTP skipped, session issued directly"
+    );
+
     const token = await createSessionToken({
       id: user.id,
       email: user.email,

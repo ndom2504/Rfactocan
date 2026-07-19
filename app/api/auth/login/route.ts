@@ -5,12 +5,7 @@ import {
   setSessionCookie,
   verifyPassword,
 } from "@/lib/auth";
-import { isEmailConfigured } from "@/lib/email";
-import {
-  createMfaToken,
-  issueLoginOtp,
-  maskEmail,
-} from "@/lib/login-otp";
+import { startEmailOtpChallenge } from "@/lib/login-otp";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -47,25 +42,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Email OTP 2FA when Resend is configured; otherwise issue session (dev fallback).
-    if (isEmailConfigured()) {
-      const issued = await issueLoginOtp(user);
-      if (!issued.ok) {
-        return NextResponse.json(
-          {
-            error:
-              "Impossible d'envoyer le code de vérification. Réessayez dans un instant.",
-          },
-          { status: 502 }
-        );
-      }
-
-      const mfaToken = await createMfaToken(user.id);
+    const challenge = await startEmailOtpChallenge(user);
+    if (challenge.ok) {
       return NextResponse.json({
         mfaRequired: true,
-        mfaToken,
-        emailHint: maskEmail(user.email),
+        mfaToken: challenge.mfaToken,
+        emailHint: challenge.emailHint,
       });
+    }
+
+    if (!challenge.skipped) {
+      return NextResponse.json(
+        {
+          error:
+            "Impossible d'envoyer le code de vérification. Réessayez dans un instant.",
+        },
+        { status: 502 }
+      );
     }
 
     console.warn(

@@ -7,6 +7,7 @@ import {
   exchangeGoogleCode,
   fetchGoogleProfile,
 } from "@/lib/google-oauth";
+import { startEmailOtpChallenge } from "@/lib/login-otp";
 
 const STATE_COOKIE = "rfacto_oauth_state";
 
@@ -57,17 +58,42 @@ export async function GET(request: Request) {
       );
     }
 
+    const next =
+      saved.next.startsWith("/") && !saved.next.startsWith("//")
+        ? saved.next
+        : "/dashboard";
+
+    const challenge = await startEmailOtpChallenge({
+      id: result.user.id,
+      email: result.user.email,
+      displayName: result.user.displayName,
+    });
+
+    if (challenge.ok) {
+      const loginUrl = new URL("/login", appUrl);
+      loginUrl.searchParams.set("mfa", "1");
+      loginUrl.searchParams.set("mfaToken", challenge.mfaToken);
+      loginUrl.searchParams.set("emailHint", challenge.emailHint);
+      loginUrl.searchParams.set("next", next);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (!challenge.skipped) {
+      return NextResponse.redirect(
+        new URL("/login?error=otp_send_failed", appUrl)
+      );
+    }
+
+    console.warn(
+      "[google] RESEND_API_KEY missing — OTP skipped, session issued directly"
+    );
+
     const token = await createSessionToken({
       id: result.user.id,
       email: result.user.email,
       role: result.user.role,
     });
     await setSessionCookie(token);
-
-    const next =
-      saved.next.startsWith("/") && !saved.next.startsWith("//")
-        ? saved.next
-        : "/dashboard";
 
     return NextResponse.redirect(new URL(next, appUrl));
   } catch (error) {

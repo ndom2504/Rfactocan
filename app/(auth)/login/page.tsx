@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,10 @@ const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
     fr: "Connexion Google annulée.",
     en: "Google sign-in cancelled.",
   },
+  otp_send_failed: {
+    fr: "Impossible d'envoyer le code de vérification. Réessayez.",
+    en: "Could not send the verification code. Try again.",
+  },
 };
 
 function LoginForm() {
@@ -60,6 +64,18 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [info, setInfo] = useState("");
+
+  useEffect(() => {
+    const mfa = params.get("mfa");
+    const token = params.get("mfaToken");
+    const hint = params.get("emailHint");
+    if (mfa === "1" && token) {
+      setMfaToken(token);
+      setEmailHint(hint || "");
+      setInfo(t("otp_sent"));
+      setError("");
+    }
+  }, [params, t]);
 
   function goNext() {
     const next = params.get("next");
@@ -183,6 +199,7 @@ function LoginForm() {
               setOtpCode("");
               setInfo("");
               setError("");
+              router.replace("/login");
             }}
           >
             {t("otp_back")}
