@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { CURRENCY_OPTIONS, resolveCheckoutCurrency } from "@/lib/currency";
+import {
+  CURRENCY_OPTIONS,
+  resolveCheckoutCurrency,
+  type MoneyCurrency,
+} from "@/lib/currency";
 import { maxWeightForMode, type TransportMode } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
 import {
@@ -28,6 +32,9 @@ export default function NewTripPage() {
   const [uploading, setUploading] = useState(false);
   const [fromCountry, setFromCountry] = useState("CA");
   const [toCountry, setToCountry] = useState("FR");
+  const [currency, setCurrency] = useState<MoneyCurrency>(() =>
+    resolveCheckoutCurrency("CA", "FR")
+  );
   const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
   const [vehiclePlate, setVehiclePlate] = useState("");
@@ -45,6 +52,10 @@ export default function NewTripPage() {
   useEffect(() => {
     setCarrierType(loadUserIntent().carrierType);
   }, []);
+
+  useEffect(() => {
+    setCurrency(resolveCheckoutCurrency(fromCountry, toCountry));
+  }, [fromCountry, toCountry]);
 
   async function onUploadVehiclePhoto(file: File) {
     setUploading(true);
@@ -82,8 +93,8 @@ export default function NewTripPage() {
       "AIR") as TransportMode;
     const transportType =
       String(fd.get("transportType") || "").trim() || undefined;
-    const currency =
-      String(fd.get("currency") || "").trim() ||
+    const currencyValue =
+      String(fd.get("currency") || currency || "").trim() ||
       resolveCheckoutCurrency(fromCountryValue, toCountryValue);
 
     if (!fromCountryValue || !toCountryValue) {
@@ -193,7 +204,7 @@ export default function NewTripPage() {
       arriveAt: arriveAt.toISOString(),
       weightKg,
       pricePerKgCad,
-      currency,
+      currency: currencyValue,
       transportMode: mode,
       transportType,
       acceptedGoods,
@@ -436,14 +447,21 @@ export default function NewTripPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="currency">{t("currency")}</Label>
-            <Select id="currency" name="currency" defaultValue="CAD">
+            <Select
+              id="currency"
+              name="currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as MoneyCurrency)}
+            >
               {CURRENCY_OPTIONS.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.label}
                 </option>
               ))}
             </Select>
-            <p className="text-xs text-[var(--muted)]">{t("trip_currency_hint")}</p>
+            <p className="text-xs text-[var(--muted)]">
+              {t("currency_from_country")} {t("trip_currency_hint")}
+            </p>
           </div>
         </div>
         <fieldset className="space-y-2 rounded-lg border border-[var(--border)] p-4">

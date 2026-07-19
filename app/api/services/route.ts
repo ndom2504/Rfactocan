@@ -7,7 +7,7 @@ import {
   getCategory,
   isServiceCategoryId,
 } from "@/lib/services-catalog";
-import { normalizeCurrency } from "@/lib/currency";
+import { currencyForCountry, normalizeCurrency } from "@/lib/currency";
 
 const priceUnits = PRICE_UNITS.map((u) => u.id) as [string, ...string[]];
 
@@ -123,6 +123,7 @@ export async function POST(request: Request) {
         priceUnit: body.priceUnit,
         currency:
           normalizeCurrency(body.currency) ??
+          currencyForCountry(body.country) ??
           normalizeCurrency(session.preferredCurrency) ??
           "CAD",
         availableFrom: body.availableFrom

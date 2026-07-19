@@ -111,11 +111,9 @@ export function resolveCheckoutCurrency(
 ): MoneyCurrency {
   const fromCorridor = normalizeCurrency(corridorCurrency);
   if (fromCorridor) return fromCorridor;
-  return (
-    COUNTRY_CURRENCY[toCountry.toUpperCase()] ||
-    COUNTRY_CURRENCY[fromCountry.toUpperCase()] ||
-    "CAD"
-  );
+  const to = currencyForCountry(toCountry);
+  if (toCountry?.trim()) return to;
+  return currencyForCountry(fromCountry);
 }
 
 /**

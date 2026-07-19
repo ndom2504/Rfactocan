@@ -6,9 +6,9 @@ export const TRANSPORT_MODES: {
   labelEn: string;
 }[] = [
   { code: "AIR", labelFr: "Aérien", labelEn: "Air" },
-  { code: "SEA", labelFr: "Maritime", labelEn: "Sea" },
   { code: "RAIL", labelFr: "Ferroviaire", labelEn: "Rail" },
-  { code: "ROAD", labelFr: "Terrestre (route)", labelEn: "Road" },
+  { code: "SEA", labelFr: "Maritime", labelEn: "Sea" },
+  { code: "ROAD", labelFr: "Terrestre", labelEn: "Land" },
 ];
 
 export type TransportTypeOption = {

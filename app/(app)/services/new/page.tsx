@@ -11,14 +11,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CURRENCY_OPTIONS } from "@/lib/currency";
+import { CURRENCY_OPTIONS, currencyForCountry } from "@/lib/currency";
 import { getCities } from "@/lib/corridors";
 import {
   PRICE_UNITS,
   SERVICE_CATALOG,
+  encodeTransportServiceType,
   getCategory,
   isServiceCategoryId,
+  parseTransportServiceType,
+  transportServiceTypesForMode,
 } from "@/lib/services-catalog";
+import {
+  TRANSPORT_MODES,
+  type TransportMode,
+  transportModeLabel,
+} from "@/lib/transport";
 
 function NewServiceForm() {
   const router = useRouter();
@@ -33,8 +41,11 @@ function NewServiceForm() {
       : "hebergement"
   );
   const [serviceType, setServiceType] = useState(initialType);
+  const [transportMode, setTransportMode] = useState<TransportMode>("ROAD");
+  const [transportType, setTransportType] = useState("TAXI");
   const [country, setCountry] = useState("GA");
   const [city, setCity] = useState("");
+  const [currency, setCurrency] = useState(() => currencyForCountry("GA"));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -43,13 +54,39 @@ function NewServiceForm() {
   const cat = getCategory(category);
   const cities = useMemo(() => getCities(country), [country]);
   const publishable = SERVICE_CATALOG.filter((c) => !c.isParcel);
+  const transportTypes = useMemo(
+    () => transportServiceTypesForMode(transportMode),
+    [transportMode]
+  );
 
   useEffect(() => {
+    setCurrency(currencyForCountry(country));
+  }, [country]);
+
+  useEffect(() => {
+    if (category === "transport") return;
     const types = cat?.types ?? [];
     if (!types.some((x) => x.id === serviceType)) {
       setServiceType(types[0]?.id ?? "");
     }
   }, [category, cat, serviceType]);
+
+  useEffect(() => {
+    if (category !== "transport") return;
+    const types = transportServiceTypesForMode(transportMode);
+    if (!types.some((x) => x.id === transportType)) {
+      setTransportType(types[0]?.id ?? "CAR");
+    }
+  }, [category, transportMode, transportType]);
+
+  useEffect(() => {
+    if (category !== "transport" || !initialType) return;
+    const parsed = parseTransportServiceType(initialType);
+    if (parsed) {
+      setTransportMode(parsed.mode);
+      setTransportType(parsed.typeCode);
+    }
+  }, [category, initialType]);
 
   async function onUpload(file: File) {
     setUploading(true);
@@ -68,9 +105,13 @@ function NewServiceForm() {
     setLoading(true);
     setError("");
     const fd = new FormData(e.currentTarget);
+    const resolvedType =
+      category === "transport"
+        ? encodeTransportServiceType(transportMode, transportType)
+        : serviceType;
     const payload = {
       category,
-      serviceType,
+      serviceType: resolvedType,
       title: String(fd.get("title") || ""),
       description: String(fd.get("description") || ""),
       country,
@@ -79,7 +120,7 @@ function NewServiceForm() {
         ? Number(fd.get("priceAmount"))
         : undefined,
       priceUnit: String(fd.get("priceUnit") || "forfait"),
-      currency: String(fd.get("currency") || "CAD"),
+      currency,
       availableFrom: String(fd.get("availableFrom") || "") || undefined,
       availableTo: String(fd.get("availableTo") || "") || undefined,
       photos,
@@ -120,20 +161,57 @@ function NewServiceForm() {
               ))}
             </Select>
           </div>
+          {category !== "transport" ? (
+            <div className="space-y-1.5">
+              <Label>{t("services_type")}</Label>
+              <Select
+                value={serviceType}
+                onChange={(e) => setServiceType(e.target.value)}
+              >
+                {(cat?.types ?? []).map((tp) => (
+                  <option key={tp.id} value={tp.id}>
+                    {locale === "en" ? tp.labelEn : tp.labelFr}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>{t("transport_mode")}</Label>
+              <Select
+                value={transportMode}
+                onChange={(e) =>
+                  setTransportMode(e.target.value as TransportMode)
+                }
+              >
+                {TRANSPORT_MODES.map((m) => (
+                  <option key={m.code} value={m.code}>
+                    {locale === "en" ? m.labelEn : m.labelFr}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </div>
+
+        {category === "transport" && (
           <div className="space-y-1.5">
-            <Label>{t("services_type")}</Label>
+            <Label>{t("transport_type")}</Label>
             <Select
-              value={serviceType}
-              onChange={(e) => setServiceType(e.target.value)}
+              value={transportType}
+              onChange={(e) => setTransportType(e.target.value)}
             >
-              {(cat?.types ?? []).map((tp) => (
+              {transportTypes.map((tp) => (
                 <option key={tp.id} value={tp.id}>
                   {locale === "en" ? tp.labelEn : tp.labelFr}
                 </option>
               ))}
             </Select>
+            <p className="text-xs text-[var(--muted)]">
+              {transportModeLabel(transportMode, locale === "en" ? "en" : "fr")}
+            </p>
           </div>
-        </div>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="title">{t("services_title_field")}</Label>
@@ -212,13 +290,21 @@ function NewServiceForm() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="currency">{t("currency")}</Label>
-            <Select id="currency" name="currency" defaultValue="XAF">
+            <Select
+              id="currency"
+              name="currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as typeof currency)}
+            >
               {CURRENCY_OPTIONS.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.code}
                 </option>
               ))}
             </Select>
+            <p className="text-xs text-[var(--muted)]">
+              {t("currency_from_country")}
+            </p>
           </div>
         </div>
 

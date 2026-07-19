@@ -83,6 +83,7 @@ const dict = {
     // Common fields
     language: "Langue",
     currency: "Devise",
+    currency_from_country: "Adaptée automatiquement selon le pays (modifiable).",
     preferred_currency: "Devise préférée",
     preferred_currency_hint:
       "Devise de paiement sur Stripe. CAD = dollar canadien ($ CA), USD = dollar américain ($ US) — ce ne sont pas la même monnaie.",
@@ -662,6 +663,7 @@ const dict = {
 
     language: "Language",
     currency: "Currency",
+    currency_from_country: "Auto-set from the country (you can still change it).",
     preferred_currency: "Preferred currency",
     preferred_currency_hint:
       "Stripe checkout currency. CAD = Canadian dollar (CA$), USD = US dollar (US$) — they are different currencies.",

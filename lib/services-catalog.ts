@@ -2,6 +2,14 @@
  * Catalogue des catégories et métiers (colis + services collaboratifs).
  */
 
+import {
+  TRANSPORT_MODES,
+  TRANSPORT_TYPES_BY_MODE,
+  transportModeLabel,
+  transportTypeLabel,
+  type TransportMode,
+} from "@/lib/transport";
+
 export const SERVICE_CATEGORIES = [
   "colis",
   "hebergement",
@@ -33,6 +41,70 @@ export type ServiceCategoryDef = {
   isParcel: boolean;
   types: ServiceTypeDef[];
 };
+
+/** Types locaux ajoutés au mode route (courses / location). */
+const ROAD_SERVICE_EXTRAS: ServiceTypeDef[] = [
+  { id: "TAXI", labelFr: "Taxi / course", labelEn: "Taxi / ride" },
+  { id: "RENTAL", labelFr: "Location véhicule", labelEn: "Vehicle rental" },
+  {
+    id: "DRIVER",
+    labelFr: "Chauffeur privé",
+    labelEn: "Private driver",
+  },
+];
+
+export function encodeTransportServiceType(
+  mode: TransportMode,
+  typeCode: string
+): string {
+  return `${mode}_${typeCode.toUpperCase()}`;
+}
+
+export function parseTransportServiceType(serviceType: string): {
+  mode: TransportMode;
+  typeCode: string;
+} | null {
+  const raw = (serviceType || "").trim().toUpperCase();
+  const modes: TransportMode[] = ["AIR", "SEA", "RAIL", "ROAD"];
+  for (const mode of modes) {
+    const prefix = `${mode}_`;
+    if (raw.startsWith(prefix)) {
+      return { mode, typeCode: raw.slice(prefix.length) };
+    }
+  }
+  // Legacy flat ids
+  if (raw === "COURSE" || raw === "TAXI") {
+    return { mode: "ROAD", typeCode: "TAXI" };
+  }
+  if (raw === "LOCATION" || raw === "RENTAL") {
+    return { mode: "ROAD", typeCode: "RENTAL" };
+  }
+  return null;
+}
+
+export function transportServiceTypesForMode(
+  mode: TransportMode
+): ServiceTypeDef[] {
+  const base = TRANSPORT_TYPES_BY_MODE[mode].map((t) => ({
+    id: t.code,
+    labelFr: t.labelFr,
+    labelEn: t.labelEn,
+  }));
+  if (mode === "ROAD") {
+    return [...ROAD_SERVICE_EXTRAS, ...base];
+  }
+  return base;
+}
+
+function buildTransportTypes(): ServiceTypeDef[] {
+  return TRANSPORT_MODES.flatMap((m) =>
+    transportServiceTypesForMode(m.code).map((t) => ({
+      id: encodeTransportServiceType(m.code, t.id),
+      labelFr: `${m.labelFr} — ${t.labelFr}`,
+      labelEn: `${m.labelEn} — ${t.labelEn}`,
+    }))
+  );
+}
 
 export const SERVICE_CATALOG: ServiceCategoryDef[] = [
   {
@@ -115,8 +187,8 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
     id: "evenements",
     labelFr: "Événements",
     labelEn: "Events",
-    hintFr: "Cérémonies et animations",
-    hintEn: "Ceremonies and hosting",
+    hintFr: "Cérémonies, animations et prestataires",
+    hintEn: "Ceremonies, hosting and vendors",
     isParcel: false,
     types: [
       {
@@ -124,19 +196,45 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
         labelFr: "Maître de cérémonie",
         labelEn: "Master of ceremonies",
       },
+      { id: "hotesse", labelFr: "Hôtesse", labelEn: "Hostess" },
+      {
+        id: "agence_hotesses",
+        labelFr: "Agence d'hôtesses",
+        labelEn: "Hostess agency",
+      },
+      { id: "decoration", labelFr: "Décoration", labelEn: "Decoration" },
+      { id: "dj", labelFr: "DJ", labelEn: "DJ" },
+      {
+        id: "location_sono",
+        labelFr: "Location sono",
+        labelEn: "Sound system rental",
+      },
+      { id: "photographe", labelFr: "Photographe", labelEn: "Photographer" },
+      {
+        id: "salle_mariage",
+        labelFr: "Salle de mariage",
+        labelEn: "Wedding hall",
+      },
+      {
+        id: "traiteur",
+        labelFr: "Traiteur",
+        labelEn: "Caterer",
+      },
+      {
+        id: "videographe",
+        labelFr: "Vidéaste",
+        labelEn: "Videographer",
+      },
     ],
   },
   {
     id: "transport",
     labelFr: "Transport",
     labelEn: "Transport",
-    hintFr: "Courses et déplacements locaux",
-    hintEn: "Rides and local transport",
+    hintFr: "Mode (air, mer, rail, route) puis type de véhicule",
+    hintEn: "Mode (air, sea, rail, road) then vehicle type",
     isParcel: false,
-    types: [
-      { id: "course", labelFr: "Course / taxi", labelEn: "Ride / taxi" },
-      { id: "location", labelFr: "Location véhicule", labelEn: "Vehicle rental" },
-    ],
+    types: buildTransportTypes(),
   },
   {
     id: "transitaire",
@@ -202,6 +300,20 @@ export function serviceTypeLabel(
   typeId: string,
   locale: "fr" | "en" = "fr"
 ): string {
+  if (categoryId === "transport") {
+    const parsed = parseTransportServiceType(typeId);
+    if (parsed) {
+      const modeLabel = transportModeLabel(parsed.mode, locale);
+      const typeLabel = transportServiceTypesForMode(parsed.mode).find(
+        (t) => t.id === parsed.typeCode
+      );
+      if (typeLabel) {
+        const tl = locale === "en" ? typeLabel.labelEn : typeLabel.labelFr;
+        return `${modeLabel} — ${tl}`;
+      }
+      return `${modeLabel} — ${transportTypeLabel(parsed.mode, parsed.typeCode, locale)}`;
+    }
+  }
   const t = getServiceType(categoryId, typeId);
   if (!t) return typeId;
   return locale === "en" ? t.labelEn : t.labelFr;
