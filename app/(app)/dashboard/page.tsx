@@ -40,7 +40,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
+      <div className="text-center" data-tour="welcome">
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
           {t(locale, "hello")}, {user.displayName}
         </h1>
@@ -52,7 +52,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3">
+      <div
+        className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3"
+        data-tour="publish-ctas"
+      >
         <Link href="/trips/new" className="w-full">
           <Button className="h-12 w-full text-base">
             {t(locale, "publish_trip_cta")}
@@ -73,12 +76,14 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <DashboardSearchHub
-        canSearchLivreurs={canSearchLivreurs}
-        canSearchCommandes={canSearchCommandes}
-      />
+      <div data-tour="search">
+        <DashboardSearchHub
+          canSearchLivreurs={canSearchLivreurs}
+          canSearchCommandes={canSearchCommandes}
+        />
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3" data-tour="stats">
         <Card>
           <CardDescription>{t(locale, "open_trips")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">{trips}</CardTitle>
@@ -95,7 +100,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <section>
+      <section data-tour="activity">
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
           {t(locale, "recent_activity")}
         </h2>

@@ -31,7 +31,7 @@ export default async function BookingsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="bookings">
       <div>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
           {t(locale, "bookings_title")}

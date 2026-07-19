@@ -9,6 +9,7 @@ import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { LocaleProvider } from "@/components/locale-provider";
 import { ProfileMenu } from "@/components/profile-menu";
 import { PublishMenu } from "@/components/publish-menu";
+import { GuidedTour } from "@/components/guided-tour";
 import { Badge } from "@/components/ui/badge";
 
 export default async function AppLayout({
@@ -39,7 +40,7 @@ export default async function AppLayout({
               >
                 Rfacto
               </Link>
-              <nav className="hidden gap-4 md:flex">
+              <nav className="hidden gap-4 md:flex" data-tour="nav">
                 {links.map((l) => (
                   <Link
                     key={l.href}
@@ -60,7 +61,9 @@ export default async function AppLayout({
               </nav>
             </div>
             <div className="flex items-center gap-3">
-              <PublishMenu />
+              <div data-tour="publish">
+                <PublishMenu />
+              </div>
               <LocaleToggle locale={locale} />
               <NotificationBell locale={locale} />
               {user.verifiedAt && (
@@ -68,13 +71,18 @@ export default async function AppLayout({
                   {t(locale, "verified")}
                 </Badge>
               )}
-              <ProfileMenu
-                displayName={user.displayName}
-                avatarUrl={user.avatarUrl}
-              />
+              <div data-tour="profile-menu">
+                <ProfileMenu
+                  displayName={user.displayName}
+                  avatarUrl={user.avatarUrl}
+                />
+              </div>
             </div>
           </div>
-          <nav className="mx-auto flex max-w-6xl gap-3 overflow-x-auto px-6 pb-3 md:hidden">
+          <nav
+            className="mx-auto flex max-w-6xl gap-3 overflow-x-auto px-6 pb-3 md:hidden"
+            data-tour="nav"
+          >
             {links.map((l) => (
               <Link
                 key={l.href}
@@ -95,6 +103,7 @@ export default async function AppLayout({
           </nav>
         </header>
         <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+        <GuidedTour />
       </div>
     </LocaleProvider>
   );

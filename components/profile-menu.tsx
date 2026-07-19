@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/locale-provider";
+import { requestTourStart } from "@/lib/guided-tour";
 
 type Props = {
   displayName: string;
@@ -78,6 +79,17 @@ export function ProfileMenu({ displayName, avatarUrl }: Props) {
           >
             {t("nav_profile")}
           </Link>
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)]"
+            onClick={() => {
+              setOpen(false);
+              requestTourStart();
+            }}
+          >
+            {t("tour_replay")}
+          </button>
           <button
             type="button"
             role="menuitem"

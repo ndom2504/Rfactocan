@@ -250,7 +250,7 @@ function ProfileForm() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <Card>
+      <Card data-tour="profile-trust">
         <CardTitle>{t("trust_payments")}</CardTitle>
         <CardDescription>{t("trust_hint")}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -465,20 +465,20 @@ function ProfileForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2" data-tour="profile-intent">
             <Label>{t("bio")}</Label>
             <Textarea value={bio} onChange={(e) => setBio(e.target.value)} />
+            {user.role !== "ADMIN" && (
+              <IntentPicker
+                primaryIntent={primaryIntent}
+                carrierType={carrierType}
+                orderIntent={orderIntent}
+                onPrimaryIntentChange={setPrimaryIntent}
+                onCarrierTypeChange={setCarrierType}
+                onOrderIntentChange={setOrderIntent}
+              />
+            )}
           </div>
-          {user.role !== "ADMIN" && (
-            <IntentPicker
-              primaryIntent={primaryIntent}
-              carrierType={carrierType}
-              orderIntent={orderIntent}
-              onPrimaryIntentChange={setPrimaryIntent}
-              onCarrierTypeChange={setCarrierType}
-              onOrderIntentChange={setOrderIntent}
-            />
-          )}
           {error && <p className="text-sm text-red-700">{error}</p>}
           {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
           <Button type="submit" disabled={uploading}>

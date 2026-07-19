@@ -360,6 +360,46 @@ const dict = {
     otp_invalid: "Code incorrect.",
     otp_resend_error: "Impossible de renvoyer le code.",
 
+    tour_label: "Visite guidée",
+    tour_replay: "Visite guidée",
+    tour_skip: "Passer",
+    tour_prev: "Précédent",
+    tour_next: "Suivant",
+    tour_done: "Terminer",
+    tour_welcome_title: "Bienvenue sur Rfacto",
+    tour_welcome_body:
+      "Rfacto relie trois acteurs : voyageurs (bagages), services (fret, cargo, prestations) et clients (commandes). Un seul compte pour livrer, offrir un service ou commander.",
+    tour_publish_title: "Publier en un clic",
+    tour_publish_body:
+      "Le bouton Publier ouvre voyage, service ou commande — disponible partout dans l’app.",
+    tour_ctas_title: "Trois actions principales",
+    tour_ctas_body:
+      "Publier un voyage (je livre), un service (je suis pro), ou une commande (j’envoie / je reçois).",
+    tour_search_title: "Rechercher",
+    tour_search_body:
+      "Cherchez des voyageurs, des services ou des clients. Affinez par région, pays, ville et date.",
+    tour_stats_title: "Votre activité",
+    tour_stats_body:
+      "Suivez vos livraisons ouvertes, commandes ouvertes et votre note moyenne.",
+    tour_activity_title: "Activité récente",
+    tour_activity_body:
+      "Vos dernières réservations apparaissent ici. Ouvrir pour suivre paiement et livraison.",
+    tour_nav_title: "Navigation",
+    tour_nav_body:
+      "Tableau de bord, Réservations et Messages : les trois écrans essentiels du quotidien.",
+    tour_bookings_title: "Réservations",
+    tour_bookings_body:
+      "Suivez propositions, paiements et livraisons. Le statut (en attente, payé, annulé…) indique l’étape.",
+    tour_messages_title: "Messages",
+    tour_messages_body:
+      "Chaque conversation est liée à une réservation : négociez, envoyez des photos, confirmez.",
+    tour_profile_title: "Confiance & paiements",
+    tour_profile_body:
+      "Vérifiez votre identité (KYC) et configurez comment recevoir vos gains. Obligatoire pour accepter des colis.",
+    tour_intent_title: "Votre profil",
+    tour_intent_body:
+      "Bio, intention (livrer / commander / les deux) et type de livreur. Enregistrez pour personnaliser Rfacto.",
+
     // Trips
     trips_title: "Voyager",
     trips_subtitle:
@@ -946,6 +986,46 @@ const dict = {
     otp_resent: "A new code was sent.",
     otp_invalid: "Incorrect code.",
     otp_resend_error: "Could not resend the code.",
+
+    tour_label: "Guided tour",
+    tour_replay: "Guided tour",
+    tour_skip: "Skip",
+    tour_prev: "Back",
+    tour_next: "Next",
+    tour_done: "Done",
+    tour_welcome_title: "Welcome to Rfacto",
+    tour_welcome_body:
+      "Rfacto connects three actors: travelers (luggage), services (freight, cargo, local offers) and clients (orders). One account to deliver, offer a service, or order.",
+    tour_publish_title: "Publish in one tap",
+    tour_publish_body:
+      "The Publish button opens trip, service, or order — available anywhere in the app.",
+    tour_ctas_title: "Three main actions",
+    tour_ctas_body:
+      "Publish a trip (I deliver), a service (I’m a pro), or an order (I send / receive).",
+    tour_search_title: "Search",
+    tour_search_body:
+      "Find travelers, services, or clients. Refine by region, country, city, and date.",
+    tour_stats_title: "Your activity",
+    tour_stats_body:
+      "Track open deliveries, open orders, and your average rating.",
+    tour_activity_title: "Recent activity",
+    tour_activity_body:
+      "Your latest bookings appear here. Open one to follow payment and delivery.",
+    tour_nav_title: "Navigation",
+    tour_nav_body:
+      "Dashboard, Bookings, and Messages: the three everyday screens.",
+    tour_bookings_title: "Bookings",
+    tour_bookings_body:
+      "Track proposals, payments, and deliveries. Status badges show the current step.",
+    tour_messages_title: "Messages",
+    tour_messages_body:
+      "Each conversation is tied to a booking: negotiate, send photos, confirm.",
+    tour_profile_title: "Trust & payments",
+    tour_profile_body:
+      "Verify your identity (KYC) and set how you receive earnings. Required to accept parcels.",
+    tour_intent_title: "Your profile",
+    tour_intent_body:
+      "Bio, intent (deliver / order / both) and carrier type. Save to personalize Rfacto.",
 
     trips_title: "Travel",
     trips_subtitle: "Travelers and carriers (air, sea, rail, road) on all corridors.",
