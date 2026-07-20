@@ -320,7 +320,7 @@ const dict = {
       "Rfacto reste un intermédiaire technologique. Nous sécurisons la relation et traitons les incidents — sans remplacer l’assureur ni le transporteur.",
     trust_s4_i1_title: "Programme Confiance Rfacto",
     trust_s4_i1_text:
-      "En place : litiges dans l’app, équipe notifiée, médiation et règles claires sur ce que la plateforme fait / ne fait pas.",
+      "En place : charte communautaire ci-dessous, litiges dans l’app, équipe notifiée, médiation et règles claires sur ce que la plateforme fait / ne fait pas.",
     trust_s4_i2_title: "Assistance incidents",
     trust_s4_i2_text:
       "En place : ouverture de litige depuis la réservation + ambassadeurs qualité sur le terrain. Pas de hotline 24/7 pour l’instant — réponses via l’app et le support.",
@@ -330,6 +330,45 @@ const dict = {
     trust_program_liability_link: "Lire la politique de responsabilité",
     trust_program_footnote:
       "Les volets marqués « Bientôt » sont en préparation. Nous n’affichons comme disponible que ce qui fonctionne déjà dans l’application.",
+    trust_charter_title: "Charte de confiance communautaire",
+    trust_charter_lead:
+      "Engagements partagés entre voyageurs, services et clients — alignés sur ce que Rfacto sécurise déjà dans l’application.",
+    trust_charter_a1_title: "1. Engagement de transparence",
+    trust_charter_a1_text:
+      "Chaque membre fournit des informations exactes sur son identité, ses colis et ses trajets. Les livreurs vérifient leur identité (KYC) pour accepter des colis. Pas de fausse déclaration, pas de profil anonyme pour livrer ou recevoir des gains.",
+    trust_charter_a2_title: "2. Respect et bienveillance",
+    trust_charter_a2_text:
+      "Les échanges entre clients, voyageurs et services restent courtois. Un comportement inapproprié peut faire l’objet d’un litige dans l’app. Rfacto est une communauté humaine — la coopération est le moteur.",
+    trust_charter_a3_title: "3. Sécurité des transactions",
+    trust_charter_a3_text:
+      "Les paiements liés aux réservations passent par le séquestre Rfacto. Aucun paiement direct hors plateforme n’est autorisé : c’est ce qui protège les deux parties jusqu’à la confirmation de livraison.",
+    trust_charter_a4_title: "4. Fiabilité des livraisons",
+    trust_charter_a4_text:
+      "Voyageurs et services s’engagent à respecter les délais annoncés et à assurer une remise correcte. Chaque livraison est confirmée par preuve numérique dans l’app (QR / code de remise et/ou photo).",
+    trust_charter_a5_title: "5. Responsabilité partagée",
+    trust_charter_a5_text:
+      "En cas d’incident, un litige peut être ouvert depuis la réservation. Le support Rfacto examine le dossier avec les preuves disponibles pour une issue équitable — sans remplacer une assurance colis (à venir).",
+    trust_charter_a6_title: "6. Protection des données",
+    trust_charter_a6_text:
+      "Les informations personnelles servent uniquement au fonctionnement du service (mise en relation, paiement, livraison, support). Elles ne sont pas revendues.",
+    trust_charter_a7_title: "7. Valorisation de la communauté",
+    trust_charter_a7_text:
+      "Chaque membre contribue à la réputation du réseau. Notes et historiques de livraison aident à choisir des profils fiables et à améliorer la qualité du service.",
+    trust_funds_title: "Incidents & fonds (règles de séquestre)",
+    trust_funds_lead:
+      "Comment Rfacto traite les cas limites autour de la confirmation, des retards et du cash-flow des prestataires — avec le statut réel de chaque règle.",
+    trust_funds_i1_title: "Client qui ne confirme pas alors que le colis est arrivé",
+    trust_funds_i1_text:
+      "Cible : preuves numériques (QR / photo) + délai de confirmation (ex. 48–72 h) sans contestation → libération des fonds ; litige ouvert → décision Rfacto. Aujourd’hui : expéditeur ou livreur peut marquer « livré » (libération immédiate) ; le litige n’empêche pas encore automatiquement le versement.",
+    trust_funds_i2_title: "Retard important, mais livraison finale OK",
+    trust_funds_i2_text:
+      "En place comme politique : un retard n’annule pas le paiement si la livraison est confirmée. Les fonds restent bloqués jusqu’au statut « Livré ». Aucune pénalité automatique aujourd’hui ; des pénalités négociées ou plafonnées pourront arriver plus tard.",
+    trust_funds_i3_title: "Frais avancés par le voyageur / service / transitaire",
+    trust_funds_i3_text:
+      "En place : le client paie en séquestre avant le transit ; le prestataire reçoit après confirmation de livraison. Il avance donc ses coûts d’exécution (fret, transport, manutention), pas le prix client déjà bloqué. Acomptes ou paiements par palier : à venir pour certains corridors pro.",
+    trust_funds_i4_title: "Litige et gel des fonds",
+    trust_funds_i4_text:
+      "Cible : litige ouvert = fonds gelés jusqu’à décision support / admin. Aujourd’hui : litige notifie l’équipe et documente le dossier, mais ne gèle pas encore automatiquement le séquestre.",
 
     // Marketing
     hero_tagline:
@@ -1007,7 +1046,7 @@ const dict = {
       "Rfacto remains a technology intermediary. We secure the relationship and handle incidents — we do not replace an insurer or a carrier.",
     trust_s4_i1_title: "Rfacto Trust program",
     trust_s4_i1_text:
-      "Live: in-app disputes, team notified, mediation, and clear rules on what the platform does / does not do.",
+      "Live: community charter below, in-app disputes, team notified, mediation, and clear rules on what the platform does / does not do.",
     trust_s4_i2_title: "Incident assistance",
     trust_s4_i2_text:
       "Live: open a dispute from the booking + quality ambassadors on the ground. No 24/7 hotline yet — support via the app.",
@@ -1017,6 +1056,45 @@ const dict = {
     trust_program_liability_link: "Read the responsibility policy",
     trust_program_footnote:
       "Items marked “Coming soon” are in preparation. We only label as available what already works in the app.",
+    trust_charter_title: "Community trust charter",
+    trust_charter_lead:
+      "Shared commitments among travelers, services and clients — aligned with what Rfacto already secures in the app.",
+    trust_charter_a1_title: "1. Transparency commitment",
+    trust_charter_a1_text:
+      "Every member provides accurate information about identity, parcels and trips. Carriers verify identity (KYC) to accept parcels. No false statements, and no anonymous profiles for delivering or receiving payouts.",
+    trust_charter_a2_title: "2. Respect and goodwill",
+    trust_charter_a2_text:
+      "Exchanges between clients, travelers and services stay courteous. Inappropriate behavior can be reported via an in-app dispute. Rfacto is a human community first — cooperation is the engine.",
+    trust_charter_a3_title: "3. Transaction security",
+    trust_charter_a3_text:
+      "Booking payments go through Rfacto escrow. Direct off-platform payment is not allowed: that is what protects both parties until delivery is confirmed.",
+    trust_charter_a4_title: "4. Delivery reliability",
+    trust_charter_a4_text:
+      "Travelers and services commit to announced timelines and proper handover. Each delivery is confirmed with digital proof in the app (handover QR / code and/or photo).",
+    trust_charter_a5_title: "5. Shared responsibility",
+    trust_charter_a5_text:
+      "If something goes wrong, a dispute can be opened from the booking. Rfacto support reviews the case with available evidence for a fair outcome — without replacing parcel insurance (coming later).",
+    trust_charter_a6_title: "6. Data protection",
+    trust_charter_a6_text:
+      "Personal data is used only to run the service (matching, payment, delivery, support). It is never sold.",
+    trust_charter_a7_title: "7. Community reputation",
+    trust_charter_a7_text:
+      "Every member shapes the network’s reputation. Ratings and delivery history help people choose reliable profiles and raise service quality.",
+    trust_funds_title: "Incidents & funds (escrow rules)",
+    trust_funds_lead:
+      "How Rfacto handles edge cases around confirmation, delays and provider cash-flow — with the real status of each rule.",
+    trust_funds_i1_title: "Client does not confirm even though the parcel arrived",
+    trust_funds_i1_text:
+      "Target: digital proof (QR / photo) + confirmation window (e.g. 48–72h) with no dispute → funds released; open dispute → Rfacto decision. Today: sender or carrier can mark “delivered” (immediate release); a dispute does not yet automatically block payout.",
+    trust_funds_i2_title: "Significant delay, but final delivery OK",
+    trust_funds_i2_text:
+      "Live as policy: delay does not cancel payment if delivery is confirmed. Funds stay held until status “Delivered”. No automatic penalties today; negotiated or capped penalties may come later.",
+    trust_funds_i3_title: "Costs advanced by traveler / service / freight forwarder",
+    trust_funds_i3_text:
+      "Live: the client pays into escrow before transit; the provider is paid after delivery confirmation. They advance their operating costs (freight, transport, handling), not the client price already held. Partial advances or milestone payouts: coming later for some pro corridors.",
+    trust_funds_i4_title: "Dispute and fund freeze",
+    trust_funds_i4_text:
+      "Target: open dispute = funds frozen until support / admin decision. Today: a dispute notifies the team and documents the case, but does not yet automatically freeze escrow.",
 
     hero_tagline:
       "Travelers, services and clients — connected in one network.",

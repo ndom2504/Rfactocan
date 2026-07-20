@@ -18,6 +18,39 @@ type Section = {
   items: Item[];
 };
 
+const CHARTER_ARTICLES: { titleKey: DictKey; textKey: DictKey }[] = [
+  { titleKey: "trust_charter_a1_title", textKey: "trust_charter_a1_text" },
+  { titleKey: "trust_charter_a2_title", textKey: "trust_charter_a2_text" },
+  { titleKey: "trust_charter_a3_title", textKey: "trust_charter_a3_text" },
+  { titleKey: "trust_charter_a4_title", textKey: "trust_charter_a4_text" },
+  { titleKey: "trust_charter_a5_title", textKey: "trust_charter_a5_text" },
+  { titleKey: "trust_charter_a6_title", textKey: "trust_charter_a6_text" },
+  { titleKey: "trust_charter_a7_title", textKey: "trust_charter_a7_text" },
+];
+
+const FUNDS_ITEMS: Item[] = [
+  {
+    titleKey: "trust_funds_i1_title",
+    textKey: "trust_funds_i1_text",
+    status: "soon",
+  },
+  {
+    titleKey: "trust_funds_i2_title",
+    textKey: "trust_funds_i2_text",
+    status: "live",
+  },
+  {
+    titleKey: "trust_funds_i3_title",
+    textKey: "trust_funds_i3_text",
+    status: "live",
+  },
+  {
+    titleKey: "trust_funds_i4_title",
+    textKey: "trust_funds_i4_text",
+    status: "soon",
+  },
+];
+
 const SECTIONS: Section[] = [
   {
     titleKey: "trust_s1_title",
@@ -168,6 +201,59 @@ export default async function TrustProgramPage() {
           </section>
         ))}
       </div>
+
+      <section
+        id="charte"
+        className="mt-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6"
+      >
+        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+          {t(locale, "trust_charter_title")}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+          {t(locale, "trust_charter_lead")}
+        </p>
+        <ol className="mt-6 space-y-5">
+          {CHARTER_ARTICLES.map((article) => (
+            <li key={article.titleKey} className="space-y-1.5">
+              <p className="font-medium text-[var(--foreground)]">
+                {t(locale, article.titleKey)}
+              </p>
+              <p className="text-sm leading-relaxed text-[var(--muted)]">
+                {t(locale, article.textKey)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section
+        id="incidents-fonds"
+        className="mt-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6"
+      >
+        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+          {t(locale, "trust_funds_title")}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+          {t(locale, "trust_funds_lead")}
+        </p>
+        <ul className="mt-5 space-y-4">
+          {FUNDS_ITEMS.map((item) => (
+            <li key={item.titleKey} className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium text-[var(--foreground)]">
+                  {t(locale, item.titleKey)}
+                </p>
+                <Badge className={statusClass(item.status)}>
+                  {statusLabel(locale, item.status)}
+                </Badge>
+              </div>
+              <p className="text-sm leading-relaxed text-[var(--muted)]">
+                {t(locale, item.textKey)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <p className="mt-8 text-sm text-[var(--muted)]">
         {t(locale, "trust_program_footnote")}
