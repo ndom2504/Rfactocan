@@ -17,7 +17,7 @@ const dict = {
     nav_admin: "Admin",
     services_title: "Colis & services",
     services_subtitle:
-      "Parcourez les catégories ou publiez une offre : hébergement, artisanat, beauté, famille, événements…",
+      "Parcourez les catégories ou publiez une offre : hébergement, artisanat, informatique, infographie, événements…",
     services_publish: "Publier un service",
     services_publish_hint:
       "Pour les commerciaux : fret, cargo, transport et autres services par catégorie.",
@@ -792,7 +792,7 @@ const dict = {
     verified: "Verified",
     services_title: "Parcels & services",
     services_subtitle:
-      "Browse categories or publish an offer: lodging, trades, beauty, family, events…",
+      "Browse categories or publish an offer: lodging, trades, IT, graphic design, events…",
     services_publish: "Publish a service",
     services_publish_hint:
       "For businesses: freight, cargo, transport and other services by category.",
