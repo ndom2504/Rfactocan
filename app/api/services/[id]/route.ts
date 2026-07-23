@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseProductsJson } from "@/lib/services-catalog";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-function serialize(listing: { photosJson: string; [key: string]: unknown }) {
+function serialize(listing: {
+  photosJson: string;
+  productsJson?: string;
+  [key: string]: unknown;
+}) {
   return {
     ...listing,
     photos: JSON.parse(listing.photosJson || "[]") as string[],
+    products: parseProductsJson(listing.productsJson),
   };
 }
 

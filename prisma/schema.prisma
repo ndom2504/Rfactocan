@@ -159,6 +159,12 @@ model User {
   kycVerifiedAt               DateTime?
   /// Last presence heartbeat (for online/offline in chat)
   lastSeenAt                  DateTime?
+  /// Last known GPS for nearby job alerts (Uber-style)
+  lastLat                     Float?
+  lastLng                     Float?
+  lastLocationAt              DateTime?
+  /// Opt-in for nearby job / service push alerts (default on)
+  nearbyAlertsEnabled         Boolean    @default(true)
   createdAt                   DateTime   @default(now())
   updatedAt                   DateTime   @updatedAt
 
@@ -176,6 +182,22 @@ model User {
   passwordResets   PasswordResetToken[]
   loginOtps        LoginOtp[]
   notifications    Notification[]
+  deviceTokens     DeviceToken[]
+}
+
+/// FCM (or other) push device tokens for Uber-style job alerts.
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("ANDROID")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([platform])
 }
 
 model Notification {
@@ -301,6 +323,8 @@ model ServiceListing {
   availableFrom DateTime?
   availableTo   DateTime?
   photosJson    String   @default("[]")
+  /// Produits / articles (JSON string[]) — surtout pour la catégorie vente.
+  productsJson  String   @default("[]")
   status        String   @default("OPEN")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

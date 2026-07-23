@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { notifyNearbyForService } from "@/lib/nearby-notify";
 import { prisma } from "@/lib/prisma";
 import {
   PRICE_UNITS,
   getCategory,
   isServiceCategoryId,
+  parseProductsJson,
 } from "@/lib/services-catalog";
 import { currencyForCountry, normalizeCurrency } from "@/lib/currency";
 
@@ -24,15 +26,18 @@ const createSchema = z.object({
   availableFrom: z.string().optional(),
   availableTo: z.string().optional(),
   photos: z.array(z.string()).max(5).optional(),
+  products: z.array(z.string().min(1).max(80)).max(20).optional(),
 });
 
 function serialize(listing: {
   photosJson: string;
+  productsJson?: string;
   [key: string]: unknown;
 }) {
   return {
     ...listing,
     photos: JSON.parse(listing.photosJson || "[]") as string[],
+    products: parseProductsJson(listing.productsJson),
   };
 }
 
@@ -42,6 +47,7 @@ export async function GET(request: Request) {
   const serviceType = (searchParams.get("type") ?? "").trim();
   const country = (searchParams.get("country") ?? "").trim().toUpperCase();
   const city = (searchParams.get("city") ?? "").trim();
+  const product = (searchParams.get("product") ?? "").trim().toLowerCase();
   const mine = searchParams.get("mine") === "1";
   const session = await getSessionUser();
 
@@ -82,8 +88,15 @@ export async function GET(request: Request) {
     take: 100,
   });
 
+  const serialized = listings.map(serialize);
+  const filtered = product
+    ? serialized.filter((l) =>
+        l.products.some((p) => p.toLowerCase().includes(product))
+      )
+    : serialized;
+
   return NextResponse.json({
-    listings: listings.map(serialize),
+    listings: filtered,
   });
 }
 
@@ -110,6 +123,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const products =
+      body.category === "vente" ? parseProductsJson(body.products ?? []) : [];
+
     const listing = await prisma.serviceListing.create({
       data: {
         userId: session.id,
@@ -131,8 +147,13 @@ export async function POST(request: Request) {
           : null,
         availableTo: body.availableTo ? new Date(body.availableTo) : null,
         photosJson: JSON.stringify(body.photos ?? []),
+        productsJson: JSON.stringify(products),
       },
     });
+
+    void notifyNearbyForService(listing).catch((err) =>
+      console.error("[nearby_service]", err)
+    );
 
     return NextResponse.json({ listing: serialize(listing) }, { status: 201 });
   } catch (e) {

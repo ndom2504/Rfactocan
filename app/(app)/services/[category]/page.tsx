@@ -12,6 +12,8 @@ import { Select } from "@/components/ui/select";
 import {
   getCategory,
   isServiceCategoryId,
+  productLabel,
+  saleProductsForSector,
   serviceTypeLabel,
 } from "@/lib/services-catalog";
 import { formatMoney } from "@/lib/currency";
@@ -31,6 +33,7 @@ type Listing = {
   priceUnit: string;
   currency: string;
   photos?: string[];
+  products?: string[];
   user: {
     displayName: string;
     ratingAvg: number;
@@ -46,6 +49,7 @@ export default function ServiceCategoryPage() {
   const cat = isServiceCategoryId(category) ? getCategory(category) : undefined;
   const [type, setType] = useState("");
   const [city, setCity] = useState("");
+  const [product, setProduct] = useState("");
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,6 +64,7 @@ export default function ServiceCategoryPage() {
     const q = new URLSearchParams({ category });
     if (type) q.set("type", type);
     if (city.trim()) q.set("city", city.trim());
+    if (product.trim()) q.set("product", product.trim());
     fetch(`/api/services?${q}`)
       .then(async (res) => {
         const data = await res.json();
@@ -75,7 +80,11 @@ export default function ServiceCategoryPage() {
     return () => {
       cancelled = true;
     };
-  }, [category, type, city, cat]);
+  }, [category, type, city, product, cat]);
+
+  useEffect(() => {
+    setProduct("");
+  }, [type, category]);
 
   if (!cat) {
     return (
@@ -158,7 +167,11 @@ export default function ServiceCategoryPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>{t("services_type")}</Label>
+          <Label>
+            {category === "vente"
+              ? t("services_sale_sector")
+              : t("services_type")}
+          </Label>
           <Select value={type} onChange={(e) => setType(e.target.value)}>
             <option value="">{t("all")}</option>
             {cat.types.map((tp) => (
@@ -176,6 +189,29 @@ export default function ServiceCategoryPage() {
             placeholder={t("services_city_filter")}
           />
         </div>
+        {category === "vente" && (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>{t("services_sale_product_filter")}</Label>
+            <Select
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+            >
+              <option value="">{t("all")}</option>
+              {(type
+                ? saleProductsForSector(type)
+                : cat.types.flatMap((tp) => saleProductsForSector(tp.id))
+              )
+                .filter(
+                  (p, i, arr) => arr.findIndex((x) => x.id === p.id) === i
+                )
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {locale === "en" ? p.labelEn : p.labelFr}
+                  </option>
+                ))}
+            </Select>
+          </div>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-700">{error}</p>}
@@ -201,6 +237,19 @@ export default function ServiceCategoryPage() {
                       {serviceTypeLabel(item.category, item.serviceType, locale)}{" "}
                       · {item.city}, {item.country}
                     </CardDescription>
+                    {(item.products?.length ?? 0) > 0 && (
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {item.products!
+                          .map((p) =>
+                            productLabel(
+                              item.serviceType,
+                              p,
+                              locale === "en" ? "en" : "fr"
+                            )
+                          )
+                          .join(" · ")}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-[var(--muted)]">
                       {item.user.displayName}
                       {item.user.ratingCount

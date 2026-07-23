@@ -18,6 +18,8 @@ export const SERVICE_CATEGORIES = [
   "beaute",
   "famille",
   "evenements",
+  "sport",
+  "vente",
   "informatique",
   "transport",
   "transitaire",
@@ -229,6 +231,136 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
     ],
   },
   {
+    id: "sport",
+    labelFr: "Sport & bien-être",
+    labelEn: "Sport & wellness",
+    hintFr: "Coach, entraîneur, kiné, massage et préparation physique",
+    hintEn: "Coach, trainer, physio, massage and conditioning",
+    isParcel: false,
+    types: [
+      {
+        id: "coach_sportif",
+        labelFr: "Coach sportif",
+        labelEn: "Sports coach",
+      },
+      {
+        id: "entraineur",
+        labelFr: "Entraîneur",
+        labelEn: "Trainer / coach",
+      },
+      {
+        id: "preparateur_physique",
+        labelFr: "Préparateur physique",
+        labelEn: "Strength & conditioning coach",
+      },
+      {
+        id: "masseur",
+        labelFr: "Masseur / masseuse",
+        labelEn: "Massage therapist",
+      },
+      {
+        id: "kine",
+        labelFr: "Kinésithérapeute",
+        labelEn: "Physiotherapist",
+      },
+      {
+        id: "yoga_pilates",
+        labelFr: "Yoga / Pilates",
+        labelEn: "Yoga / Pilates",
+      },
+      {
+        id: "fitness",
+        labelFr: "Fitness / musculation",
+        labelEn: "Fitness / gym",
+      },
+      {
+        id: "arts_martiaux",
+        labelFr: "Arts martiaux",
+        labelEn: "Martial arts",
+      },
+      {
+        id: "natation",
+        labelFr: "Natation",
+        labelEn: "Swimming",
+      },
+      {
+        id: "autre_sport",
+        labelFr: "Autre service sportif",
+        labelEn: "Other sports service",
+      },
+    ],
+  },
+  {
+    id: "vente",
+    labelFr: "Vente & commerce",
+    labelEn: "Sales & retail",
+    hintFr: "Filtrez par secteur puis par produit(s)",
+    hintEn: "Filter by sector then by product(s)",
+    isParcel: false,
+    types: [
+      {
+        id: "alimentaire",
+        labelFr: "Alimentaire",
+        labelEn: "Food & grocery",
+      },
+      {
+        id: "mode_textile",
+        labelFr: "Mode & textile",
+        labelEn: "Fashion & textile",
+      },
+      {
+        id: "electronique",
+        labelFr: "Électronique",
+        labelEn: "Electronics",
+      },
+      {
+        id: "telephone_accessoires",
+        labelFr: "Téléphonie & accessoires",
+        labelEn: "Phones & accessories",
+      },
+      {
+        id: "auto_moto",
+        labelFr: "Auto / moto",
+        labelEn: "Auto / moto",
+      },
+      {
+        id: "immobilier",
+        labelFr: "Immobilier",
+        labelEn: "Real estate",
+      },
+      {
+        id: "cosmetique_beaute",
+        labelFr: "Cosmétique & beauté",
+        labelEn: "Cosmetics & beauty",
+      },
+      {
+        id: "maison_deco",
+        labelFr: "Maison & déco",
+        labelEn: "Home & décor",
+      },
+      {
+        id: "agriculture",
+        labelFr: "Agriculture",
+        labelEn: "Agriculture",
+      },
+      {
+        id: "services_b2b",
+        labelFr: "Vente B2B / fournitures",
+        labelEn: "B2B / supplies",
+      },
+      {
+        id: "artisanat_vente",
+        labelFr: "Artisanat & faits main",
+        labelEn: "Crafts & handmade",
+      },
+      {
+        id: "autre_vente",
+        labelFr: "Autre secteur",
+        labelEn: "Other sector",
+      },
+    ],
+  },
+  {
     id: "informatique",
     labelFr: "Informatique & design",
     labelEn: "IT & design",
@@ -346,6 +478,102 @@ export const PRICE_UNITS = [
 ] as const;
 
 export type PriceUnitId = (typeof PRICE_UNITS)[number]["id"];
+
+/** Produits suggérés par secteur de vente (serviceType de la catégorie `vente`). */
+export const SALE_PRODUCTS_BY_SECTOR: Record<string, ServiceTypeDef[]> = {
+  alimentaire: [
+    { id: "fruits", labelFr: "Fruits", labelEn: "Fruit" },
+    { id: "legumes", labelFr: "Légumes", labelEn: "Vegetables" },
+    { id: "viande", labelFr: "Viande", labelEn: "Meat" },
+    { id: "poisson", labelFr: "Poisson", labelEn: "Fish" },
+    { id: "epicerie", labelFr: "Épicerie", labelEn: "Grocery" },
+    { id: "boissons", labelFr: "Boissons", labelEn: "Beverages" },
+  ],
+  mode_textile: [
+    { id: "vetements", labelFr: "Vêtements", labelEn: "Clothing" },
+    { id: "chaussures", labelFr: "Chaussures", labelEn: "Shoes" },
+    { id: "accessoires_mode", labelFr: "Accessoires", labelEn: "Accessories" },
+    { id: "tissus", labelFr: "Tissus", labelEn: "Fabrics" },
+  ],
+  electronique: [
+    { id: "ordinateurs", labelFr: "Ordinateurs", labelEn: "Computers" },
+    { id: "tv_audio", labelFr: "TV / audio", labelEn: "TV / audio" },
+    { id: "electromenager", labelFr: "Électroménager", labelEn: "Appliances" },
+  ],
+  telephone_accessoires: [
+    { id: "smartphones", labelFr: "Smartphones", labelEn: "Smartphones" },
+    { id: "accessoires_tel", labelFr: "Accessoires téléphone", labelEn: "Phone accessories" },
+    { id: "reparation_tel", labelFr: "Réparation téléphone", labelEn: "Phone repair" },
+  ],
+  auto_moto: [
+    { id: "pieces_auto", labelFr: "Pièces auto", labelEn: "Car parts" },
+    { id: "pieces_moto", labelFr: "Pièces moto", labelEn: "Moto parts" },
+    { id: "vehicules", labelFr: "Véhicules", labelEn: "Vehicles" },
+  ],
+  immobilier: [
+    { id: "location", labelFr: "Location", labelEn: "Rental" },
+    { id: "vente_bien", labelFr: "Vente de bien", labelEn: "Property sale" },
+    { id: "terrain", labelFr: "Terrain", labelEn: "Land" },
+  ],
+  cosmetique_beaute: [
+    { id: "soins", labelFr: "Soins", labelEn: "Skincare" },
+    { id: "maquillage", labelFr: "Maquillage", labelEn: "Makeup" },
+    { id: "parfums", labelFr: "Parfums", labelEn: "Perfume" },
+  ],
+  maison_deco: [
+    { id: "meubles", labelFr: "Meubles", labelEn: "Furniture" },
+    { id: "decoration", labelFr: "Décoration", labelEn: "Decoration" },
+    { id: "ustensiles", labelFr: "Ustensiles", labelEn: "Kitchenware" },
+  ],
+  agriculture: [
+    { id: "semences", labelFr: "Semences", labelEn: "Seeds" },
+    { id: "engrais", labelFr: "Engrais", labelEn: "Fertilizer" },
+    { id: "materiel_agricole", labelFr: "Matériel agricole", labelEn: "Farm equipment" },
+  ],
+  services_b2b: [
+    { id: "fournitures_bureau", labelFr: "Fournitures de bureau", labelEn: "Office supplies" },
+    { id: "equipements", labelFr: "Équipements", labelEn: "Equipment" },
+    { id: "gros", labelFr: "Vente en gros", labelEn: "Wholesale" },
+  ],
+  artisanat_vente: [
+    { id: "bijoux", labelFr: "Bijoux", labelEn: "Jewelry" },
+    { id: "artisanat_local", labelFr: "Artisanat local", labelEn: "Local crafts" },
+    { id: "faits_main", labelFr: "Faits main", labelEn: "Handmade" },
+  ],
+  autre_vente: [
+    { id: "divers", labelFr: "Divers", labelEn: "Miscellaneous" },
+  ],
+};
+
+export function saleProductsForSector(sectorId: string): ServiceTypeDef[] {
+  return SALE_PRODUCTS_BY_SECTOR[sectorId] ?? SALE_PRODUCTS_BY_SECTOR.autre_vente;
+}
+
+export function parseProductsJson(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((x): x is string => typeof x === "string")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+  }
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    return parseProductsJson(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+export function productLabel(
+  sectorId: string,
+  productId: string,
+  locale: "fr" | "en" = "fr"
+): string {
+  const found = saleProductsForSector(sectorId).find((p) => p.id === productId);
+  if (found) return locale === "en" ? found.labelEn : found.labelFr;
+  return productId;
+}
 
 export function getCategory(id: string): ServiceCategoryDef | undefined {
   return SERVICE_CATALOG.find((c) => c.id === id);

@@ -11,6 +11,7 @@ import { ServicePhotosButton } from "@/components/service-photos-button";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 import {
   categoryLabel,
+  productLabel,
   serviceTypeLabel,
 } from "@/lib/services-catalog";
 
@@ -28,6 +29,7 @@ type Listing = {
   availableFrom: string | null;
   availableTo: string | null;
   photos: string[];
+  products?: string[];
   userId: string;
   user: {
     id: string;
@@ -104,6 +106,21 @@ export default function ServiceListingDetailPage() {
             </>
           )}
         </CardDescription>
+
+        {(listing.products?.length ?? 0) > 0 && (
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            {t("services_sale_products")}:{" "}
+            {listing.products!
+              .map((p) =>
+                productLabel(
+                  listing.serviceType,
+                  p,
+                  locale === "en" ? "en" : "fr"
+                )
+              )
+              .join(" · ")}
+          </p>
+        )}
 
         <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">
           {listing.description}

@@ -14,20 +14,24 @@ const body = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+const siteTitle = "Services de vente collaboratif en ligne";
+const siteDescription =
+  "Services de vente collaboratif en ligne — Rfacto connecte vendeurs, voyageurs et clients pour le commerce et l’expédition de colis.";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.rfacto.com"),
   title: {
-    default: "Services collaboratifs et expédition de colis",
+    default: siteTitle,
     template: "%s · Rfacto",
   },
-  description:
-    "Envoyez vos colis plus simplement, plus rapidement et à moindre coût. Mise en relation entre expéditeurs et voyageurs, paiement sécurisé et suivi des livraisons.",
+  description: siteDescription,
   applicationName: "Rfacto",
   keywords: [
     "Rfacto",
+    "services de vente collaboratif",
+    "vente collaboratif en ligne",
     "services collaboratifs",
     "expédition de colis",
-    "transport collaboratif",
     "colis",
     "voyageurs",
     "Gabon",
@@ -43,23 +47,21 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     url: "https://www.rfacto.com",
     siteName: "Rfacto",
-    title: "Services collaboratifs et expédition de colis",
-    description:
-      "Envoyez vos colis plus simplement, plus rapidement et à moindre coût grâce à la communauté Rfacto. Paiement sécurisé et suivi des livraisons.",
+    title: siteTitle,
+    description: siteDescription,
     images: [
       {
         url: "/og-rfacto.png",
         width: 1200,
         height: 675,
-        alt: "Services collaboratifs et expédition de colis",
+        alt: siteTitle,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Services collaboratifs et expédition de colis",
-    description:
-      "Mise en relation expéditeurs et voyageurs. Paiement sécurisé. Suivi des livraisons.",
+    title: siteTitle,
+    description: siteDescription,
     images: ["/og-rfacto.png"],
   },
 };

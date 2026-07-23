@@ -20,6 +20,8 @@ import {
   getCategory,
   isServiceCategoryId,
   parseTransportServiceType,
+  productLabel,
+  saleProductsForSector,
   transportServiceTypesForMode,
 } from "@/lib/services-catalog";
 import {
@@ -50,8 +52,14 @@ function NewServiceForm() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [products, setProducts] = useState<string[]>([]);
+  const [customProduct, setCustomProduct] = useState("");
 
   const cat = getCategory(category);
+  const saleProducts = useMemo(
+    () => (category === "vente" ? saleProductsForSector(serviceType) : []),
+    [category, serviceType]
+  );
   const cities = useMemo(() => getCities(country), [country]);
   const publishable = SERVICE_CATALOG.filter((c) => !c.isParcel);
   const transportTypes = useMemo(
@@ -70,6 +78,16 @@ function NewServiceForm() {
       setServiceType(types[0]?.id ?? "");
     }
   }, [category, cat, serviceType]);
+
+  useEffect(() => {
+    if (category !== "vente") {
+      setProducts([]);
+      setCustomProduct("");
+      return;
+    }
+    setProducts([]);
+    setCustomProduct("");
+  }, [category, serviceType]);
 
   useEffect(() => {
     if (category !== "transport") return;
@@ -124,6 +142,7 @@ function NewServiceForm() {
       availableFrom: String(fd.get("availableFrom") || "") || undefined,
       availableTo: String(fd.get("availableTo") || "") || undefined,
       photos,
+      ...(category === "vente" ? { products } : {}),
     };
     const res = await fetch("/api/services", {
       method: "POST",
@@ -163,7 +182,11 @@ function NewServiceForm() {
           </div>
           {category !== "transport" ? (
             <div className="space-y-1.5">
-              <Label>{t("services_type")}</Label>
+              <Label>
+                {category === "vente"
+                  ? t("services_sale_sector")
+                  : t("services_type")}
+              </Label>
               <Select
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
@@ -210,6 +233,71 @@ function NewServiceForm() {
             <p className="text-xs text-[var(--muted)]">
               {transportModeLabel(transportMode, locale === "en" ? "en" : "fr")}
             </p>
+          </div>
+        )}
+
+        {category === "vente" && (
+          <div className="space-y-2">
+            <Label>{t("services_sale_products")}</Label>
+            <p className="text-xs text-[var(--muted)]">
+              {t("services_sale_products_hint")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {saleProducts.map((p) => {
+                const selected = products.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() =>
+                      setProducts((prev) =>
+                        selected
+                          ? prev.filter((x) => x !== p.id)
+                          : [...prev, p.id].slice(0, 20)
+                      )
+                    }
+                    className={`rounded-md border px-3 py-1.5 text-sm ${
+                      selected
+                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                        : "border-[var(--border)] text-[var(--foreground)]"
+                    }`}
+                  >
+                    {locale === "en" ? p.labelEn : p.labelFr}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                value={customProduct}
+                onChange={(e) => setCustomProduct(e.target.value)}
+                placeholder={t("services_sale_product_custom")}
+                className="max-w-xs"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const value = customProduct.trim();
+                  if (!value) return;
+                  setProducts((prev) =>
+                    prev.includes(value) ? prev : [...prev, value].slice(0, 20)
+                  );
+                  setCustomProduct("");
+                }}
+              >
+                {t("services_sale_product_add")}
+              </Button>
+            </div>
+            {products.length > 0 && (
+              <p className="text-xs text-[var(--muted)]">
+                {products
+                  .map((p) =>
+                    productLabel(serviceType, p, locale === "en" ? "en" : "fr")
+                  )
+                  .join(" · ")}
+              </p>
+            )}
           </div>
         )}
 

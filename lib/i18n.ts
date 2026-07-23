@@ -17,13 +17,20 @@ const dict = {
     nav_admin: "Admin",
     services_title: "Colis & services",
     services_subtitle:
-      "Parcourez les catégories ou publiez une offre : hébergement, artisanat, informatique, infographie, événements…",
+      "Parcourez les catégories ou publiez une offre : sport, vente, informatique, hébergement…",
     services_publish: "Publier un service",
     services_publish_hint:
       "Pour les commerciaux : fret, cargo, transport et autres services par catégorie.",
     services_see_list: "Voir les offres",
     services_back: "Toutes les catégories",
     services_type: "Métier / type",
+    services_sale_sector: "Secteur de vente",
+    services_sale_products: "Produit(s)",
+    services_sale_products_hint:
+      "Sélectionnez un ou plusieurs produits, ou ajoutez un produit spécifique.",
+    services_sale_product_filter: "Filtrer par produit",
+    services_sale_product_custom: "Produit spécifique…",
+    services_sale_product_add: "Ajouter",
     services_category: "Catégorie",
     services_title_field: "Titre de l’offre",
     services_price: "Prix",
@@ -792,13 +799,20 @@ const dict = {
     verified: "Verified",
     services_title: "Parcels & services",
     services_subtitle:
-      "Browse categories or publish an offer: lodging, trades, IT, graphic design, events…",
+      "Browse categories or publish an offer: sport, sales, IT, lodging…",
     services_publish: "Publish a service",
     services_publish_hint:
       "For businesses: freight, cargo, transport and other services by category.",
     services_see_list: "See offers",
     services_back: "All categories",
     services_type: "Trade / type",
+    services_sale_sector: "Sales sector",
+    services_sale_products: "Product(s)",
+    services_sale_products_hint:
+      "Select one or more products, or add a specific product.",
+    services_sale_product_filter: "Filter by product",
+    services_sale_product_custom: "Specific product…",
+    services_sale_product_add: "Add",
     services_category: "Category",
     services_title_field: "Offer title",
     services_price: "Price",

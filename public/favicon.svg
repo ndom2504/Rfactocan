@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" role="img" aria-label="Rfacto">
-  <rect width="108" height="108" rx="20" fill="#0B3D2E"/>
-  <g transform="translate(14,12) scale(0.80)">
-    <path fill="#1A5C45" d="M30,20 H70 C80,20 85,30 85,40 C85,50 80,60 70,60 H50 V80 H30 Z M50,40 H65 C68,40 70,38 70,35 C70,32 68,30 65,30 H50 Z"/>
-    <path fill="#2E8B6A" d="M20,60 C10,70 15,85 40,90 C65,95 85,85 90,60 L85,65 C80,80 60,85 40,82 C25,80 20,70 25,65 Z"/>
-    <path fill="#FFFFFF" d="M25,45 L45,35 L65,45 L65,65 L45,75 L25,65 Z"/>
-    <path fill="#E0E0E0" d="M25,45 L45,55 L65,45 L45,35 Z"/>
-    <path fill="#0B3D2E" d="M40,50 L50,45 L50,55 L40,60 Z"/>
+  <rect width="108" height="108" rx="22" fill="#FFFFFF"/>
+  <g transform="translate(54,54) scale(0.62) translate(-54,-54)">
+    <!-- R -->
+    <path fill="#006437" d="M35,20 H98 C105,20 108,30 108,40 C108,50 102,60 92,60 L108,95 H85 L68,60 H58 V95 H35 V20 Z M58,35 V45 H88 C90,45 92,43 92,40 C92,37 90,35 88,35 H58 Z"/>
+    <!-- Swoosh -->
+    <path fill="#000000" d="M5,80 C0,92 25,108 60,108 C95,108 115,88 112,65 L106,70 C108,85 85,100 60,100 C35,100 15,90 15,82 Z"/>
+    <!-- Parcel top -->
+    <path fill="#FFFFFF" stroke="#000000" stroke-width="1" d="M10,65 L32,54 L54,65 L32,76 Z"/>
+    <!-- Parcel left -->
+    <path fill="#FFFFFF" stroke="#000000" stroke-width="1" d="M10,65 L32,76 V98 L10,87 Z"/>
+    <!-- Parcel right -->
+    <path fill="#000000" d="M32,76 L54,65 V87 L32,98 Z"/>
+    <!-- Tape -->
+    <path fill="#000000" d="M28,56 L36,52 V85 L28,89 Z"/>
   </g>
 </svg>
