@@ -49,12 +49,17 @@ export default async function MarketingLayout({
         <footer className="mx-auto max-w-6xl border-t border-[var(--border)] px-6 py-8">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
             <p>© {new Date().getFullYear()} Rfacto · RapidFacto</p>
-            <Link
-              href="/responsibility"
-              className="hover:text-[var(--foreground)]"
-            >
-              {t(locale, "nav_responsibility")}
-            </Link>
+            <div className="flex flex-wrap gap-4">
+              <Link href="/about" className="hover:text-[var(--foreground)]">
+                {t(locale, "cta_about_us")}
+              </Link>
+              <Link
+                href="/responsibility"
+                className="hover:text-[var(--foreground)]"
+              >
+                {t(locale, "nav_responsibility")}
+              </Link>
+            </div>
           </div>
         </footer>
       </div>

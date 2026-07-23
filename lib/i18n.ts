@@ -376,6 +376,7 @@ const dict = {
     hero_sub:
       "Voyageurs, transitaires et particuliers peuvent livrer. Envoyez ou recevez un colis en toute confiance.",
     cta_start_here: "Commencer ici",
+    cta_about_us: "Qui sommes-nous",
     cta_send: "Commander",
     cta_travel: "Livrer",
     vision_title: "Vision & objectif",
@@ -392,6 +393,47 @@ const dict = {
       "commandent un voyage, une livraison ou un service.",
     vision_goal:
       "Objectif : une place de marché de confiance — KYC, paiements sécurisés, messagerie et suivi.",
+    about_title: "Qui sommes-nous",
+    about_welcome_title: "Message de bienvenue",
+    about_welcome_text:
+      "Bienvenue chez Rfacto (RapidFacto). Nous sommes une plateforme qui connecte voyageurs, prestataires de services et clients pour faciliter les envois, les prestations et la mise en lumière des talents — près de chez vous et à travers le monde.",
+    about_vision_title: "Notre vision",
+    about_vision_text:
+      "Promouvoir l’usage des services en ligne et des outils numériques comme vecteur de transformation de notre environnement ; rapprocher les gens ; créer un écosystème qui met en évidence des services et activités connues et méconnues ; favoriser l’autonomie et redonner de l’espoir à ceux qui ont des talents non exploités.",
+    about_objectives_title: "Nos objectifs",
+    about_objectives_text:
+      "Nous voulons établir Rfacto dans le monde, corridor après corridor, avec des cibles chiffrées pour rester concrets.",
+    about_obj_1:
+      "12+ pays actifs d’ici 12–18 mois (Canada, France et corridors Afrique de l’Ouest / Centrale en priorité).",
+    about_obj_2:
+      "10 000 utilisateurs inscrits la première année, puis 100 000 à moyen terme.",
+    about_obj_3:
+      "500 ambassadeurs et animateurs de communauté pour animer les réseaux locaux.",
+    about_obj_4:
+      "Un groupe WhatsApp officiel par pays couvert, plus des groupes de testeurs avant chaque lancement majeur.",
+    about_values_title: "Nos valeurs",
+    about_values_text:
+      "Confiance et transparence · Entraide et inclusion · Autonomie et dignité du travail · Responsabilité partagée · Innovation au service du réel.",
+    about_trust_title: "Programme de crédibilité et confiance",
+    about_trust_text:
+      "KYC, réputation, séquestre, preuves de livraison, charte communautaire et gestion des litiges : le détail de ce qui est déjà en place et de ce qui arrive est sur la page dédiée.",
+    about_trust_cta: "Voir le programme de confiance",
+    about_org_title: "Notre modèle organisationnel",
+    about_org_text:
+      "Trois rôles produits — Client, Voyageur, Service — sur un même compte selon le besoin. Une équipe admin / support pour la sécurité et les litiges. Des ambassadeurs locaux pour la croissance et l’animation. Des communautés WhatsApp nationales pour l’écoute et le feedback.",
+    about_ambassadors_title: "Ambassadeurs & réseau WhatsApp",
+    about_ambassadors_text:
+      "Étapes de création du réseau : (1) inscription et validation du profil ; (2) intégration dans un groupe de testeurs ; (3) formation courte aux règles Rfacto ; (4) ouverture / animation du groupe WhatsApp du pays ; (5) recrutement de nouveaux membres et remontée des besoins terrain.",
+    about_community_title: "Notre communauté",
+    about_community_text:
+      "Pays déjà prévus ou en déploiement : Canada, France, Côte d’Ivoire, Sénégal, Cameroun, Gabon, RDC, Congo-Brazzaville, Guinée, Maroc, Ghana, Chine — puis élargissement mondial. Chaque pays vise une communauté WhatsApp officielle (ex. RFacto Canada, RFacto Côte d’Ivoire).",
+    about_security_title: "Conflits, sécurité & fonctionnalités",
+    about_security_text:
+      "Les conflits se gèrent via messagerie, litiges documentés, support et charte. La sécurité repose sur comptes vérifiés, preuves, et règles de séquestre progressives. Fonctionnalités déjà utiles : comptes, voyages, demandes, services, messagerie, notifications. À venir / en consolidation : KYC renforcé, gel auto des fonds en litige, score de réputation élargi, alertes de proximité.",
+    about_features_live:
+      "Déjà disponible : inscription, voyages, commandes, offres de services, chat, programme de confiance publié.",
+    about_features_soon:
+      "À venir : renforcement KYC, gel automatique des fonds en litige, scoring avancé, push de proximité généralisé.",
     close: "Fermer",
     view_photos: "Voir photos",
     section_airbnb_title: "L'Airbnb du bagage international",
@@ -1101,6 +1143,7 @@ const dict = {
     hero_sub:
       "Travelers, freight forwarders and individuals can deliver. Send or receive a parcel with confidence.",
     cta_start_here: "Start here",
+    cta_about_us: "About us",
     cta_send: "Order",
     cta_travel: "Deliver",
     vision_title: "Vision & purpose",
@@ -1117,6 +1160,47 @@ const dict = {
       "order a trip, a delivery or a service.",
     vision_goal:
       "Goal: a trusted marketplace — KYC, secure payments, messaging and tracking.",
+    about_title: "About us",
+    about_welcome_title: "Welcome",
+    about_welcome_text:
+      "Welcome to Rfacto (RapidFacto). We connect travelers, service providers and clients to make shipments, local services and untapped talent easier to find — nearby and across the world.",
+    about_vision_title: "Our vision",
+    about_vision_text:
+      "Promote online services and digital tools as a force for transforming our environment; bring people closer; build an ecosystem that surfaces known and lesser-known services and activities; foster autonomy and restore hope for people whose talents remain unused.",
+    about_objectives_title: "Our objectives",
+    about_objectives_text:
+      "We aim to establish Rfacto worldwide, corridor by corridor, with numbered targets to stay concrete.",
+    about_obj_1:
+      "12+ active countries within 12–18 months (Canada, France and West / Central Africa corridors first).",
+    about_obj_2:
+      "10,000 registered users in year one, then 100,000 over the medium term.",
+    about_obj_3:
+      "500 ambassadors and community leads to animate local networks.",
+    about_obj_4:
+      "One official WhatsApp group per covered country, plus tester groups before each major launch.",
+    about_values_title: "Our values",
+    about_values_text:
+      "Trust and transparency · Mutual help and inclusion · Autonomy and dignity of work · Shared responsibility · Innovation grounded in real needs.",
+    about_trust_title: "Credibility & trust program",
+    about_trust_text:
+      "KYC, reputation, escrow, delivery proof, community charter and dispute handling: what is live and what is coming is detailed on the dedicated page.",
+    about_trust_cta: "View the trust program",
+    about_org_title: "Our organizational model",
+    about_org_text:
+      "Three product roles — Client, Traveler, Service — on one account as needed. An admin / support team for safety and disputes. Local ambassadors for growth and animation. National WhatsApp communities for listening and feedback.",
+    about_ambassadors_title: "Ambassadors & WhatsApp network",
+    about_ambassadors_text:
+      "Network build steps: (1) sign up and validate your profile; (2) join a tester group; (3) short Rfacto rules training; (4) open / run the country WhatsApp group; (5) recruit members and surface field needs.",
+    about_community_title: "Our community",
+    about_community_text:
+      "Countries planned or rolling out: Canada, France, Côte d’Ivoire, Senegal, Cameroon, Gabon, DRC, Congo-Brazzaville, Guinea, Morocco, Ghana, China — then worldwide. Each country targets an official WhatsApp community (e.g. RFacto Canada, RFacto Côte d’Ivoire).",
+    about_security_title: "Conflicts, security & features",
+    about_security_text:
+      "Conflicts are handled via messaging, documented disputes, support and the charter. Security relies on verified accounts, proof artifacts, and progressive escrow rules. Already useful: accounts, trips, requests, services, messaging, notifications. Coming / hardening: stronger KYC, auto fund freeze on dispute, broader reputation score, proximity alerts.",
+    about_features_live:
+      "Live: sign-up, trips, orders, service offers, chat, published trust program.",
+    about_features_soon:
+      "Coming: stronger KYC, automatic fund freeze on dispute, advanced scoring, wider proximity push.",
     close: "Close",
     view_photos: "View photos",
     section_airbnb_title: "The Airbnb of international baggage",

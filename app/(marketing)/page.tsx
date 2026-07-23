@@ -4,7 +4,6 @@ import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { HomeVisionButton } from "@/components/home-vision-button";
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
@@ -49,14 +48,13 @@ export default async function HomePage() {
                 {t(locale, "cta_start_here")}
               </Button>
             </Link>
-            <HomeVisionButton />
-            <Link href="/trust" className="w-full">
+            <Link href="/about" className="w-full">
               <Button
                 size="lg"
                 variant="outline"
                 className="h-12 w-full border-white/45 bg-transparent text-sm font-medium text-white/95 hover:bg-white/10"
               >
-                {t(locale, "trust_program_cta")}
+                {t(locale, "cta_about_us")}
               </Button>
             </Link>
           </div>
