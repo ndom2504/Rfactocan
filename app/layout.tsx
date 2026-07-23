@@ -17,7 +17,7 @@ const body = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.rfacto.com"),
   title: {
-    default: "Rfacto — Transport collaboratif de colis",
+    default: "Services collaboratifs et expédition de colis",
     template: "%s · Rfacto",
   },
   description:
@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   applicationName: "Rfacto",
   keywords: [
     "Rfacto",
+    "services collaboratifs",
+    "expédition de colis",
     "transport collaboratif",
     "colis",
     "voyageurs",
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     url: "https://www.rfacto.com",
     siteName: "Rfacto",
-    title: "Rfacto — Transport collaboratif de colis",
+    title: "Services collaboratifs et expédition de colis",
     description:
       "Envoyez vos colis plus simplement, plus rapidement et à moindre coût grâce à la communauté Rfacto. Paiement sécurisé et suivi des livraisons.",
     images: [
@@ -49,13 +51,13 @@ export const metadata: Metadata = {
         url: "/og-rfacto.png",
         width: 1200,
         height: 675,
-        alt: "Rfacto — Transport collaboratif de colis",
+        alt: "Services collaboratifs et expédition de colis",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rfacto — Transport collaboratif de colis",
+    title: "Services collaboratifs et expédition de colis",
     description:
       "Mise en relation expéditeurs et voyageurs. Paiement sécurisé. Suivi des livraisons.",
     images: ["/og-rfacto.png"],
