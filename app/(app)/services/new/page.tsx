@@ -408,31 +408,46 @@ function NewServiceForm() {
         </div>
 
         <div className="space-y-2">
-          <Label>{t("optional")} — photos</Label>
+          <Label>{t("services_photos")}</Label>
+          <p className="text-xs text-[var(--muted)]">{t("services_photos_hint")}</p>
           <Input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             disabled={uploading || photos.length >= 5}
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) void onUpload(f);
+              if (f && photos.length < 5) void onUpload(f);
+              e.target.value = "";
             }}
           />
+          {uploading && (
+            <p className="text-xs text-[var(--muted)]">{t("uploading")}</p>
+          )}
           {photos.length > 0 && (
-            <ul className="text-xs text-[var(--muted)]">
-              {photos.map((url) => (
-                <li key={url}>
+            <div className="grid grid-cols-3 gap-3 pt-2 sm:grid-cols-5">
+              {photos.map((url, index) => (
+                <div
+                  key={url}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
                   <button
                     type="button"
-                    className="underline"
-                    onClick={() => setPhotos((p) => p.filter((x) => x !== url))}
+                    onClick={() =>
+                      setPhotos((p) => p.filter((x) => x !== url))
+                    }
+                    className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white opacity-90 hover:bg-red-700"
                   >
                     {t("remove_photo")}
-                  </button>{" "}
-                  {url.slice(0, 48)}…
-                </li>
+                  </button>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 

@@ -31,6 +31,8 @@ const dict = {
     services_sale_product_filter: "Filtrer par produit",
     services_sale_product_custom: "Produit spécifique…",
     services_sale_product_add: "Ajouter",
+    services_photos: "Photos de l’offre (max 5)",
+    services_photos_hint: "Aperçu immédiat après sélection (jpeg, png, webp, gif).",
     services_category: "Catégorie",
     services_title_field: "Titre de l’offre",
     services_price: "Prix",
@@ -433,7 +435,7 @@ const dict = {
       "Étapes de création du réseau : (1) inscription et validation du profil ; (2) intégration dans un groupe de testeurs ; (3) formation courte aux règles Rfacto ; (4) ouverture / animation du groupe WhatsApp du pays ; (5) recrutement de nouveaux membres et remontée des besoins terrain.",
     about_community_title: "Notre communauté",
     about_community_text:
-      "Pays déjà prévus ou en déploiement : Canada, France, Côte d’Ivoire, Sénégal, Cameroun, Gabon, RDC, Congo-Brazzaville, Guinée, Maroc, Ghana, Chine — puis élargissement mondial. Chaque pays vise une communauté WhatsApp officielle (ex. RFacto Canada, RFacto Côte d’Ivoire).",
+      "Pays déjà prévus ou en déploiement : Canada, France, Côte d’Ivoire, Bénin, Sénégal, Cameroun, Gabon, RDC, Congo-Brazzaville, Guinée, Maroc, Ghana, Chine — puis élargissement mondial. Chaque pays vise une communauté WhatsApp officielle (ex. RFacto Canada, RFacto Côte d’Ivoire).",
     about_security_title: "Conflits, sécurité & fonctionnalités",
     about_security_text:
       "Les conflits se gèrent via messagerie, litiges documentés, support et charte. La sécurité repose sur comptes vérifiés, preuves, et règles de séquestre progressives. Fonctionnalités déjà utiles : comptes, voyages, demandes, services, messagerie, notifications. À venir / en consolidation : KYC renforcé, gel auto des fonds en litige, score de réputation élargi, alertes de proximité.",
@@ -813,6 +815,8 @@ const dict = {
     services_sale_product_filter: "Filter by product",
     services_sale_product_custom: "Specific product…",
     services_sale_product_add: "Add",
+    services_photos: "Offer photos (max 5)",
+    services_photos_hint: "Preview appears right after selection (jpeg, png, webp, gif).",
     services_category: "Category",
     services_title_field: "Offer title",
     services_price: "Price",
@@ -1207,7 +1211,7 @@ const dict = {
       "Network build steps: (1) sign up and validate your profile; (2) join a tester group; (3) short Rfacto rules training; (4) open / run the country WhatsApp group; (5) recruit members and surface field needs.",
     about_community_title: "Our community",
     about_community_text:
-      "Countries planned or rolling out: Canada, France, Côte d’Ivoire, Senegal, Cameroon, Gabon, DRC, Congo-Brazzaville, Guinea, Morocco, Ghana, China — then worldwide. Each country targets an official WhatsApp community (e.g. RFacto Canada, RFacto Côte d’Ivoire).",
+      "Countries planned or rolling out: Canada, France, Côte d’Ivoire, Benin, Senegal, Cameroon, Gabon, DRC, Congo-Brazzaville, Guinea, Morocco, Ghana, China — then worldwide. Each country targets an official WhatsApp community (e.g. RFacto Canada, RFacto Côte d’Ivoire).",
     about_security_title: "Conflicts, security & features",
     about_security_text:
       "Conflicts are handled via messaging, documented disputes, support and the charter. Security relies on verified accounts, proof artifacts, and progressive escrow rules. Already useful: accounts, trips, requests, services, messaging, notifications. Coming / hardening: stronger KYC, auto fund freeze on dispute, broader reputation score, proximity alerts.",
