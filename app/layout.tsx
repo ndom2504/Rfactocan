@@ -51,7 +51,10 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: "/og-rfacto.png",
+        // New light JPEG URL — WhatsApp often skips heavy PNGs and caches old previews.
+        url: "https://www.rfacto.com/og-share.jpg",
+        secureUrl: "https://www.rfacto.com/og-share.jpg",
+        type: "image/jpeg",
         width: 1200,
         height: 675,
         alt: siteTitle,
@@ -62,7 +65,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/og-rfacto.png"],
+    images: ["https://www.rfacto.com/og-share.jpg"],
   },
 };
 
