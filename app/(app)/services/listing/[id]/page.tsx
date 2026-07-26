@@ -14,6 +14,7 @@ import {
   productLabel,
   serviceTypeLabel,
 } from "@/lib/services-catalog";
+import { displayWebsiteHost } from "@/lib/service-website";
 
 type Listing = {
   id: string;
@@ -30,6 +31,7 @@ type Listing = {
   availableTo: string | null;
   photos: string[];
   products?: string[];
+  websiteUrl?: string | null;
   userId: string;
   user: {
     id: string;
@@ -87,7 +89,18 @@ export default function ServiceListingDetailPage() {
         ← {categoryLabel(listing.category, locale)}
       </Link>
 
-      <Card>
+      <Card className="overflow-hidden">
+        {listing.photos?.[0] ? (
+          <div className="relative -mx-5 -mt-5 mb-5 aspect-[16/9] overflow-hidden bg-[var(--surface-2,#eef2ef)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={listing.photos[0]}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : null}
+
         <p className="text-xs uppercase tracking-wide text-[var(--muted)]">
           {serviceTypeLabel(listing.category, listing.serviceType, locale)}
         </p>
@@ -122,6 +135,20 @@ export default function ServiceListingDetailPage() {
           </p>
         )}
 
+        {listing.websiteUrl ? (
+          <p className="mt-3">
+            <a
+              href={listing.websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:underline"
+            >
+              {t("services_website_open")} ·{" "}
+              {displayWebsiteHost(listing.websiteUrl)}
+            </a>
+          </p>
+        ) : null}
+
         <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">
           {listing.description}
         </p>
@@ -143,7 +170,7 @@ export default function ServiceListingDetailPage() {
           </p>
         )}
 
-        {(listing.photos?.length ?? 0) > 0 && (
+        {(listing.photos?.length ?? 0) > 1 && (
           <div className="mt-4">
             <ServicePhotosButton photos={listing.photos} />
           </div>

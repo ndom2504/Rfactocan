@@ -19,7 +19,7 @@ import {
 import { formatMoney } from "@/lib/currency";
 import type { MoneyCurrency } from "@/lib/currency";
 import { UserAvatar } from "@/components/user-avatar";
-import { ServicePhotosButton } from "@/components/service-photos-button";
+import { displayWebsiteHost } from "@/lib/service-website";
 
 type Listing = {
   id: string;
@@ -34,6 +34,7 @@ type Listing = {
   currency: string;
   photos?: string[];
   products?: string[];
+  websiteUrl?: string | null;
   user: {
     displayName: string;
     ratingAvg: number;
@@ -221,22 +222,55 @@ export default function ServiceCategoryPage() {
       )}
 
       <div className="grid gap-4">
-        {listings.map((item) => (
-          <Link key={item.id} href={`/services/listing/${item.id}`}>
-            <Card className="transition hover:border-[var(--accent)]">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <UserAvatar
-                    name={item.user.displayName}
-                    avatarUrl={item.user.avatarUrl}
-                    size="md"
-                  />
-                  <div className="min-w-0">
-                    <CardTitle className="text-lg">{item.title}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {serviceTypeLabel(item.category, item.serviceType, locale)}{" "}
-                      · {item.city}, {item.country}
-                    </CardDescription>
+        {listings.map((item) => {
+          const cover = item.photos?.[0];
+          return (
+            <Link key={item.id} href={`/services/listing/${item.id}`}>
+              <Card className="overflow-hidden transition hover:border-[var(--accent)]">
+                <div className="flex gap-3 sm:gap-4">
+                  <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-md bg-[var(--surface-2,#eef2ef)] sm:h-32 sm:w-36">
+                    {cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={cover}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs text-[var(--muted)]">
+                        {t("services_no_cover")}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 py-0.5">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <CardTitle className="text-lg leading-snug">
+                          {item.title}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          {serviceTypeLabel(
+                            item.category,
+                            item.serviceType,
+                            locale
+                          )}{" "}
+                          · {item.city}, {item.country}
+                        </CardDescription>
+                      </div>
+                      {item.priceAmount != null && (
+                        <p className="shrink-0 text-sm font-medium text-[var(--accent)]">
+                          {formatMoney(
+                            item.priceAmount,
+                            (item.currency as MoneyCurrency) || "CAD",
+                            locale === "en" ? "en-CA" : "fr-CA"
+                          )}
+                          <span className="text-[var(--muted)]">
+                            {" "}
+                            / {item.priceUnit}
+                          </span>
+                        </p>
+                      )}
+                    </div>
                     {(item.products?.length ?? 0) > 0 && (
                       <p className="mt-1 text-xs text-[var(--muted)]">
                         {item.products!
@@ -250,39 +284,33 @@ export default function ServiceCategoryPage() {
                           .join(" · ")}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-[var(--muted)]">
-                      {item.user.displayName}
-                      {item.user.ratingCount
-                        ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
-                        : ""}
+                    <p className="mt-2 line-clamp-2 text-sm text-[var(--muted)]">
+                      {item.description}
                     </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <UserAvatar
+                        name={item.user.displayName}
+                        avatarUrl={item.user.avatarUrl}
+                        size="sm"
+                      />
+                      <p className="text-xs text-[var(--muted)]">
+                        {item.user.displayName}
+                        {item.user.ratingCount
+                          ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
+                          : ""}
+                      </p>
+                      {item.websiteUrl ? (
+                        <span className="text-xs font-medium text-[var(--accent)]">
+                          · {displayWebsiteHost(item.websiteUrl)}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-                {item.priceAmount != null && (
-                  <p className="text-sm font-medium text-[var(--accent)]">
-                    {formatMoney(
-                      item.priceAmount,
-                      (item.currency as MoneyCurrency) || "CAD",
-                      locale === "en" ? "en-CA" : "fr-CA"
-                    )}
-                    <span className="text-[var(--muted)]">
-                      {" "}
-                      / {item.priceUnit}
-                    </span>
-                  </p>
-                )}
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm text-[var(--muted)]">
-                {item.description}
-              </p>
-              {(item.photos?.length ?? 0) > 0 && (
-                <div className="mt-3">
-                  <ServicePhotosButton photos={item.photos ?? []} />
-                </div>
-              )}
-            </Card>
-          </Link>
-        ))}
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

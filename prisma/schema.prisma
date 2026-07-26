@@ -325,6 +325,8 @@ model ServiceListing {
   photosJson    String   @default("[]")
   /// Produits / articles (JSON string[]) — surtout pour la catégorie vente.
   productsJson  String   @default("[]")
+  /// Site web / page du service (optionnel).
+  websiteUrl    String?
   status        String   @default("OPEN")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -52,6 +52,7 @@ function NewServiceForm() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [products, setProducts] = useState<string[]>([]);
   const [customProduct, setCustomProduct] = useState("");
 
@@ -142,6 +143,7 @@ function NewServiceForm() {
       availableFrom: String(fd.get("availableFrom") || "") || undefined,
       availableTo: String(fd.get("availableTo") || "") || undefined,
       photos,
+      websiteUrl: websiteUrl.trim() || undefined,
       ...(category === "vente" ? { products } : {}),
     };
     const res = await fetch("/api/services", {
@@ -405,6 +407,20 @@ function NewServiceForm() {
             <Label htmlFor="availableTo">{t("services_available_to")}</Label>
             <Input id="availableTo" name="availableTo" type="date" />
           </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="websiteUrl">{t("services_website")}</Label>
+          <Input
+            id="websiteUrl"
+            type="url"
+            inputMode="url"
+            placeholder={t("services_website_hint")}
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            maxLength={300}
+          />
+          <p className="text-xs text-[var(--muted)]">{t("services_website_hint")}</p>
         </div>
 
         <div className="space-y-2">

@@ -10,6 +10,7 @@ import {
   parseProductsJson,
 } from "@/lib/services-catalog";
 import { currencyForCountry, normalizeCurrency } from "@/lib/currency";
+import { normalizeWebsiteUrl } from "@/lib/service-website";
 
 const priceUnits = PRICE_UNITS.map((u) => u.id) as [string, ...string[]];
 
@@ -27,6 +28,7 @@ const createSchema = z.object({
   availableTo: z.string().optional(),
   photos: z.array(z.string()).max(5).optional(),
   products: z.array(z.string().min(1).max(80)).max(20).optional(),
+  websiteUrl: z.string().max(300).optional(),
 });
 
 function serialize(listing: {
@@ -125,6 +127,13 @@ export async function POST(request: Request) {
 
     const products =
       body.category === "vente" ? parseProductsJson(body.products ?? []) : [];
+    const websiteUrl = normalizeWebsiteUrl(body.websiteUrl);
+    if (body.websiteUrl?.trim() && !websiteUrl) {
+      return NextResponse.json(
+        { error: "Lien du site invalide." },
+        { status: 400 }
+      );
+    }
 
     const listing = await prisma.serviceListing.create({
       data: {
@@ -148,6 +157,7 @@ export async function POST(request: Request) {
         availableTo: body.availableTo ? new Date(body.availableTo) : null,
         photosJson: JSON.stringify(body.photos ?? []),
         productsJson: JSON.stringify(products),
+        websiteUrl,
       },
     });
 
