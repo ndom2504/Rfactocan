@@ -448,14 +448,104 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
     id: "transitaire",
     labelFr: "Transit / logistique",
     labelEn: "Freight / logistics",
-    hintFr: "Transitaires et logistique",
-    hintEn: "Forwarders and logistics",
+    hintFr: "Transitaires, douane, entreposage, livraison et métiers de la chaîne logistique",
+    hintEn: "Forwarders, customs, warehousing, delivery and supply-chain trades",
     isParcel: false,
     types: [
       {
         id: "transitaire",
         labelFr: "Transitaire",
         labelEn: "Freight forwarder",
+      },
+      {
+        id: "commissionnaire_transport",
+        labelFr: "Commissionnaire de transport",
+        labelEn: "Freight broker",
+      },
+      {
+        id: "agent_maritime",
+        labelFr: "Agent maritime",
+        labelEn: "Shipping agent",
+      },
+      {
+        id: "agent_aerien",
+        labelFr: "Agent cargo aérien",
+        labelEn: "Air cargo agent",
+      },
+      {
+        id: "courtier_douane",
+        labelFr: "Courtier / déclarant en douane",
+        labelEn: "Customs broker",
+      },
+      {
+        id: "groupage",
+        labelFr: "Groupage / consolidation",
+        labelEn: "Consolidation / groupage",
+      },
+      {
+        id: "affretement",
+        labelFr: "Affrètement",
+        labelEn: "Chartering",
+      },
+      {
+        id: "entreposage",
+        labelFr: "Entreposage / stockage",
+        labelEn: "Warehousing / storage",
+      },
+      {
+        id: "manutention",
+        labelFr: "Manutention / stevedoring",
+        labelEn: "Handling / stevedoring",
+      },
+      {
+        id: "emballage_logistique",
+        labelFr: "Emballage & conditionnement",
+        labelEn: "Packing & packaging",
+      },
+      {
+        id: "chaine_froid",
+        labelFr: "Chaîne du froid",
+        labelEn: "Cold chain",
+      },
+      {
+        id: "livraison_express",
+        labelFr: "Livraison express / dernier km",
+        labelEn: "Express / last-mile delivery",
+      },
+      {
+        id: "coursier",
+        labelFr: "Coursier / messagerie",
+        labelEn: "Courier / messenger",
+      },
+      {
+        id: "chauffeur_livreur",
+        labelFr: "Chauffeur-livreur",
+        labelEn: "Delivery driver",
+      },
+      {
+        id: "transporteur_routier",
+        labelFr: "Transporteur routier",
+        labelEn: "Road haulier",
+      },
+      {
+        id: "demenagement",
+        labelFr: "Déménagement",
+        labelEn: "Moving / relocation",
+      },
+      {
+        id: "logistique_ecommerce",
+        labelFr: "Logistique e-commerce",
+        labelEn: "E-commerce logistics",
+      },
+      {
+        id: "supply_chain",
+        labelFr: "Supply chain / planification",
+        labelEn: "Supply chain / planning",
+      },
+      {
+        id: "autre_logistique",
+        labelFr: "Autre service logistique",
+        labelEn: "Other logistics service",
       },
     ],
   },
