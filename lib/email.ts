@@ -335,3 +335,25 @@ export async function emailLoginOtp(input: {
     ),
   });
 }
+
+export async function emailAmbassadorInvite(input: {
+  email: string;
+  displayName: string;
+  agentCode: string;
+  inviteUrl: string;
+}) {
+  return sendEmail({
+    to: input.email,
+    subject: "Votre code agent ambassadeur Rfacto",
+    html: layout(
+      "Vous êtes ambassadeur Rfacto",
+      `<p>Bonjour ${input.displayName},</p>
+       <p>L'équipe Rfacto vous a nommé <strong>ambassadeur</strong>. Voici votre code agent personnel :</p>
+       <p style="font-size:28px;letter-spacing:0.12em;font-weight:700;text-align:center;margin:24px 0;color:#0f6b4c;">${input.agentCode}</p>
+       <p>Partagez ce lien d'inscription pour que les nouveaux utilisateurs soient associés à votre code :</p>
+       <p><a href="${input.inviteUrl}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Lien d'inscription personnalisé</a></p>
+       <p style="font-size:13px;color:#5f6f68;word-break:break-all;">${input.inviteUrl}</p>
+       <p style="font-size:13px;color:#5f6f68;">Ne partagez ce code qu'avec les personnes que vous invitez.</p>`
+    ),
+  });
+}

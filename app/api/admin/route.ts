@@ -5,6 +5,7 @@ import {
   inviteUrlForCode,
 } from "@/lib/ambassador";
 import { getSessionUser } from "@/lib/auth";
+import { emailAmbassadorInvite } from "@/lib/email";
 import { expireBookingPayment } from "@/lib/payments/expiry";
 import { prisma } from "@/lib/prisma";
 
@@ -171,6 +172,7 @@ const userPatchSchema = z.object({
     "mark_kyc_verified",
     "promote_ambassador",
     "revoke_ambassador",
+    "email_ambassador_invite",
   ]),
   userId: z.string(),
 });
@@ -276,6 +278,65 @@ export async function PATCH(request: Request) {
         agentCode: user.agentCode,
         inviteUrl: user.agentCode ? inviteUrlForCode(user.agentCode) : null,
         referralCount: user._count.referrals,
+      });
+    }
+
+    if (body.action === "email_ambassador_invite") {
+      const user = await prisma.user.findUnique({
+        where: { id: body.userId },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          isAmbassador: true,
+          agentCode: true,
+        },
+      });
+      if (!user) {
+        return NextResponse.json(
+          { error: "Utilisateur introuvable" },
+          { status: 404 }
+        );
+      }
+      if (!user.isAmbassador || !user.agentCode) {
+        return NextResponse.json(
+          {
+            error:
+              "Cet utilisateur n'est pas ambassadeur actif (nommez-le d'abord).",
+          },
+          { status: 400 }
+        );
+      }
+      const inviteUrl = inviteUrlForCode(user.agentCode);
+      const sent = await emailAmbassadorInvite({
+        email: user.email,
+        displayName: user.displayName,
+        agentCode: user.agentCode,
+        inviteUrl,
+      });
+      if (!sent.ok) {
+        if ("skipped" in sent && sent.skipped) {
+          return NextResponse.json(
+            { error: sent.reason || "Email non configuré (RESEND_API_KEY)." },
+            { status: 503 }
+          );
+        }
+        return NextResponse.json(
+          {
+            error:
+              ("error" in sent ? sent.error : null) ||
+              "Échec de l'envoi de l'email.",
+            code: "code" in sent ? sent.code : undefined,
+          },
+          { status: 502 }
+        );
+      }
+      return NextResponse.json({
+        ok: true,
+        emailId: sent.id,
+        email: user.email,
+        agentCode: user.agentCode,
+        inviteUrl,
       });
     }
 

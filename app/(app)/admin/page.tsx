@@ -143,12 +143,21 @@ export default function AdminPage() {
       body: JSON.stringify({ userId, action: actionName }),
     });
     const json = await res.json().catch(() => ({}));
-    if (res.ok && actionName === "promote_ambassador" && json.inviteUrl) {
+    if (!res.ok) {
+      window.alert(json.error ?? "Action impossible");
+      return;
+    }
+    if (actionName === "promote_ambassador" && json.inviteUrl) {
       try {
         await navigator.clipboard.writeText(json.inviteUrl);
       } catch {
         /* ignore clipboard errors */
       }
+    }
+    if (actionName === "email_ambassador_invite") {
+      window.alert(
+        `Email envoyé à ${json.email ?? "l'ambassadeur"} avec le code ${json.agentCode ?? ""}.`
+      );
     }
     await load();
   }
@@ -403,6 +412,13 @@ export default function AdminPage() {
                         Copier le lien
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => action(u.id, "email_ambassador_invite")}
+                    >
+                      Envoyer par email
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
