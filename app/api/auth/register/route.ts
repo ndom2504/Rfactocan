@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveReferralFromRequest } from "@/lib/ambassador";
 import {
   createSessionToken,
   hashPassword,
@@ -15,6 +16,7 @@ const schema = z.object({
   displayName: z.string().min(2).max(80),
   role: z.enum(["SENDER", "TRAVELER", "BOTH"]).default("BOTH"),
   country: z.string().optional(),
+  ref: z.string().max(32).optional(),
 });
 
 export async function POST(request: Request) {
@@ -30,6 +32,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const referredById = await resolveReferralFromRequest(body.ref);
+
     const user = await prisma.user.create({
       data: {
         email: body.email.toLowerCase(),
@@ -40,6 +44,7 @@ export async function POST(request: Request) {
         preferredCurrency: currencyForCountry(
           resolveCountryCode(body.country) ?? body.country
         ),
+        ...(referredById ? { referredById } : {}),
       },
     });
 

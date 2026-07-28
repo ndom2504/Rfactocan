@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { REF_COOKIE } from "@/lib/ambassador";
 import { getAppUrl } from "@/lib/app-url";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
 import { upsertUserFromGoogleProfile } from "@/lib/google-auth-user";
@@ -27,6 +28,7 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   const raw = cookieStore.get(STATE_COOKIE)?.value;
   cookieStore.delete(STATE_COOKIE);
+  const refFromCookie = cookieStore.get(REF_COOKIE)?.value ?? null;
 
   let saved: { state: string; next: string } | null = null;
   try {
@@ -44,7 +46,9 @@ export async function GET(request: Request) {
   try {
     const tokens = await exchangeGoogleCode(code);
     const profile = await fetchGoogleProfile(tokens.access_token);
-    const result = await upsertUserFromGoogleProfile(profile);
+    const result = await upsertUserFromGoogleProfile(profile, {
+      ref: refFromCookie,
+    });
 
     if (!result.ok) {
       const map = {

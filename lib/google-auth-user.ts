@@ -1,4 +1,5 @@
 import type { GoogleProfile } from "@/lib/google-oauth";
+import { resolveActiveAmbassador } from "@/lib/ambassador";
 import { prisma } from "@/lib/prisma";
 
 export type GoogleAuthUserRow = {
@@ -13,11 +14,17 @@ export type GoogleAuthUserRow = {
   preferredCurrency: string | null;
 };
 
+export type UpsertGoogleOptions = {
+  /** Agent code from body or cookie — applied only on first create */
+  ref?: string | null;
+};
+
 /**
  * Find or create a user from a verified Google profile (web OAuth + mobile ID token).
  */
 export async function upsertUserFromGoogleProfile(
-  profile: GoogleProfile
+  profile: GoogleProfile,
+  options: UpsertGoogleOptions = {}
 ): Promise<
   | { ok: true; user: GoogleAuthUserRow }
   | { ok: false; error: "email_required" | "email_unverified" | "suspended" | "failed" }
@@ -48,14 +55,18 @@ export async function upsertUserFromGoogleProfile(
 
   if (!user) {
     const id = `g_${profile.sub.slice(0, 24)}`;
+    const ambassador = await resolveActiveAmbassador(options.ref);
+    const referredById = ambassador?.id ?? null;
+
     await prisma.$executeRaw`
       INSERT INTO "User" (
         id, email, "googleId", "displayName", "avatarUrl", role, status,
         "preferredCurrency", "verifiedAt", "ratingAvg", "ratingCount",
-        "createdAt", "updatedAt"
+        "referredById", "createdAt", "updatedAt"
       ) VALUES (
         ${id}, ${email}, ${profile.sub}, ${displayName}, ${profile.picture ?? null},
-        'BOTH', 'ACTIVE', 'CAD', NOW(), 0, 0, NOW(), NOW()
+        'BOTH', 'ACTIVE', 'CAD', NOW(), 0, 0,
+        ${referredById}, NOW(), NOW()
       )
     `;
     const created = await prisma.$queryRaw<GoogleAuthUserRow[]>`

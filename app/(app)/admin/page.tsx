@@ -36,6 +36,9 @@ type AdminData = {
     stripeConnectChargesEnabled: boolean;
     ratingAvg: number;
     createdAt: string;
+    isAmbassador?: boolean;
+    agentCode?: string | null;
+    _count?: { referrals: number };
   }>;
   openReports: Array<{
     id: string;
@@ -134,12 +137,31 @@ export default function AdminPage() {
   }, []);
 
   async function action(userId: string, actionName: string) {
-    await fetch("/api/admin", {
+    const res = await fetch("/api/admin", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action: actionName }),
     });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && actionName === "promote_ambassador" && json.inviteUrl) {
+      try {
+        await navigator.clipboard.writeText(json.inviteUrl);
+      } catch {
+        /* ignore clipboard errors */
+      }
+    }
     await load();
+  }
+
+  async function copyInvite(agentCode: string) {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/register?ref=${encodeURIComponent(agentCode)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      window.prompt("Copiez le lien ambassadeur :", url);
+    }
   }
 
   async function cancelBooking(bookingId: string) {
@@ -340,7 +362,18 @@ export default function AdminPage() {
                       Connect OK
                     </Badge>
                   )}
+                  {u.isAmbassador && (
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      Ambassadeur
+                    </Badge>
+                  )}
                 </div>
+                {(u.isAmbassador || u.agentCode) && (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Code {u.agentCode ?? "—"} · {u._count?.referrals ?? 0}{" "}
+                    filleul{(u._count?.referrals ?? 0) === 1 ? "" : "s"}
+                  </p>
+                )}
               </div>
               <div className="flex flex-wrap gap-2">
                 {u.kycStatus !== "VERIFIED" && (
@@ -350,6 +383,34 @@ export default function AdminPage() {
                   >
                     Forcer KYC
                   </Button>
+                )}
+                {!u.isAmbassador ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => action(u.id, "promote_ambassador")}
+                  >
+                    Nommer ambassadeur
+                  </Button>
+                ) : (
+                  <>
+                    {u.agentCode && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyInvite(u.agentCode!)}
+                      >
+                        Copier le lien
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => action(u.id, "revoke_ambassador")}
+                    >
+                      Révoquer
+                    </Button>
+                  </>
                 )}
                 {u.status !== "SUSPENDED" ? (
                   <Button

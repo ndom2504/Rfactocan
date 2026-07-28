@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,24 @@ import {
   type OrderIntent,
   type PrimaryIntent,
 } from "@/lib/user-intent";
+
+const REF_COOKIE = "rfacto_ref";
+const REF_MAX_AGE = 60 * 60 * 24 * 30;
+
+function readRefCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${REF_COOKIE}=`));
+  if (!match) return null;
+  return decodeURIComponent(match.split("=").slice(1).join("=")) || null;
+}
+
+function persistRefCode(code: string) {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) return;
+  document.cookie = `${REF_COOKIE}=${encodeURIComponent(normalized)}; path=/; max-age=${REF_MAX_AGE}; samesite=lax`;
+}
 
 function initialIntentFromParams(role: string | null): PrimaryIntent {
   if (role === "SENDER" || role === "commander") return "commander";
@@ -41,6 +59,7 @@ function RegisterForm() {
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
   const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [country, setCountry] = useState("");
+  const [refCode, setRefCode] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +67,16 @@ function RegisterForm() {
     () => intentToApiRole(primaryIntent),
     [primaryIntent]
   );
+
+  useEffect(() => {
+    const fromQuery = params.get("ref")?.trim().toUpperCase() || null;
+    if (fromQuery) {
+      persistRefCode(fromQuery);
+      setRefCode(fromQuery);
+      return;
+    }
+    setRefCode(readRefCookie());
+  }, [params]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +92,7 @@ function RegisterForm() {
         password,
         role,
         country: country || undefined,
+        ref: refCode || undefined,
       }),
     });
     const data = await res.json();
@@ -80,6 +110,13 @@ function RegisterForm() {
     <Card className="w-full">
       <CardTitle>{t("register_title")}</CardTitle>
       <CardDescription>{t("register_subtitle")}</CardDescription>
+      {refCode && (
+        <p className="mt-2 text-xs text-[var(--muted)]">
+          {locale === "en"
+            ? `Invited via agent code ${refCode}`
+            : `Inscription via code agent ${refCode}`}
+        </p>
+      )}
 
       <div className="mt-6 space-y-4">
         <GoogleSignInButton

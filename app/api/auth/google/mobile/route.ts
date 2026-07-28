@@ -7,6 +7,7 @@ import { startEmailOtpChallenge } from "@/lib/login-otp";
 
 const schema = z.object({
   idToken: z.string().min(10),
+  ref: z.string().max(32).optional(),
 });
 
 /**
@@ -25,7 +26,9 @@ export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
     const profile = await verifyGoogleIdToken(body.idToken);
-    const result = await upsertUserFromGoogleProfile(profile);
+    const result = await upsertUserFromGoogleProfile(profile, {
+      ref: body.ref,
+    });
 
     if (!result.ok) {
       if (result.error === "email_required") {

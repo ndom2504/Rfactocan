@@ -165,9 +165,17 @@ model User {
   lastLocationAt              DateTime?
   /// Opt-in for nearby job / service push alerts (default on)
   nearbyAlertsEnabled         Boolean    @default(true)
+  /// Named ambassador by admin (keeps product role)
+  isAmbassador                Boolean    @default(false)
+  /// Unique agent code for invite links (/register?ref=CODE)
+  agentCode                   String?    @unique
+  /// Set once at signup when arriving via an active ambassador link
+  referredById                String?
   createdAt                   DateTime   @default(now())
   updatedAt                   DateTime   @updatedAt
 
+  referredBy       User?           @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals        User[]          @relation("UserReferrals")
   trips            Trip[]
   parcelRequests   ParcelRequest[]
   serviceListings  ServiceListing[]
@@ -183,6 +191,8 @@ model User {
   loginOtps        LoginOtp[]
   notifications    Notification[]
   deviceTokens     DeviceToken[]
+
+  @@index([referredById])
 }
 
 /// FCM (or other) push device tokens for Uber-style job alerts.

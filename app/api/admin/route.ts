@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import {
+  generateAgentCode,
+  inviteUrlForCode,
+} from "@/lib/ambassador";
 import { getSessionUser } from "@/lib/auth";
 import { expireBookingPayment } from "@/lib/payments/expiry";
 import { prisma } from "@/lib/prisma";
@@ -78,6 +82,9 @@ export async function GET() {
       ratingAvg: true,
       ratingCount: true,
       createdAt: true,
+      isAmbassador: true,
+      agentCode: true,
+      _count: { select: { referrals: true } },
     },
   });
 
@@ -162,6 +169,8 @@ const userPatchSchema = z.object({
     "activate",
     "make_admin",
     "mark_kyc_verified",
+    "promote_ambassador",
+    "revoke_ambassador",
   ]),
   userId: z.string(),
 });
@@ -211,6 +220,65 @@ export async function PATCH(request: Request) {
     }
 
     const body = userPatchSchema.parse(raw);
+
+    if (body.action === "promote_ambassador") {
+      const existing = await prisma.user.findUnique({
+        where: { id: body.userId },
+        select: {
+          id: true,
+          agentCode: true,
+          isAmbassador: true,
+          _count: { select: { referrals: true } },
+        },
+      });
+      if (!existing) {
+        return NextResponse.json(
+          { error: "Utilisateur introuvable" },
+          { status: 404 }
+        );
+      }
+      const agentCode = existing.agentCode ?? (await generateAgentCode());
+      const user = await prisma.user.update({
+        where: { id: body.userId },
+        data: { isAmbassador: true, agentCode },
+        select: {
+          id: true,
+          displayName: true,
+          email: true,
+          isAmbassador: true,
+          agentCode: true,
+          _count: { select: { referrals: true } },
+        },
+      });
+      return NextResponse.json({
+        user,
+        agentCode: user.agentCode,
+        inviteUrl: inviteUrlForCode(user.agentCode!),
+        referralCount: user._count.referrals,
+      });
+    }
+
+    if (body.action === "revoke_ambassador") {
+      const user = await prisma.user.update({
+        where: { id: body.userId },
+        data: { isAmbassador: false },
+        select: {
+          id: true,
+          displayName: true,
+          email: true,
+          isAmbassador: true,
+          agentCode: true,
+          _count: { select: { referrals: true } },
+        },
+      });
+      return NextResponse.json({
+        user,
+        agentCode: user.agentCode,
+        inviteUrl: user.agentCode ? inviteUrlForCode(user.agentCode) : null,
+        referralCount: user._count.referrals,
+      });
+    }
+
     const data =
       body.action === "verify"
         ? {
