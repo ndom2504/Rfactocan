@@ -446,16 +446,73 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
   },
   {
     id: "transitaire",
-    labelFr: "Transit / logistique",
-    labelEn: "Freight / logistics",
-    hintFr: "Transitaires, douane, entreposage, livraison et métiers de la chaîne logistique",
-    hintEn: "Forwarders, customs, warehousing, delivery and supply-chain trades",
+    labelFr: "Transit, logistique & commerce intl.",
+    labelEn: "Freight, logistics & intl. trade",
+    hintFr:
+      "Transitaires, personal shopper, import-export, douane, entreposage et chaîne logistique",
+    hintEn:
+      "Forwarders, personal shoppers, import-export, customs, warehousing and supply chain",
     isParcel: false,
     types: [
       {
         id: "transitaire",
         labelFr: "Transitaire",
         labelEn: "Freight forwarder",
+      },
+      {
+        id: "personal_shopper",
+        labelFr: "Personal shopper",
+        labelEn: "Personal shopper",
+      },
+      {
+        id: "acheteur_commissionnaire",
+        labelFr: "Acheteur / commissionnaire à l'achat",
+        labelEn: "Buying agent / purchasing broker",
+      },
+      {
+        id: "agent_sourcing",
+        labelFr: "Agent sourcing / approvisionnement",
+        labelEn: "Sourcing / procurement agent",
+      },
+      {
+        id: "agent_import_export",
+        labelFr: "Agent import-export",
+        labelEn: "Import-export agent",
+      },
+      {
+        id: "courtier_commerce_intl",
+        labelFr: "Courtier en commerce international",
+        labelEn: "International trade broker",
+      },
+      {
+        id: "representant_commercial",
+        labelFr: "Représentant commercial international",
+        labelEn: "International sales representative",
+      },
+      {
+        id: "mandataire_achats",
+        labelFr: "Mandataire / intermédiaire d'achats",
+        labelEn: "Purchase intermediary / proxy buyer",
+      },
+      {
+        id: "accompagnement_shopping",
+        labelFr: "Accompagnement shopping à l'étranger",
+        labelEn: "Overseas shopping assistant",
+      },
+      {
+        id: "dropshipping_fulfillment",
+        labelFr: "Dropshipping / fulfillment",
+        labelEn: "Dropshipping / fulfillment",
+      },
+      {
+        id: "inspection_qualite",
+        labelFr: "Contrôle qualité / inspection",
+        labelEn: "Quality control / inspection",
+      },
+      {
+        id: "assurance_cargo",
+        labelFr: "Assurance cargo / marchandises",
+        labelEn: "Cargo / goods insurance",
       },
       {
         id: "commissionnaire_transport",
@@ -544,8 +601,8 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
       },
       {
         id: "autre_logistique",
-        labelFr: "Autre service logistique",
-        labelEn: "Other logistics service",
+        labelFr: "Autre service logistique / commerce",
+        labelEn: "Other logistics / trade service",
       },
     ],
   },

@@ -42,7 +42,7 @@ export const SERVICE_LABELS_FR: Record<string, string> = {
   famille: "Famille",
   evenements: "Événements",
   transport: "Transport",
-  transitaire: "Transit / logistique",
+  transitaire: "Transit, logistique & commerce intl.",
   hotel: "Hébergement",
   autre: "Autres services",
 };
@@ -56,7 +56,7 @@ export const SERVICE_LABELS_EN: Record<string, string> = {
   famille: "Family",
   evenements: "Events",
   transport: "Transport",
-  transitaire: "Freight / logistics",
+  transitaire: "Freight, logistics & intl. trade",
   hotel: "Lodging",
   autre: "Other services",
 };

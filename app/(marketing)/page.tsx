@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
@@ -60,6 +61,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      <WhatsAppCommunityButton label={t(locale, "cta_join_whatsapp")} />
     </main>
   );
 }
