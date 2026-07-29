@@ -9,11 +9,17 @@ import { emailAmbassadorInvite } from "@/lib/email";
 import { expireBookingPayment } from "@/lib/payments/expiry";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getSessionUser();
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ error: "Interdit" }, { status: 403 });
   }
+
+  const { searchParams } = new URL(request.url);
+  const letterRaw = (searchParams.get("letter") ?? "").trim().toUpperCase();
+  const letter =
+    letterRaw.length === 1 && /[A-Z]/.test(letterRaw) ? letterRaw : null;
+  const q = (searchParams.get("q") ?? "").trim();
 
   const [
     users,
@@ -81,9 +87,37 @@ export async function GET() {
     take: 40,
   });
 
+  const userWhere = {
+    AND: [
+      ...(letter
+        ? [
+            {
+              displayName: {
+                startsWith: letter,
+                mode: "insensitive" as const,
+              },
+            },
+          ]
+        : []),
+      ...(q
+        ? [
+            {
+              OR: [
+                {
+                  displayName: { contains: q, mode: "insensitive" as const },
+                },
+                { email: { contains: q, mode: "insensitive" as const } },
+              ],
+            },
+          ]
+        : []),
+    ],
+  };
+
   const allUsers = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 50,
+    where: userWhere,
+    orderBy: [{ displayName: "asc" }, { createdAt: "desc" }],
+    take: 100,
     select: {
       id: true,
       email: true,
@@ -101,6 +135,8 @@ export async function GET() {
       _count: { select: { referrals: true } },
     },
   });
+
+  const usersMatching = await prisma.user.count({ where: userWhere });
 
   const recentPayments = await prisma.payment.findMany({
     orderBy: { createdAt: "desc" },
@@ -187,6 +223,8 @@ export async function GET() {
     openReports,
     openDisputes,
     users: allUsers,
+    usersMatching,
+    usersFilter: { letter, q },
     payments: recentPayments,
     pendingOffers,
   });

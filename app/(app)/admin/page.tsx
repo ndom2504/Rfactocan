@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -109,7 +109,10 @@ type AdminData = {
       currency?: string;
     } | null;
   }>;
+  usersMatching?: number;
 };
+
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 function remainingLabel(expiresAt: string | null) {
   if (!expiresAt) return "—";
@@ -127,9 +130,18 @@ function formatCents(cents: number, currency = "CAD") {
 export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null);
   const [error, setError] = useState("");
+  const [userLetter, setUserLetter] = useState<string>("");
+  const [userQuery, setUserQuery] = useState("");
+  const [userQueryDraft, setUserQueryDraft] = useState("");
 
-  async function load() {
-    const res = await fetch("/api/admin");
+  async function load(opts?: { letter?: string; q?: string }) {
+    const letter = opts?.letter ?? userLetter;
+    const q = opts?.q ?? userQuery;
+    const params = new URLSearchParams();
+    if (letter) params.set("letter", letter);
+    if (q.trim()) params.set("q", q.trim());
+    const qs = params.toString();
+    const res = await fetch(`/api/admin${qs ? `?${qs}` : ""}`);
     const json = await res.json();
     if (!res.ok) {
       setError(json.error ?? "Accès refusé");
@@ -140,7 +152,20 @@ export default function AdminPage() {
 
   useEffect(() => {
     void load();
+    // initial load only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function applyUserLetter(next: string) {
+    setUserLetter(next);
+    void load({ letter: next, q: userQuery });
+  }
+
+  function applyUserSearch(e: FormEvent) {
+    e.preventDefault();
+    setUserQuery(userQueryDraft);
+    void load({ letter: userLetter, q: userQueryDraft });
+  }
 
   async function action(userId: string, actionName: string) {
     const res = await fetch("/api/admin", {
@@ -379,9 +404,78 @@ export default function AdminPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-          Utilisateurs
-        </h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+              Utilisateurs
+            </h2>
+            <p className="text-sm text-[var(--muted)]">
+              {data.usersMatching ?? data.users.length} résultat
+              {(data.usersMatching ?? data.users.length) === 1 ? "" : "s"}
+              {userLetter ? ` · lettre ${userLetter}` : ""}
+              {userQuery ? ` · « ${userQuery} »` : ""}
+              {data.users.length >= 100 ? " (100 max affichés)" : ""}
+            </p>
+          </div>
+          <form
+            onSubmit={applyUserSearch}
+            className="flex flex-wrap items-center gap-2"
+          >
+            <input
+              value={userQueryDraft}
+              onChange={(e) => setUserQueryDraft(e.target.value)}
+              placeholder="Nom ou email…"
+              className="h-9 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+            />
+            <Button type="submit" size="sm">
+              Chercher
+            </Button>
+            {(userQuery || userLetter) && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setUserLetter("");
+                  setUserQuery("");
+                  setUserQueryDraft("");
+                  void load({ letter: "", q: "" });
+                }}
+              >
+                Réinitialiser
+              </Button>
+            )}
+          </form>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant={userLetter === "" ? "secondary" : "outline"}
+            onClick={() => applyUserLetter("")}
+          >
+            Tous
+          </Button>
+          {LETTERS.map((L) => (
+            <Button
+              key={L}
+              type="button"
+              size="sm"
+              variant={userLetter === L ? "secondary" : "outline"}
+              className="min-w-9 px-2"
+              onClick={() => applyUserLetter(L)}
+            >
+              {L}
+            </Button>
+          ))}
+        </div>
+
+        {data.users.length === 0 && (
+          <p className="text-sm text-[var(--muted)]">
+            Aucun utilisateur pour ce filtre.
+          </p>
+        )}
         {data.users.map((u) => (
           <Card key={u.id}>
             <div className="flex flex-wrap items-start justify-between gap-3">
