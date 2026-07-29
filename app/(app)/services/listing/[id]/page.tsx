@@ -39,6 +39,7 @@ type Listing = {
     ratingAvg: number;
     ratingCount: number;
     verifiedAt: string | null;
+    kycStatus?: string;
     avatarUrl?: string | null;
   };
 };
@@ -188,7 +189,9 @@ export default function ServiceListingDetailPage() {
               {listing.user.ratingCount
                 ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
                 : t("services_no_rating")}
-              {listing.user.verifiedAt ? ` · ${t("verified")}` : ""}
+              {listing.user.kycStatus === "VERIFIED"
+                ? ` · ${t("verified")}`
+                : ""}
             </p>
           </div>
         </div>

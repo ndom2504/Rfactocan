@@ -337,7 +337,7 @@ function ProfileForm() {
         <CardTitle>{t("profile_title")}</CardTitle>
         <CardDescription>{user.email}</CardDescription>
         <div className="mt-3 flex flex-wrap gap-2">
-          {(user.verifiedAt || user.kycStatus === "VERIFIED") && (
+          {user.kycStatus === "VERIFIED" && (
             <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
               {t("account_verified")}
             </Badge>

@@ -38,6 +38,7 @@ type Match = {
       ratingAvg: number;
       ratingCount: number;
       verifiedAt: string | null;
+      kycStatus?: string;
     };
   };
 };
@@ -264,7 +265,9 @@ export default function RequestDetailPage({
                   <p className="text-xs text-[var(--muted)]">{t("profile_photo")}</p>
                   <p className="font-medium">
                     {m.trip.user.displayName}
-                    {m.trip.user.verifiedAt ? ` · ${t("verified")}` : ""}
+                    {m.trip.user.kycStatus === "VERIFIED"
+                      ? ` · ${t("verified")}`
+                      : ""}
                     {m.trip.user.ratingCount
                       ? ` · ★ ${m.trip.user.ratingAvg.toFixed(1)}`
                       : ""}

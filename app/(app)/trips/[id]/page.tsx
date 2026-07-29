@@ -236,7 +236,7 @@ export default async function TripDetailPage({ params }: Props) {
           <div className="min-w-0">
             <p className="font-medium">
               {trip.user.displayName}
-              {trip.user.verifiedAt || trip.user.kycStatus === "VERIFIED"
+              {trip.user.kycStatus === "VERIFIED"
                 ? ` · ${t(locale, "verified")}`
                 : ""}
             </p>

@@ -167,8 +167,7 @@ export default async function TripsPage({ searchParams }: Props) {
                     >
                       {nego}
                     </Badge>
-                    {(trip.user.verifiedAt ||
-                      trip.user.kycStatus === "VERIFIED") && (
+                    {trip.user.kycStatus === "VERIFIED" && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                         {t(locale, "traveler_verified")}
                       </Badge>

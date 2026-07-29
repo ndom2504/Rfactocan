@@ -14,6 +14,7 @@ export type SessionUser = {
   role: UserRole;
   status: UserStatus;
   verifiedAt: Date | null;
+  kycStatus: User["kycStatus"];
   avatarUrl: string | null;
   ratingAvg: number;
   ratingCount: number;
@@ -99,6 +100,7 @@ async function sessionUserFromToken(
       role: user.role,
       status: user.status,
       verifiedAt: user.verifiedAt,
+      kycStatus: user.kycStatus,
       avatarUrl: user.avatarUrl,
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,

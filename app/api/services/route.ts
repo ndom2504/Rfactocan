@@ -82,6 +82,7 @@ export async function GET(request: Request) {
           ratingAvg: true,
           ratingCount: true,
           verifiedAt: true,
+          kycStatus: true,
           avatarUrl: true,
         },
       },

@@ -254,6 +254,7 @@ type RequestMatch = {
       ratingAvg: number;
       ratingCount: number;
       verifiedAt: string | null;
+      kycStatus?: string;
     };
   };
 };
@@ -347,7 +348,9 @@ export function TripSuggestedRequests({ tripId }: { tripId: string }) {
               <p className="text-xs text-[var(--muted)]">{t("profile_photo")}</p>
               <p className="font-medium">
                 {m.request.user.displayName}
-                {m.request.user.verifiedAt ? ` · ${t("verified")}` : ""}
+                {m.request.user.kycStatus === "VERIFIED"
+                  ? ` · ${t("verified")}`
+                  : ""}
                 {m.request.user.ratingCount
                   ? ` · ★ ${m.request.user.ratingAvg.toFixed(1)}`
                   : ""}

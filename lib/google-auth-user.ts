@@ -61,11 +61,11 @@ export async function upsertUserFromGoogleProfile(
     await prisma.$executeRaw`
       INSERT INTO "User" (
         id, email, "googleId", "displayName", "avatarUrl", role, status,
-        "preferredCurrency", "verifiedAt", "ratingAvg", "ratingCount",
+        "preferredCurrency", "ratingAvg", "ratingCount",
         "referredById", "createdAt", "updatedAt"
       ) VALUES (
         ${id}, ${email}, ${profile.sub}, ${displayName}, ${profile.picture ?? null},
-        'BOTH', 'ACTIVE', 'CAD', NOW(), 0, 0,
+        'BOTH', 'ACTIVE', 'CAD', 0, 0,
         ${referredById}, NOW(), NOW()
       )
     `;
@@ -80,7 +80,6 @@ export async function upsertUserFromGoogleProfile(
       SET
         "googleId" = COALESCE("googleId", ${profile.sub}),
         "avatarUrl" = COALESCE("avatarUrl", ${profile.picture ?? null}),
-        "verifiedAt" = COALESCE("verifiedAt", NOW()),
         "updatedAt" = NOW()
       WHERE id = ${user.id}
     `;

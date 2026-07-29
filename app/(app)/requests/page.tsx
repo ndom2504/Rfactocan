@@ -109,8 +109,7 @@ export default async function RequestsPage({ searchParams }: Props) {
                     {req.description}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {(req.user.verifiedAt ||
-                      req.user.kycStatus === "VERIFIED") && (
+                    {req.user.kycStatus === "VERIFIED" && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                         {t(locale, "verified")}
                       </Badge>

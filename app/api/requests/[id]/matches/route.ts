@@ -34,6 +34,7 @@ export async function GET(_request: Request, { params }: Params) {
           ratingAvg: true,
           ratingCount: true,
           verifiedAt: true,
+          kycStatus: true,
           avatarUrl: true,
           completedDeliveries: true,
         },
