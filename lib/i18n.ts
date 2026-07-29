@@ -286,6 +286,50 @@ const dict = {
       "En utilisant Rfacto, vous acceptez que la plateforme soit un intermédiaire technologique. Toute responsabilité liée au colis (contenu, emballage, perte, vol, dommages, retards, douanes) incombe aux utilisateurs concernés, dans le respect des lois applicables.",
     back_home: "Retour à l'accueil",
     nav_responsibility: "Responsabilité",
+    nav_privacy: "Confidentialité",
+    privacy_title: "Politique de confidentialité",
+    privacy_updated: "Dernière mise à jour : 28 juillet 2026",
+    privacy_lead:
+      "Cette politique décrit comment RapidFacto (« Rfacto », « nous ») collecte, utilise et protège vos données personnelles lorsque vous utilisez le site www.rfacto.com et l'application mobile Rfacto.",
+    privacy_s1_title: "1. Responsable du traitement",
+    privacy_s1_text:
+      "Le service Rfacto est opéré sous la marque RapidFacto. Pour toute question relative à vos données : contact@rfacto.com.",
+    privacy_s2_title: "2. Données que nous collectons",
+    privacy_s2_text:
+      "Selon votre usage : identité et contact (nom d'affichage, e-mail, téléphone le cas échéant, pays) ; données de compte (mot de passe hashé, préférences de langue et devise, photo de profil) ; données de vérification (statut KYC via Stripe Identity) ; données de transaction (annonces, trajets, demandes, réservations, messages liés aux réservations) ; données de paiement traitées par Stripe (nous ne stockons pas vos numéros de carte complets) ; données techniques (adresse IP, type d'appareil, journaux serveur) ; localisation approximative ou précise si vous activez les alertes de proximité ; jetons de notification push (FCM) si vous autorisez les notifications ; et, le cas échéant, code agent / affiliation ambassadeur lors de l'inscription.",
+    privacy_s3_title: "3. Finalités",
+    privacy_s3_text:
+      "Nous utilisons ces données pour créer et gérer votre compte, mettre en relation clients, voyageurs et prestataires de services, sécuriser les paiements (séquestre / Connect), vérifier l'identité lorsque requis, assurer le support et la médiation des litiges, envoyer des communications transactionnelles (e-mail, OTP, notifications), améliorer le service et respecter nos obligations légales.",
+    privacy_s4_title: "4. Bases légales",
+    privacy_s4_text:
+      "Selon le cas : exécution du contrat (fourniture du service), intérêt légitime (sécurité, prévention de la fraude, amélioration du produit), consentement (notifications push, certaines données de localisation) et obligations légales.",
+    privacy_s5_title: "5. Destinataires et sous-traitants",
+    privacy_s5_text:
+      "Vos données peuvent être traitées par des prestataires techniques nécessaires au service, notamment : hébergement et base de données (ex. Vercel, Neon), paiements et KYC (Stripe), e-mails transactionnels (Resend), stockage de fichiers (Vercel Blob), authentification Google si vous choisissez Google Sign-In, et notifications push (Firebase Cloud Messaging). Ces prestataires n'agissent que pour nos instructions et dans le cadre de leurs propres politiques.",
+    privacy_s6_title: "6. Partage avec d'autres utilisateurs",
+    privacy_s6_text:
+      "Certaines informations de profil (nom d'affichage, note, photo, pays, annonces publiques) sont visibles par les autres utilisateurs pour permettre la mise en relation. Les messages d'une réservation sont visibles par les parties concernées et, si nécessaire, par le support administrateur.",
+    privacy_s7_title: "7. Conservation",
+    privacy_s7_text:
+      "Nous conservons les données tant que votre compte est actif, puis pendant la durée nécessaire aux obligations légales, comptables et à la gestion des litiges. Vous pouvez demander la suppression de votre compte sous réserve des obligations de conservation applicables.",
+    privacy_s8_title: "8. Transferts internationaux",
+    privacy_s8_text:
+      "Rfacto est un service mondial. Vos données peuvent être traitées dans des pays où nos prestataires opèrent. Nous veillons à des garanties appropriées lorsque la réglementation l'exige.",
+    privacy_s9_title: "9. Sécurité",
+    privacy_s9_text:
+      "Nous appliquons des mesures raisonnables (chiffrement en transit HTTPS, hachage des mots de passe, contrôle d'accès, sessions authentifiées). Aucun système n'étant infaillible, nous vous invitons à utiliser un mot de passe unique et fort.",
+    privacy_s10_title: "10. Vos droits",
+    privacy_s10_text:
+      "Selon votre juridiction (notamment au Canada et dans l'UE/EEE), vous pouvez disposer de droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité. Pour exercer ces droits : contact@rfacto.com. Vous pouvez aussi déposer une plainte auprès de l'autorité de protection des données compétente.",
+    privacy_s11_title: "11. Enfants",
+    privacy_s11_text:
+      "Rfacto n'est pas destiné aux personnes de moins de 16 ans (ou l'âge numérique localement requis). Nous ne collectons pas sciemment de données d'enfants.",
+    privacy_s12_title: "12. Modifications",
+    privacy_s12_text:
+      "Nous pouvons mettre à jour cette politique. La date en tête de page sera actualisée ; en cas de changement important, nous pourrons vous en informer via l'application ou par e-mail.",
+    privacy_s13_title: "13. Contact",
+    privacy_s13_text:
+      "RapidFacto / Rfacto — contact@rfacto.com — Site : https://www.rfacto.com",
     trust_program_cta: "Notre programme de crédibilité et confiance",
     trust_program_title: "Programme de crédibilité et confiance",
     trust_program_lead:
@@ -1069,6 +1113,50 @@ const dict = {
       "By using Rfacto, you accept that the platform is a technology intermediary. Any liability related to the parcel (content, packaging, loss, theft, damage, delays, customs) rests with the users involved, subject to applicable law.",
     back_home: "Back to home",
     nav_responsibility: "Responsibility",
+    nav_privacy: "Privacy",
+    privacy_title: "Privacy policy",
+    privacy_updated: "Last updated: July 28, 2026",
+    privacy_lead:
+      "This policy explains how RapidFacto (“Rfacto”, “we”) collects, uses and protects your personal data when you use www.rfacto.com and the Rfacto mobile app.",
+    privacy_s1_title: "1. Data controller",
+    privacy_s1_text:
+      "The Rfacto service is operated under the RapidFacto brand. For any privacy question: contact@rfacto.com.",
+    privacy_s2_title: "2. Data we collect",
+    privacy_s2_text:
+      "Depending on your use: identity and contact (display name, email, phone if provided, country); account data (hashed password, language and currency preferences, profile photo); verification data (KYC status via Stripe Identity); transaction data (listings, trips, requests, bookings, booking-related messages); payment data processed by Stripe (we do not store full card numbers); technical data (IP address, device type, server logs); approximate or precise location if you enable nearby alerts; push notification tokens (FCM) if you allow notifications; and, where applicable, ambassador agent / referral codes at signup.",
+    privacy_s3_title: "3. Purposes",
+    privacy_s3_text:
+      "We use this data to create and manage your account, connect clients, travelers and service providers, secure payments (escrow / Connect), verify identity when required, provide support and dispute mediation, send transactional communications (email, OTP, notifications), improve the service and comply with legal obligations.",
+    privacy_s4_title: "4. Legal bases",
+    privacy_s4_text:
+      "As applicable: performance of a contract (providing the service), legitimate interest (security, fraud prevention, product improvement), consent (push notifications, certain location data) and legal obligations.",
+    privacy_s5_title: "5. Recipients and processors",
+    privacy_s5_text:
+      "Your data may be processed by technical providers required to run the service, including: hosting and database (e.g. Vercel, Neon), payments and KYC (Stripe), transactional email (Resend), file storage (Vercel Blob), Google authentication if you choose Google Sign-In, and push notifications (Firebase Cloud Messaging). These providers act on our instructions under their own policies.",
+    privacy_s6_title: "6. Sharing with other users",
+    privacy_s6_text:
+      "Some profile information (display name, rating, photo, country, public listings) is visible to other users to enable matching. Messages on a booking are visible to the parties involved and, when needed, to admin support.",
+    privacy_s7_title: "7. Retention",
+    privacy_s7_text:
+      "We keep data while your account is active and then for as long as needed for legal, accounting and dispute purposes. You may request account deletion subject to applicable retention duties.",
+    privacy_s8_title: "8. International transfers",
+    privacy_s8_text:
+      "Rfacto is a worldwide service. Your data may be processed in countries where our providers operate. We rely on appropriate safeguards when required by law.",
+    privacy_s9_title: "9. Security",
+    privacy_s9_text:
+      "We apply reasonable measures (HTTPS in transit, password hashing, access control, authenticated sessions). No system is perfect; please use a unique, strong password.",
+    privacy_s10_title: "10. Your rights",
+    privacy_s10_text:
+      "Depending on your jurisdiction (including Canada and the EU/EEA), you may have rights of access, rectification, erasure, restriction, objection and portability. To exercise them: contact@rfacto.com. You may also lodge a complaint with your local data protection authority.",
+    privacy_s11_title: "11. Children",
+    privacy_s11_text:
+      "Rfacto is not intended for anyone under 16 (or the locally required digital age). We do not knowingly collect children’s data.",
+    privacy_s12_title: "12. Changes",
+    privacy_s12_text:
+      "We may update this policy. The date at the top will change; for material updates we may notify you in the app or by email.",
+    privacy_s13_title: "13. Contact",
+    privacy_s13_text:
+      "RapidFacto / Rfacto — contact@rfacto.com — Website: https://www.rfacto.com",
     trust_program_cta: "Our credibility & trust program",
     trust_program_title: "Credibility & trust program",
     trust_program_lead:

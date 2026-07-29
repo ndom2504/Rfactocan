@@ -54,6 +54,12 @@ export default async function MarketingLayout({
                 {t(locale, "cta_about_us")}
               </Link>
               <Link
+                href="/privacy"
+                className="hover:text-[var(--foreground)]"
+              >
+                {t(locale, "nav_privacy")}
+              </Link>
+              <Link
                 href="/responsibility"
                 className="hover:text-[var(--foreground)]"
               >
