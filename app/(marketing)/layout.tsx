@@ -60,6 +60,12 @@ export default async function MarketingLayout({
                 {t(locale, "nav_privacy")}
               </Link>
               <Link
+                href="/delete-account"
+                className="hover:text-[var(--foreground)]"
+              >
+                {t(locale, "delete_account_title")}
+              </Link>
+              <Link
                 href="/responsibility"
                 className="hover:text-[var(--foreground)]"
               >

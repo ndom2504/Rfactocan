@@ -330,6 +330,25 @@ const dict = {
     privacy_s13_title: "13. Contact",
     privacy_s13_text:
       "RapidFacto / Rfacto — contact@rfacto.com — Site : https://www.rfacto.com",
+    delete_account_title: "Suppression de compte",
+    delete_account_lead:
+      "Vous pouvez demander la suppression de votre compte Rfacto et des données personnelles associées. Cette page répond aux exigences Google Play (Account deletion).",
+    delete_account_how_title: "Comment faire la demande",
+    delete_account_how_1:
+      "Connectez-vous à l'application ou au site avec le compte à supprimer (si possible).",
+    delete_account_how_2:
+      "Envoyez un e-mail à contact@rfacto.com depuis l'adresse e-mail associée au compte.",
+    delete_account_how_3:
+      "Indiquez clairement « Demande de suppression de compte » et le nom d'affichage du compte.",
+    delete_account_email_title: "Adresse de contact",
+    delete_account_email_text:
+      "Toute demande de suppression doit être envoyée à :",
+    delete_account_what_title: "Ce qui est supprimé",
+    delete_account_what_text:
+      "Nous supprimerons ou anonymiserons les données de profil, préférences, jetons de notification et contenus liés au compte lorsque cela est possible. Certaines données de transaction / litige / comptabilité peuvent être conservées le temps requis par la loi, puis effacées ou archivées de façon anonymisée.",
+    delete_account_delay_title: "Délai",
+    delete_account_delay_text:
+      "Nous traitons les demandes dans un délai raisonnable, en général sous 30 jours, sauf obligation légale contraire. Vous recevrez une confirmation par e-mail.",
     trust_program_cta: "Notre programme de crédibilité et confiance",
     trust_program_title: "Programme de crédibilité et confiance",
     trust_program_lead:
@@ -1157,6 +1176,24 @@ const dict = {
     privacy_s13_title: "13. Contact",
     privacy_s13_text:
       "RapidFacto / Rfacto — contact@rfacto.com — Website: https://www.rfacto.com",
+    delete_account_title: "Account deletion",
+    delete_account_lead:
+      "You can request deletion of your Rfacto account and associated personal data. This page meets Google Play account deletion requirements.",
+    delete_account_how_title: "How to request deletion",
+    delete_account_how_1:
+      "Sign in to the app or website with the account you want deleted (if possible).",
+    delete_account_how_2:
+      "Email contact@rfacto.com from the email address linked to the account.",
+    delete_account_how_3:
+      "Clearly write “Account deletion request” and include your display name.",
+    delete_account_email_title: "Contact address",
+    delete_account_email_text: "Send all deletion requests to:",
+    delete_account_what_title: "What is deleted",
+    delete_account_what_text:
+      "We will delete or anonymize profile data, preferences, notification tokens and account-linked content where possible. Some transaction / dispute / accounting records may be retained as required by law, then deleted or anonymized.",
+    delete_account_delay_title: "Timeline",
+    delete_account_delay_text:
+      "We process requests within a reasonable time, generally within 30 days, unless the law requires otherwise. You will receive email confirmation.",
     trust_program_cta: "Our credibility & trust program",
     trust_program_title: "Credibility & trust program",
     trust_program_lead:
