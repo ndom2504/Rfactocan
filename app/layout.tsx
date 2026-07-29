@@ -14,9 +14,9 @@ const body = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-const siteTitle = "Services de vente collaboratif en ligne";
+const siteTitle = "Service collaboratif en ligne";
 const siteDescription =
-  "Services de vente collaboratif en ligne — Rfacto connecte vendeurs, voyageurs et clients pour le commerce et l’expédition de colis.";
+  "Service collaboratif en ligne — Rfacto connecte vendeurs, voyageurs et clients pour le commerce et l’expédition de colis.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.rfacto.com"),
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
   applicationName: "Rfacto",
   keywords: [
     "Rfacto",
-    "services de vente collaboratif",
-    "vente collaboratif en ligne",
+    "service collaboratif en ligne",
     "services collaboratifs",
+    "vente collaborative",
     "expédition de colis",
     "colis",
     "voyageurs",
