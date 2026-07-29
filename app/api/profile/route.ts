@@ -30,7 +30,12 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
-  const user = await prisma.user.findUnique({ where: { id: session.id } });
+  const user = await prisma.user.findUnique({
+    where: { id: session.id },
+    include: {
+      _count: { select: { referrals: true } },
+    },
+  });
   return NextResponse.json({ user });
 }
 

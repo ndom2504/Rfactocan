@@ -15,6 +15,8 @@ export type SessionUser = {
   status: UserStatus;
   verifiedAt: Date | null;
   kycStatus: User["kycStatus"];
+  isAmbassador: boolean;
+  agentCode: string | null;
   avatarUrl: string | null;
   ratingAvg: number;
   ratingCount: number;
@@ -101,6 +103,8 @@ async function sessionUserFromToken(
       status: user.status,
       verifiedAt: user.verifiedAt,
       kycStatus: user.kycStatus,
+      isAmbassador: user.isAmbassador,
+      agentCode: user.agentCode,
       avatarUrl: user.avatarUrl,
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,

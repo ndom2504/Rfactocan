@@ -349,6 +349,25 @@ const dict = {
     delete_account_delay_title: "Délai",
     delete_account_delay_text:
       "Nous traitons les demandes dans un délai raisonnable, en général sous 30 jours, sauf obligation légale contraire. Vous recevrez une confirmation par e-mail.",
+    ambassador_badge: "Espace ambassadeur",
+    ambassador_earn_title: "Gagner avec Rfacto en tant qu'ambassadeur",
+    ambassador_earn_lead:
+      "Bonjour {name} — votre KYC est validé. Voici comment monétiser votre réseau sur Rfacto.",
+    ambassador_code_label: "Votre code agent",
+    ambassador_copy_link: "Copier mon lien d'invitation",
+    ambassador_copied: "Lien copié",
+    ambassador_copy_prompt: "Copiez votre lien ambassadeur :",
+    ambassador_referrals: "filleul(s) inscrit(s)",
+    ambassador_earn_step1:
+      "Partagez votre lien personnel (WhatsApp, réseaux, communauté). Chaque inscription via ce lien vous est attribuée.",
+    ambassador_earn_step2:
+      "Aidez vos filleuls à publier un trajet, une demande de colis ou un service — plus ils sont actifs, plus votre réseau crée de valeur.",
+    ambassador_earn_step3:
+      "Gagnez aussi vous-même : voyageur, prestataire ou commercial — les paiements passent par Stripe Connect une fois le KYC validé.",
+    ambassador_earn_step4:
+      "Les inscriptions attribuées sont suivies par Rfacto pour le programme de récompenses ambassadeurs (primes / commissions selon le programme en cours).",
+    ambassador_earn_note:
+      "Astuce : un filleul qui complète son premier échange (réservation ou service) compte davantage pour votre performance d'ambassadeur. Contactez le support pour le barème actuel du programme.",
     trust_program_cta: "Notre programme de crédibilité et confiance",
     trust_program_title: "Programme de crédibilité et confiance",
     trust_program_lead:
@@ -1194,6 +1213,25 @@ const dict = {
     delete_account_delay_title: "Timeline",
     delete_account_delay_text:
       "We process requests within a reasonable time, generally within 30 days, unless the law requires otherwise. You will receive email confirmation.",
+    ambassador_badge: "Ambassador space",
+    ambassador_earn_title: "Earn with Rfacto as an ambassador",
+    ambassador_earn_lead:
+      "Hi {name} — your KYC is verified. Here’s how to monetize your network on Rfacto.",
+    ambassador_code_label: "Your agent code",
+    ambassador_copy_link: "Copy my invite link",
+    ambassador_copied: "Link copied",
+    ambassador_copy_prompt: "Copy your ambassador link:",
+    ambassador_referrals: "referred signup(s)",
+    ambassador_earn_step1:
+      "Share your personal link (WhatsApp, social, community). Every signup via that link is attributed to you.",
+    ambassador_earn_step2:
+      "Help your referrals publish a trip, parcel request or service — the more active they are, the more value your network creates.",
+    ambassador_earn_step3:
+      "Earn yourself too: as traveler, provider or seller — payouts go through Stripe Connect once KYC is verified.",
+    ambassador_earn_step4:
+      "Attributed signups are tracked by Rfacto for the ambassador rewards program (bonuses / commissions per the current program).",
+    ambassador_earn_note:
+      "Tip: a referral who completes a first exchange (booking or service) counts more toward your ambassador performance. Contact support for the current reward schedule.",
     trust_program_cta: "Our credibility & trust program",
     trust_program_title: "Credibility & trust program",
     trust_program_lead:

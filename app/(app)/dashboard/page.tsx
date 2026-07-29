@@ -7,6 +7,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
+import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -20,7 +21,12 @@ export default async function DashboardPage() {
   const canSearchCommandes =
     user.role === "TRAVELER" || user.role === "BOTH" || user.role === "ADMIN";
 
-  const [trips, requests, bookings] = await Promise.all([
+  const showAmbassadorEarn =
+    user.isAmbassador &&
+    user.kycStatus === "VERIFIED" &&
+    Boolean(user.agentCode);
+
+  const [trips, requests, bookings, referralCount] = await Promise.all([
     prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
     prisma.parcelRequest.count({
       where: { userId: user.id, status: "OPEN" },
@@ -37,6 +43,9 @@ export default async function DashboardPage() {
       orderBy: { updatedAt: "desc" },
       take: 5,
     }),
+    showAmbassadorEarn
+      ? prisma.user.count({ where: { referredById: user.id } })
+      : Promise.resolve(0),
   ]);
 
   return (
@@ -52,6 +61,14 @@ export default async function DashboardPage() {
           {t(locale, "dashboard_actors_hint")}
         </p>
       </div>
+
+      {showAmbassadorEarn && user.agentCode ? (
+        <AmbassadorEarnPanel
+          agentCode={user.agentCode}
+          referralCount={referralCount}
+          displayName={user.displayName}
+        />
+      ) : null}
 
       <div
         className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3"

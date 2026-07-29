@@ -17,6 +17,7 @@ import { resolveCountryCode } from "@/lib/detect-country";
 import { currencyForCountry } from "@/lib/currency";
 import { IntentPicker } from "@/components/intent-picker";
 import { PayoutChannelPicker } from "@/components/payout-channel-picker";
+import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
 import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
@@ -48,6 +49,9 @@ type User = {
   stripeConnectAccountId?: string | null;
   stripeConnectChargesEnabled?: boolean;
   stripeConnectPayoutsEnabled?: boolean;
+  isAmbassador?: boolean;
+  agentCode?: string | null;
+  _count?: { referrals: number };
 };
 
 function ProfileForm() {
@@ -332,6 +336,16 @@ function ProfileForm() {
           </Link>
         </div>
       </Card>
+
+      {user.isAmbassador &&
+        user.kycStatus === "VERIFIED" &&
+        user.agentCode && (
+          <AmbassadorEarnPanel
+            agentCode={user.agentCode}
+            referralCount={user._count?.referrals ?? 0}
+            displayName={user.displayName}
+          />
+        )}
 
       <Card>
         <CardTitle>{t("profile_title")}</CardTitle>
