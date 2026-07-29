@@ -228,13 +228,13 @@ export default function ServiceCategoryPage() {
             <Link key={item.id} href={`/services/listing/${item.id}`}>
               <Card className="overflow-hidden transition hover:border-[var(--accent)]">
                 <div className="flex gap-3 sm:gap-4">
-                  <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2,#eef2ef)] sm:h-32 sm:w-36">
+                  <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-md bg-[var(--surface-2,#eef2ef)] sm:h-32 sm:w-36">
                     {cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={cover}
                         alt=""
-                        className="max-h-full max-w-full object-contain"
+                        className="h-full w-full object-cover object-top"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs text-[var(--muted)]">

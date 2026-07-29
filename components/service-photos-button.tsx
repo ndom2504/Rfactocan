@@ -77,7 +77,7 @@ export function ServicePhotosButton({ photos, className }: Props) {
                   key={url}
                   src={url}
                   alt=""
-                  className="max-h-72 w-full rounded-lg bg-[var(--surface-2,#eef2ef)] object-contain"
+                  className="h-auto w-full rounded-lg bg-[var(--surface-2,#eef2ef)]"
                 />
               ))}
             </div>

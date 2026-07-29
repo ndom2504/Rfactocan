@@ -92,12 +92,12 @@ export default function ServiceListingDetailPage() {
 
       <Card className="overflow-hidden">
         {listing.photos?.[0] ? (
-          <div className="relative -mx-5 -mt-5 mb-5 flex max-h-[min(70vh,36rem)] items-center justify-center overflow-hidden bg-[var(--surface-2,#eef2ef)]">
+          <div className="relative -mx-5 -mt-5 mb-5 overflow-hidden bg-[var(--surface-2,#eef2ef)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={listing.photos[0]}
               alt=""
-              className="max-h-[min(70vh,36rem)] w-full object-contain"
+              className="block h-auto w-full"
             />
           </div>
         ) : null}
