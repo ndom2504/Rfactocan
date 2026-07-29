@@ -26,6 +26,10 @@ export async function GET() {
     feeAgg,
     kycVerified,
     openDisputesCount,
+    servicesTotal,
+    servicesOpen,
+    servicesClosed,
+    serviceProviders,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.trip.count(),
@@ -40,6 +44,15 @@ export async function GET() {
     }),
     prisma.user.count({ where: { kycStatus: "VERIFIED" } }),
     prisma.dispute.count({ where: { status: { in: ["OPEN", "IN_REVIEW"] } } }),
+    prisma.serviceListing.count(),
+    prisma.serviceListing.count({ where: { status: "OPEN" } }),
+    prisma.serviceListing.count({ where: { status: "CLOSED" } }),
+    prisma.serviceListing
+      .findMany({
+        distinct: ["userId"],
+        select: { userId: true },
+      })
+      .then((rows) => rows.length),
   ]);
 
   const openReports = await prisma.report.findMany({
@@ -139,6 +152,18 @@ export async function GET() {
     },
   });
 
+  const servicesByCategoryRaw = await prisma.serviceListing.groupBy({
+    by: ["category"],
+    where: { status: "OPEN" },
+    _count: { _all: true },
+  });
+  const servicesByCategory = servicesByCategoryRaw
+    .map((row) => ({
+      category: row.category,
+      count: row._count._all,
+    }))
+    .sort((a, b) => b.count - a.count);
+
   return NextResponse.json({
     stats: {
       users,
@@ -153,6 +178,11 @@ export async function GET() {
       platformFeesCadCents: feeAgg._sum.platformFeeCents ?? 0,
       volumeCadCents: feeAgg._sum.amountCadCents ?? 0,
       pendingOffers: pendingOffers.length,
+      services: servicesTotal,
+      servicesOpen,
+      servicesClosed,
+      serviceProviders,
+      servicesByCategory,
     },
     openReports,
     openDisputes,

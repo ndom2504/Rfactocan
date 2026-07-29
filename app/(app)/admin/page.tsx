@@ -11,6 +11,7 @@ import {
 } from "@/lib/corridors";
 import { formatDate } from "@/lib/utils";
 import { formatMoneyFromCents } from "@/lib/currency";
+import { categoryLabel } from "@/lib/services-catalog";
 
 type AdminData = {
   stats: {
@@ -24,6 +25,11 @@ type AdminData = {
     kycVerified: number;
     platformFeesCadCents: number;
     volumeCadCents: number;
+    services?: number;
+    servicesOpen?: number;
+    servicesClosed?: number;
+    serviceProviders?: number;
+    servicesByCategory?: Array<{ category: string; count: number }>;
   };
   users: Array<{
     id: string;
@@ -241,6 +247,11 @@ export default function AdminPage() {
           ["Volume", formatCents(data.stats.volumeCadCents)],
           ["Livrés", data.stats.delivered],
           ["Voyages", data.stats.trips],
+          ["Demandes colis", data.stats.requests],
+          ["Services (total)", data.stats.services ?? 0],
+          ["Services ouverts", data.stats.servicesOpen ?? 0],
+          ["Services fermés", data.stats.servicesClosed ?? 0],
+          ["Prestataires services", data.stats.serviceProviders ?? 0],
           ["Signalements", data.stats.openReports],
           ["Litiges ouverts", data.stats.openDisputes ?? 0],
           ["Offres en attente", data.pendingOffers?.length ?? 0],
@@ -251,6 +262,24 @@ export default function AdminPage() {
           </Card>
         ))}
       </div>
+
+      {(data.stats.servicesByCategory?.length ?? 0) > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+            Services ouverts par catégorie
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {data.stats.servicesByCategory!.map((row) => (
+              <Card key={row.category}>
+                <CardDescription>
+                  {categoryLabel(row.category, "fr")}
+                </CardDescription>
+                <CardTitle className="mt-2 text-2xl">{row.count}</CardTitle>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
