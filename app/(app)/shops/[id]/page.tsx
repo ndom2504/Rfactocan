@@ -110,12 +110,14 @@ export default function ShopDetailPage() {
               <Link key={p.id} href={`/shops/product/${p.id}`}>
                 <Card className="h-full transition hover:border-[var(--accent)]">
                   {p.photoUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.photoUrl}
-                      alt=""
-                      className="mb-3 h-40 w-full rounded-md object-cover"
-                    />
+                    <div className="mb-3 flex max-h-72 min-h-[12rem] items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.photoUrl}
+                        alt=""
+                        className="max-h-72 w-full object-contain"
+                      />
+                    </div>
                   )}
                   <CardTitle className="text-base">{p.title}</CardTitle>
                   <CardDescription className="line-clamp-2">

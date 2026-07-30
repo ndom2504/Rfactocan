@@ -105,12 +105,14 @@ function ProductBuyForm() {
       </Link>
       <Card>
         {product.photoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.photoUrl}
-            alt=""
-            className="mb-4 h-56 w-full rounded-md object-cover"
-          />
+          <div className="mb-4 flex max-h-[28rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.photoUrl}
+              alt=""
+              className="max-h-[28rem] w-full object-contain"
+            />
+          </div>
         )}
         <CardTitle className="text-2xl">{product.title}</CardTitle>
         <CardDescription className="mt-1">

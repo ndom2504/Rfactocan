@@ -352,12 +352,14 @@ export default function ManageShopPage() {
           <Card key={p.id}>
             <div className="flex gap-3">
               {p.photoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={p.photoUrl}
-                  alt=""
-                  className="h-20 w-20 rounded-md object-cover"
-                />
+                <div className="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.photoUrl}
+                    alt=""
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
               )}
               <div className="flex-1">
                 <CardTitle className="text-base">{p.title}</CardTitle>
