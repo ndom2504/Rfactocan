@@ -4,12 +4,13 @@ import { useState } from "react";
 import { TravelerSearch } from "@/components/traveler-search";
 import { RequestSearch } from "@/components/request-search";
 import { ServiceSearch } from "@/components/service-search";
+import { ShopSearch } from "@/components/shop-search";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/components/locale-provider";
 
-export type SearchMode = "voyageurs" | "services" | "clients";
+export type SearchMode = "voyageurs" | "services" | "boutiques" | "clients";
 
 type Props = {
   /** Kept for compatibility — all modes are available. */
@@ -42,12 +43,14 @@ export function DashboardSearchHub(_props: Props) {
           >
             <option value="voyageurs">{t("search_mode_voyageurs")}</option>
             <option value="services">{t("search_mode_services")}</option>
+            <option value="boutiques">{t("search_mode_shops")}</option>
             <option value="clients">{t("search_mode_clients")}</option>
           </Select>
         </div>
 
         {mode === "voyageurs" && <TravelerSearch hideHeading plain />}
         {mode === "services" && <ServiceSearch hideHeading plain />}
+        {mode === "boutiques" && <ShopSearch hideHeading plain />}
         {mode === "clients" && <RequestSearch hideHeading plain />}
       </Card>
     </section>

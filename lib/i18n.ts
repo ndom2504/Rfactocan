@@ -277,6 +277,7 @@ const dict = {
     search_filter_type: "Type de recherche",
     search_mode_voyageurs: "Voyageurs",
     search_mode_services: "Services",
+    search_mode_shops: "Boutiques",
     search_mode_clients: "Clients",
     search_mode_livreurs: "Chercher des livreurs",
     search_mode_commandes: "Chercher des commandes",
@@ -284,6 +285,11 @@ const dict = {
     search_services_hint:
       "Filtrez les offres commerciales par mot-clé, pays ou ville.",
     search_services_placeholder: "Titre, type, prestataire…",
+    search_shops: "Trouver une boutique",
+    search_shops_hint:
+      "Recherchez par nom, produit, catégorie, ville ou vendeur.",
+    search_shops_placeholder: "Nom, produit, vendeur…",
+    shops_found: "boutique(s) trouvée(s)",
     services_found: "service(s) trouvé(s)",
     search_travel_date: "Date du voyage",
     requests_found: "commande(s) trouvée(s)",
@@ -1225,7 +1231,13 @@ const dict = {
     search_filter_type: "Search type",
     search_mode_voyageurs: "Travelers",
     search_mode_services: "Services",
+    search_mode_shops: "Shops",
     search_mode_clients: "Clients",
+    search_shops: "Find a shop",
+    search_shops_hint:
+      "Search by name, product, category, city or seller.",
+    search_shops_placeholder: "Name, product, seller…",
+    shops_found: "shop(s) found",
     search_mode_livreurs: "Search carriers",
     search_mode_commandes: "Search orders",
     search_services: "Find a service",

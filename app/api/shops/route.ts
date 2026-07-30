@@ -25,6 +25,7 @@ export async function GET(request: Request) {
   const category = (searchParams.get("category") ?? "").trim();
   const country = (searchParams.get("country") ?? "").trim().toUpperCase();
   const city = (searchParams.get("city") ?? "").trim();
+  const q = (searchParams.get("q") ?? "").trim();
   const mine = searchParams.get("mine") === "1";
   const session = await getSessionUser();
 
@@ -53,6 +54,37 @@ export async function GET(request: Request) {
       ...(country ? { country } : {}),
       ...(city
         ? { city: { contains: city, mode: "insensitive" as const } }
+        : {}),
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" as const } },
+              { description: { contains: q, mode: "insensitive" as const } },
+              { city: { contains: q, mode: "insensitive" as const } },
+              { category: { contains: q, mode: "insensitive" as const } },
+              {
+                user: {
+                  displayName: { contains: q, mode: "insensitive" as const },
+                },
+              },
+              {
+                products: {
+                  some: {
+                    active: true,
+                    OR: [
+                      { title: { contains: q, mode: "insensitive" as const } },
+                      {
+                        description: {
+                          contains: q,
+                          mode: "insensitive" as const,
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          }
         : {}),
     },
     orderBy: { updatedAt: "desc" },
