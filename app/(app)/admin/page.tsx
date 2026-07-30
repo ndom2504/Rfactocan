@@ -133,13 +133,26 @@ export default function AdminPage() {
   const [userLetter, setUserLetter] = useState<string>("");
   const [userQuery, setUserQuery] = useState("");
   const [userQueryDraft, setUserQueryDraft] = useState("");
+  const [userFrom, setUserFrom] = useState("");
+  const [userTo, setUserTo] = useState("");
+  const [userFromDraft, setUserFromDraft] = useState("");
+  const [userToDraft, setUserToDraft] = useState("");
 
-  async function load(opts?: { letter?: string; q?: string }) {
+  async function load(opts?: {
+    letter?: string;
+    q?: string;
+    from?: string;
+    to?: string;
+  }) {
     const letter = opts?.letter ?? userLetter;
     const q = opts?.q ?? userQuery;
+    const from = opts?.from ?? userFrom;
+    const to = opts?.to ?? userTo;
     const params = new URLSearchParams();
     if (letter) params.set("letter", letter);
     if (q.trim()) params.set("q", q.trim());
+    if (from.trim()) params.set("from", from.trim());
+    if (to.trim()) params.set("to", to.trim());
     const qs = params.toString();
     const res = await fetch(`/api/admin${qs ? `?${qs}` : ""}`);
     const json = await res.json();
@@ -158,13 +171,36 @@ export default function AdminPage() {
 
   function applyUserLetter(next: string) {
     setUserLetter(next);
-    void load({ letter: next, q: userQuery });
+    void load({
+      letter: next,
+      q: userQuery,
+      from: userFrom,
+      to: userTo,
+    });
   }
 
   function applyUserSearch(e: FormEvent) {
     e.preventDefault();
     setUserQuery(userQueryDraft);
-    void load({ letter: userLetter, q: userQueryDraft });
+    setUserFrom(userFromDraft);
+    setUserTo(userToDraft);
+    void load({
+      letter: userLetter,
+      q: userQueryDraft,
+      from: userFromDraft,
+      to: userToDraft,
+    });
+  }
+
+  function resetUserFilters() {
+    setUserLetter("");
+    setUserQuery("");
+    setUserQueryDraft("");
+    setUserFrom("");
+    setUserTo("");
+    setUserFromDraft("");
+    setUserToDraft("");
+    void load({ letter: "", q: "", from: "", to: "" });
   }
 
   async function action(userId: string, actionName: string) {
@@ -414,13 +450,34 @@ export default function AdminPage() {
               {(data.usersMatching ?? data.users.length) === 1 ? "" : "s"}
               {userLetter ? ` · lettre ${userLetter}` : ""}
               {userQuery ? ` · « ${userQuery} »` : ""}
+              {userFrom || userTo
+                ? ` · inscrit ${userFrom || "…"} → ${userTo || "…"}`
+                : ""}
               {data.users.length >= 100 ? " (100 max affichés)" : ""}
             </p>
           </div>
           <form
             onSubmit={applyUserSearch}
-            className="flex flex-wrap items-center gap-2"
+            className="flex flex-wrap items-end gap-2"
           >
+            <label className="text-xs text-[var(--muted)]">
+              Du
+              <input
+                type="date"
+                value={userFromDraft}
+                onChange={(e) => setUserFromDraft(e.target.value)}
+                className="mt-1 block h-9 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+              />
+            </label>
+            <label className="text-xs text-[var(--muted)]">
+              Au
+              <input
+                type="date"
+                value={userToDraft}
+                onChange={(e) => setUserToDraft(e.target.value)}
+                className="mt-1 block h-9 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+              />
+            </label>
             <input
               value={userQueryDraft}
               onChange={(e) => setUserQueryDraft(e.target.value)}
@@ -430,17 +487,12 @@ export default function AdminPage() {
             <Button type="submit" size="sm">
               Chercher
             </Button>
-            {(userQuery || userLetter) && (
+            {(userQuery || userLetter || userFrom || userTo) && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  setUserLetter("");
-                  setUserQuery("");
-                  setUserQueryDraft("");
-                  void load({ letter: "", q: "" });
-                }}
+                onClick={resetUserFilters}
               >
                 Réinitialiser
               </Button>

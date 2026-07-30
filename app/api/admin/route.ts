@@ -20,6 +20,21 @@ export async function GET(request: Request) {
   const letter =
     letterRaw.length === 1 && /[A-Z]/.test(letterRaw) ? letterRaw : null;
   const q = (searchParams.get("q") ?? "").trim();
+  const fromRaw = (searchParams.get("from") ?? "").trim();
+  const toRaw = (searchParams.get("to") ?? "").trim();
+
+  function parseDayStart(raw: string): Date | null {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+    const d = new Date(`${raw}T00:00:00.000Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  function parseDayEnd(raw: string): Date | null {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+    const d = new Date(`${raw}T23:59:59.999Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const fromDate = parseDayStart(fromRaw);
+  const toDate = parseDayEnd(toRaw);
 
   const [
     users,
@@ -108,6 +123,16 @@ export async function GET(request: Request) {
                 },
                 { email: { contains: q, mode: "insensitive" as const } },
               ],
+            },
+          ]
+        : []),
+      ...(fromDate || toDate
+        ? [
+            {
+              createdAt: {
+                ...(fromDate ? { gte: fromDate } : {}),
+                ...(toDate ? { lte: toDate } : {}),
+              },
             },
           ]
         : []),
@@ -224,7 +249,12 @@ export async function GET(request: Request) {
     openDisputes,
     users: allUsers,
     usersMatching,
-    usersFilter: { letter, q },
+    usersFilter: {
+      letter,
+      q,
+      from: fromDate ? fromRaw : null,
+      to: toDate ? toRaw : null,
+    },
     payments: recentPayments,
     pendingOffers,
   });
