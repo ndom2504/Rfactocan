@@ -1,0 +1,108 @@
+export const SHOP_CATEGORY_IDS = [
+  "food_appliances",
+  "cosmetics",
+  "auto_parts",
+  "electronics",
+] as const;
+
+export type ShopCategoryId = (typeof SHOP_CATEGORY_IDS)[number];
+
+export type ShopCategory = {
+  id: ShopCategoryId;
+  labelFr: string;
+  labelEn: string;
+  hintFr: string;
+  hintEn: string;
+};
+
+export const SHOP_CATEGORIES: ShopCategory[] = [
+  {
+    id: "food_appliances",
+    labelFr: "Alimentation & électroménager",
+    labelEn: "Food & appliances",
+    hintFr: "Épicerie, boissons, appareils ménagers",
+    hintEn: "Groceries, drinks, household appliances",
+  },
+  {
+    id: "cosmetics",
+    labelFr: "Cosmétique",
+    labelEn: "Cosmetics",
+    hintFr: "Beauté, soins, parfums",
+    hintEn: "Beauty, skincare, fragrance",
+  },
+  {
+    id: "auto_parts",
+    labelFr: "Automobile & pièces détachées",
+    labelEn: "Auto & spare parts",
+    hintFr: "Pièces, accessoires, entretien auto",
+    hintEn: "Parts, accessories, car care",
+  },
+  {
+    id: "electronics",
+    labelFr: "Électronique",
+    labelEn: "Electronics",
+    hintFr: "Téléphones, ordis, gadgets",
+    hintEn: "Phones, computers, gadgets",
+  },
+];
+
+export function isShopCategoryId(value: string): value is ShopCategoryId {
+  return (SHOP_CATEGORY_IDS as readonly string[]).includes(value);
+}
+
+export function getShopCategory(id: string): ShopCategory | undefined {
+  return SHOP_CATEGORIES.find((c) => c.id === id);
+}
+
+export function shopCategoryLabel(id: string, locale: string) {
+  const cat = getShopCategory(id);
+  if (!cat) return id;
+  return locale === "en" ? cat.labelEn : cat.labelFr;
+}
+
+export function shopCategoryHint(id: string, locale: string) {
+  const cat = getShopCategory(id);
+  if (!cat) return "";
+  return locale === "en" ? cat.hintEn : cat.hintFr;
+}
+
+/** Effective unit price in cents (promo if still valid). */
+export function effectiveProductPriceCents(product: {
+  priceCents: number;
+  promoPriceCents?: number | null;
+  promoEndsAt?: Date | string | null;
+}): number {
+  const promo = product.promoPriceCents;
+  if (promo == null || promo <= 0 || promo >= product.priceCents) {
+    return product.priceCents;
+  }
+  if (product.promoEndsAt) {
+    const ends = new Date(product.promoEndsAt).getTime();
+    if (Number.isFinite(ends) && ends < Date.now()) {
+      return product.priceCents;
+    }
+  }
+  return promo;
+}
+
+export function hasActivePromo(product: {
+  priceCents: number;
+  promoPriceCents?: number | null;
+  promoEndsAt?: Date | string | null;
+}): boolean {
+  return effectiveProductPriceCents(product) < product.priceCents;
+}
+
+export const SHOP_ORDER_STATUS_LABELS: Record<string, { fr: string; en: string }> =
+  {
+    AWAITING_PAYMENT: { fr: "En attente de paiement", en: "Awaiting payment" },
+    PAID: { fr: "Payée", en: "Paid" },
+    FULFILLED: { fr: "Livrée / remise", en: "Fulfilled" },
+    CANCELLED: { fr: "Annulée", en: "Cancelled" },
+  };
+
+export function shopOrderStatusLabel(status: string, locale: string) {
+  const row = SHOP_ORDER_STATUS_LABELS[status];
+  if (!row) return status;
+  return locale === "en" ? row.en : row.fr;
+}

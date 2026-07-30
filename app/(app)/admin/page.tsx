@@ -30,6 +30,8 @@ type AdminData = {
     servicesClosed?: number;
     serviceProviders?: number;
     servicesByCategory?: Array<{ category: string; count: number }>;
+    shopsOpen?: number;
+    shopOrdersPaid?: number;
   };
   users: Array<{
     id: string;
@@ -349,6 +351,8 @@ export default function AdminPage() {
           ["Services ouverts", data.stats.servicesOpen ?? 0],
           ["Services fermés", data.stats.servicesClosed ?? 0],
           ["Prestataires services", data.stats.serviceProviders ?? 0],
+          ["Boutiques ouvertes", data.stats.shopsOpen ?? 0],
+          ["Commandes boutique payées", data.stats.shopOrdersPaid ?? 0],
           ["Signalements", data.stats.openReports],
           ["Litiges ouverts", data.stats.openDisputes ?? 0],
           ["Offres en attente", data.pendingOffers?.length ?? 0],

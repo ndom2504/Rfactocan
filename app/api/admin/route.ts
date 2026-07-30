@@ -51,6 +51,8 @@ export async function GET(request: Request) {
     servicesOpen,
     servicesClosed,
     serviceProviders,
+    shopsOpen,
+    shopOrdersPaid,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.trip.count(),
@@ -74,6 +76,10 @@ export async function GET(request: Request) {
         select: { userId: true },
       })
       .then((rows) => rows.length),
+    prisma.shop.count({ where: { status: "OPEN" } }),
+    prisma.shopOrder.count({
+      where: { status: { in: ["PAID", "FULFILLED"] } },
+    }),
   ]);
 
   const openReports = await prisma.report.findMany({
@@ -294,6 +300,8 @@ export async function GET(request: Request) {
       servicesClosed,
       serviceProviders,
       servicesByCategory,
+      shopsOpen,
+      shopOrdersPaid,
     },
     openReports,
     openDisputes,

@@ -84,6 +84,19 @@ export default async function DashboardPage() {
             {t(locale, "publish_service_cta")}
           </Button>
         </Link>
+        <Link href="/shops/new" className="w-full">
+          <Button className="h-12 w-full text-base">
+            {t(locale, "publish_shop_cta")}
+          </Button>
+        </Link>
+        <Link href="/shops" className="w-full">
+          <Button
+            className="h-12 w-full text-base"
+            variant="outline"
+          >
+            {t(locale, "shops_browse")}
+          </Button>
+        </Link>
         <Link href="/requests/new" className="w-full">
           <Button
             className="h-12 w-full border-[var(--accent)]/25 bg-[var(--accent-soft)] text-base text-[var(--accent)] hover:bg-[#c5e6d6]"

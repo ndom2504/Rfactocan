@@ -8,6 +8,7 @@ import { markRequestMatchedOnPayment } from "@/lib/payments/expiry";
 import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { markShopOrderPaid } from "@/lib/shop-payments";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
 export const runtime = "nodejs";
@@ -222,7 +223,14 @@ export async function POST(request: Request) {
       }
       case "payment_intent.succeeded": {
         const pi = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentIntent(pi, "CAPTURED");
+        if (pi.metadata?.type === "shop_order" || pi.metadata?.shopOrderId) {
+          await markShopOrderPaid({
+            orderId: pi.metadata.shopOrderId,
+            paymentIntentId: pi.id,
+          });
+        } else {
+          await handlePaymentIntent(pi, "CAPTURED");
+        }
         break;
       }
       case "payment_intent.canceled": {
@@ -237,12 +245,28 @@ export async function POST(request: Request) {
       }
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const bookingId =
-          session.metadata?.bookingId || session.client_reference_id || undefined;
         const piId =
           typeof session.payment_intent === "string"
             ? session.payment_intent
             : session.payment_intent?.id;
+
+        if (
+          session.metadata?.type === "shop_order" ||
+          session.metadata?.shopOrderId
+        ) {
+          await markShopOrderPaid({
+            orderId:
+              session.metadata.shopOrderId ||
+              session.client_reference_id ||
+              undefined,
+            sessionId: session.id,
+            paymentIntentId: piId ?? null,
+          });
+          break;
+        }
+
+        const bookingId =
+          session.metadata?.bookingId || session.client_reference_id || undefined;
         if (bookingId && piId) {
           await prisma.payment.updateMany({
             where: { bookingId },

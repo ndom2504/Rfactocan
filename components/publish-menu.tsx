@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 const PUBLISH_LINKS = [
   { href: "/trips/new", labelKey: "publish_trip_cta" as const },
   { href: "/services/new", labelKey: "publish_service_cta" as const },
+  { href: "/shops/new", labelKey: "publish_shop_cta" as const },
   { href: "/requests/new", labelKey: "publish_order_cta" as const },
 ];
 
