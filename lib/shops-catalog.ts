@@ -50,6 +50,11 @@ export function isShopCategoryId(value: string): value is ShopCategoryId {
   return (SHOP_CATEGORY_IDS as readonly string[]).includes(value);
 }
 
+/** Extra product fields shown for electronics shops. */
+export function shopCategoryHasElectronicsSpecs(category: string) {
+  return category === "electronics";
+}
+
 export function getShopCategory(id: string): ShopCategory | undefined {
   return SHOP_CATEGORIES.find((c) => c.id === id);
 }

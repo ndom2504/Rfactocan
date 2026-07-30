@@ -248,6 +248,15 @@ const dict = {
     shops_qty: "Quantité",
     shops_created: "Boutique créée",
     shops_need_product: "Ajoutez au moins un produit avant de publier.",
+    shops_warranty: "Garantie",
+    shops_warranty_placeholder: "Ex. 12 mois constructeur",
+    shops_stock: "Quantité en stock",
+    shops_stock_available: "En stock",
+    shops_stock_out: "Rupture de stock",
+    shops_highlights: "Points forts",
+    shops_highlights_placeholder:
+      "Ex. Écran AMOLED, 5G, batterie longue durée…",
+    shops_electronics_specs: "Fiche électronique",
     publish_order_cta: "Publier une commande",
     search_travelers: "Trouver un livreur",
     search_travelers_hint:
@@ -1182,6 +1191,15 @@ const dict = {
     shops_qty: "Quantity",
     shops_created: "Shop created",
     shops_need_product: "Add at least one product before publishing.",
+    shops_warranty: "Warranty",
+    shops_warranty_placeholder: "E.g. 12-month manufacturer warranty",
+    shops_stock: "Stock quantity",
+    shops_stock_available: "In stock",
+    shops_stock_out: "Out of stock",
+    shops_highlights: "Key strengths",
+    shops_highlights_placeholder:
+      "E.g. AMOLED display, 5G, long battery life…",
+    shops_electronics_specs: "Electronics specs",
     publish_order_cta: "Publish an order",
     search_travelers: "Find a carrier",
     search_travelers_hint:

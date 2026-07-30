@@ -414,6 +414,12 @@ model ShopProduct {
   promoLabel      String?
   promoEndsAt     DateTime?
   photoUrl        String?
+  /// Warranty text (esp. electronics) e.g. "12 mois"
+  warranty        String?
+  /// Available stock units (null = not tracked)
+  stockQty        Int?
+  /// Key strengths / selling points (esp. electronics)
+  highlights      String?
   active          Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

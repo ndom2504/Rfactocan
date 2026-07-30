@@ -8,7 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatMoneyFromCents } from "@/lib/currency";
-import { shopCategoryLabel } from "@/lib/shops-catalog";
+import {
+  shopCategoryHasElectronicsSpecs,
+  shopCategoryLabel,
+} from "@/lib/shops-catalog";
 
 type Product = {
   id: string;
@@ -16,6 +19,9 @@ type Product = {
   description: string;
   priceCents: number;
   photoUrl: string | null;
+  warranty: string | null;
+  stockQty: number | null;
+  highlights: string | null;
   effectivePriceCents: number;
   hasPromo: boolean;
   promoLabel: string | null;
@@ -140,6 +146,28 @@ export default function ShopDetailPage() {
                       <Badge className="ml-2">{p.promoLabel}</Badge>
                     )}
                   </p>
+                  {shopCategoryHasElectronicsSpecs(shop.category) && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {p.warranty && (
+                        <Badge>
+                          {t("shops_warranty")}: {p.warranty}
+                        </Badge>
+                      )}
+                      {p.stockQty != null && (
+                        <Badge>
+                          {p.stockQty > 0
+                            ? `${t("shops_stock_available")}: ${p.stockQty}`
+                            : t("shops_stock_out")}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  {shopCategoryHasElectronicsSpecs(shop.category) &&
+                    p.highlights && (
+                      <p className="mt-2 line-clamp-2 text-xs text-[var(--muted)]">
+                        {p.highlights}
+                      </p>
+                    )}
                 </Card>
               </Link>
             ))}

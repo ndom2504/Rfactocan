@@ -10,7 +10,10 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatMoneyFromCents } from "@/lib/currency";
-import { shopCategoryLabel } from "@/lib/shops-catalog";
+import {
+  shopCategoryHasElectronicsSpecs,
+  shopCategoryLabel,
+} from "@/lib/shops-catalog";
 
 type Product = {
   id: string;
@@ -18,6 +21,9 @@ type Product = {
   description: string;
   priceCents: number;
   photoUrl: string | null;
+  warranty: string | null;
+  stockQty: number | null;
+  highlights: string | null;
   effectivePriceCents: number;
   hasPromo: boolean;
   promoLabel: string | null;
@@ -92,8 +98,17 @@ function ProductBuyForm() {
   }
 
   const loc = locale === "en" ? "en-CA" : "fr-CA";
+  const isElectronics = shopCategoryHasElectronicsSpecs(
+    product.shop.category
+  );
+  const outOfStock =
+    isElectronics && product.stockQty != null && product.stockQty <= 0;
+  const maxQty =
+    isElectronics && product.stockQty != null
+      ? Math.min(20, product.stockQty)
+      : 20;
   const canBuy =
-    !product.isOwner && product.shop.status === "OPEN";
+    !product.isOwner && product.shop.status === "OPEN" && !outOfStock;
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -120,6 +135,44 @@ function ProductBuyForm() {
           {product.shop.user.displayName}
         </CardDescription>
         <p className="mt-4 text-sm leading-relaxed">{product.description}</p>
+
+        {isElectronics &&
+          (product.warranty ||
+            product.stockQty != null ||
+            product.highlights) && (
+            <div className="mt-4 space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3 text-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                {t("shops_electronics_specs")}
+              </p>
+              {product.warranty && (
+                <p>
+                  <span className="text-[var(--muted)]">
+                    {t("shops_warranty")} :{" "}
+                  </span>
+                  {product.warranty}
+                </p>
+              )}
+              {product.stockQty != null && (
+                <p>
+                  <span className="text-[var(--muted)]">
+                    {t("shops_stock")} :{" "}
+                  </span>
+                  {product.stockQty > 0
+                    ? `${product.stockQty} — ${t("shops_stock_available")}`
+                    : t("shops_stock_out")}
+                </p>
+              )}
+              {product.highlights && (
+                <div>
+                  <p className="text-[var(--muted)]">{t("shops_highlights")}</p>
+                  <p className="mt-1 whitespace-pre-line leading-relaxed">
+                    {product.highlights}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
         <p className="mt-4 text-lg">
           {product.hasPromo && (
             <span className="mr-2 text-[var(--muted)] line-through">
@@ -142,6 +195,10 @@ function ProductBuyForm() {
           )}
         </p>
 
+        {outOfStock && (
+          <Badge className="mt-3">{t("shops_stock_out")}</Badge>
+        )}
+
         {canBuy && (
           <div className="mt-6 space-y-3">
             <div className="space-y-1">
@@ -150,9 +207,11 @@ function ProductBuyForm() {
                 id="qty"
                 type="number"
                 min={1}
-                max={20}
+                max={maxQty}
                 value={qty}
-                onChange={(e) => setQty(Number(e.target.value) || 1)}
+                onChange={(e) =>
+                  setQty(Math.min(maxQty, Number(e.target.value) || 1))
+                }
                 className="max-w-[120px]"
               />
             </div>

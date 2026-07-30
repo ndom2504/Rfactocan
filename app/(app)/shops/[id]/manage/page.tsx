@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoneyFromCents } from "@/lib/currency";
 import {
+  shopCategoryHasElectronicsSpecs,
   shopCategoryLabel,
   shopOrderStatusLabel,
 } from "@/lib/shops-catalog";
@@ -25,6 +26,9 @@ type Product = {
   promoLabel: string | null;
   promoEndsAt: string | null;
   photoUrl: string | null;
+  warranty: string | null;
+  stockQty: number | null;
+  highlights: string | null;
   active: boolean;
   effectivePriceCents: number;
   hasPromo: boolean;
@@ -71,6 +75,9 @@ export default function ManageShopPage() {
   const [promoLabel, setPromoLabel] = useState("");
   const [promoEndsAt, setPromoEndsAt] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [warranty, setWarranty] = useState("");
+  const [stockQty, setStockQty] = useState("");
+  const [highlights, setHighlights] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
@@ -123,6 +130,13 @@ export default function ManageShopPage() {
         promoLabel: promoLabel || null,
         promoEndsAt: promoEndsAt || null,
         photoUrl,
+        ...(shopCategoryHasElectronicsSpecs(shop?.category ?? "")
+          ? {
+              warranty: warranty || null,
+              stockQty: stockQty === "" ? null : Number(stockQty),
+              highlights: highlights || null,
+            }
+          : {}),
       }),
     });
     const data = await res.json();
@@ -138,6 +152,9 @@ export default function ManageShopPage() {
     setPromoLabel("");
     setPromoEndsAt("");
     setPhotoUrl(null);
+    setWarranty("");
+    setStockQty("");
+    setHighlights("");
     setMessage(t("shops_save_product"));
     await load();
   }
@@ -315,6 +332,42 @@ export default function ManageShopPage() {
               />
             </div>
           </div>
+          {shopCategoryHasElectronicsSpecs(shop.category) && (
+            <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                {t("shops_electronics_specs")}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>{t("shops_warranty")}</Label>
+                  <Input
+                    value={warranty}
+                    onChange={(e) => setWarranty(e.target.value)}
+                    placeholder={t("shops_warranty_placeholder")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t("shops_stock")}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={stockQty}
+                    onChange={(e) => setStockQty(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>{t("shops_highlights")}</Label>
+                <Textarea
+                  value={highlights}
+                  onChange={(e) => setHighlights(e.target.value)}
+                  rows={3}
+                  placeholder={t("shops_highlights_placeholder")}
+                />
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <Label>{t("shops_product_photo")}</Label>
             <Input
@@ -386,6 +439,17 @@ export default function ManageShopPage() {
                     <Badge className="ml-2">{t("shops_status_closed")}</Badge>
                   )}
                 </p>
+                {shopCategoryHasElectronicsSpecs(shop.category) && (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {p.warranty
+                      ? `${t("shops_warranty")}: ${p.warranty}`
+                      : null}
+                    {p.warranty && p.stockQty != null ? " · " : null}
+                    {p.stockQty != null
+                      ? `${t("shops_stock")}: ${p.stockQty}`
+                      : null}
+                  </p>
+                )}
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button
                     size="sm"

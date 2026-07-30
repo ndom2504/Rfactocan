@@ -56,6 +56,13 @@ export async function createShopCheckout(input: {
   if (product.shop.userId === input.buyerId) {
     throw new Error("Vous ne pouvez pas acheter votre propre produit");
   }
+  if (product.stockQty != null && product.stockQty < quantity) {
+    throw new Error(
+      product.stockQty <= 0
+        ? "Produit en rupture de stock."
+        : `Stock insuffisant (disponible : ${product.stockQty}).`
+    );
+  }
 
   const seller = product.shop.user;
   if (!travelerCanReceivePayments(seller) || !seller.stripeConnectAccountId) {
@@ -189,18 +196,36 @@ export async function markShopOrderPaid(opts: {
         : null;
   if (!where) return null;
 
-  const order = await prisma.shopOrder.findFirst({ where });
+  const order = await prisma.shopOrder.findFirst({
+    where,
+    include: { product: { select: { id: true, stockQty: true } } },
+  });
   if (!order) return null;
   if (order.status === "PAID" || order.status === "FULFILLED") return order;
 
-  return prisma.shopOrder.update({
-    where: { id: order.id },
-    data: {
-      status: "PAID",
-      ...(opts.paymentIntentId
-        ? { stripePaymentIntentId: opts.paymentIntentId }
-        : {}),
-      ...(opts.sessionId ? { stripeCheckoutSessionId: opts.sessionId } : {}),
-    },
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.shopOrder.update({
+      where: { id: order.id },
+      data: {
+        status: "PAID",
+        ...(opts.paymentIntentId
+          ? { stripePaymentIntentId: opts.paymentIntentId }
+          : {}),
+        ...(opts.sessionId ? { stripeCheckoutSessionId: opts.sessionId } : {}),
+      },
+    });
+
+    if (order.product.stockQty != null) {
+      await tx.shopProduct.update({
+        where: { id: order.productId },
+        data: {
+          stockQty: {
+            decrement: Math.min(order.quantity, order.product.stockQty),
+          },
+        },
+      });
+    }
+
+    return updated;
   });
 }

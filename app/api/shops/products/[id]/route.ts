@@ -17,6 +17,9 @@ const patchSchema = z.object({
   promoLabel: z.string().max(80).optional().nullable(),
   promoEndsAt: z.string().optional().nullable(),
   photoUrl: z.string().max(2000).optional().nullable(),
+  warranty: z.string().max(120).optional().nullable(),
+  stockQty: z.coerce.number().int().min(0).max(1_000_000).optional().nullable(),
+  highlights: z.string().max(2000).optional().nullable(),
   active: z.boolean().optional(),
 });
 
@@ -111,6 +114,17 @@ export async function PATCH(request: Request, context: Ctx) {
     if (body.description !== undefined) data.description = body.description.trim();
     if (body.photoUrl !== undefined) data.photoUrl = body.photoUrl || null;
     if (body.active !== undefined) data.active = body.active;
+    if (existing.shop.category === "electronics") {
+      if (body.warranty !== undefined) {
+        data.warranty = body.warranty?.trim() || null;
+      }
+      if (body.stockQty !== undefined) {
+        data.stockQty = body.stockQty;
+      }
+      if (body.highlights !== undefined) {
+        data.highlights = body.highlights?.trim() || null;
+      }
+    }
     if (body.promoLabel !== undefined) {
       data.promoLabel = body.promoLabel?.trim() || null;
     }

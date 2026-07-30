@@ -18,6 +18,9 @@ const createSchema = z.object({
   promoLabel: z.string().max(80).optional().nullable(),
   promoEndsAt: z.string().optional().nullable(),
   photoUrl: z.string().max(2000).optional().nullable(),
+  warranty: z.string().max(120).optional().nullable(),
+  stockQty: z.coerce.number().int().min(0).max(1_000_000).optional().nullable(),
+  highlights: z.string().max(2000).optional().nullable(),
   active: z.boolean().optional().default(true),
 });
 
@@ -87,6 +90,8 @@ export async function POST(request: Request, context: Ctx) {
       }
     }
 
+    const isElectronics = shop.category === "electronics";
+
     const product = await prisma.shopProduct.create({
       data: {
         shopId: id,
@@ -97,6 +102,17 @@ export async function POST(request: Request, context: Ctx) {
         promoLabel: body.promoLabel?.trim() || null,
         promoEndsAt: body.promoEndsAt ? new Date(body.promoEndsAt) : null,
         photoUrl: body.photoUrl || null,
+        warranty: isElectronics
+          ? body.warranty?.trim() || null
+          : null,
+        stockQty: isElectronics
+          ? body.stockQty == null
+            ? null
+            : body.stockQty
+          : null,
+        highlights: isElectronics
+          ? body.highlights?.trim() || null
+          : null,
         active: body.active ?? true,
       },
     });
