@@ -59,6 +59,19 @@ type Order = {
   buyer: { displayName: string };
 };
 
+function fromCents(cents: number, currency: string) {
+  const code = currency.toUpperCase();
+  if (code === "XOF" || code === "XAF") return String(cents);
+  return (cents / 100).toFixed(2);
+}
+
+function toDateInput(value: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
 export default function ManageShopPage() {
   const { id } = useParams<{ id: string }>();
   const { t, locale } = useI18n();
@@ -67,6 +80,7 @@ export default function ManageShopPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -103,6 +117,42 @@ export default function ManageShopPage() {
     void load();
   }, [load]);
 
+  function resetForm() {
+    setEditingId(null);
+    setTitle("");
+    setDescription("");
+    setPrice("");
+    setPromoPrice("");
+    setPromoLabel("");
+    setPromoEndsAt("");
+    setPhotoUrl(null);
+    setWarranty("");
+    setStockQty("");
+    setHighlights("");
+  }
+
+  function startEdit(p: Product, currency: string) {
+    setEditingId(p.id);
+    setTitle(p.title);
+    setDescription(p.description ?? "");
+    setPrice(fromCents(p.priceCents, currency));
+    setPromoPrice(
+      p.promoPriceCents != null ? fromCents(p.promoPriceCents, currency) : ""
+    );
+    setPromoLabel(p.promoLabel ?? "");
+    setPromoEndsAt(toDateInput(p.promoEndsAt));
+    setPhotoUrl(p.photoUrl);
+    setWarranty(p.warranty ?? "");
+    setStockQty(p.stockQty != null ? String(p.stockQty) : "");
+    setHighlights(p.highlights ?? "");
+    setError("");
+    setMessage("");
+    document.getElementById("product-form")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   async function uploadPhoto(file: File) {
     setUploading(true);
     const fd = new FormData();
@@ -114,48 +164,50 @@ export default function ManageShopPage() {
     else setError(data.error ?? "Upload échoué");
   }
 
-  async function addProduct(e: React.FormEvent) {
+  function productPayload() {
+    return {
+      title,
+      description,
+      price: Number(price),
+      promoPrice: promoPrice ? Number(promoPrice) : null,
+      promoLabel: promoLabel || null,
+      promoEndsAt: promoEndsAt || null,
+      photoUrl,
+      ...(shopCategoryHasElectronicsSpecs(shop?.category ?? "")
+        ? {
+            warranty: warranty || null,
+            stockQty: stockQty === "" ? null : Number(stockQty),
+            highlights: highlights || null,
+          }
+        : {}),
+    };
+  }
+
+  async function saveProduct(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
     setMessage("");
-    const res = await fetch(`/api/shops/${id}/products`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        description,
-        price: Number(price),
-        promoPrice: promoPrice ? Number(promoPrice) : null,
-        promoLabel: promoLabel || null,
-        promoEndsAt: promoEndsAt || null,
-        photoUrl,
-        ...(shopCategoryHasElectronicsSpecs(shop?.category ?? "")
-          ? {
-              warranty: warranty || null,
-              stockQty: stockQty === "" ? null : Number(stockQty),
-              highlights: highlights || null,
-            }
-          : {}),
-      }),
-    });
+
+    const isEdit = Boolean(editingId);
+    const res = await fetch(
+      isEdit ? `/api/shops/products/${editingId}` : `/api/shops/${id}/products`,
+      {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productPayload()),
+      }
+    );
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
       setError(data.error ?? "Erreur");
       return;
     }
-    setTitle("");
-    setDescription("");
-    setPrice("");
-    setPromoPrice("");
-    setPromoLabel("");
-    setPromoEndsAt("");
-    setPhotoUrl(null);
-    setWarranty("");
-    setStockQty("");
-    setHighlights("");
-    setMessage(t("shops_save_product"));
+    resetForm();
+    setMessage(
+      isEdit ? t("shops_product_updated") : t("shops_save_product")
+    );
     await load();
   }
 
@@ -203,6 +255,7 @@ export default function ManageShopPage() {
   }
 
   const loc = locale === "en" ? "en-CA" : "fr-CA";
+  const editing = Boolean(editingId);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -270,9 +323,16 @@ export default function ManageShopPage() {
         )}
       </div>
 
-      <Card>
-        <CardTitle>{t("shops_add_product")}</CardTitle>
-        <form onSubmit={addProduct} className="mt-4 space-y-3">
+      <Card id="product-form">
+        <CardTitle>
+          {editing ? t("shops_editing_product") : t("shops_add_product")}
+        </CardTitle>
+        {editing && (
+          <CardDescription className="mt-1">
+            {title || "…"}
+          </CardDescription>
+        )}
+        <form onSubmit={saveProduct} className="mt-4 space-y-3">
           <div className="space-y-1">
             <Label>{t("shops_product_title")}</Label>
             <Input
@@ -390,9 +450,24 @@ export default function ManageShopPage() {
               />
             )}
           </div>
-          <Button type="submit" disabled={busy}>
-            {t("shops_save_product")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={busy}>
+              {editing ? t("shops_update_product") : t("shops_save_product")}
+            </Button>
+            {editing && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  resetForm();
+                  setMessage("");
+                }}
+              >
+                {t("shops_cancel_edit")}
+              </Button>
+            )}
+          </div>
         </form>
       </Card>
 
@@ -402,7 +477,14 @@ export default function ManageShopPage() {
           <p className="text-sm text-[var(--muted)]">{t("shops_need_product")}</p>
         )}
         {shop.products.map((p) => (
-          <Card key={p.id}>
+          <Card
+            key={p.id}
+            className={
+              editingId === p.id
+                ? "border-[var(--accent)]/50"
+                : undefined
+            }
+          >
             <div className="flex gap-3">
               {p.photoUrl && (
                 <div className="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
@@ -451,6 +533,13 @@ export default function ManageShopPage() {
                   </p>
                 )}
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => startEdit(p, shop.currency)}
+                  >
+                    {t("shops_edit_product")}
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -504,7 +593,7 @@ export default function ManageShopPage() {
       </section>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
+      {message && <p className="mt-0 text-sm text-[var(--accent)]">{message}</p>}
     </div>
   );
 }
