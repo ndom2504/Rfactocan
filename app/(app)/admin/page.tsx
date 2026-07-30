@@ -39,6 +39,7 @@ type AdminData = {
     status: string;
     verifiedAt: string | null;
     kycStatus: string;
+    hasManualIdDoc?: boolean;
     manualIdDocStatus?: string;
     manualIdDocUploadedAt?: string | null;
     manualIdDocNote?: string | null;
@@ -48,6 +49,21 @@ type AdminData = {
     isAmbassador?: boolean;
     agentCode?: string | null;
     _count?: { referrals: number };
+  }>;
+  pendingManualIds?: Array<{
+    id: string;
+    email: string;
+    displayName: string;
+    role: string;
+    status: string;
+    kycStatus: string;
+    hasManualIdDoc?: boolean;
+    manualIdDocStatus?: string;
+    manualIdDocUploadedAt?: string | null;
+    manualIdDocNote?: string | null;
+    isAmbassador?: boolean;
+    agentCode?: string | null;
+    createdAt: string;
   }>;
   openReports: Array<{
     id: string;
@@ -116,6 +132,19 @@ type AdminData = {
 };
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+function hasViewableManualId(u: {
+  hasManualIdDoc?: boolean;
+  manualIdDocStatus?: string;
+}) {
+  if (u.hasManualIdDoc) return true;
+  const status = u.manualIdDocStatus;
+  return (
+    status === "SUBMITTED" ||
+    status === "APPROVED" ||
+    status === "REJECTED"
+  );
+}
 
 function remainingLabel(expiresAt: string | null) {
   if (!expiresAt) return "—";
@@ -447,6 +476,90 @@ export default function AdminPage() {
       </section>
 
       <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Pièces d&apos;identité manuelles
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          Dossiers envoyés via le profil (fallback si Stripe Identity échoue),
+          y compris quand le KYC est « Action requise ».
+          {(data.pendingManualIds?.length ?? 0) === 0
+            ? " Aucune pièce à revoir."
+            : ` ${data.pendingManualIds!.length} dossier(s).`}
+        </p>
+        {(data.pendingManualIds ?? []).map((u) => (
+          <Card
+            key={`manual-${u.id}`}
+            className="border-amber-300/60 bg-amber-50/40"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">{u.displayName}</CardTitle>
+                <CardDescription>
+                  {u.email} · KYC:{" "}
+                  {KYC_STATUS_LABELS[u.kycStatus] ?? u.kycStatus}
+                  {u.manualIdDocStatus
+                    ? ` · pièce: ${u.manualIdDocStatus}`
+                    : ""}
+                  {u.manualIdDocUploadedAt
+                    ? ` · envoyé ${formatDate(u.manualIdDocUploadedAt)}`
+                    : ""}
+                </CardDescription>
+                {u.manualIdDocNote ? (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Note : {u.manualIdDocNote}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  type="button"
+                  onClick={() =>
+                    window.open(
+                      `/api/admin/manual-id?userId=${encodeURIComponent(u.id)}`,
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
+                >
+                  Voir la pièce
+                </Button>
+                {u.kycStatus !== "VERIFIED" && (
+                  <Button
+                    size="sm"
+                    onClick={() => action(u.id, "mark_kyc_verified")}
+                  >
+                    Valider pièce (KYC)
+                  </Button>
+                )}
+                {(u.manualIdDocStatus === "SUBMITTED" ||
+                  u.kycStatus === "REQUIRES_INPUT") &&
+                  u.kycStatus !== "VERIFIED" && (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => {
+                        const note = window.prompt(
+                          "Motif du refus (optionnel) :",
+                          ""
+                        );
+                        if (note === null) return;
+                        void action(u.id, "reject_manual_id", {
+                          note: note.trim() || undefined,
+                        });
+                      }}
+                    >
+                      Refuser la pièce
+                    </Button>
+                  )}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </section>
+
+      <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
@@ -553,6 +666,13 @@ export default function AdminPage() {
                       Pièce manuelle à valider
                     </Badge>
                   )}
+                  {u.hasManualIdDoc &&
+                    u.kycStatus === "REQUIRES_INPUT" &&
+                    u.manualIdDocStatus !== "SUBMITTED" && (
+                      <Badge className="bg-amber-100 text-amber-900">
+                        Pièce + action requise
+                      </Badge>
+                    )}
                   {u.manualIdDocStatus === "APPROVED" && (
                     <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                       Pièce manuelle OK
@@ -585,31 +705,36 @@ export default function AdminPage() {
                 ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
-                {(u.manualIdDocStatus === "SUBMITTED" ||
-                  u.manualIdDocStatus === "APPROVED" ||
-                  u.manualIdDocStatus === "REJECTED") && (
-                  <a
-                    href={`/api/admin/manual-id?userId=${encodeURIComponent(u.id)}`}
-                    target="_blank"
-                    rel="noreferrer"
+                {hasViewableManualId(u) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    type="button"
+                    onClick={() =>
+                      window.open(
+                        `/api/admin/manual-id?userId=${encodeURIComponent(u.id)}`,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
                   >
-                    <Button size="sm" variant="outline" type="button">
-                      Voir la pièce
-                    </Button>
-                  </a>
+                    Voir la pièce
+                  </Button>
                 )}
                 {u.kycStatus !== "VERIFIED" && (
                   <Button
                     size="sm"
                     onClick={() => action(u.id, "mark_kyc_verified")}
                   >
-                    {u.manualIdDocStatus === "SUBMITTED"
+                    {u.manualIdDocStatus === "SUBMITTED" ||
+                    u.kycStatus === "REQUIRES_INPUT"
                       ? "Valider pièce (KYC)"
                       : "Forcer KYC"}
                   </Button>
                 )}
-                {u.manualIdDocStatus === "SUBMITTED" &&
-                  u.kycStatus !== "VERIFIED" && (
+                {hasViewableManualId(u) &&
+                  u.kycStatus !== "VERIFIED" &&
+                  u.manualIdDocStatus !== "APPROVED" && (
                     <Button
                       size="sm"
                       variant="danger"

@@ -139,7 +139,7 @@ export async function GET(request: Request) {
     ],
   };
 
-  const allUsers = await prisma.user.findMany({
+  const allUsersRaw = await prisma.user.findMany({
     where: userWhere,
     orderBy: [{ displayName: "asc" }, { createdAt: "desc" }],
     take: 100,
@@ -151,6 +151,7 @@ export async function GET(request: Request) {
       status: true,
       verifiedAt: true,
       kycStatus: true,
+      manualIdDocUrl: true,
       manualIdDocStatus: true,
       manualIdDocUploadedAt: true,
       manualIdDocNote: true,
@@ -163,6 +164,52 @@ export async function GET(request: Request) {
       _count: { select: { referrals: true } },
     },
   });
+
+  const allUsers = allUsersRaw.map(({ manualIdDocUrl, ...u }) => ({
+    ...u,
+    hasManualIdDoc: Boolean(manualIdDocUrl),
+  }));
+
+  const pendingManualIdsRaw = await prisma.user.findMany({
+    where: {
+      AND: [
+        { manualIdDocUrl: { not: null } },
+        {
+          OR: [
+            { manualIdDocStatus: "SUBMITTED" },
+            { manualIdDocStatus: "REJECTED" },
+            { kycStatus: "REQUIRES_INPUT" },
+            { kycStatus: "PENDING" },
+            { kycStatus: "FAILED" },
+          ],
+        },
+      ],
+    },
+    orderBy: { manualIdDocUploadedAt: "desc" },
+    take: 50,
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      role: true,
+      status: true,
+      kycStatus: true,
+      manualIdDocUrl: true,
+      manualIdDocStatus: true,
+      manualIdDocUploadedAt: true,
+      manualIdDocNote: true,
+      isAmbassador: true,
+      agentCode: true,
+      createdAt: true,
+    },
+  });
+
+  const pendingManualIds = pendingManualIdsRaw.map(
+    ({ manualIdDocUrl, ...u }) => ({
+      ...u,
+      hasManualIdDoc: Boolean(manualIdDocUrl),
+    })
+  );
 
   const usersMatching = await prisma.user.count({ where: userWhere });
 
@@ -251,6 +298,7 @@ export async function GET(request: Request) {
     openReports,
     openDisputes,
     users: allUsers,
+    pendingManualIds,
     usersMatching,
     usersFilter: {
       letter,
