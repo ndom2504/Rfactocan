@@ -1,24 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/locale-provider";
+import { formatMoneyFromCents } from "@/lib/currency";
+import type { AmbassadorKpis } from "@/lib/ambassador-stats";
 
 type Props = {
   agentCode: string;
-  referralCount: number;
   displayName: string;
+  /** Optional SSR seed (dashboard). */
+  initialKpis?: AmbassadorKpis;
+  /**
+   * When true (dashboard), only show a button until the user opens the space.
+   * Profile keeps the full panel by default.
+   */
+  collapsedByDefault?: boolean;
 };
+
+function formatCad(cents: number, locale: string) {
+  return formatMoneyFromCents(cents, "CAD", locale === "en" ? "en-CA" : "fr-CA");
+}
 
 export function AmbassadorEarnPanel({
   agentCode,
-  referralCount,
   displayName,
+  initialKpis,
+  collapsedByDefault = false,
 }: Props) {
   const { t, locale } = useI18n();
+  const [open, setOpen] = useState(!collapsedByDefault);
   const [copied, setCopied] = useState(false);
+  const [kpis, setKpis] = useState<AmbassadorKpis | null>(initialKpis ?? null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/ambassador/stats");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!cancelled && data.kpis) setKpis(data.kpis);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const inviteUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -37,20 +66,94 @@ export function AmbassadorEarnPanel({
     }
   }
 
+  const rewardPct = kpis ? (kpis.rewardBps / 100).toFixed(0) : "—";
+
+  if (!open) {
+    return (
+      <div className="flex justify-center" data-tour="ambassador-earn">
+        <Button
+          type="button"
+          variant="outline"
+          className="border-[var(--accent)]/40 bg-[var(--accent-soft)]/50 text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+          onClick={() => setOpen(true)}
+        >
+          {t("ambassador_open_cta")}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Card
       className="border-[var(--accent)]/30 bg-[var(--accent-soft)]/40"
       data-tour="ambassador-earn"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
-        {t("ambassador_badge")}
-      </p>
-      <CardTitle className="mt-1 text-xl">
-        {t("ambassador_earn_title")}
-      </CardTitle>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+            {t("ambassador_badge")}
+          </p>
+          <CardTitle className="mt-1 text-xl">
+            {t("ambassador_earn_title")}
+          </CardTitle>
+        </div>
+        {collapsedByDefault ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setOpen(false)}
+          >
+            {t("ambassador_close")}
+          </Button>
+        ) : null}
+      </div>
       <CardDescription className="mt-2 text-[var(--foreground)]/80">
         {t("ambassador_earn_lead").replace("{name}", displayName)}
       </CardDescription>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="text-xs text-[var(--muted)]">
+            {t("ambassador_kpi_referrals")}
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">
+            {kpis?.referralCount ?? "…"}
+          </p>
+        </div>
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="text-xs text-[var(--muted)]">
+            {t("ambassador_kpi_kyc")}
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">
+            {kpis?.referralsKycVerified ?? "…"}
+          </p>
+        </div>
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="text-xs text-[var(--muted)]">
+            {t("ambassador_kpi_volume")}
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">
+            {kpis ? formatCad(kpis.networkVolumeCents, locale) : "…"}
+          </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {kpis
+              ? `${kpis.networkPaymentsCount} ${t("ambassador_kpi_payments")}`
+              : ""}
+          </p>
+        </div>
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="text-xs text-[var(--muted)]">
+            {t("ambassador_kpi_estimate")}
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--accent)]">
+            {kpis ? formatCad(kpis.estimatedRewardCents, locale) : "…"}
+          </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {t("ambassador_kpi_estimate_hint").replace("{pct}", String(rewardPct))}
+          </p>
+        </div>
+      </div>
 
       <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
         <p className="text-xs text-[var(--muted)]">{t("ambassador_code_label")}</p>
@@ -62,9 +165,6 @@ export function AmbassadorEarnPanel({
           <Button type="button" size="sm" onClick={() => void copyLink()}>
             {copied ? t("ambassador_copied") : t("ambassador_copy_link")}
           </Button>
-          <p className="self-center text-sm text-[var(--muted)]">
-            {referralCount} {t("ambassador_referrals")}
-          </p>
         </div>
       </div>
 

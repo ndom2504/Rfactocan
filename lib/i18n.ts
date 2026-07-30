@@ -350,6 +350,22 @@ const dict = {
     delete_account_delay_text:
       "Nous traitons les demandes dans un délai raisonnable, en général sous 30 jours, sauf obligation légale contraire. Vous recevrez une confirmation par e-mail.",
     ambassador_badge: "Espace ambassadeur",
+    ambassador_open_cta: "Espace Ambassadeur",
+    ambassador_close: "Fermer",
+    manual_id_title: "Envoi manuel de pièce d'identité",
+    manual_id_lead:
+      "Si la vérification Stripe Identity échoue, envoyez une photo ou un PDF de votre pièce (passeport, permis ou carte d'identité). Un administrateur validera votre compte.",
+    manual_id_choose: "Choisir un fichier",
+    manual_id_send: "Envoyer la pièce",
+    manual_id_sending: "Envoi…",
+    manual_id_sent: "Pièce envoyée — en attente de validation admin",
+    manual_id_rejected: "Pièce refusée",
+    manual_id_approved: "Pièce validée par l'équipe",
+    manual_id_preview: "Voir ma pièce",
+    manual_id_replace: "Remplacer le fichier",
+    manual_id_hint: "Jpeg, png, webp ou PDF — max 5 Mo.",
+    manual_id_note_label: "Note (optionnel)",
+    manual_id_note_placeholder: "Ex. Stripe Identity bloqué / selfie refusé…",
     ambassador_earn_title: "Gagner avec Rfacto en tant qu'ambassadeur",
     ambassador_earn_lead:
       "Bonjour {name} — votre KYC est validé. Voici comment monétiser votre réseau sur Rfacto.",
@@ -358,6 +374,13 @@ const dict = {
     ambassador_copied: "Lien copié",
     ambassador_copy_prompt: "Copiez votre lien ambassadeur :",
     ambassador_referrals: "filleul(s) inscrit(s)",
+    ambassador_kpi_referrals: "Nombre de filleuls",
+    ambassador_kpi_kyc: "Filleuls KYC validés",
+    ambassador_kpi_volume: "Volume réseau (indicatif)",
+    ambassador_kpi_payments: "paiement(s) capturé(s)",
+    ambassador_kpi_estimate: "Estimation gains (indicatif)",
+    ambassador_kpi_estimate_hint:
+      "~{pct} % des frais plateforme du réseau — barème programme",
     ambassador_earn_step1:
       "Partagez votre lien personnel (WhatsApp, réseaux, communauté). Chaque inscription via ce lien vous est attribuée.",
     ambassador_earn_step2:
@@ -1214,6 +1237,22 @@ const dict = {
     delete_account_delay_text:
       "We process requests within a reasonable time, generally within 30 days, unless the law requires otherwise. You will receive email confirmation.",
     ambassador_badge: "Ambassador space",
+    ambassador_open_cta: "Ambassador space",
+    ambassador_close: "Close",
+    manual_id_title: "Manual ID document upload",
+    manual_id_lead:
+      "If Stripe Identity verification fails, upload a photo or PDF of your ID (passport, licence or national ID). An admin will validate your account.",
+    manual_id_choose: "Choose a file",
+    manual_id_send: "Submit ID document",
+    manual_id_sending: "Uploading…",
+    manual_id_sent: "Document submitted — awaiting admin review",
+    manual_id_rejected: "Document rejected",
+    manual_id_approved: "Document approved by the team",
+    manual_id_preview: "View my document",
+    manual_id_replace: "Replace file",
+    manual_id_hint: "Jpeg, png, webp or PDF — max 5 MB.",
+    manual_id_note_label: "Note (optional)",
+    manual_id_note_placeholder: "E.g. Stripe Identity blocked / selfie rejected…",
     ambassador_earn_title: "Earn with Rfacto as an ambassador",
     ambassador_earn_lead:
       "Hi {name} — your KYC is verified. Here’s how to monetize your network on Rfacto.",
@@ -1222,6 +1261,13 @@ const dict = {
     ambassador_copied: "Link copied",
     ambassador_copy_prompt: "Copy your ambassador link:",
     ambassador_referrals: "referred signup(s)",
+    ambassador_kpi_referrals: "Referral count",
+    ambassador_kpi_kyc: "KYC-verified referrals",
+    ambassador_kpi_volume: "Network volume (indicative)",
+    ambassador_kpi_payments: "captured payment(s)",
+    ambassador_kpi_estimate: "Estimated earnings (indicative)",
+    ambassador_kpi_estimate_hint:
+      "~{pct}% of network platform fees — program schedule",
     ambassador_earn_step1:
       "Share your personal link (WhatsApp, social, community). Every signup via that link is attributed to you.",
     ambassador_earn_step2:

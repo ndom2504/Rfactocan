@@ -151,6 +151,9 @@ export async function GET(request: Request) {
       status: true,
       verifiedAt: true,
       kycStatus: true,
+      manualIdDocStatus: true,
+      manualIdDocUploadedAt: true,
+      manualIdDocNote: true,
       stripeConnectChargesEnabled: true,
       ratingAvg: true,
       ratingCount: true,
@@ -268,11 +271,13 @@ const userPatchSchema = z.object({
     "activate",
     "make_admin",
     "mark_kyc_verified",
+    "reject_manual_id",
     "promote_ambassador",
     "revoke_ambassador",
     "email_ambassador_invite",
   ]),
   userId: z.string(),
+  note: z.string().max(500).optional(),
 });
 
 const bookingPatchSchema = z.object({
@@ -438,6 +443,18 @@ export async function PATCH(request: Request) {
       });
     }
 
+    if (body.action === "reject_manual_id") {
+      const user = await prisma.user.update({
+        where: { id: body.userId },
+        data: {
+          manualIdDocStatus: "REJECTED",
+          manualIdDocNote: body.note?.trim() || "Pièce refusée par l'admin",
+          kycStatus: "REQUIRES_INPUT",
+        },
+      });
+      return NextResponse.json({ user });
+    }
+
     const data =
       body.action === "verify"
         ? {
@@ -445,18 +462,21 @@ export async function PATCH(request: Request) {
             status: "ACTIVE" as const,
             kycStatus: "VERIFIED" as const,
             kycVerifiedAt: new Date(),
+            manualIdDocStatus: "APPROVED" as const,
           }
         : body.action === "mark_kyc_verified"
           ? {
               kycStatus: "VERIFIED" as const,
               kycVerifiedAt: new Date(),
               verifiedAt: new Date(),
+              manualIdDocStatus: "APPROVED" as const,
             }
           : body.action === "unverify"
             ? {
                 verifiedAt: null,
                 kycStatus: "NONE" as const,
                 kycVerifiedAt: null,
+                manualIdDocStatus: "NONE" as const,
               }
             : body.action === "suspend"
               ? { status: "SUSPENDED" as const }

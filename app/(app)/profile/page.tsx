@@ -46,6 +46,10 @@ type User = {
   ratingCount: number;
   kycStatus?: string;
   kycVerifiedAt?: string | null;
+  manualIdDocStatus?: string;
+  manualIdDocUploadedAt?: string | null;
+  manualIdDocNote?: string | null;
+  hasManualIdDoc?: boolean;
   stripeConnectAccountId?: string | null;
   stripeConnectChargesEnabled?: boolean;
   stripeConnectPayoutsEnabled?: boolean;
@@ -71,6 +75,9 @@ function ProfileForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [manualIdBusy, setManualIdBusy] = useState(false);
+  const [manualIdFile, setManualIdFile] = useState<File | null>(null);
+  const [manualIdNote, setManualIdNote] = useState("");
 
   async function load() {
     const res = await fetch("/api/profile");
@@ -243,6 +250,37 @@ function ProfileForm() {
     if (data.url) window.location.href = data.url;
   }
 
+  async function submitManualId() {
+    if (!manualIdFile) {
+      setError(t("manual_id_choose"));
+      return;
+    }
+    setManualIdBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const form = new FormData();
+      form.append("file", manualIdFile);
+      if (manualIdNote.trim()) form.append("note", manualIdNote.trim());
+      const res = await fetch("/api/kyc/manual-id", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Échec de l'envoi");
+        return;
+      }
+      setManualIdFile(null);
+      setMessage(t("manual_id_sent"));
+      await load();
+    } catch {
+      setError("Erreur réseau lors de l'envoi de la pièce.");
+    } finally {
+      setManualIdBusy(false);
+    }
+  }
+
   if (!user) {
     return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
@@ -288,6 +326,85 @@ function ProfileForm() {
               <p className="text-xs text-[var(--muted)]">
                 Redirection vers Stripe Identity (passeport / pièce + selfie).
               </p>
+            </div>
+          )}
+
+          {user.kycStatus !== "VERIFIED" && (
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
+              <div>
+                <p className="text-sm font-medium">{t("manual_id_title")}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {t("manual_id_lead")}
+                </p>
+              </div>
+
+              {user.manualIdDocStatus === "SUBMITTED" && (
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {t("manual_id_sent")}
+                </Badge>
+              )}
+              {user.manualIdDocStatus === "REJECTED" && (
+                <div className="space-y-1">
+                  <Badge>{t("manual_id_rejected")}</Badge>
+                  {user.manualIdDocNote ? (
+                    <p className="text-xs text-[var(--muted)]">
+                      {user.manualIdDocNote}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+              {user.manualIdDocStatus === "APPROVED" && (
+                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                  {t("manual_id_approved")}
+                </Badge>
+              )}
+
+              {user.hasManualIdDoc ||
+              user.manualIdDocStatus === "SUBMITTED" ||
+              user.manualIdDocStatus === "REJECTED" ||
+              user.manualIdDocStatus === "APPROVED" ? (
+                <a
+                  href="/api/kyc/manual-id"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-[var(--accent)] underline"
+                >
+                  {t("manual_id_preview")}
+                </a>
+              ) : null}
+
+              <div className="space-y-2">
+                <Label htmlFor="manual-id-file">{t("manual_id_choose")}</Label>
+                <Input
+                  id="manual-id-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  onChange={(e) =>
+                    setManualIdFile(e.target.files?.[0] ?? null)
+                  }
+                />
+                <p className="text-xs text-[var(--muted)]">{t("manual_id_hint")}</p>
+                <Label htmlFor="manual-id-note">{t("manual_id_note_label")}</Label>
+                <Input
+                  id="manual-id-note"
+                  value={manualIdNote}
+                  onChange={(e) => setManualIdNote(e.target.value)}
+                  placeholder={t("manual_id_note_placeholder")}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={manualIdBusy || !manualIdFile}
+                  onClick={() => void submitManualId()}
+                >
+                  {manualIdBusy
+                    ? t("manual_id_sending")
+                    : user.manualIdDocStatus === "SUBMITTED" ||
+                        user.manualIdDocStatus === "REJECTED"
+                      ? t("manual_id_replace")
+                      : t("manual_id_send")}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -342,7 +459,6 @@ function ProfileForm() {
         user.agentCode && (
           <AmbassadorEarnPanel
             agentCode={user.agentCode}
-            referralCount={user._count?.referrals ?? 0}
             displayName={user.displayName}
           />
         )}

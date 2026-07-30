@@ -47,6 +47,8 @@ next-env.d.ts
 /prisma/dev.db-journal
 /public/uploads/*
 !/public/uploads/.gitkeep
+/public/id-docs/*
+!/public/id-docs/.gitkeep
 
 # Expo mobile
 /mobile/android

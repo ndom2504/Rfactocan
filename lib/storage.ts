@@ -34,10 +34,14 @@ function toAppMediaUrl(blobUrl: string) {
  * On Vercel, missing BLOB_READ_WRITE_TOKEN fails with a clear error — never
  * write to the read-only serverless filesystem.
  */
-export async function uploadImage(file: File, userId: string) {
+async function uploadFile(
+  file: File,
+  userId: string,
+  folder: "uploads" | "id-docs"
+) {
   const ext = extensionFor(file.type);
   const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const pathname = `uploads/${safeUserId}-${Date.now()}.${ext}`;
+  const pathname = `${folder}/${safeUserId}-${Date.now()}.${ext}`;
 
   if (isBlobConfigured()) {
     const access = blobAccess();
@@ -57,10 +61,19 @@ export async function uploadImage(file: File, userId: string) {
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const filename = `${safeUserId}-${Date.now()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = path.join(process.cwd(), "public", folder);
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, filename), bytes);
-  return { url: `/uploads/${filename}` };
+  return { url: `/${folder}/${filename}` };
+}
+
+export async function uploadImage(file: File, userId: string) {
+  return uploadFile(file, userId, "uploads");
+}
+
+/** Private ID document (images or PDF). Prefer blobUrl for admin-only serving. */
+export async function uploadIdDocument(file: File, userId: string) {
+  return uploadFile(file, userId, "id-docs");
 }
 
 /** Stream a private blob through our API (auth optional — URL is unguessable). */

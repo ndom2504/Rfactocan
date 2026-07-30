@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
+import { getAmbassadorKpis } from "@/lib/ambassador-stats";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 
@@ -26,7 +27,7 @@ export default async function DashboardPage() {
     user.kycStatus === "VERIFIED" &&
     Boolean(user.agentCode);
 
-  const [trips, requests, bookings, referralCount] = await Promise.all([
+  const [trips, requests, bookings, ambassadorKpis] = await Promise.all([
     prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
     prisma.parcelRequest.count({
       where: { userId: user.id, status: "OPEN" },
@@ -43,9 +44,7 @@ export default async function DashboardPage() {
       orderBy: { updatedAt: "desc" },
       take: 5,
     }),
-    showAmbassadorEarn
-      ? prisma.user.count({ where: { referredById: user.id } })
-      : Promise.resolve(0),
+    showAmbassadorEarn ? getAmbassadorKpis(user.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -65,8 +64,9 @@ export default async function DashboardPage() {
       {showAmbassadorEarn && user.agentCode ? (
         <AmbassadorEarnPanel
           agentCode={user.agentCode}
-          referralCount={referralCount}
           displayName={user.displayName}
+          initialKpis={ambassadorKpis ?? undefined}
+          collapsedByDefault
         />
       ) : null}
 

@@ -39,6 +39,9 @@ type AdminData = {
     status: string;
     verifiedAt: string | null;
     kycStatus: string;
+    manualIdDocStatus?: string;
+    manualIdDocUploadedAt?: string | null;
+    manualIdDocNote?: string | null;
     stripeConnectChargesEnabled: boolean;
     ratingAvg: number;
     createdAt: string;
@@ -203,11 +206,15 @@ export default function AdminPage() {
     void load({ letter: "", q: "", from: "", to: "" });
   }
 
-  async function action(userId: string, actionName: string) {
+  async function action(
+    userId: string,
+    actionName: string,
+    extra?: { note?: string }
+  ) {
     const res = await fetch("/api/admin", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, action: actionName }),
+      body: JSON.stringify({ userId, action: actionName, ...extra }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -541,6 +548,19 @@ export default function AdminPage() {
                   <Badge>
                     KYC: {KYC_STATUS_LABELS[u.kycStatus] ?? u.kycStatus}
                   </Badge>
+                  {u.manualIdDocStatus === "SUBMITTED" && (
+                    <Badge className="bg-amber-100 text-amber-900">
+                      Pièce manuelle à valider
+                    </Badge>
+                  )}
+                  {u.manualIdDocStatus === "APPROVED" && (
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      Pièce manuelle OK
+                    </Badge>
+                  )}
+                  {u.manualIdDocStatus === "REJECTED" && (
+                    <Badge>Pièce manuelle refusée</Badge>
+                  )}
                   {u.stripeConnectChargesEnabled && (
                     <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                       Connect OK
@@ -558,16 +578,55 @@ export default function AdminPage() {
                     filleul{(u._count?.referrals ?? 0) === 1 ? "" : "s"}
                   </p>
                 )}
+                {u.manualIdDocNote && u.manualIdDocStatus === "SUBMITTED" ? (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Note utilisateur : {u.manualIdDocNote}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
+                {(u.manualIdDocStatus === "SUBMITTED" ||
+                  u.manualIdDocStatus === "APPROVED" ||
+                  u.manualIdDocStatus === "REJECTED") && (
+                  <a
+                    href={`/api/admin/manual-id?userId=${encodeURIComponent(u.id)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button size="sm" variant="outline" type="button">
+                      Voir la pièce
+                    </Button>
+                  </a>
+                )}
                 {u.kycStatus !== "VERIFIED" && (
                   <Button
                     size="sm"
                     onClick={() => action(u.id, "mark_kyc_verified")}
                   >
-                    Forcer KYC
+                    {u.manualIdDocStatus === "SUBMITTED"
+                      ? "Valider pièce (KYC)"
+                      : "Forcer KYC"}
                   </Button>
                 )}
+                {u.manualIdDocStatus === "SUBMITTED" &&
+                  u.kycStatus !== "VERIFIED" && (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => {
+                        const note = window.prompt(
+                          "Motif du refus (optionnel) :",
+                          ""
+                        );
+                        if (note === null) return;
+                        void action(u.id, "reject_manual_id", {
+                          note: note.trim() || undefined,
+                        });
+                      }}
+                    >
+                      Refuser la pièce
+                    </Button>
+                  )}
                 {!u.isAmbassador ? (
                   <Button
                     size="sm"

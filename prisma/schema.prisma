@@ -68,6 +68,14 @@ enum KycStatus {
   REQUIRES_INPUT
 }
 
+/// Manual ID document review (fallback when Stripe Identity fails)
+enum ManualIdDocStatus {
+  NONE
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 enum PaymentStatus {
   REQUIRES_PAYMENT
   AUTHORIZED
@@ -157,6 +165,12 @@ model User {
   kycStatus                   KycStatus  @default(NONE)
   kycSessionId                String?
   kycVerifiedAt               DateTime?
+  /// Private URL of manually uploaded ID (admin review fallback)
+  manualIdDocUrl              String?
+  manualIdDocStatus           ManualIdDocStatus @default(NONE)
+  manualIdDocUploadedAt       DateTime?
+  /// Optional user note or admin rejection reason
+  manualIdDocNote             String?
   /// Last presence heartbeat (for online/offline in chat)
   lastSeenAt                  DateTime?
   /// Last known GPS for nearby job alerts (Uber-style)

@@ -36,7 +36,17 @@ export async function GET() {
       _count: { select: { referrals: true } },
     },
   });
-  return NextResponse.json({ user });
+  if (!user) {
+    return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+  }
+  // Never expose the raw private blob URL in JSON; use /api/kyc/manual-id to stream.
+  const { manualIdDocUrl, ...safe } = user;
+  return NextResponse.json({
+    user: {
+      ...safe,
+      hasManualIdDoc: Boolean(manualIdDocUrl),
+    },
+  });
 }
 
 export async function PATCH(request: Request) {
