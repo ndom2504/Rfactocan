@@ -25,9 +25,9 @@ import {
   apiRoleToIntent,
   intentToApiRole,
   loadUserIntent,
+  normalizePrimaryIntent,
   saveUserIntent,
   type CarrierType,
-  type OrderIntent,
   type PrimaryIntent,
 } from "@/lib/user-intent";
 
@@ -68,7 +68,6 @@ function ProfileForm() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [primaryIntent, setPrimaryIntent] = useState<PrimaryIntent>("both");
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
-  const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [language, setLanguage] = useState("fr");
   const [preferredCurrency, setPreferredCurrency] = useState("CAD");
   const [message, setMessage] = useState("");
@@ -92,10 +91,11 @@ function ProfileForm() {
       setPrimaryIntent(
         data.user.role === "ADMIN"
           ? "both"
-          : apiRoleToIntent(data.user.role) || prefs.primaryIntent
+          : normalizePrimaryIntent(
+              apiRoleToIntent(data.user.role) || prefs.primaryIntent
+            )
       );
       setCarrierType(prefs.carrierType);
-      setOrderIntent(prefs.orderIntent);
       setLanguage(data.user.language ?? "fr");
       setPreferredCurrency(data.user.preferredCurrency ?? "CAD");
     }
@@ -177,7 +177,7 @@ function ProfileForm() {
     setMessage("");
     setError("");
     const role = intentToApiRole(primaryIntent);
-    saveUserIntent({ primaryIntent, carrierType, orderIntent });
+    saveUserIntent({ primaryIntent, carrierType });
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -477,10 +477,10 @@ function ProfileForm() {
             {user.ratingCount})
           </Badge>
           <Badge>
-            {primaryIntent === "livrer"
-              ? t("intent_livrer")
-              : primaryIntent === "commander"
-                ? t("intent_commander")
+            {primaryIntent === "vendre"
+              ? t("intent_vendre")
+              : primaryIntent === "payer"
+                ? t("intent_payer")
                 : t("intent_both")}
           </Badge>
         </div>
@@ -607,10 +607,8 @@ function ProfileForm() {
               <IntentPicker
                 primaryIntent={primaryIntent}
                 carrierType={carrierType}
-                orderIntent={orderIntent}
                 onPrimaryIntentChange={setPrimaryIntent}
                 onCarrierTypeChange={setCarrierType}
-                onOrderIntentChange={setOrderIntent}
               />
             )}
           </div>

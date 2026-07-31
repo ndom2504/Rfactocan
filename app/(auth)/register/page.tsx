@@ -16,9 +16,9 @@ import { useI18n } from "@/components/locale-provider";
 import { markTourPendingIfNeeded } from "@/lib/guided-tour";
 import {
   intentToApiRole,
+  normalizePrimaryIntent,
   saveUserIntent,
   type CarrierType,
-  type OrderIntent,
   type PrimaryIntent,
 } from "@/lib/user-intent";
 
@@ -41,9 +41,7 @@ function persistRefCode(code: string) {
 }
 
 function initialIntentFromParams(role: string | null): PrimaryIntent {
-  if (role === "SENDER" || role === "commander") return "commander";
-  if (role === "TRAVELER" || role === "livrer") return "livrer";
-  return "both";
+  return normalizePrimaryIntent(role);
 }
 
 function RegisterForm() {
@@ -57,7 +55,6 @@ function RegisterForm() {
     initialIntentFromParams(params.get("role") ?? params.get("intent"))
   );
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
-  const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [country, setCountry] = useState("");
   const [refCode, setRefCode] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -82,7 +79,7 @@ function RegisterForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    saveUserIntent({ primaryIntent, carrierType, orderIntent });
+    saveUserIntent({ primaryIntent, carrierType });
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -168,10 +165,8 @@ function RegisterForm() {
         <IntentPicker
           primaryIntent={primaryIntent}
           carrierType={carrierType}
-          orderIntent={orderIntent}
           onPrimaryIntentChange={setPrimaryIntent}
           onCarrierTypeChange={setCarrierType}
-          onOrderIntentChange={setOrderIntent}
         />
         <div className="space-y-2">
           <CountrySelect value={country} onChange={setCountry} />
