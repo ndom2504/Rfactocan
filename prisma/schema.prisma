@@ -105,6 +105,13 @@ enum ShopOrderStatus {
   CANCELLED
 }
 
+/// How the buyer organizes delivery after product payment
+enum ShopDeliveryMode {
+  NONE
+  MATCH_ONLY
+  PARCEL_PAID
+}
+
 model Currency {
   id           String  @id @default(cuid())
   code         String  @unique
@@ -338,8 +345,9 @@ model ParcelRequest {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+  shopOrder ShopOrder?
 
   @@index([toCountry, toCity])
   @@index([userId])
@@ -434,30 +442,38 @@ model ShopProduct {
 }
 
 model ShopOrder {
-  id                      String          @id @default(cuid())
+  id                      String           @id @default(cuid())
   shopId                  String
   buyerId                 String
   productId               String
-  quantity                Int             @default(1)
+  quantity                Int              @default(1)
   unitPriceCents          Int
   amountCents             Int
   platformFeeCents        Int
   sellerPayoutCents       Int
-  currency                String          @default("cad")
-  status                  ShopOrderStatus @default(AWAITING_PAYMENT)
-  stripeCheckoutSessionId String?         @unique
-  stripePaymentIntentId   String?         @unique
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
+  currency                String           @default("cad")
+  status                  ShopOrderStatus  @default(AWAITING_PAYMENT)
+  stripeCheckoutSessionId String?          @unique
+  stripePaymentIntentId   String?          @unique
+  /// Buyer delivery destination (after product payment)
+  deliveryToCountry       String?
+  deliveryToCity          String?
+  deliveryMode            ShopDeliveryMode @default(NONE)
+  /// Linked parcel request when mode = PARCEL_PAID
+  parcelRequestId         String?          @unique
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
 
-  shop    Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  buyer   User        @relation("ShopOrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
-  product ShopProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shop          Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  buyer         User           @relation("ShopOrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  product       ShopProduct    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  parcelRequest ParcelRequest? @relation(fields: [parcelRequestId], references: [id], onDelete: SetNull)
 
   @@index([shopId, status])
   @@index([buyerId, createdAt])
   @@index([productId])
   @@index([status])
+  @@index([deliveryMode])
 }
 
 model Booking {

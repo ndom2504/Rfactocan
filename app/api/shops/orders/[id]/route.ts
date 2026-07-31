@@ -27,10 +27,27 @@ export async function GET(_request: Request, context: Ctx) {
           name: true,
           userId: true,
           currency: true,
+          city: true,
+          country: true,
         },
       },
       buyer: {
         select: { id: true, displayName: true, email: true },
+      },
+      parcelRequest: {
+        select: {
+          id: true,
+          status: true,
+          fromCountry: true,
+          fromCity: true,
+          toCountry: true,
+          toCity: true,
+          bookings: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { id: true, status: true },
+          },
+        },
       },
     },
   });

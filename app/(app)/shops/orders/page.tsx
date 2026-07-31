@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatMoneyFromCents } from "@/lib/currency";
-import { shopOrderStatusLabel } from "@/lib/shops-catalog";
+import {
+  shopDeliveryModeLabel,
+  shopOrderStatusLabel,
+} from "@/lib/shops-catalog";
 
 type Order = {
   id: string;
@@ -16,6 +19,10 @@ type Order = {
   currency: string;
   quantity: number;
   createdAt: string;
+  deliveryMode?: string;
+  deliveryToCity?: string | null;
+  deliveryToCountry?: string | null;
+  parcelRequestId?: string | null;
   product: { id: string; title: string; photoUrl: string | null };
   shop: { id: string; name: string };
 };
@@ -53,9 +60,15 @@ export default function ShopOrdersPage() {
                   {o.shop.name} · x{o.quantity} ·{" "}
                   {formatMoneyFromCents(o.amountCents, o.currency, loc)}
                 </CardDescription>
-                <Badge className="mt-2">
-                  {shopOrderStatusLabel(o.status, locale)}
-                </Badge>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge>{shopOrderStatusLabel(o.status, locale)}</Badge>
+                  {o.deliveryMode && o.deliveryMode !== "NONE" && (
+                    <Badge className="border border-[var(--border)] bg-transparent">
+                      {shopDeliveryModeLabel(o.deliveryMode, locale)}
+                      {o.deliveryToCity ? ` · ${o.deliveryToCity}` : ""}
+                    </Badge>
+                  )}
+                </div>
               </div>
               <Link href={`/shops/orders/${o.id}`}>
                 <Button size="sm" variant="outline">

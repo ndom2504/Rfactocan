@@ -111,3 +111,18 @@ export function shopOrderStatusLabel(status: string, locale: string) {
   if (!row) return status;
   return locale === "en" ? row.en : row.fr;
 }
+
+export const SHOP_DELIVERY_MODE_LABELS: Record<
+  string,
+  { fr: string; en: string }
+> = {
+  NONE: { fr: "Non organisée", en: "Not arranged" },
+  MATCH_ONLY: { fr: "Mise en relation", en: "Match only" },
+  PARCEL_PAID: { fr: "Livraison Rfacto", en: "Rfacto delivery" },
+};
+
+export function shopDeliveryModeLabel(mode: string, locale: string) {
+  const row = SHOP_DELIVERY_MODE_LABELS[mode];
+  if (!row) return mode;
+  return locale === "en" ? row.en : row.fr;
+}

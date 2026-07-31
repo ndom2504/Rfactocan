@@ -14,6 +14,7 @@ import { formatMoneyFromCents } from "@/lib/currency";
 import {
   shopCategoryHasElectronicsSpecs,
   shopCategoryLabel,
+  shopDeliveryModeLabel,
   shopOrderStatusLabel,
 } from "@/lib/shops-catalog";
 
@@ -57,6 +58,10 @@ type Order = {
   currency: string;
   quantity: number;
   createdAt: string;
+  deliveryMode?: string;
+  deliveryToCity?: string | null;
+  deliveryToCountry?: string | null;
+  parcelRequestId?: string | null;
   product: { title: string };
   buyer: { displayName: string };
 };
@@ -679,9 +684,15 @@ export default function ManageShopPage() {
                   {o.buyer.displayName} · x{o.quantity} ·{" "}
                   {formatMoneyFromCents(o.amountCents, o.currency, loc)}
                 </CardDescription>
-                <Badge className="mt-2">
-                  {shopOrderStatusLabel(o.status, locale)}
-                </Badge>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge>{shopOrderStatusLabel(o.status, locale)}</Badge>
+                  {o.deliveryMode && o.deliveryMode !== "NONE" && (
+                    <Badge className="border border-[var(--border)] bg-transparent">
+                      {shopDeliveryModeLabel(o.deliveryMode, locale)}
+                      {o.deliveryToCity ? ` · ${o.deliveryToCity}` : ""}
+                    </Badge>
+                  )}
+                </div>
               </div>
               {o.status === "PAID" && (
                 <Button size="sm" onClick={() => void fulfill(o.id)}>
