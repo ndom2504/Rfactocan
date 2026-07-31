@@ -116,7 +116,7 @@ export default async function DashboardPage() {
         </Link>
         <Link href="/requests/new" className="w-full">
           <Button
-            className="h-12 w-full border-[var(--accent)]/25 bg-[var(--accent-soft)] text-base text-[var(--accent)] hover:bg-[#c5e6d6]"
+            className="h-12 w-full border-[var(--accent)]/25 bg-[var(--accent-soft)] text-base text-[var(--accent)] hover:bg-[var(--surface-3)]"
             variant="outline"
           >
             {t(locale, "publish_order_cta")}

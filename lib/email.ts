@@ -130,11 +130,11 @@ function layout(title: string, body: string) {
 <html lang="fr">
 <body style="font-family:Georgia,serif;background:#f3efe6;color:#14201c;padding:24px;">
   <div style="max-width:560px;margin:0 auto;background:#fffdf8;border:1px solid #c9d5cc;border-radius:12px;padding:28px;">
-    <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#0f6b4c;">Rfacto</p>
+    <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#28541D;">Rfacto</p>
     <h1 style="margin:0 0 16px;font-size:22px;">${title}</h1>
     <div style="font-size:15px;line-height:1.55;color:#14201c;">${body}</div>
     <p style="margin:24px 0 0;font-size:13px;color:#5f6f68;">
-      <a href="${appUrl}" style="color:#0f6b4c;">Ouvrir Rfacto</a>
+      <a href="${appUrl}" style="color:#28541D;">Ouvrir Rfacto</a>
     </p>
   </div>
 </body>
@@ -169,7 +169,7 @@ export async function emailBookingProposed(input: {
       "Nouvelle proposition",
       `<p>Bonjour ${input.travelerName},</p>
        <p><strong>${input.senderName}</strong> souhaite réserver de l'espace sur votre trajet <strong>${input.route}</strong>.</p>
-       <p><a href="${url}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la réservation</a></p>`
+       <p><a href="${url}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la réservation</a></p>`
     ),
   });
 }
@@ -189,7 +189,7 @@ export async function emailBookingApplication(input: {
       "Candidature voyageur",
       `<p>Bonjour ${input.senderName},</p>
        <p><strong>${input.travelerName}</strong> souhaite transporter votre colis sur <strong>${input.route}</strong>.</p>
-       <p><a href="${url}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la candidature</a></p>`
+       <p><a href="${url}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la candidature</a></p>`
     ),
   });
 }
@@ -219,7 +219,7 @@ export async function emailPaymentRequested(input: {
        ${acceptLine}
        ${amountLine}
        <p>Payez maintenant : les fonds restent bloqués jusqu'à la livraison.</p>
-       <p><a href="${url}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Payer avec Stripe</a></p>`
+       <p><a href="${url}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Payer avec Stripe</a></p>`
     ),
   });
 }
@@ -240,7 +240,7 @@ export async function emailPaymentAuthorized(input: {
       `<p>Bonjour ${name},</p>
        <p>Le paiement de <strong>${input.amountLabel}</strong> pour <strong>${input.route}</strong> est sécurisé (séquestre).</p>
        <p>${roleNote}</p>
-       <p><a href="${url}" style="color:#0f6b4c;">Voir la réservation</a></p>`
+       <p><a href="${url}" style="color:#28541D;">Voir la réservation</a></p>`
     );
 
   await Promise.all([
@@ -281,7 +281,7 @@ export async function emailDelivered(input: {
         "Livraison confirmée",
         `<p>Bonjour ${input.senderName},</p>
          <p>La livraison de <strong>${input.route}</strong> est confirmée. Merci d'utiliser Rfacto.</p>
-         <p><a href="${url}" style="color:#0f6b4c;">Laisser un avis</a></p>`
+         <p><a href="${url}" style="color:#28541D;">Laisser un avis</a></p>`
       ),
     }),
     sendEmail({
@@ -291,7 +291,7 @@ export async function emailDelivered(input: {
         "Fonds libérés",
         `<p>Bonjour ${input.travelerName},</p>
          <p>La livraison est confirmée. <strong>${input.payoutLabel}</strong> est en cours de versement vers votre compte bancaire (Stripe).</p>
-         <p><a href="${url}" style="color:#0f6b4c;">Voir la réservation</a></p>`
+         <p><a href="${url}" style="color:#28541D;">Voir la réservation</a></p>`
       ),
     }),
   ]);
@@ -310,7 +310,7 @@ export async function emailPasswordReset(input: {
       `<p>Bonjour ${input.displayName},</p>
        <p>Vous avez demandé à réinitialiser votre mot de passe Rfacto.</p>
        <p>Ce lien est valable <strong>1 heure</strong> et ne peut être utilisé qu'une fois.</p>
-       <p><a href="${input.resetUrl}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Choisir un nouveau mot de passe</a></p>
+       <p><a href="${input.resetUrl}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Choisir un nouveau mot de passe</a></p>
        <p style="font-size:13px;color:#5f6f68;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`
     ),
   });
@@ -329,7 +329,7 @@ export async function emailLoginOtp(input: {
       "Code de vérification",
       `<p>Bonjour ${input.displayName},</p>
        <p>Voici votre code pour finaliser la connexion à Rfacto :</p>
-       <p style="font-size:32px;letter-spacing:0.25em;font-weight:700;text-align:center;margin:24px 0;color:#0f6b4c;">${input.code}</p>
+       <p style="font-size:32px;letter-spacing:0.25em;font-weight:700;text-align:center;margin:24px 0;color:#28541D;">${input.code}</p>
        <p>Ce code est valable <strong>${input.minutes} minutes</strong>. Ne le partagez avec personne.</p>
        <p style="font-size:13px;color:#5f6f68;">Si vous n'êtes pas à l'origine de cette connexion, ignorez cet email et changez votre mot de passe.</p>`
     ),
@@ -349,9 +349,9 @@ export async function emailAmbassadorInvite(input: {
       "Vous êtes ambassadeur Rfacto",
       `<p>Bonjour ${input.displayName},</p>
        <p>L'équipe Rfacto vous a nommé <strong>ambassadeur</strong>. Voici votre code agent personnel :</p>
-       <p style="font-size:28px;letter-spacing:0.12em;font-weight:700;text-align:center;margin:24px 0;color:#0f6b4c;">${input.agentCode}</p>
+       <p style="font-size:28px;letter-spacing:0.12em;font-weight:700;text-align:center;margin:24px 0;color:#28541D;">${input.agentCode}</p>
        <p>Partagez ce lien d'inscription pour que les nouveaux utilisateurs soient associés à votre code :</p>
-       <p><a href="${input.inviteUrl}" style="display:inline-block;background:#0f6b4c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Lien d'inscription personnalisé</a></p>
+       <p><a href="${input.inviteUrl}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Lien d'inscription personnalisé</a></p>
        <p style="font-size:13px;color:#5f6f68;word-break:break-all;">${input.inviteUrl}</p>
        <p style="font-size:13px;color:#5f6f68;">Ne partagez ce code qu'avec les personnes que vous invitez.</p>`
     ),

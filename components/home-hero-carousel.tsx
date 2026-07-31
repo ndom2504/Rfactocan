@@ -89,7 +89,7 @@ export function HomeHeroCarousel({ startHref }: Props) {
         className="pointer-events-none absolute inset-0 opacity-90"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 70% 40%, rgba(26,92,69,0.55), transparent 70%), linear-gradient(165deg, #0b3d2e 0%, #145c45 55%, #0f6b4c 100%)",
+            "radial-gradient(ellipse 80% 60% at 70% 40%, rgba(93,132,67,0.45), transparent 70%), linear-gradient(165deg, #1b3b14 0%, #28541d 55%, #404d35 100%)",
         }}
       />
 
@@ -152,7 +152,7 @@ export function HomeHeroCarousel({ startHref }: Props) {
 
           {/* Soft vignette so dock stays readable */}
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[rgba(11,61,46,0.92)] via-[rgba(11,61,46,0.35)] to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[rgba(27,59,20,0.94)] via-[rgba(27,59,20,0.4)] to-transparent"
             aria-hidden
           />
         </div>

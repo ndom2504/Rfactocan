@@ -1,20 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3efe6;
-  --foreground: #14201c;
-  --muted: #5f6f68;
-  --surface: #fffdf8;
-  --surface-2: #e8efe9;
-  --surface-3: #d7e3da;
-  --border: #c9d5cc;
-  --accent: #0f6b4c;
-  --accent-hover: #0c563d;
-  --accent-soft: #d8efe4;
-  --highlight: #c45c26;
-  --ring: #0f6b4c;
-  --hero-from: #0b3d2e;
-  --hero-to: #1a5c45;
+  /* Official Rfacto brand palette (affiche premium vert + or) */
+  --rfacto-green: #28541d;
+  --rfacto-green-light: #5d8443;
+  --rfacto-green-dark: #1b3b14;
+  --rfacto-green-muted: #404d35;
+  --rfacto-gold: #d8b24c;
+  --rfacto-white: #ffffff;
+
+  /* Semantic tokens (site-wide) */
+  --background: #f3f5ef;
+  --foreground: #1b3b14;
+  --muted: #5a6754;
+  --surface: #ffffff;
+  --surface-2: #e8ede3;
+  --surface-3: #d5ddcf;
+  --border: #c5cebc;
+  --accent: var(--rfacto-green);
+  --accent-hover: var(--rfacto-green-light);
+  --accent-soft: #e4ede0;
+  --highlight: var(--rfacto-gold);
+  --ring: var(--rfacto-green);
+  --hero-from: var(--rfacto-green-dark);
+  --hero-to: var(--rfacto-green);
+  --panel-dark: var(--rfacto-green-muted);
 }
 
 @theme inline {
@@ -26,9 +36,17 @@
 
 body {
   background:
-    radial-gradient(circle at top left, rgba(15, 107, 76, 0.08), transparent 35%),
-    radial-gradient(circle at 80% 20%, rgba(196, 92, 38, 0.08), transparent 30%),
-    linear-gradient(180deg, #f7f3ea 0%, var(--background) 40%, #ebe6db 100%);
+    radial-gradient(
+      circle at top left,
+      rgba(40, 84, 29, 0.09),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 82% 18%,
+      rgba(216, 178, 76, 0.12),
+      transparent 32%
+    ),
+    linear-gradient(180deg, #f7f8f3 0%, var(--background) 42%, #ebeee6 100%);
   color: var(--foreground);
   min-height: 100vh;
 }
@@ -40,4 +58,29 @@ a {
 
 ::selection {
   background: var(--accent-soft);
+  color: var(--rfacto-green-dark);
+}
+
+/* Official primary button look (also mirrored by Button default variant) */
+.btn-rfacto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--rfacto-green);
+  color: var(--rfacto-white);
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  padding: 0.625rem 1.1rem;
+  transition: background-color 0.15s ease;
+}
+
+.btn-rfacto:hover {
+  background: var(--rfacto-green-light);
+}
+
+.btn-rfacto:disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
