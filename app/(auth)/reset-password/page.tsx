@@ -51,7 +51,7 @@ function ResetForm() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" data-auth-card>
       <CardTitle>{t("reset_title")}</CardTitle>
       <CardDescription>{t("reset_subtitle")}</CardDescription>
       {!token ? (
@@ -101,10 +101,8 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-6">
-      <Suspense>
-        <ResetForm />
-      </Suspense>
-    </div>
+    <Suspense>
+      <ResetForm />
+    </Suspense>
   );
 }

@@ -6,32 +6,20 @@ import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { getWhatsAppCommunityUrl } from "@/lib/whatsapp-community";
+import { RFACTO_SLIDES, RFACTO_SLIDE_MS } from "@/lib/rfacto-slides";
 
-const SLIDE_MS = 6500;
+const SLIDES = RFACTO_SLIDES.map((s) => ({
+  ...s,
+  href: s.id === "emploi" ? "/services" : "/shops",
+  labelKey:
+    s.id === "emploi"
+      ? ("home_slide_emploi" as const)
+      : s.id === "boutique"
+        ? ("home_slide_boutique" as const)
+        : ("home_slide_fournisseurs" as const),
+}));
 
-const SLIDES = [
-  {
-    id: "emploi",
-    src: "/images/home/slide-emploi.png",
-    href: "/services",
-    labelKey: "home_slide_emploi" as const,
-    altKey: "home_slide_emploi_alt" as const,
-  },
-  {
-    id: "boutique",
-    src: "/images/home/slide-boutique.png",
-    href: "/shops",
-    labelKey: "home_slide_boutique" as const,
-    altKey: "home_slide_boutique_alt" as const,
-  },
-  {
-    id: "fournisseurs",
-    src: "/images/home/slide-fournisseurs.png",
-    href: "/shops",
-    labelKey: "home_slide_fournisseurs" as const,
-    altKey: "home_slide_fournisseurs_alt" as const,
-  },
-];
+const SLIDE_MS = RFACTO_SLIDE_MS;
 
 type Props = {
   startHref: string;

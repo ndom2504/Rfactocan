@@ -166,7 +166,7 @@ function LoginForm() {
 
   if (mfaToken) {
     return (
-      <Card className="w-full">
+      <Card className="w-full" data-auth-card>
         <CardTitle>{t("otp_title")}</CardTitle>
         <CardDescription>
           {t("otp_subtitle")} {emailHint}
@@ -225,7 +225,7 @@ function LoginForm() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" data-auth-card>
       <CardTitle>{t("login_title")}</CardTitle>
       <CardDescription>{t("login_subtitle")}</CardDescription>
 
@@ -289,10 +289,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-6">
-      <Suspense>
-        <LoginForm />
-      </Suspense>
-    </div>
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

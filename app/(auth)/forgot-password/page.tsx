@@ -34,43 +34,41 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-6">
-      <Card className="w-full">
-        <CardTitle>{t("forgot_title")}</CardTitle>
-        <CardDescription>{t("forgot_subtitle")}</CardDescription>
+    <Card className="w-full" data-auth-card>
+      <CardTitle>{t("forgot_title")}</CardTitle>
+      <CardDescription>{t("forgot_subtitle")}</CardDescription>
 
-        {done ? (
-          <div className="mt-6 space-y-3">
-            <p className="text-sm text-[var(--accent)]">{t("forgot_sent")}</p>
-            <Link href="/login" className="text-sm underline">
+      {done ? (
+        <div className="mt-6 space-y-3">
+          <p className="text-sm text-[var(--accent)]">{t("forgot_sent")}</p>
+          <Link href="/login" className="text-sm underline">
+            {t("back_to_login")}
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">{t("email")}</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+          {error && <p className="text-sm text-red-700">{error}</p>}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? t("loading") : t("forgot_submit")}
+          </Button>
+          <p className="text-sm text-[var(--muted)]">
+            <Link href="/login" className="underline">
               {t("back_to_login")}
             </Link>
-          </div>
-        ) : (
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("email")}</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-            {error && <p className="text-sm text-red-700">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? t("loading") : t("forgot_submit")}
-            </Button>
-            <p className="text-sm text-[var(--muted)]">
-              <Link href="/login" className="underline">
-                {t("back_to_login")}
-              </Link>
-            </p>
-          </form>
-        )}
-      </Card>
-    </div>
+          </p>
+        </form>
+      )}
+    </Card>
   );
 }

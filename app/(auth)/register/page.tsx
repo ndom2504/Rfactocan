@@ -107,7 +107,7 @@ function RegisterForm() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" data-auth-card>
       <CardTitle>{t("register_title")}</CardTitle>
       <CardDescription>{t("register_subtitle")}</CardDescription>
       {refCode && (
@@ -198,10 +198,8 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-6">
-      <Suspense>
-        <RegisterForm />
-      </Suspense>
-    </div>
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }
