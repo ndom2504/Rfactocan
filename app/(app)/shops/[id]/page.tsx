@@ -57,7 +57,7 @@ function ShopInitials({ name }: { name: string }) {
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("");
   return (
-    <span className="text-xl font-semibold text-[var(--accent)]">
+    <span className="text-xl font-semibold text-white/90">
       {initials || "?"}
     </span>
   );
@@ -107,27 +107,26 @@ export default function ShopDetailPage() {
         )}
       </div>
 
-      {/* Banner + overlapping profile bubble */}
-      <div className="relative pb-14">
-        <div className="h-44 overflow-hidden rounded-xl bg-[var(--surface-2)] sm:h-52">
-          {shop.coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={shop.coverUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--accent-soft)] to-[var(--surface-2)]">
-              <span className="text-sm text-[var(--muted)]">
-                {t("shops_cover")}
-              </span>
-            </div>
-          )}
-        </div>
+      {/* Banner — full image, no crop */}
+      <div className="overflow-hidden rounded-xl bg-[#0f1419]">
+        {shop.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={shop.coverUrl}
+            alt=""
+            className="mx-auto block h-auto w-full max-h-[28rem] object-contain"
+          />
+        ) : (
+          <div className="flex min-h-40 w-full items-center justify-center bg-gradient-to-br from-[#1a2330] to-[#0f1419]">
+            <span className="text-sm text-white/50">{t("shops_cover")}</span>
+          </div>
+        )}
+      </div>
 
-        <div className="absolute bottom-0 left-4 flex items-end gap-3 sm:left-6">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--background)] bg-[var(--surface)] shadow-md sm:h-28 sm:w-28">
+      {/* Identity section: dark band, logo bubble, title + description */}
+      <section className="-mt-10 rounded-xl bg-[#12181f] px-4 pb-5 pt-0 text-white shadow-lg sm:-mt-12 sm:px-6 sm:pb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+          <div className="-mt-10 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#12181f] bg-[#1e2833] shadow-md sm:-mt-12 sm:h-28 sm:w-28">
             {logoSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -139,33 +138,29 @@ export default function ShopDetailPage() {
               <ShopInitials name={shop.name} />
             )}
           </div>
-          <div className="mb-1 min-w-0 pb-1">
-            <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold leading-tight sm:text-3xl">
+          <div className="min-w-0 flex-1 pb-1 pt-2 sm:pt-0">
+            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {shop.name}
             </h1>
-            <p className="mt-0.5 text-sm text-[var(--muted)]">
+            <p className="mt-1 text-sm text-white/70">
               {shopCategoryLabel(shop.category, locale)}
               {shop.city ? ` · ${shop.city}` : ""}
+              {shop.country ? `, ${shop.country}` : ""}
+              {shop.user.displayName ? ` · ${shop.user.displayName}` : ""}
             </p>
             {shop.user.ratingCount > 0 && (
-              <p className="mt-0.5 text-sm text-[var(--muted)]">
+              <p className="mt-1 text-sm text-amber-300/90">
                 ★ {shop.user.ratingAvg.toFixed(1)} ({shop.user.ratingCount})
               </p>
             )}
           </div>
         </div>
-      </div>
-
-      <div className="space-y-1 text-sm text-[var(--muted)]">
-        <p>
-          {shop.city}, {shop.country} · {shop.user.displayName}
-        </p>
         {shop.description && (
-          <p className="max-w-2xl leading-relaxed text-[var(--foreground)]">
+          <p className="mt-4 max-w-3xl border-t border-white/10 pt-4 text-base leading-relaxed text-white/90">
             {shop.description}
           </p>
         )}
-      </div>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">{t("shops_products")}</h2>
