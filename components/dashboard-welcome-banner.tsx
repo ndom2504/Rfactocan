@@ -22,20 +22,20 @@ export function DashboardWelcomeBanner({
       data-tour="welcome"
       className="w-full overflow-hidden border-b border-[var(--border)] bg-[var(--surface)]"
     >
-      <div className="relative h-40 w-full sm:h-48 md:h-52">
+      <div className="relative h-40 w-full bg-[var(--rfacto-green-dark)] sm:h-48 md:h-[min(42vw,420px)] lg:h-[min(38vw,480px)]">
         <Image
           src="/images/home/slide-boutique.png"
           alt=""
           fill
           priority
           sizes="100vw"
-          className="object-cover object-top"
+          className="object-cover object-top md:object-contain md:object-center"
         />
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-100 md:opacity-20"
           style={{
             background:
-              "linear-gradient(160deg, rgba(27,59,20,0.55) 0%, rgba(40,84,29,0.35) 50%, rgba(64,77,53,0.55) 100%)",
+              "linear-gradient(160deg, rgba(27,59,20,0.4) 0%, rgba(40,84,29,0.2) 50%, rgba(64,77,53,0.4) 100%)",
           }}
         />
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--surface)] to-transparent" />
