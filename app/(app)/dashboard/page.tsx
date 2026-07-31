@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
+import { DashboardWelcomeBanner } from "@/components/dashboard-welcome-banner";
 import { getAmbassadorKpis } from "@/lib/ambassador-stats";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
@@ -56,17 +57,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="text-center" data-tour="welcome">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          {t(locale, "hello")}, {user.displayName}
-        </h1>
-        <p className="mx-auto mt-2 max-w-xl text-[var(--muted)]">
-          {t(locale, "dashboard_subtitle")}
-        </p>
-        <p className="mx-auto mt-1 max-w-xl text-sm text-[var(--muted)]">
-          {t(locale, "dashboard_actors_hint")}
-        </p>
-      </div>
+      <DashboardWelcomeBanner
+        displayName={user.displayName}
+        avatarUrl={user.avatarUrl}
+        kycVerified={user.kycStatus === "VERIFIED"}
+      />
 
       {showAmbassadorEarn && user.agentCode ? (
         <AmbassadorEarnPanel

@@ -8,10 +8,10 @@ import { LocaleToggle } from "@/components/locale-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { LocaleProvider } from "@/components/locale-provider";
-import { ProfileMenu } from "@/components/profile-menu";
 import { PublishMenu } from "@/components/publish-menu";
 import { GuidedTour } from "@/components/guided-tour";
 import { Badge } from "@/components/ui/badge";
+import { HeaderProfileSlot } from "@/components/header-profile-slot";
 
 export default async function AppLayout({
   children,
@@ -72,12 +72,10 @@ export default async function AppLayout({
                   {t(locale, "verified")}
                 </Badge>
               )}
-              <div data-tour="profile-menu">
-                <ProfileMenu
-                  displayName={user.displayName}
-                  avatarUrl={user.avatarUrl}
-                />
-              </div>
+              <HeaderProfileSlot
+                displayName={user.displayName}
+                avatarUrl={user.avatarUrl}
+              />
             </div>
           </div>
           <nav
