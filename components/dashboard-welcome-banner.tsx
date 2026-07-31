@@ -18,14 +18,17 @@ export function DashboardWelcomeBanner({
   const { t } = useI18n();
 
   return (
-    <section data-tour="welcome" className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-      <div className="relative h-36 w-full sm:h-44">
+    <section
+      data-tour="welcome"
+      className="w-full overflow-hidden border-b border-[var(--border)] bg-[var(--surface)]"
+    >
+      <div className="relative h-40 w-full sm:h-48 md:h-52">
         <Image
           src="/images/home/slide-boutique.png"
           alt=""
           fill
           priority
-          sizes="(max-width: 768px) 100vw, 1152px"
+          sizes="100vw"
           className="object-cover object-center"
         />
         <div
@@ -35,15 +38,12 @@ export function DashboardWelcomeBanner({
               "linear-gradient(160deg, rgba(27,59,20,0.55) 0%, rgba(40,84,29,0.35) 50%, rgba(64,77,53,0.55) 100%)",
           }}
         />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--surface)] to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[var(--rfacto-gold)] to-transparent opacity-90" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--surface)] to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--rfacto-gold)] to-transparent opacity-90" />
       </div>
 
-      <div className="relative flex flex-col items-center px-5 pb-6 pt-0 text-center sm:px-8">
-        <div
-          className="-mt-14 sm:-mt-16"
-          data-tour="profile-menu"
-        >
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-6 pb-6 pt-0 text-center">
+        <div className="-mt-14 sm:-mt-16" data-tour="profile-menu">
           <ProfileMenu
             displayName={displayName}
             avatarUrl={avatarUrl}

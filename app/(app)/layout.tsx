@@ -12,6 +12,7 @@ import { PublishMenu } from "@/components/publish-menu";
 import { GuidedTour } from "@/components/guided-tour";
 import { Badge } from "@/components/ui/badge";
 import { HeaderProfileSlot } from "@/components/header-profile-slot";
+import { AppMain } from "@/components/app-main";
 
 export default async function AppLayout({
   children,
@@ -101,7 +102,7 @@ export default async function AppLayout({
             )}
           </nav>
         </header>
-        <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+        <AppMain>{children}</AppMain>
         <Suspense fallback={null}>
           <GuidedTour />
         </Suspense>

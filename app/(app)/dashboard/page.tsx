@@ -56,13 +56,14 @@ export default async function DashboardPage() {
   const ambPending = ambProfile?.ambassadorRequestStatus === "PENDING";
 
   return (
-    <div className="space-y-8">
+    <div>
       <DashboardWelcomeBanner
         displayName={user.displayName}
         avatarUrl={user.avatarUrl}
         kycVerified={user.kycStatus === "VERIFIED"}
       />
 
+      <div className="mx-auto max-w-6xl space-y-8 px-6 py-8">
       {showAmbassadorEarn && user.agentCode ? (
         <AmbassadorEarnPanel
           agentCode={user.agentCode}
@@ -178,6 +179,7 @@ export default async function DashboardPage() {
         </div>
       </section>
       <WhatsAppCommunityButton label={t(locale, "cta_join_whatsapp")} />
+      </div>
     </div>
   );
 }
