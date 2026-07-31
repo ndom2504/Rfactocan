@@ -29,7 +29,7 @@ export function DashboardWelcomeBanner({
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover object-top"
         />
         <div
           className="absolute inset-0"
