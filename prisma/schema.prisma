@@ -389,7 +389,10 @@ model Shop {
   country     String
   city        String
   currency    String     @default("CAD")
+  /// Wide banner image for the shop storefront
   coverUrl    String?
+  /// Circular shop logo / profile bubble
+  logoUrl     String?
   status      ShopStatus @default(DRAFT)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

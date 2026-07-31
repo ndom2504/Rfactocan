@@ -37,11 +37,31 @@ type Shop = {
   country: string;
   currency: string;
   coverUrl: string | null;
+  logoUrl: string | null;
   status: string;
   isOwner?: boolean;
   products: Product[];
-  user: { displayName: string; ratingAvg: number; ratingCount: number };
+  user: {
+    displayName: string;
+    avatarUrl?: string | null;
+    ratingAvg: number;
+    ratingCount: number;
+  };
 };
+
+function ShopInitials({ name }: { name: string }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+  return (
+    <span className="text-xl font-semibold text-[var(--accent)]">
+      {initials || "?"}
+    </span>
+  );
+}
 
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -70,39 +90,80 @@ export default function ShopDetailPage() {
 
   const loc = locale === "en" ? "en-CA" : "fr-CA";
   const products = shop.products.filter((p) => p.active || shop.isOwner);
+  const logoSrc = shop.logoUrl || shop.user.avatarUrl || null;
 
   return (
     <div className="space-y-6">
-      {shop.coverUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={shop.coverUrl}
-          alt=""
-          className="h-48 w-full rounded-xl object-cover"
-        />
-      )}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/shops" className="text-sm text-[var(--accent)]">
-            ← {t("shops_title")}
-          </Link>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
-            {shop.name}
-          </h1>
-          <p className="text-[var(--muted)]">
-            {shopCategoryLabel(shop.category, locale)} · {shop.city},{" "}
-            {shop.country} · {shop.user.displayName}
-          </p>
-          {shop.description && (
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed">
-              {shop.description}
-            </p>
-          )}
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link href="/shops" className="text-sm text-[var(--accent)]">
+          ← {t("shops_title")}
+        </Link>
         {shop.isOwner && (
           <Link href={`/shops/${shop.id}/manage`}>
-            <Button variant="outline">{t("shops_manage")}</Button>
+            <Button variant="outline" size="sm">
+              {t("shops_manage")}
+            </Button>
           </Link>
+        )}
+      </div>
+
+      {/* Banner + overlapping profile bubble */}
+      <div className="relative pb-14">
+        <div className="h-44 overflow-hidden rounded-xl bg-[var(--surface-2)] sm:h-52">
+          {shop.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={shop.coverUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--accent-soft)] to-[var(--surface-2)]">
+              <span className="text-sm text-[var(--muted)]">
+                {t("shops_cover")}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="absolute bottom-0 left-4 flex items-end gap-3 sm:left-6">
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--background)] bg-[var(--surface)] shadow-md sm:h-28 sm:w-28">
+            {logoSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoSrc}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <ShopInitials name={shop.name} />
+            )}
+          </div>
+          <div className="mb-1 min-w-0 pb-1">
+            <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold leading-tight sm:text-3xl">
+              {shop.name}
+            </h1>
+            <p className="mt-0.5 text-sm text-[var(--muted)]">
+              {shopCategoryLabel(shop.category, locale)}
+              {shop.city ? ` · ${shop.city}` : ""}
+            </p>
+            {shop.user.ratingCount > 0 && (
+              <p className="mt-0.5 text-sm text-[var(--muted)]">
+                ★ {shop.user.ratingAvg.toFixed(1)} ({shop.user.ratingCount})
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-1 text-sm text-[var(--muted)]">
+        <p>
+          {shop.city}, {shop.country} · {shop.user.displayName}
+        </p>
+        {shop.description && (
+          <p className="max-w-2xl leading-relaxed text-[var(--foreground)]">
+            {shop.description}
+          </p>
         )}
       </div>
 

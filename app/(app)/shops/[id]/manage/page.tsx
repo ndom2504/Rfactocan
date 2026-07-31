@@ -42,6 +42,8 @@ type Shop = {
   city: string;
   country: string;
   currency: string;
+  coverUrl: string | null;
+  logoUrl: string | null;
   status: string;
   canReceivePayments?: boolean;
   isOwner?: boolean;
@@ -93,6 +95,12 @@ export default function ManageShopPage() {
   const [stockQty, setStockQty] = useState("");
   const [highlights, setHighlights] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [brandBusy, setBrandBusy] = useState(false);
+  const [brandUploading, setBrandUploading] = useState<
+    "cover" | "logo" | null
+  >(null);
 
   const load = useCallback(async () => {
     const [shopRes, ordersRes] = await Promise.all([
@@ -106,6 +114,8 @@ export default function ManageShopPage() {
       return;
     }
     setShop(shopData.shop);
+    setCoverUrl(shopData.shop.coverUrl ?? null);
+    setLogoUrl(shopData.shop.logoUrl ?? null);
     setOrders(
       (ordersData.orders ?? []).filter(
         (o: { shop?: { id: string } }) => o.shop?.id === id
@@ -208,6 +218,41 @@ export default function ManageShopPage() {
     setMessage(
       isEdit ? t("shops_product_updated") : t("shops_save_product")
     );
+    await load();
+  }
+
+  async function uploadBranding(file: File, kind: "cover" | "logo") {
+    setBrandUploading(kind);
+    setError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    setBrandUploading(null);
+    if (!res.ok) {
+      setError(data.error ?? "Upload échoué");
+      return;
+    }
+    if (kind === "cover") setCoverUrl(data.url);
+    else setLogoUrl(data.url);
+  }
+
+  async function saveBranding() {
+    setBrandBusy(true);
+    setError("");
+    setMessage("");
+    const res = await fetch(`/api/shops/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coverUrl, logoUrl }),
+    });
+    const data = await res.json();
+    setBrandBusy(false);
+    if (!res.ok) {
+      setError(data.error ?? "Erreur");
+      return;
+    }
+    setMessage(t("shops_branding_saved"));
     await load();
   }
 
@@ -322,6 +367,67 @@ export default function ManageShopPage() {
           </>
         )}
       </div>
+
+      <Card>
+        <CardTitle>{t("shops_branding")}</CardTitle>
+        <CardDescription className="mt-1">
+          {t("shops_cover_hint")}
+        </CardDescription>
+        <div className="mt-4 space-y-4">
+          <div className="space-y-2">
+            <Label>{t("shops_cover")}</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void uploadBranding(f, "cover");
+              }}
+            />
+            {brandUploading === "cover" && (
+              <p className="text-xs text-[var(--muted)]">{t("loading")}</p>
+            )}
+            {coverUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverUrl}
+                alt=""
+                className="mt-2 h-32 w-full rounded-md object-cover"
+              />
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>{t("shops_logo")}</Label>
+            <p className="text-xs text-[var(--muted)]">{t("shops_logo_hint")}</p>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void uploadBranding(f, "logo");
+              }}
+            />
+            {brandUploading === "logo" && (
+              <p className="text-xs text-[var(--muted)]">{t("loading")}</p>
+            )}
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt=""
+                className="mt-2 h-20 w-20 rounded-full border-2 border-[var(--border)] object-cover"
+              />
+            )}
+          </div>
+          <Button
+            type="button"
+            disabled={brandBusy}
+            onClick={() => void saveBranding()}
+          >
+            {brandBusy ? t("loading") : t("shops_save_branding")}
+          </Button>
+        </div>
+      </Card>
 
       <Card id="product-form">
         <CardTitle>

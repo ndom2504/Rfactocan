@@ -18,6 +18,7 @@ const createSchema = z.object({
   city: z.string().min(2).max(80),
   currency: z.string().optional(),
   coverUrl: z.string().max(2000).optional().nullable(),
+  logoUrl: z.string().max(2000).optional().nullable(),
 });
 
 export async function GET(request: Request) {
@@ -132,6 +133,7 @@ export async function POST(request: Request) {
         city: body.city.trim(),
         currency,
         coverUrl: body.coverUrl || null,
+        logoUrl: body.logoUrl || null,
         status: "DRAFT",
       },
     });

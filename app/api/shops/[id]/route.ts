@@ -18,6 +18,7 @@ const patchSchema = z.object({
   city: z.string().min(2).max(80).optional(),
   currency: z.string().optional(),
   coverUrl: z.string().max(2000).optional().nullable(),
+  logoUrl: z.string().max(2000).optional().nullable(),
   category: z
     .enum([
       "food_appliances",
@@ -118,6 +119,7 @@ export async function PATCH(request: Request, context: Ctx) {
     if (body.country !== undefined) data.country = body.country.toUpperCase();
     if (body.city !== undefined) data.city = body.city.trim();
     if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null;
+    if (body.logoUrl !== undefined) data.logoUrl = body.logoUrl || null;
     if (body.category !== undefined) data.category = body.category;
     if (body.currency !== undefined) {
       const c = normalizeCurrency(body.currency);

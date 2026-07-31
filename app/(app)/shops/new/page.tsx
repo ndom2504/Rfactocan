@@ -39,9 +39,10 @@ function NewShopForm() {
     currencyForCountry("GA")
   );
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<"cover" | "logo" | null>(null);
 
   const cities = useMemo(() => getCities(country), [country]);
 
@@ -49,16 +50,20 @@ function NewShopForm() {
     setCurrency(currencyForCountry(country));
   }, [country]);
 
-  async function onUpload(file: File) {
-    setUploading(true);
+  async function onUpload(file: File, kind: "cover" | "logo") {
+    setUploading(kind);
     setError("");
     const fd = new FormData();
     fd.append("file", file);
     const res = await fetch("/api/upload", { method: "POST", body: fd });
     const data = await res.json();
-    setUploading(false);
-    if (res.ok) setCoverUrl(data.url);
-    else setError(data.error ?? "Upload échoué");
+    setUploading(null);
+    if (!res.ok) {
+      setError(data.error ?? "Upload échoué");
+      return;
+    }
+    if (kind === "cover") setCoverUrl(data.url);
+    else setLogoUrl(data.url);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -76,6 +81,7 @@ function NewShopForm() {
         city,
         currency,
         coverUrl,
+        logoUrl,
       }),
     });
     const data = await res.json();
@@ -179,15 +185,16 @@ function NewShopForm() {
         </div>
         <div className="space-y-2">
           <Label>{t("shops_cover")}</Label>
+          <p className="text-xs text-[var(--muted)]">{t("shops_cover_hint")}</p>
           <Input
             type="file"
             accept="image/*"
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) void onUpload(f);
+              if (f) void onUpload(f, "cover");
             }}
           />
-          {uploading && (
+          {uploading === "cover" && (
             <p className="text-xs text-[var(--muted)]">{t("loading")}</p>
           )}
           {coverUrl && (
@@ -196,6 +203,29 @@ function NewShopForm() {
               src={coverUrl}
               alt=""
               className="mt-2 h-32 w-full rounded-md object-cover"
+            />
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label>{t("shops_logo")}</Label>
+          <p className="text-xs text-[var(--muted)]">{t("shops_logo_hint")}</p>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onUpload(f, "logo");
+            }}
+          />
+          {uploading === "logo" && (
+            <p className="text-xs text-[var(--muted)]">{t("loading")}</p>
+          )}
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt=""
+              className="mt-2 h-20 w-20 rounded-full object-cover"
             />
           )}
         </div>
