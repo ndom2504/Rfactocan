@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CountryCodeSelect } from "@/components/country-select";
 import { useI18n } from "@/components/locale-provider";
+import { PromoImagesDialog } from "@/components/promo-images-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,8 @@ function NewShopForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState<"cover" | "logo" | null>(null);
+  const [createdShopId, setCreatedShopId] = useState<string | null>(null);
+  const [showPromoDialog, setShowPromoDialog] = useState(false);
 
   const cities = useMemo(() => getCities(country), [country]);
 
@@ -90,10 +93,18 @@ function NewShopForm() {
       setError(data.error ?? "Erreur");
       return;
     }
-    router.push(`/shops/${data.shop.id}/manage`);
+    setCreatedShopId(data.shop.id);
+    setShowPromoDialog(true);
+  }
+
+  function continueAfterPromo() {
+    if (!createdShopId) return;
+    setShowPromoDialog(false);
+    router.push(`/shops/${createdShopId}/manage`);
   }
 
   return (
+    <>
     <Card className="mx-auto max-w-xl">
       <CardTitle>{t("shops_create_title")}</CardTitle>
       <CardDescription className="mt-2">{t("shops_create_lead")}</CardDescription>
@@ -235,6 +246,13 @@ function NewShopForm() {
         </Button>
       </form>
     </Card>
+    <PromoImagesDialog
+      open={showPromoDialog}
+      title={t("promo_images_shop_title")}
+      body={t("promo_images_shop_body")}
+      onContinue={continueAfterPromo}
+    />
+    </>
   );
 }
 

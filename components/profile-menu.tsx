@@ -79,6 +79,14 @@ export function ProfileMenu({ displayName, avatarUrl }: Props) {
           >
             {t("nav_profile")}
           </Link>
+          <Link
+            href="/ambassador/apply"
+            role="menuitem"
+            className="block px-3 py-2 text-sm hover:bg-[var(--surface-2)]"
+            onClick={() => setOpen(false)}
+          >
+            {t("ambassador_become_cta")}
+          </Link>
           <button
             type="button"
             role="menuitem"

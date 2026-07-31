@@ -17,10 +17,11 @@ export default async function MarketingLayout({
   return (
     <LocaleProvider locale={locale}>
       <div className="min-h-screen">
-        <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <header className="sticky top-0 z-30 border-b border-[var(--border)]/60 bg-[var(--surface)]/85 backdrop-blur-md">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight"
+            className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--accent)]"
           >
             Rfacto
           </Link>
@@ -44,6 +45,7 @@ export default async function MarketingLayout({
               </>
             )}
           </nav>
+          </div>
         </header>
         {children}
         <footer className="mx-auto max-w-6xl border-t border-[var(--border)] px-6 py-8">

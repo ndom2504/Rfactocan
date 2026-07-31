@@ -50,6 +50,9 @@ type AdminData = {
     createdAt: string;
     isAmbassador?: boolean;
     agentCode?: string | null;
+    ambassadorRequestStatus?: string;
+    ambassadorWhatsapp?: string | null;
+    ambassadorRequestedAt?: string | null;
     _count?: { referrals: number };
   }>;
   pendingManualIds?: Array<{
@@ -65,6 +68,18 @@ type AdminData = {
     manualIdDocNote?: string | null;
     isAmbassador?: boolean;
     agentCode?: string | null;
+    createdAt: string;
+  }>;
+  pendingAmbassadorRequests?: Array<{
+    id: string;
+    email: string;
+    displayName: string;
+    role: string;
+    status: string;
+    kycStatus: string;
+    ambassadorWhatsapp: string | null;
+    ambassadorRequestedAt: string | null;
+    ambassadorRequestStatus: string;
     createdAt: string;
   }>;
   openReports: Array<{
@@ -481,6 +496,73 @@ export default function AdminPage() {
 
       <section className="space-y-3">
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Demandes ambassadeur
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          Candidatures avec numéro WhatsApp pour contact direct.
+          {(data.pendingAmbassadorRequests?.length ?? 0) === 0
+            ? " Aucune demande en attente."
+            : ` ${data.pendingAmbassadorRequests!.length} demande(s).`}
+        </p>
+        {(data.pendingAmbassadorRequests ?? []).map((u) => {
+          const wa = (u.ambassadorWhatsapp ?? "").replace(/[^\d+]/g, "");
+          const waDigits = wa.replace(/\D/g, "");
+          return (
+            <Card
+              key={`amb-req-${u.id}`}
+              className="border-[var(--accent)]/30 bg-[var(--accent-soft)]/40"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base">{u.displayName}</CardTitle>
+                  <CardDescription>
+                    {u.email} · KYC:{" "}
+                    {KYC_STATUS_LABELS[u.kycStatus] ?? u.kycStatus}
+                    {u.ambassadorRequestedAt
+                      ? ` · demandé ${formatDate(u.ambassadorRequestedAt)}`
+                      : ""}
+                  </CardDescription>
+                  <p className="mt-2 text-sm">
+                    WhatsApp :{" "}
+                    {waDigits ? (
+                      <a
+                        href={`https://wa.me/${waDigits}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-[var(--accent)] underline"
+                      >
+                        {u.ambassadorWhatsapp}
+                      </a>
+                    ) : (
+                      u.ambassadorWhatsapp ?? "—"
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => action(u.id, "promote_ambassador")}
+                  >
+                    Valider (nommer)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() =>
+                      action(u.id, "reject_ambassador_request")
+                    }
+                  >
+                    Refuser
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
           Pièces d&apos;identité manuelles
         </h2>
         <p className="text-sm text-[var(--muted)]">
@@ -695,7 +777,31 @@ export default function AdminPage() {
                       Ambassadeur
                     </Badge>
                   )}
+                  {!u.isAmbassador &&
+                    u.ambassadorRequestStatus === "PENDING" && (
+                      <Badge className="bg-amber-100 text-amber-900">
+                        Demande ambassadeur
+                      </Badge>
+                    )}
+                  {!u.isAmbassador &&
+                    u.ambassadorRequestStatus === "REJECTED" && (
+                      <Badge>Demande amb. refusée</Badge>
+                    )}
                 </div>
+                {u.ambassadorRequestStatus === "PENDING" &&
+                  u.ambassadorWhatsapp && (
+                    <p className="mt-2 text-xs text-[var(--muted)]">
+                      WhatsApp demande :{" "}
+                      <a
+                        href={`https://wa.me/${u.ambassadorWhatsapp.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--accent)] underline"
+                      >
+                        {u.ambassadorWhatsapp}
+                      </a>
+                    </p>
+                  )}
                 {(u.isAmbassador || u.agentCode) && (
                   <p className="mt-2 text-xs text-[var(--muted)]">
                     Code {u.agentCode ?? "—"} · {u._count?.referrals ?? 0}{" "}

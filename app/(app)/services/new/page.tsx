@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { CountryCodeSelect } from "@/components/country-select";
 import { useI18n } from "@/components/locale-provider";
+import { PromoImagesDialog } from "@/components/promo-images-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,8 @@ function NewServiceForm() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [products, setProducts] = useState<string[]>([]);
   const [customProduct, setCustomProduct] = useState("");
+  const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  const [showPromoDialog, setShowPromoDialog] = useState(false);
 
   const cat = getCategory(category);
   const saleProducts = useMemo(
@@ -157,10 +160,18 @@ function NewServiceForm() {
       setError(data.error ?? t("services_publish_error"));
       return;
     }
-    router.push(`/services/listing/${data.listing.id}`);
+    setCreatedListingId(data.listing.id);
+    setShowPromoDialog(true);
+  }
+
+  function continueAfterPromo() {
+    if (!createdListingId) return;
+    setShowPromoDialog(false);
+    router.push(`/services/listing/${createdListingId}`);
   }
 
   return (
+    <>
     <Card className="mx-auto max-w-2xl">
       <CardTitle>{t("services_publish")}</CardTitle>
       <CardDescription className="mt-1">
@@ -481,6 +492,21 @@ function NewServiceForm() {
         </div>
       </form>
     </Card>
+    <PromoImagesDialog
+      open={showPromoDialog}
+      title={
+        photos.length === 0
+          ? t("promo_images_service_title")
+          : t("promo_images_service_ok_title")
+      }
+      body={
+        photos.length === 0
+          ? t("promo_images_service_body")
+          : t("promo_images_service_ok_body")
+      }
+      onContinue={continueAfterPromo}
+    />
+    </>
   );
 }
 

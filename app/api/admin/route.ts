@@ -167,6 +167,9 @@ export async function GET(request: Request) {
       createdAt: true,
       isAmbassador: true,
       agentCode: true,
+      ambassadorRequestStatus: true,
+      ambassadorWhatsapp: true,
+      ambassadorRequestedAt: true,
       _count: { select: { referrals: true } },
     },
   });
@@ -206,6 +209,8 @@ export async function GET(request: Request) {
       manualIdDocNote: true,
       isAmbassador: true,
       agentCode: true,
+      ambassadorRequestStatus: true,
+      ambassadorWhatsapp: true,
       createdAt: true,
     },
   });
@@ -216,6 +221,27 @@ export async function GET(request: Request) {
       hasManualIdDoc: Boolean(manualIdDocUrl),
     })
   );
+
+  const pendingAmbassadorRequests = await prisma.user.findMany({
+    where: {
+      ambassadorRequestStatus: "PENDING",
+      isAmbassador: false,
+    },
+    orderBy: { ambassadorRequestedAt: "desc" },
+    take: 50,
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      role: true,
+      status: true,
+      kycStatus: true,
+      ambassadorWhatsapp: true,
+      ambassadorRequestedAt: true,
+      ambassadorRequestStatus: true,
+      createdAt: true,
+    },
+  });
 
   const usersMatching = await prisma.user.count({ where: userWhere });
 
@@ -307,6 +333,7 @@ export async function GET(request: Request) {
     openDisputes,
     users: allUsers,
     pendingManualIds,
+    pendingAmbassadorRequests,
     usersMatching,
     usersFilter: {
       letter,
@@ -331,6 +358,7 @@ const userPatchSchema = z.object({
     "promote_ambassador",
     "revoke_ambassador",
     "email_ambassador_invite",
+    "reject_ambassador_request",
   ]),
   userId: z.string(),
   note: z.string().max(500).optional(),
@@ -401,13 +429,19 @@ export async function PATCH(request: Request) {
       const agentCode = existing.agentCode ?? (await generateAgentCode());
       const user = await prisma.user.update({
         where: { id: body.userId },
-        data: { isAmbassador: true, agentCode },
+        data: {
+          isAmbassador: true,
+          agentCode,
+          ambassadorRequestStatus: "NONE",
+        },
         select: {
           id: true,
           displayName: true,
           email: true,
           isAmbassador: true,
           agentCode: true,
+          ambassadorWhatsapp: true,
+          ambassadorRequestStatus: true,
           _count: { select: { referrals: true } },
         },
       });
@@ -417,6 +451,23 @@ export async function PATCH(request: Request) {
         inviteUrl: inviteUrlForCode(user.agentCode!),
         referralCount: user._count.referrals,
       });
+    }
+
+    if (body.action === "reject_ambassador_request") {
+      const user = await prisma.user.update({
+        where: { id: body.userId },
+        data: {
+          ambassadorRequestStatus: "REJECTED",
+        },
+        select: {
+          id: true,
+          displayName: true,
+          email: true,
+          ambassadorRequestStatus: true,
+          ambassadorWhatsapp: true,
+        },
+      });
+      return NextResponse.json({ user });
     }
 
     if (body.action === "revoke_ambassador") {

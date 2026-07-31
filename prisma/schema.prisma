@@ -76,6 +76,13 @@ enum ManualIdDocStatus {
   REJECTED
 }
 
+/// User application to become a Rfacto ambassador
+enum AmbassadorRequestStatus {
+  NONE
+  PENDING
+  REJECTED
+}
+
 enum PaymentStatus {
   REQUIRES_PAYMENT
   AUTHORIZED
@@ -205,6 +212,11 @@ model User {
   agentCode                   String?    @unique
   /// Set once at signup when arriving via an active ambassador link
   referredById                String?
+  /// User-submitted request to become ambassador
+  ambassadorRequestStatus     AmbassadorRequestStatus @default(NONE)
+  /// WhatsApp number provided with the ambassador request (admin contact)
+  ambassadorWhatsapp          String?
+  ambassadorRequestedAt       DateTime?
   createdAt                   DateTime   @default(now())
   updatedAt                   DateTime   @updatedAt
 
@@ -229,6 +241,7 @@ model User {
   deviceTokens     DeviceToken[]
 
   @@index([referredById])
+  @@index([ambassadorRequestStatus])
 }
 
 /// FCM (or other) push device tokens for Uber-style job alerts.

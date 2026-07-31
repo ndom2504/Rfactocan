@@ -27,25 +27,32 @@ export default async function DashboardPage() {
     user.kycStatus === "VERIFIED" &&
     Boolean(user.agentCode);
 
-  const [trips, requests, bookings, ambassadorKpis] = await Promise.all([
-    prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
-    prisma.parcelRequest.count({
-      where: { userId: user.id, status: "OPEN" },
-    }),
-    prisma.booking.findMany({
-      where: {
-        OR: [{ senderId: user.id }, { trip: { userId: user.id } }],
-        status: { notIn: ["CANCELLED", "REFUSED"] },
-      },
-      include: {
-        request: true,
-        trip: true,
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-    }),
-    showAmbassadorEarn ? getAmbassadorKpis(user.id) : Promise.resolve(null),
-  ]);
+  const [trips, requests, bookings, ambassadorKpis, ambProfile] =
+    await Promise.all([
+      prisma.trip.count({ where: { userId: user.id, status: "OPEN" } }),
+      prisma.parcelRequest.count({
+        where: { userId: user.id, status: "OPEN" },
+      }),
+      prisma.booking.findMany({
+        where: {
+          OR: [{ senderId: user.id }, { trip: { userId: user.id } }],
+          status: { notIn: ["CANCELLED", "REFUSED"] },
+        },
+        include: {
+          request: true,
+          trip: true,
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+      }),
+      showAmbassadorEarn ? getAmbassadorKpis(user.id) : Promise.resolve(null),
+      prisma.user.findUnique({
+        where: { id: user.id },
+        select: { ambassadorRequestStatus: true },
+      }),
+    ]);
+
+  const ambPending = ambProfile?.ambassadorRequestStatus === "PENDING";
 
   return (
     <div className="space-y-8">
@@ -68,6 +75,16 @@ export default async function DashboardPage() {
           initialKpis={ambassadorKpis ?? undefined}
           collapsedByDefault
         />
+      ) : !user.isAmbassador ? (
+        <div className="mx-auto flex w-full max-w-md justify-center">
+          <Link href="/ambassador/apply" className="w-full">
+            <Button className="h-12 w-full text-base" variant="outline">
+              {ambPending
+                ? t(locale, "ambassador_apply_pending_cta")
+                : t(locale, "ambassador_become_cta")}
+            </Button>
+          </Link>
+        </div>
       ) : null}
 
       <div

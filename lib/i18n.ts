@@ -449,6 +449,39 @@ const dict = {
     ambassador_badge: "Espace ambassadeur",
     ambassador_open_cta: "Espace Ambassadeur",
     ambassador_close: "Fermer",
+    ambassador_become_cta: "Devenir Ambassadeur",
+    ambassador_apply_pending_cta: "Demande ambassadeur en cours",
+    ambassador_apply_title: "Devenir Ambassadeur Rfacto",
+    ambassador_apply_lead:
+      "Rejoignez le programme ambassadeur pour inviter votre réseau et gagner sur l'activité créée. Un admin vous contactera sur WhatsApp pour valider votre candidature.",
+    ambassador_apply_step1:
+      "Vous publiez un lien d'invitation personnel après validation.",
+    ambassador_apply_step2:
+      "Vos filleuls s'inscrivent via votre lien et sont attribués à votre réseau.",
+    ambassador_apply_step3:
+      "Plus ils sont actifs (colis, services, boutiques), plus votre impact grandit.",
+    ambassador_apply_step4:
+      "L'équipe Rfacto vous contacte sur WhatsApp pour finaliser la validation.",
+    ambassador_apply_whatsapp: "Votre numéro WhatsApp",
+    ambassador_apply_whatsapp_hint:
+      "Avec indicatif pays (ex. +241…). L'admin vous écrira directement.",
+    ambassador_apply_submit: "Envoyer la demande",
+    ambassador_apply_sent: "Demande envoyée — un admin vous contactera bientôt.",
+    ambassador_apply_pending:
+      "Votre demande est en cours d'examen. Un admin vous contactera sur WhatsApp.",
+    ambassador_apply_rejected:
+      "Votre précédente demande a été refusée. Vous pouvez renvoyer une nouvelle demande avec un numéro à jour.",
+    ambassador_apply_already: "Vous êtes déjà ambassadeur. Merci !",
+    promo_images_continue: "Continuer",
+    promo_images_shop_title: "Finalisez votre boutique",
+    promo_images_shop_body:
+      "Ajoutez une bannière, un logo et des photos de produits pour être mieux promu sur Rfacto. Les boutiques avec images apparaissent davantage.",
+    promo_images_service_title: "Ajoutez des images à votre service",
+    promo_images_service_body:
+      "Les annonces avec photos sont mieux mises en avant. Ajoutez des images depuis la fiche de votre service pour maximiser la visibilité.",
+    promo_images_service_ok_title: "Service publié",
+    promo_images_service_ok_body:
+      "Bonne nouvelle : vous avez déjà des photos. Vous pourrez en ajouter d'autres depuis la fiche pour encore mieux promouvoir votre offre.",
     manual_id_title: "Envoi manuel de pièce d'identité",
     manual_id_lead:
       "Si la vérification Stripe Identity échoue, envoyez une photo ou un PDF de votre pièce (passeport, permis ou carte d'identité). Un administrateur validera votre compte.",
@@ -591,6 +624,29 @@ const dict = {
       "Voyageurs, services et clients — connectés en un seul réseau.",
     hero_sub:
       "Voyageurs, transitaires et particuliers peuvent livrer. Envoyez ou recevez un colis en toute confiance.",
+    home_carousel_label: "Présentation Rfacto",
+    home_carousel_now: "En ce moment",
+    home_carousel_prev: "Slide précédent",
+    home_carousel_next: "Slide suivant",
+    home_carousel_explore: "Explorer",
+    home_slide_emploi: "Emploi & opportunités",
+    home_slide_emploi_alt:
+      "Bannière Rfacto : recherche d'emploi et contact avec des employeurs",
+    home_slide_boutique: "Boutique en ligne",
+    home_slide_boutique_alt:
+      "Bannière Rfacto : créer sa boutique et vendre depuis son téléphone",
+    home_slide_fournisseurs: "Fournisseurs mondiaux",
+    home_slide_fournisseurs_alt:
+      "Bannière Rfacto : trouver des fournisseurs fiables partout dans le monde",
+    home_pillar_connect_title: "Connecter",
+    home_pillar_connect_text:
+      "Réseau de voyageurs, services et commerçants pour créer des opportunités locales et internationales.",
+    home_pillar_ship_title: "Expédier",
+    home_pillar_ship_text:
+      "Colis, boutiques et livraisons avec mise en relation et paiement sécurisé.",
+    home_pillar_grow_title: "Réussir",
+    home_pillar_grow_text:
+      "Emploi, vente en ligne et sourcing fournisseurs — boostez votre activité avec Rfacto.",
     cta_start_here: "Commencer ici",
     cta_about_us: "Qui sommes-nous",
     cta_join_whatsapp: "Rejoindre la communauté WhatsApp",
@@ -1433,6 +1489,39 @@ const dict = {
     ambassador_badge: "Ambassador space",
     ambassador_open_cta: "Ambassador space",
     ambassador_close: "Close",
+    ambassador_become_cta: "Become an Ambassador",
+    ambassador_apply_pending_cta: "Ambassador request pending",
+    ambassador_apply_title: "Become a Rfacto Ambassador",
+    ambassador_apply_lead:
+      "Join the ambassador program to invite your network and earn from activity you create. An admin will contact you on WhatsApp to validate your application.",
+    ambassador_apply_step1:
+      "After approval you get a personal invite link to share.",
+    ambassador_apply_step2:
+      "People who sign up via your link are attributed to your network.",
+    ambassador_apply_step3:
+      "The more active they are (parcels, services, shops), the more impact you create.",
+    ambassador_apply_step4:
+      "The Rfacto team contacts you on WhatsApp to complete validation.",
+    ambassador_apply_whatsapp: "Your WhatsApp number",
+    ambassador_apply_whatsapp_hint:
+      "Include country code (e.g. +241…). An admin will message you directly.",
+    ambassador_apply_submit: "Send request",
+    ambassador_apply_sent: "Request sent — an admin will contact you soon.",
+    ambassador_apply_pending:
+      "Your request is under review. An admin will contact you on WhatsApp.",
+    ambassador_apply_rejected:
+      "Your previous request was declined. You can submit again with an updated number.",
+    ambassador_apply_already: "You are already an ambassador. Thank you!",
+    promo_images_continue: "Continue",
+    promo_images_shop_title: "Finish setting up your shop",
+    promo_images_shop_body:
+      "Add a banner, logo and product photos to get better promotion on Rfacto. Shops with images get more visibility.",
+    promo_images_service_title: "Add images to your service",
+    promo_images_service_body:
+      "Listings with photos are promoted better. Add images from your service page to maximize visibility.",
+    promo_images_service_ok_title: "Service published",
+    promo_images_service_ok_body:
+      "Nice — you already added photos. You can add more from the listing page to promote your offer even better.",
     manual_id_title: "Manual ID document upload",
     manual_id_lead:
       "If Stripe Identity verification fails, upload a photo or PDF of your ID (passport, licence or national ID). An admin will validate your account.",
@@ -1574,6 +1663,29 @@ const dict = {
       "Travelers, services and clients — connected in one network.",
     hero_sub:
       "Travelers, freight forwarders and individuals can deliver. Send or receive a parcel with confidence.",
+    home_carousel_label: "Rfacto introduction",
+    home_carousel_now: "Now showing",
+    home_carousel_prev: "Previous slide",
+    home_carousel_next: "Next slide",
+    home_carousel_explore: "Explore",
+    home_slide_emploi: "Jobs & opportunities",
+    home_slide_emploi_alt:
+      "Rfacto banner: job search and contact with employers",
+    home_slide_boutique: "Online shop",
+    home_slide_boutique_alt:
+      "Rfacto banner: create your shop and sell from your phone",
+    home_slide_fournisseurs: "Global suppliers",
+    home_slide_fournisseurs_alt:
+      "Rfacto banner: find reliable suppliers worldwide",
+    home_pillar_connect_title: "Connect",
+    home_pillar_connect_text:
+      "A network of travelers, services and merchants creating local and international opportunities.",
+    home_pillar_ship_title: "Ship",
+    home_pillar_ship_text:
+      "Parcels, shops and deliveries with matching and secure payment.",
+    home_pillar_grow_title: "Succeed",
+    home_pillar_grow_text:
+      "Jobs, online selling and supplier sourcing — grow with Rfacto.",
     cta_start_here: "Start here",
     cta_about_us: "About us",
     cta_join_whatsapp: "Join the WhatsApp community",
