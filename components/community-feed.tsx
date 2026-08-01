@@ -199,25 +199,60 @@ export function CommunityFeed() {
             </span>
           </div>
           {attachments.length > 0 && (
-            <ul className="space-y-1 text-sm">
+            <div className="grid gap-3 sm:grid-cols-3">
               {attachments.map((a, i) => (
-                <li
+                <div
                   key={`${a.url}-${i}`}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-[var(--surface-2)] px-3 py-2"
+                  className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
                 >
-                  <span className="truncate">{a.name}</span>
+                  {isImageAttachment(a.contentType) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={a.url}
+                      alt={a.name}
+                      className="h-40 w-full object-cover"
+                    />
+                  ) : (
+                    <a
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-40 flex-col items-center justify-center gap-2 px-3 text-center"
+                    >
+                      <span className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--accent)]">
+                        PDF
+                      </span>
+                      <span className="line-clamp-2 text-xs text-[var(--muted)]">
+                        {a.name}
+                      </span>
+                      <span className="text-[11px] text-[var(--accent)] underline">
+                        {t("community_preview_open")}
+                      </span>
+                    </a>
+                  )}
                   <button
                     type="button"
-                    className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+                    className="absolute right-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs text-white hover:bg-black/80"
                     onClick={() =>
                       setAttachments((prev) => prev.filter((_, idx) => idx !== i))
                     }
+                    aria-label={t("close")}
                   >
-                    {t("close")}
+                    ✕
                   </button>
-                </li>
+                  {isImageAttachment(a.contentType) && (
+                    <p className="truncate border-t border-[var(--border)] px-2 py-1.5 text-[11px] text-[var(--muted)]">
+                      {a.name}
+                    </p>
+                  )}
+                </div>
               ))}
-            </ul>
+            </div>
+          )}
+          {attachments.length > 0 && (
+            <p className="text-xs text-[var(--muted)]">
+              {t("community_preview_hint")}
+            </p>
           )}
           {error && (
             <p className="text-sm text-red-700" role="alert">

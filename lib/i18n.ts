@@ -37,6 +37,8 @@ const dict = {
     community_connect: "Connecter",
     community_message: "Message",
     community_see: "Voir",
+    community_preview_hint: "Aperçu avant publication — retirez un fichier avec ✕.",
+    community_preview_open: "Ouvrir l’aperçu",
     services_title: "Colis & services",
     services_subtitle:
       "Parcourez les catégories ou publiez une offre : sport, vente, informatique, hébergement…",
@@ -1113,6 +1115,8 @@ const dict = {
     community_connect: "Connect",
     community_message: "Message",
     community_see: "View",
+    community_preview_hint: "Preview before publishing — remove a file with ✕.",
+    community_preview_open: "Open preview",
     services_title: "Parcels & services",
     services_subtitle:
       "Browse categories or publish an offer: sport, sales, IT, lodging…",
