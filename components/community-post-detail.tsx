@@ -165,7 +165,6 @@ export function CommunityPostDetail() {
           <CommunityMediaGrid
             attachments={post.attachments}
             postId={post.id}
-            maxHeightClass="max-h-[640px]"
           />
         )}
         <p className="text-xs text-[var(--muted)]">

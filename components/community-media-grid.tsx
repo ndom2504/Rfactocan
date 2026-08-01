@@ -5,15 +5,13 @@ import {
   type CommunityAttachment,
 } from "@/lib/community";
 
-/** Facebook-style media: full-width single image, grid for 2–3. */
+/** X-style media: full width, natural height (no crop). */
 export function CommunityMediaGrid({
   attachments,
   postId,
-  maxHeightClass = "max-h-[520px]",
 }: {
   attachments: CommunityAttachment[];
   postId: string;
-  maxHeightClass?: string;
 }) {
   if (!attachments.length) return null;
 
@@ -23,48 +21,37 @@ export function CommunityMediaGrid({
   return (
     <div className="space-y-2">
       {images.length === 1 && (
-        <div className="overflow-hidden bg-[var(--surface-2)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={images[0].url}
-            alt={images[0].name}
-            className={`block w-full ${maxHeightClass} object-cover object-center`}
-          />
-        </div>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={images[0].url}
+          alt={images[0].name}
+          className="block h-auto w-full"
+        />
       )}
       {images.length === 2 && (
-        <div className="grid grid-cols-2 gap-0.5 overflow-hidden bg-[var(--surface-2)]">
+        <div className="grid grid-cols-2 gap-0.5 overflow-hidden rounded-lg bg-[var(--surface-2)]">
           {images.map((a, i) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={`${postId}-img-${i}`}
               src={a.url}
               alt={a.name}
-              className="aspect-square h-full w-full object-cover"
+              className="h-auto w-full object-contain"
             />
           ))}
         </div>
       )}
       {images.length >= 3 && (
-        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden bg-[var(--surface-2)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={images[0].url}
-            alt={images[0].name}
-            className="row-span-2 h-full min-h-[220px] w-full object-cover"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={images[1].url}
-            alt={images[1].name}
-            className="h-full min-h-[110px] w-full object-cover"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={images[2].url}
-            alt={images[2].name}
-            className="h-full min-h-[110px] w-full object-cover"
-          />
+        <div className="flex flex-col gap-0.5 overflow-hidden rounded-lg bg-[var(--surface-2)]">
+          {images.slice(0, 3).map((a, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={`${postId}-img-${i}`}
+              src={a.url}
+              alt={a.name}
+              className="block h-auto w-full"
+            />
+          ))}
         </div>
       )}
       {files.map((a, i) => (
