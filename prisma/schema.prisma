@@ -240,6 +240,7 @@ model User {
   notifications    Notification[]
   deviceTokens     DeviceToken[]
   communityPosts   CommunityPost[]
+  communityComments CommunityComment[]
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -693,13 +694,35 @@ model CommunityPost {
   /// JSON array: [{ url, name, contentType, size }]
   attachmentsJson String              @default("[]")
   status          CommunityPostStatus @default(OPEN)
+  viewCount       Int                 @default(0)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author   User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments CommunityComment[]
 
   @@index([createdAt])
   @@index([kind, createdAt])
   @@index([authorId, createdAt])
   @@index([status, createdAt])
+}
+
+model CommunityComment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  /// Null = top-level comment; set = reply to another comment
+  parentId  String?
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post    CommunityPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent  CommunityComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies CommunityComment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt])
+  @@index([parentId])
+  @@index([authorId])
 }

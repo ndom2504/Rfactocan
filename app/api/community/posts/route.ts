@@ -48,6 +48,8 @@ type FeedItem = {
   source: "post" | "service" | "shop" | "trip";
   author: FeedAuthor;
   isOwner: boolean;
+  viewCount: number;
+  commentCount: number;
 };
 
 function serializePost(post: {
@@ -59,6 +61,8 @@ function serializePost(post: {
   createdAt: Date;
   updatedAt: Date;
   authorId: string;
+  viewCount?: number;
+  _count?: { comments?: number };
   author: {
     id: string;
     displayName: string;
@@ -78,7 +82,7 @@ function serializePost(post: {
     attachments: parseAttachmentsJson(post.attachmentsJson),
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
-    href: null,
+    href: `/community/${post.id}`,
     source: "post",
     author: {
       id: post.author.id,
@@ -91,6 +95,8 @@ function serializePost(post: {
       ratingCount: post.author.ratingCount,
     },
     isOwner: false,
+    viewCount: post.viewCount ?? 0,
+    commentCount: post._count?.comments ?? 0,
   };
 }
 
@@ -135,6 +141,7 @@ export async function GET(request: Request) {
             ratingCount: true,
           },
         },
+        _count: { select: { comments: true } },
       },
       orderBy: { createdAt: "desc" },
       take,
@@ -245,6 +252,8 @@ export async function GET(request: Request) {
           ratingCount: author.ratingCount,
         },
         isOwner: author.id === session.id,
+        viewCount: 0,
+        commentCount: 0,
       });
     }
 
@@ -279,6 +288,8 @@ export async function GET(request: Request) {
           ratingCount: author.ratingCount,
         },
         isOwner: author.id === session.id,
+        viewCount: 0,
+        commentCount: 0,
       });
     }
 
@@ -311,6 +322,8 @@ export async function GET(request: Request) {
           ratingCount: author.ratingCount,
         },
         isOwner: author.id === session.id,
+        viewCount: 0,
+        commentCount: 0,
       });
     }
   }
@@ -383,6 +396,7 @@ export async function POST(request: Request) {
             ratingCount: true,
           },
         },
+        _count: { select: { comments: true } },
       },
     });
 

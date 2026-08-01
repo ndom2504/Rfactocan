@@ -24,6 +24,8 @@ type FeedPost = {
   href?: string | null;
   source?: "post" | "service" | "shop" | "trip";
   isOwner: boolean;
+  viewCount?: number;
+  commentCount?: number;
   author: {
     id: string;
     displayName: string;
@@ -333,13 +335,21 @@ export function CommunityFeed() {
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
                     {post.body}
                   </p>
+                  {(post.source === "post" || !post.source) && (
+                    <p className="mt-2 text-xs text-[var(--muted)]">
+                      {post.viewCount ?? 0} {t("community_views")} ·{" "}
+                      {post.commentCount ?? 0} {t("community_comments")}
+                    </p>
+                  )}
                   <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
                     <Link
                       href={
-                        post.source === "service" || post.source === "shop"
-                          ? post.href || "/messages"
-                          : `/messages`
+                        post.href ||
+                        (post.source === "post" || !post.source
+                          ? `/community/${post.id}`
+                          : "/messages")
                       }
+                      title={t("community_connect_hint")}
                       className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
                     >
                       {t("community_connect")}
@@ -351,7 +361,11 @@ export function CommunityFeed() {
                       {t("community_message")}
                     </Link>
                     <Link
-                      href={post.href || "/community"}
+                      href={
+                        post.source === "post" || !post.source
+                          ? `/community/${post.id}`
+                          : post.href || "/community"
+                      }
                       className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent-soft)]"
                     >
                       {t("community_see")}

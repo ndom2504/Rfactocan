@@ -39,6 +39,16 @@ const dict = {
     community_see: "Voir",
     community_preview_hint: "Aperçu avant publication — retirez un fichier avec ✕.",
     community_preview_open: "Ouvrir l’aperçu",
+    community_views: "vues",
+    community_comments: "commentaires",
+    community_comments_empty: "Aucun commentaire pour le moment.",
+    community_comment_placeholder: "Écrire un commentaire…",
+    community_reply_placeholder: "Écrire une réponse…",
+    community_comment_send: "Envoyer",
+    community_reply: "Répondre",
+    community_replying: "Réponse en cours —",
+    community_connect_hint:
+      "Connecter ouvre l’offre ou le profil lié (service, boutique, voyage).",
     services_title: "Colis & services",
     services_subtitle:
       "Parcourez les catégories ou publiez une offre : sport, vente, informatique, hébergement…",
@@ -1117,6 +1127,16 @@ const dict = {
     community_see: "View",
     community_preview_hint: "Preview before publishing — remove a file with ✕.",
     community_preview_open: "Open preview",
+    community_views: "views",
+    community_comments: "comments",
+    community_comments_empty: "No comments yet.",
+    community_comment_placeholder: "Write a comment…",
+    community_reply_placeholder: "Write a reply…",
+    community_comment_send: "Send",
+    community_reply: "Reply",
+    community_replying: "Replying —",
+    community_connect_hint:
+      "Connect opens the related offer or profile (service, shop, trip).",
     services_title: "Parcels & services",
     services_subtitle:
       "Browse categories or publish an offer: sport, sales, IT, lodging…",
