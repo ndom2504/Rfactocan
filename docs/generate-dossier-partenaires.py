@@ -140,7 +140,7 @@ def build() -> Path:
     pdf.cell(
         0,
         7,
-        "Dossier de présentation partenaires",
+        "Dossier partenaires — communauté & plateforme",
         new_x="LMARGIN",
         new_y="NEXT",
     )
@@ -156,60 +156,85 @@ def build() -> Path:
     pdf.cell(
         0,
         6,
-        "Export Monde Prestige · Siège Québec, Canada · Juillet 2026 · rfacto.com",
+        "Export Monde Prestige · Siège Québec, Canada · Août 2026 · rfacto.com",
         new_x="LMARGIN",
         new_y="NEXT",
     )
     pdf.set_y(66)
 
     pdf.quote(
-        "Rfacto (RapidFacto) est la place de marché qui connecte voyageurs, "
-        "prestataires de services et clients pour les envois collaboratifs et les "
-        "prestations utiles — près de chez vous et à travers le monde. "
-        "On connecte, on sécurise (identité, paiement, messagerie, suivi) — "
-        "on ne transporte pas nous-mêmes."
+        "Rfacto bâtit une communauté autour de la crédibilité, de la sécurité et "
+        "de la croissance — et fournit une application qui connecte, rapproche "
+        "les communautés et les conduit vers la réalisation juste de leurs projets."
     )
 
-    pdf.h2("1. En une phrase")
+    pdf.h2("1. Notre projet — description claire")
     pdf.body(
-        "L'Airbnb du bagage international : une marketplace P2P de transport "
-        "collaboratif de colis et de services, avec vérification d'identité (KYC), "
-        "paiement séquestré, messagerie et preuves de livraison."
+        "Rfacto est à la fois une communauté et une plateforme numérique. "
+        "Nous organisons la rencontre entre besoins et capacités (colis, services, "
+        "commerce) dans un cadre de confiance — sans remplacer les acteurs terrain."
+    )
+    pdf.h3("Trois piliers")
+    pdf.bullet(
+        "Communauté — membres fiables, dynamiques et solidaires, orientés vers "
+        "le développement de leur environnement, notamment par un usage plus "
+        "stratégique des outils numériques."
     )
     pdf.bullet(
-        "Analogie : comme Uber organise la rencontre sans être le chauffeur, "
-        "Rfacto organise l'échange sans être le transporteur."
+        "Valeurs — crédibilité, sécurité, croissance : la base de toute "
+        "relation durable entre membres et partenaires."
     )
     pdf.bullet(
-        "Projet d'Export Monde Prestige, fondé par Morel Stevens Ndong — "
-        "siège international au Québec (Canada)."
+        "Plateforme — une application qui connecte, rapproche et conduit "
+        "vers la réalisation juste des projets."
     )
 
-    pdf.h2("2. Problème que nous résolvons")
+    pdf.h2("2. Ce que l'application permet")
     pdf.bullet(
-        "Les envois diaspora / corridors Afrique–Canada–Europe passent encore "
-        "souvent par des groupes WhatsApp informels : peu d'identité, paiements "
-        "hors plateforme, litiges sans traces."
+        "Expédition et réception de colis via un réseau de voyageurs ou de "
+        "transporteurs (matching, messagerie, suivi, preuves)."
     )
     pdf.bullet(
-        "Les transitaires classiques sont chers ou lents pour les petits volumes ; "
-        "les voyageurs ont de la capacité bagage sous-utilisée."
+        "Fourniture de services en ligne : vitrine, demande, mise en relation "
+        "et parcours sécurisé."
     )
     pdf.bullet(
-        "Les talents et services locaux manquent de vitrine numérique et de "
-        "paiement sécurisé."
+        "Développement stratégique des boutiques en ligne : présence, catalogue, "
+        "commandes et croissance du commerce communautaire."
+    )
+    pdf.body(
+        "Analogie : comme Uber organise la rencontre sans être le chauffeur, "
+        "Rfacto structure l'échange sans être le transporteur. "
+        "Projet d'Export Monde Prestige — siège international au Québec (Canada)."
+    )
+
+    pdf.h2("3. Problème que nous structurons")
+    pdf.bullet(
+        "Beaucoup d'échanges diaspora / locaux passent encore par des canaux "
+        "informels : peu d'identité, paiements hors cadre, litiges sans traces."
+    )
+    pdf.bullet(
+        "Les solutions classiques sont souvent chères ou lentes pour les petits "
+        "volumes ; la capacité voyageur / locale reste sous-utilisée."
+    )
+    pdf.bullet(
+        "Les talents, services et commerces manquent d'une vitrine numérique "
+        "reliée à une communauté digne de confiance."
     )
     pdf.h3("Notre réponse")
-    pdf.bullet("Mettre en relation capacité (bagage, trajet, fret, service) et besoin.")
     pdf.bullet(
-        "Imposer confiance : KYC Stripe Identity, séquestre, notations, preuves QR, litiges."
+        "Bâtir la communauté (crédibilité · sécurité · croissance) avant "
+        "d'empiler les fonctionnalités."
     )
     pdf.bullet(
-        "Ambition paiements locaux (Mobile Money / Interac) pour convertir réellement "
-        "en Afrique et au Canada."
+        "Équiper cette communauté d'une app qui connecte colis, services et boutiques."
+    )
+    pdf.bullet(
+        "Imposer la confiance technique : KYC, séquestre, messagerie, preuves, litiges — "
+        "et ouvrir les partenariats (assurance, paiements locaux, autorités)."
     )
 
-    pdf.h2("3. Produit — ce qui est live aujourd'hui")
+    pdf.h2("4. Produit — ce qui est live aujourd'hui")
     pdf.table(
         ["Capacité", "Statut", "Détail"],
         [
@@ -218,6 +243,8 @@ def build() -> Path:
             ["Stripe Connect", "Live", "Payout voyageurs après livraison"],
             ["Voyages / demandes", "Live", "Matching route, date, réputation"],
             ["Services publiés", "Live", "Fret, logistique, métiers locaux…"],
+            ["Boutiques en ligne", "Live", "Catalogue, commandes, croissance"],
+            ["Feed communauté", "Live", "Publications, connexions, partage"],
             ["Messagerie + photos", "Live", "Liée à la réservation"],
             ["Preuve de remise", "Live", "Code / QR à la livraison"],
             ["Litiges documentés", "Live", "Support examine le dossier"],
@@ -231,7 +258,7 @@ def build() -> Path:
         "Stripe Identity (KYC), pas à une simple connexion Google ou e-mail."
     )
 
-    pdf.h2("4. Marchés & corridors")
+    pdf.h2("5. Marchés & corridors")
     pdf.body(
         "Phase 1 — diaspora francophone : Canada, France, Belgique ↔ Gabon, "
         "Cameroun, Côte d'Ivoire, Sénégal, RDC, Bénin… puis extension Europe–Afrique "
@@ -247,7 +274,7 @@ def build() -> Path:
         "transactions payées et taux de litige (< 5 %), pas seulement les inscriptions."
     )
 
-    pdf.h2("5. Positionnement juridique (clair pour tous les partenaires)")
+    pdf.h2("6. Positionnement juridique (clair pour tous les partenaires)")
     pdf.quote(
         "Rfacto met en relation et sécurise les comptes et les paiements. "
         "Le colis reste sous la responsabilité des parties. "
@@ -268,7 +295,7 @@ def build() -> Path:
     )
 
     pdf.add_page()
-    pdf.h2("6. Partenariat assureurs")
+    pdf.h2("7. Partenariat assureurs")
     pdf.h3("Pourquoi Rfacto a besoin d'un assureur")
     pdf.body(
         "Aujourd'hui, la plateforme n'inclut pas d'assurance automatique sur le "
@@ -302,7 +329,7 @@ def build() -> Path:
     )
     pdf.bullet("Option premium : suivi GPS renforcé lié à l'assurance.")
 
-    pdf.h2("7. Autorités locales, police et douanes")
+    pdf.h2("8. Autorités locales, police et douanes")
     pdf.h3("Notre engagement de conformité")
     pdf.body(
         "Rfacto formalise un usage qui existe déjà de manière informelle. "
@@ -345,7 +372,7 @@ def build() -> Path:
         "Nous renforçons la traçabilité et la responsabilisation des parties."
     )
 
-    pdf.h2("8. Opérateurs téléphonie & Mobile Money")
+    pdf.h2("9. Opérateurs téléphonie & Mobile Money")
     pdf.h3("Pourquoi le paiement local est stratégique")
     pdf.body(
         "La carte bancaire internationale ne convertit pas assez en Afrique. "
@@ -398,7 +425,7 @@ def build() -> Path:
     )
 
     pdf.add_page()
-    pdf.h2("9. Autres partenaires stratégiques")
+    pdf.h2("10. Autres partenaires stratégiques")
     pdf.h3("Ambassades / diasporas / associations")
     pdf.bullet("Sensibilisation corridors ; recrutement voyageurs et clients vérifiés.")
     pdf.bullet("Groupes communautaires officiels RFacto par pays.")
@@ -412,7 +439,7 @@ def build() -> Path:
     pdf.h3("Médias & influenceurs corridors")
     pdf.bullet("Éducation confiance (KYC, séquestre) vs groupes informels.")
 
-    pdf.h2("10. Stack confiance — résumé pour tout partenaire")
+    pdf.h2("11. Stack confiance — résumé pour tout partenaire")
     pdf.table(
         ["Couche", "Live / partiel / à venir"],
         [
@@ -431,19 +458,19 @@ def build() -> Path:
         [100, 72],
     )
 
-    pdf.h2("11. Vision & valeurs")
+    pdf.h2("12. Vision & valeurs")
     pdf.body(
-        "Promouvoir les services en ligne et le numérique comme vecteur de "
-        "transformation ; rapprocher les gens ; mettre en évidence talents et "
-        "services connus et méconnus ; favoriser l'autonomie et la dignité du travail."
+        "Bâtir une communauté crédible, sécurisée et en croissance ; fournir "
+        "une app qui connecte, rapproche et conduit vers la réalisation juste "
+        "des projets — colis, services, boutiques."
     )
-    pdf.bullet("Confiance et transparence")
-    pdf.bullet("Entraide et inclusion")
-    pdf.bullet("Autonomie et dignité du travail")
-    pdf.bullet("Responsabilité partagée")
-    pdf.bullet("Innovation au service du réel")
+    pdf.bullet("Crédibilité — membres fiables et responsables")
+    pdf.bullet("Sécurité — échanges traçables et protégés")
+    pdf.bullet("Croissance — usage stratégique du numérique")
+    pdf.bullet("Solidarité — développement de l'environnement local et diaspora")
+    pdf.bullet("Réalisation juste — clarté, équité, résultats concrets")
 
-    pdf.h2("12. Prochaines étapes proposées")
+    pdf.h2("13. Prochaines étapes proposées")
     pdf.table(
         ["Partenaire", "Étape 1", "Étape 2"],
         [
@@ -471,7 +498,7 @@ def build() -> Path:
         [38, 68, 66],
     )
 
-    pdf.h2("13. Contact")
+    pdf.h2("14. Contact")
     pdf.body(
         "Export Monde Prestige — Projet Rfacto\n"
         "Siège : Québec, Canada\n"
