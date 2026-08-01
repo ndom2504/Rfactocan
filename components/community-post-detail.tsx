@@ -9,6 +9,7 @@ import {
   absoluteShareUrl,
   CommunityShareButton,
 } from "@/components/community-share-button";
+import { communitySharePath } from "@/lib/community-share";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import type { CommunityAttachment } from "@/lib/community";
@@ -246,7 +247,7 @@ export function CommunityPostDetail() {
             {t("community_comment_action")}
           </a>
           <CommunityShareButton
-            url={absoluteShareUrl(`/community/${post.id}`)}
+            url={absoluteShareUrl(communitySharePath(post.id))}
             title={post.title}
             body={post.body}
             className="[&_button]:bg-[var(--surface-2)]"

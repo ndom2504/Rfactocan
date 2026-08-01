@@ -8,6 +8,7 @@ import {
   absoluteShareUrl,
   CommunityShareButton,
 } from "@/components/community-share-button";
+import { communitySharePath } from "@/lib/community-share";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import {
@@ -454,10 +455,9 @@ export function CommunityFeed() {
                 </Link>
                 <CommunityShareButton
                   url={absoluteShareUrl(
-                    post.href ||
-                      (post.source === "post" || !post.source
-                        ? `/community/${post.id}`
-                        : "/community")
+                    post.source === "post" || !post.source
+                      ? communitySharePath(post.id)
+                      : post.href || "/community"
                   )}
                   title={post.title}
                   body={post.body}
