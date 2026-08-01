@@ -43,6 +43,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const description = shareExcerpt(post.body, 180);
   const image = firstImageAttachment(post.attachmentsJson);
   const imageUrl = image ? absoluteMediaUrl(image.url) : undefined;
+  const imageType =
+    image?.contentType?.startsWith("image/") ? image.contentType : "image/jpeg";
   const url = `${getAppUrl()}${communitySharePath(post.id)}`;
 
   return {
@@ -61,9 +63,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
             {
               url: imageUrl,
               secureUrl: imageUrl,
-              type: image.contentType?.startsWith("image/")
-                ? image.contentType
-                : "image/jpeg",
+              type: imageType,
               width: 1200,
               height: 630,
               alt: title,
