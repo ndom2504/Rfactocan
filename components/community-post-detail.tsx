@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
+import {
+  absoluteShareUrl,
+  CommunityShareButton,
+} from "@/components/community-share-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import type { CommunityAttachment } from "@/lib/community";
@@ -241,6 +245,12 @@ export function CommunityPostDetail() {
           >
             {t("community_comment_action")}
           </a>
+          <CommunityShareButton
+            url={absoluteShareUrl(`/community/${post.id}`)}
+            title={post.title}
+            body={post.body}
+            className="[&_button]:bg-[var(--surface-2)]"
+          />
         </div>
       </article>
 

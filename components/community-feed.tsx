@@ -4,6 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
+import {
+  absoluteShareUrl,
+  CommunityShareButton,
+} from "@/components/community-share-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import {
@@ -448,6 +452,16 @@ export function CommunityFeed() {
                 >
                   {t("community_see")}
                 </Link>
+                <CommunityShareButton
+                  url={absoluteShareUrl(
+                    post.href ||
+                      (post.source === "post" || !post.source
+                        ? `/community/${post.id}`
+                        : "/community")
+                  )}
+                  title={post.title}
+                  body={post.body}
+                />
               </div>
               {post.isOwner &&
                 (post.source === "post" || !post.source) && (
