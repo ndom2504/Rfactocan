@@ -34,6 +34,18 @@
   --font-display: var(--font-display);
 }
 
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--rfacto-green-dark);
+  }
+}
+
 body {
   background:
     radial-gradient(
@@ -49,16 +61,6 @@ body {
     linear-gradient(180deg, #f7f8f3 0%, var(--background) 42%, #ebeee6 100%);
   color: var(--foreground);
   min-height: 100vh;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-::selection {
-  background: var(--accent-soft);
-  color: var(--rfacto-green-dark);
 }
 
 /* Official primary button look (also mirrored by Button default variant) */

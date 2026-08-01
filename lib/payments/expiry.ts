@@ -122,6 +122,57 @@ export async function expireBookingPayment(
 }
 
 /**
+ * Hard-delete a pending offer (PROPOSED / AWAITING_PAYMENT) after cancelling
+ * any open payment authorization. Cascades related payment/messages/events.
+ */
+export async function deletePendingBookingOffer(
+  bookingId: string,
+  deletedById?: string | null
+) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      request: { select: { fromCity: true, toCity: true } },
+      payment: true,
+      trip: { select: { userId: true } },
+    },
+  });
+  if (!booking) return null;
+  if (!["PROPOSED", "AWAITING_PAYMENT"].includes(booking.status)) {
+    return { error: "NOT_PENDING" as const, booking };
+  }
+
+  if (isStripeConfigured() && booking.payment) {
+    try {
+      await getPaymentProvider().cancelAuthorization(bookingId);
+    } catch (error) {
+      console.error("cancelAuthorization before delete", error);
+    }
+  }
+
+  const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
+
+  await prisma.booking.delete({ where: { id: bookingId } });
+
+  void notifyUser({
+    userId: booking.senderId,
+    type: "booking_cancelled",
+    title: "Offre supprimée",
+    body: `Une offre en attente a été supprimée par l'admin · ${route}`,
+    href: "/bookings",
+  });
+  void notifyUser({
+    userId: booking.trip.userId,
+    type: "booking_cancelled",
+    title: "Offre supprimée",
+    body: `Une offre en attente a été supprimée par l'admin · ${route}`,
+    href: "/bookings",
+  });
+
+  return { ok: true as const, deletedId: bookingId, deletedById: deletedById ?? null };
+}
+
+/**
  * First successful payment wins: mark request MATCHED and cancel rival offers.
  */
 export async function markRequestMatchedOnPayment(

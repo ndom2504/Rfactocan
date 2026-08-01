@@ -313,6 +313,30 @@ export default function AdminPage() {
     await load();
   }
 
+  async function deleteBooking(bookingId: string) {
+    if (
+      !confirm(
+        "Supprimer définitivement cette offre / paiement en attente ? Cette action est irréversible."
+      )
+    ) {
+      return;
+    }
+    const res = await fetch("/api/admin", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete_booking",
+        bookingId,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      window.alert(data.error ?? "Suppression impossible");
+      return;
+    }
+    await load();
+  }
+
   async function resolveReport(reportId: string) {
     await fetch("/api/reports", {
       method: "PATCH",
@@ -450,6 +474,13 @@ export default function AdminPage() {
                 >
                   Annuler (charte)
                 </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => void deleteBooking(b.id)}
+                >
+                  Supprimer
+                </Button>
               </div>
             </div>
           </Card>
@@ -566,8 +597,8 @@ export default function AdminPage() {
           Pièces d&apos;identité manuelles
         </h2>
         <p className="text-sm text-[var(--muted)]">
-          Dossiers envoyés via le profil (fallback si Stripe Identity échoue),
-          y compris quand le KYC est « Action requise ».
+          Dossiers manuels en attente (uniquement si le KYC Stripe n&apos;est
+          pas encore validé).
           {(data.pendingManualIds?.length ?? 0) === 0
             ? " Aucune pièce à revoir."
             : ` ${data.pendingManualIds!.length} dossier(s).`}
@@ -747,7 +778,8 @@ export default function AdminPage() {
                   <Badge>
                     KYC: {KYC_STATUS_LABELS[u.kycStatus] ?? u.kycStatus}
                   </Badge>
-                  {u.manualIdDocStatus === "SUBMITTED" && (
+                  {u.manualIdDocStatus === "SUBMITTED" &&
+                    u.kycStatus !== "VERIFIED" && (
                     <Badge className="bg-amber-100 text-amber-900">
                       Pièce manuelle à valider
                     </Badge>
@@ -764,7 +796,8 @@ export default function AdminPage() {
                       Pièce manuelle OK
                     </Badge>
                   )}
-                  {u.manualIdDocStatus === "REJECTED" && (
+                  {u.manualIdDocStatus === "REJECTED" &&
+                    u.kycStatus !== "VERIFIED" && (
                     <Badge>Pièce manuelle refusée</Badge>
                   )}
                   {u.stripeConnectChargesEnabled && (

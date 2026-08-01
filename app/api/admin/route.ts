@@ -6,7 +6,7 @@ import {
 } from "@/lib/ambassador";
 import { getSessionUser } from "@/lib/auth";
 import { emailAmbassadorInvite } from "@/lib/email";
-import { expireBookingPayment } from "@/lib/payments/expiry";
+import { expireBookingPayment, deletePendingBookingOffer } from "@/lib/payments/expiry";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -183,15 +183,9 @@ export async function GET(request: Request) {
     where: {
       AND: [
         { manualIdDocUrl: { not: null } },
-        {
-          OR: [
-            { manualIdDocStatus: "SUBMITTED" },
-            { manualIdDocStatus: "REJECTED" },
-            { kycStatus: "REQUIRES_INPUT" },
-            { kycStatus: "PENDING" },
-            { kycStatus: "FAILED" },
-          ],
-        },
+        { manualIdDocStatus: "SUBMITTED" },
+        // Stripe/admin KYC already done — no need to review a leftover upload
+        { kycStatus: { not: "VERIFIED" } },
       ],
     },
     orderBy: { manualIdDocUploadedAt: "desc" },
@@ -365,7 +359,7 @@ const userPatchSchema = z.object({
 });
 
 const bookingPatchSchema = z.object({
-  action: z.literal("cancel_booking"),
+  action: z.enum(["cancel_booking", "delete_booking"]),
   bookingId: z.string(),
   reason: z.enum(["ADMIN_CHARTER"]).default("ADMIN_CHARTER"),
 });
@@ -379,7 +373,7 @@ export async function PATCH(request: Request) {
   try {
     const raw = await request.json();
 
-    if (raw.action === "cancel_booking") {
+    if (raw.action === "cancel_booking" || raw.action === "delete_booking") {
       const body = bookingPatchSchema.parse(raw);
       const existing = await prisma.booking.findUnique({
         where: { id: body.bookingId },
@@ -395,11 +389,26 @@ export async function PATCH(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Seules les offres proposées ou en attente de paiement peuvent être annulées.",
+              "Seules les offres proposées ou en attente de paiement peuvent être traitées.",
           },
           { status: 400 }
         );
       }
+
+      if (body.action === "delete_booking") {
+        const result = await deletePendingBookingOffer(
+          body.bookingId,
+          session.id
+        );
+        if (!result || ("error" in result && result.error === "NOT_PENDING")) {
+          return NextResponse.json(
+            { error: "Cette offre ne peut pas être supprimée." },
+            { status: 400 }
+          );
+        }
+        return NextResponse.json({ ok: true, deletedId: body.bookingId });
+      }
+
       const booking = await expireBookingPayment(
         body.bookingId,
         body.reason,

@@ -148,6 +148,10 @@ export async function syncIdentitySessionStatus(
         kycStatus: "VERIFIED",
         kycVerifiedAt: new Date(),
         verifiedAt: new Date(),
+        // Close leftover manual ID fallback once Stripe KYC succeeds
+        ...(user.manualIdDocUrl || user.manualIdDocStatus === "SUBMITTED"
+          ? { manualIdDocStatus: "APPROVED" as const }
+          : {}),
       },
     });
   }

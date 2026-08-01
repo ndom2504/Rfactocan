@@ -8,13 +8,13 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[var(--rfacto-green)] text-white hover:bg-[var(--rfacto-green-light)]",
+          "bg-[var(--rfacto-green)] !text-white hover:bg-[var(--rfacto-green-light)] hover:!text-white",
         secondary:
           "bg-[var(--surface-2)] text-[var(--foreground)] hover:bg-[var(--surface-3)]",
         outline:
-          "border border-[var(--border)] bg-transparent hover:bg-[var(--surface-2)]",
-        ghost: "hover:bg-[var(--surface-2)]",
-        danger: "bg-red-700 text-white hover:bg-red-800",
+          "border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--surface-2)]",
+        ghost: "text-[var(--foreground)] hover:bg-[var(--surface-2)]",
+        danger: "bg-red-700 !text-white hover:bg-red-800 hover:!text-white",
         gold: "bg-[var(--rfacto-gold)] text-[var(--rfacto-green-dark)] hover:brightness-105",
       },
       size: {
@@ -38,7 +38,7 @@ export interface ButtonProps
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => (
     <button
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size }), className)}
       ref={ref}
       {...props}
     />
