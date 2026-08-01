@@ -299,7 +299,7 @@ const dict = {
     shops_highlights_placeholder:
       "Ex. Écran AMOLED, 5G, batterie longue durée…",
     shops_electronics_specs: "Fiche électronique",
-    publish_order_cta: "Publier une commande",
+    publish_order_cta: "Commander",
     search_travelers: "Trouver un livreur",
     search_travelers_hint:
       "Filtrez par nom, pays, ville ou région (départ ou arrivée).",
@@ -1346,7 +1346,7 @@ const dict = {
     shops_highlights_placeholder:
       "E.g. AMOLED display, 5G, long battery life…",
     shops_electronics_specs: "Electronics specs",
-    publish_order_cta: "Publish an order",
+    publish_order_cta: "Order",
     search_travelers: "Find a carrier",
     search_travelers_hint:
       "Filter by name, country, city or region (origin or destination).",
