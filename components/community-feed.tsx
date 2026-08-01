@@ -36,6 +36,8 @@ type FeedPost = {
     verified: boolean;
     ratingAvg: number;
     ratingCount: number;
+    connectionCount?: number;
+    connectedByMe?: boolean;
   };
 };
 
@@ -144,6 +146,44 @@ export function CommunityFeed() {
     if (!confirm(t("community_delete_confirm"))) return;
     const res = await fetch(`/api/community/posts/${id}`, { method: "DELETE" });
     if (res.ok) setPosts((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  async function toggleConnect(authorId: string, currentlyConnected: boolean) {
+    try {
+      const res = await fetch(
+        currentlyConnected
+          ? `/api/connections?userId=${encodeURIComponent(authorId)}`
+          : "/api/connections",
+        currentlyConnected
+          ? { method: "DELETE" }
+          : {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: authorId }),
+            }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur");
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.author.id === authorId
+            ? {
+                ...p,
+                author: {
+                  ...p.author,
+                  connectedByMe: Boolean(data.connected),
+                  connectionCount:
+                    typeof data.connectionCount === "number"
+                      ? data.connectionCount
+                      : p.author.connectionCount ?? 0,
+                },
+              }
+            : p
+        )
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    }
   }
 
   return (
@@ -296,12 +336,24 @@ export function CommunityFeed() {
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
           {posts.map((post) => (
             <li key={post.id} className="py-4">
-              <div className="flex gap-3 px-0 sm:px-0">
-                <UserAvatar
-                  name={post.author.displayName}
-                  avatarUrl={post.author.avatarUrl}
-                  size="md"
-                />
+              <div className="flex gap-3">
+                <div className="flex shrink-0 flex-col items-center gap-1">
+                  <UserAvatar
+                    name={post.author.displayName}
+                    avatarUrl={post.author.avatarUrl}
+                    size="md"
+                  />
+                  <p
+                    className="max-w-[4.5rem] text-center text-[10px] leading-tight text-[var(--muted)]"
+                    title={t("community_connections")}
+                  >
+                    <span className="font-semibold text-[var(--foreground)]">
+                      {post.author.connectionCount ?? 0}
+                    </span>
+                    <br />
+                    {t("community_connections")}
+                  </p>
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                     <span className="font-semibold">{post.author.displayName}</span>
@@ -356,23 +408,35 @@ export function CommunityFeed() {
                 </p>
               )}
               <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
+                <button
+                  type="button"
+                  title={t("community_connect_hint")}
+                  disabled={post.isOwner}
+                  onClick={() =>
+                    void toggleConnect(
+                      post.author.id,
+                      Boolean(post.author.connectedByMe)
+                    )
+                  }
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
+                    post.author.connectedByMe
+                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+                  }`}
+                >
+                  {post.author.connectedByMe
+                    ? t("community_connected")
+                    : t("community_connect")}
+                </button>
                 <Link
                   href={
-                    post.href ||
-                    (post.source === "post" || !post.source
-                      ? `/community/${post.id}`
-                      : "/messages")
+                    post.source === "post" || !post.source
+                      ? `/community/${post.id}#comments`
+                      : post.href || "/community"
                   }
-                  title={t("community_connect_hint")}
                   className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
                 >
-                  {t("community_connect")}
-                </Link>
-                <Link
-                  href="/messages"
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-                >
-                  {t("community_message")}
+                  {t("community_comment_action")}
                 </Link>
                 <Link
                   href={

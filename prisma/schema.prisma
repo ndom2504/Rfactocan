@@ -241,6 +241,8 @@ model User {
   deviceTokens     DeviceToken[]
   communityPosts   CommunityPost[]
   communityComments CommunityComment[]
+  connectionsFrom  UserConnection[] @relation("ConnectionsFrom")
+  connectionsTo    UserConnection[] @relation("ConnectionsTo")
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -725,4 +727,19 @@ model CommunityComment {
   @@index([postId, createdAt])
   @@index([parentId])
   @@index([authorId])
+}
+
+/// Follow / “Connecter” — follower subscribes to following’s community presence.
+model UserConnection {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("ConnectionsFrom", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("ConnectionsTo", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+  @@index([followerId])
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { parseAttachmentsJson } from "@/lib/community";
+import { loadAuthorConnections } from "@/lib/connections";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -42,6 +43,12 @@ export async function GET(_request: Request, { params }: Params) {
     select: { viewCount: true },
   });
 
+  const connMap = await loadAuthorConnections(session.id, [post.author.id]);
+  const stats = connMap.get(post.author.id) ?? {
+    connectionCount: 0,
+    connectedByMe: false,
+  };
+
   return NextResponse.json({
     post: {
       id: post.id,
@@ -65,6 +72,8 @@ export async function GET(_request: Request, { params }: Params) {
         verified: post.author.kycStatus === "VERIFIED",
         ratingAvg: post.author.ratingAvg,
         ratingCount: post.author.ratingCount,
+        connectionCount: stats.connectionCount,
+        connectedByMe: stats.connectedByMe,
       },
     },
   });

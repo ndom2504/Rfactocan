@@ -7,6 +7,7 @@ import {
   parseAttachmentsJson,
   type CommunityAttachment,
 } from "@/lib/community";
+import { loadAuthorConnections } from "@/lib/connections";
 import { prisma } from "@/lib/prisma";
 
 const kindSchema = z.enum(["BUSINESS", "OPPORTUNITY", "COMMUNITY"]);
@@ -34,6 +35,8 @@ type FeedAuthor = {
   verified: boolean;
   ratingAvg: number;
   ratingCount: number;
+  connectionCount: number;
+  connectedByMe: boolean;
 };
 
 type FeedItem = {
@@ -93,6 +96,8 @@ function serializePost(post: {
       verified: post.author.kycStatus === "VERIFIED",
       ratingAvg: post.author.ratingAvg,
       ratingCount: post.author.ratingCount,
+      connectionCount: 0,
+      connectedByMe: false,
     },
     isOwner: false,
     viewCount: post.viewCount ?? 0,
@@ -250,6 +255,8 @@ export async function GET(request: Request) {
           verified: author.kycStatus === "VERIFIED",
           ratingAvg: author.ratingAvg,
           ratingCount: author.ratingCount,
+          connectionCount: 0,
+          connectedByMe: false,
         },
         isOwner: author.id === session.id,
         viewCount: 0,
@@ -286,6 +293,8 @@ export async function GET(request: Request) {
           verified: author.kycStatus === "VERIFIED",
           ratingAvg: author.ratingAvg,
           ratingCount: author.ratingCount,
+          connectionCount: 0,
+          connectedByMe: false,
         },
         isOwner: author.id === session.id,
         viewCount: 0,
@@ -320,6 +329,8 @@ export async function GET(request: Request) {
           verified: author.kycStatus === "VERIFIED",
           ratingAvg: author.ratingAvg,
           ratingCount: author.ratingCount,
+          connectionCount: 0,
+          connectedByMe: false,
         },
         isOwner: author.id === session.id,
         viewCount: 0,
@@ -333,8 +344,21 @@ export async function GET(request: Request) {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
+  const slice = feed.slice(0, take);
+  const connMap = await loadAuthorConnections(
+    session.id,
+    slice.map((p) => p.author.id)
+  );
+  for (const item of slice) {
+    const stats = connMap.get(item.author.id);
+    if (stats) {
+      item.author.connectionCount = stats.connectionCount;
+      item.author.connectedByMe = stats.connectedByMe;
+    }
+  }
+
   return NextResponse.json({
-    posts: feed.slice(0, take),
+    posts: slice,
   });
 }
 

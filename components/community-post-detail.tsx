@@ -17,6 +17,8 @@ type Author = {
   avatarUrl: string | null;
   bio?: string | null;
   verified?: boolean;
+  connectionCount?: number;
+  connectedByMe?: boolean;
 };
 
 type Post = {
@@ -83,6 +85,43 @@ export function CommunityPostDetail() {
     if (id) void load();
   }, [id, load]);
 
+  async function toggleConnect() {
+    if (!post || post.isOwner) return;
+    const currently = Boolean(post.author.connectedByMe);
+    const res = await fetch(
+      currently
+        ? `/api/connections?userId=${encodeURIComponent(post.author.id)}`
+        : "/api/connections",
+      currently
+        ? { method: "DELETE" }
+        : {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: post.author.id }),
+          }
+    );
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Erreur");
+      return;
+    }
+    setPost((p) =>
+      p
+        ? {
+            ...p,
+            author: {
+              ...p.author,
+              connectedByMe: Boolean(data.connected),
+              connectionCount:
+                typeof data.connectionCount === "number"
+                  ? data.connectionCount
+                  : p.author.connectionCount ?? 0,
+            },
+          }
+        : p
+    );
+  }
+
   const roots = useMemo(
     () => comments.filter((c) => !c.parentId),
     [comments]
@@ -142,11 +181,20 @@ export function CommunityPostDetail() {
 
       <article className="space-y-3 border-b border-[var(--border)] pb-6">
         <div className="flex gap-3">
-          <UserAvatar
-            name={post.author.displayName}
-            avatarUrl={post.author.avatarUrl}
-            size="md"
-          />
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <UserAvatar
+              name={post.author.displayName}
+              avatarUrl={post.author.avatarUrl}
+              size="md"
+            />
+            <p className="max-w-[4.5rem] text-center text-[10px] leading-tight text-[var(--muted)]">
+              <span className="font-semibold text-[var(--foreground)]">
+                {post.author.connectionCount ?? 0}
+              </span>
+              <br />
+              {t("community_connections")}
+            </p>
+          </div>
           <div>
             <p className="font-semibold">{post.author.displayName}</p>
             <p className="text-xs text-[var(--muted)]">
@@ -172,22 +220,31 @@ export function CommunityPostDetail() {
           {t("community_comments")}
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
-          <Link
-            href="/messages"
+          <button
+            type="button"
+            title={t("community_connect_hint")}
+            disabled={post.isOwner}
+            onClick={() => void toggleConnect()}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
+              post.author.connectedByMe
+                ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                : "bg-[var(--surface-2)]"
+            }`}
+          >
+            {post.author.connectedByMe
+              ? t("community_connected")
+              : t("community_connect")}
+          </button>
+          <a
+            href="#comments"
             className="rounded-md bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium"
           >
-            {t("community_connect")}
-          </Link>
-          <Link
-            href="/messages"
-            className="rounded-md bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium"
-          >
-            {t("community_message")}
-          </Link>
+            {t("community_comment_action")}
+          </a>
         </div>
       </article>
 
-      <section className="space-y-4">
+      <section id="comments" className="space-y-4 scroll-mt-24">
         <h2 className="text-lg font-semibold">{t("community_comments")}</h2>
         <div className="space-y-2">
           {replyTo && (
