@@ -34,6 +34,9 @@ const dict = {
     community_empty: "Aucune publication pour le moment. Soyez le premier.",
     community_delete: "Supprimer",
     community_delete_confirm: "Supprimer cette publication ?",
+    community_connect: "Connecter",
+    community_message: "Message",
+    community_see: "Voir",
     services_title: "Colis & services",
     services_subtitle:
       "Parcourez les catégories ou publiez une offre : sport, vente, informatique, hébergement…",
@@ -1107,6 +1110,9 @@ const dict = {
     community_empty: "No posts yet. Be the first.",
     community_delete: "Delete",
     community_delete_confirm: "Delete this post?",
+    community_connect: "Connect",
+    community_message: "Message",
+    community_see: "View",
     services_title: "Parcels & services",
     services_subtitle:
       "Browse categories or publish an offer: sport, sales, IT, lodging…",
