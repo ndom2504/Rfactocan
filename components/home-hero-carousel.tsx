@@ -181,7 +181,7 @@ export function HomeHeroCarousel({ startHref }: Props) {
               <Link href={startHref} className="sm:flex-1">
                 <Button
                   size="lg"
-                  className="h-12 w-full bg-white text-base font-semibold text-[var(--hero-from)] shadow-lg shadow-black/20 hover:bg-white/90"
+                  className="h-12 w-full bg-white text-base font-semibold !text-[var(--rfacto-green-dark)] shadow-lg shadow-black/20 hover:bg-white/90 hover:!text-[var(--rfacto-green-dark)]"
                 >
                   {t("cta_start_here")}
                 </Button>

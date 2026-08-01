@@ -37,7 +37,7 @@ function toAppMediaUrl(blobUrl: string) {
 async function uploadFile(
   file: File,
   userId: string,
-  folder: "uploads" | "id-docs"
+  folder: "uploads" | "id-docs" | "community"
 ) {
   const ext = extensionFor(file.type);
   const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -74,6 +74,11 @@ export async function uploadImage(file: File, userId: string) {
 /** Private ID document (images or PDF). Prefer blobUrl for admin-only serving. */
 export async function uploadIdDocument(file: File, userId: string) {
   return uploadFile(file, userId, "id-docs");
+}
+
+/** Community feed attachments (images or PDF business docs). */
+export async function uploadCommunityFile(file: File, userId: string) {
+  return uploadFile(file, userId, "community");
 }
 
 /** Stream a private blob through our API (auth optional — URL is unguessable). */

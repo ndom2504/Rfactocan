@@ -7,6 +7,7 @@ const dict = {
   fr: {
     // Nav
     nav_dashboard: "Tableau de bord",
+    nav_community: "Communauté",
     nav_trips: "Voyager",
     nav_requests: "Commander",
     nav_services: "Services",
@@ -15,6 +16,24 @@ const dict = {
     nav_messages: "Messages",
     nav_profile: "Profil",
     nav_admin: "Admin",
+    community_title: "Communauté",
+    community_subtitle:
+      "Réseau pro Rfacto — affaires, opportunités et vie communautaire.",
+    community_guidelines:
+      "Publiez uniquement des contenus liés aux affaires, aux opportunités commerciales ou à la communauté Rfacto. Pas de contenu hors cadre professionnel.",
+    community_kind_business: "Affaires",
+    community_kind_opportunity: "Opportunités",
+    community_kind_community: "Communauté",
+    community_title_placeholder: "Titre (optionnel)",
+    community_body_placeholder:
+      "Partagez une annonce, une opportunité ou une info communautaire…",
+    community_attach: "Joindre un fichier",
+    community_attach_hint: "Images (jpeg/png/webp, 2 Mo) ou PDF (5 Mo), max 3.",
+    community_attachments_max: "Maximum 3 fichiers par publication.",
+    community_publish: "Publier",
+    community_empty: "Aucune publication pour le moment. Soyez le premier.",
+    community_delete: "Supprimer",
+    community_delete_confirm: "Supprimer cette publication ?",
     services_title: "Colis & services",
     services_subtitle:
       "Parcourez les catégories ou publiez une offre : sport, vente, informatique, hébergement…",
@@ -1058,6 +1077,7 @@ const dict = {
   },
   en: {
     nav_dashboard: "Dashboard",
+    nav_community: "Community",
     nav_trips: "Travel",
     nav_requests: "Order",
     nav_services: "Services",
@@ -1069,6 +1089,24 @@ const dict = {
     nav_login: "Log in",
     nav_signup: "Sign up",
     verified: "Verified",
+    community_title: "Community",
+    community_subtitle:
+      "Rfacto pro network — business, opportunities and community life.",
+    community_guidelines:
+      "Only post content related to business, commercial opportunities, or the Rfacto community. No off-topic content.",
+    community_kind_business: "Business",
+    community_kind_opportunity: "Opportunities",
+    community_kind_community: "Community",
+    community_title_placeholder: "Title (optional)",
+    community_body_placeholder:
+      "Share an announcement, opportunity or community update…",
+    community_attach: "Attach a file",
+    community_attach_hint: "Images (jpeg/png/webp, 2 MB) or PDF (5 MB), max 3.",
+    community_attachments_max: "Maximum 3 files per post.",
+    community_publish: "Publish",
+    community_empty: "No posts yet. Be the first.",
+    community_delete: "Delete",
+    community_delete_confirm: "Delete this post?",
     services_title: "Parcels & services",
     services_subtitle:
       "Browse categories or publish an offer: sport, sales, IT, lodging…",

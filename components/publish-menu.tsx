@@ -6,6 +6,7 @@ import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 
 const PUBLISH_LINKS = [
+  { href: "/community", labelKey: "community_publish" as const },
   { href: "/trips/new", labelKey: "publish_trip_cta" as const },
   { href: "/services/new", labelKey: "publish_service_cta" as const },
   { href: "/shops/new", labelKey: "publish_shop_cta" as const },

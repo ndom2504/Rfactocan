@@ -239,6 +239,7 @@ model User {
   loginOtps        LoginOtp[]
   notifications    Notification[]
   deviceTokens     DeviceToken[]
+  communityPosts   CommunityPost[]
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -668,4 +669,37 @@ model Dispute {
   @@index([bookingId, createdAt])
   @@index([status])
   @@index([openedById])
+}
+
+/// Feed posts: business, opportunities, community (pro network)
+enum CommunityPostKind {
+  BUSINESS
+  OPPORTUNITY
+  COMMUNITY
+}
+
+enum CommunityPostStatus {
+  OPEN
+  HIDDEN
+  REMOVED
+}
+
+model CommunityPost {
+  id              String              @id @default(cuid())
+  authorId        String
+  kind            CommunityPostKind
+  title           String?
+  body            String
+  /// JSON array: [{ url, name, contentType, size }]
+  attachmentsJson String              @default("[]")
+  status          CommunityPostStatus @default(OPEN)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([kind, createdAt])
+  @@index([authorId, createdAt])
+  @@index([status, createdAt])
 }

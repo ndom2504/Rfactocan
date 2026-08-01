@@ -25,6 +25,7 @@ export default async function AppLayout({
 
   const links = [
     { href: "/dashboard", label: t(locale, "nav_dashboard") },
+    { href: "/community", label: t(locale, "nav_community") },
     { href: "/bookings", label: t(locale, "nav_bookings") },
     { href: "/messages", label: t(locale, "nav_messages") },
   ];
