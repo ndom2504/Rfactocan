@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
@@ -20,6 +21,8 @@ type FeedPost = {
   body: string;
   attachments: CommunityAttachment[];
   createdAt: string;
+  href?: string | null;
+  source?: "post" | "service" | "shop" | "trip";
   isOwner: boolean;
   author: {
     id: string;
@@ -270,7 +273,10 @@ export function CommunityFeed() {
                       </span>
                     )}
                     <span className="text-xs text-[var(--muted)]">
-                      {t(kindLabelKey[post.kind])} · {formatDate(post.createdAt)}
+                      {t(
+                        kindLabelKey[post.kind] ?? "community_kind_community"
+                      )}{" "}
+                      · {formatDate(post.createdAt)}
                     </span>
                   </div>
                   {post.author.bio && (
@@ -280,13 +286,27 @@ export function CommunityFeed() {
                   )}
                   {post.title && (
                     <h2 className="mt-2 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--accent)]">
-                      {post.title}
+                      {post.href ? (
+                        <Link href={post.href} className="hover:underline">
+                          {post.title}
+                        </Link>
+                      ) : (
+                        post.title
+                      )}
                     </h2>
                   )}
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
                     {post.body}
                   </p>
-                  {post.attachments.length > 0 && (
+                  {post.href && (
+                    <Link
+                      href={post.href}
+                      className="mt-2 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
+                    >
+                      {t("open")}
+                    </Link>
+                  )}
+                  {(post.attachments?.length ?? 0) > 0 && (
                     <div className="mt-3 space-y-2">
                       {post.attachments.map((a, i) =>
                         isImageAttachment(a.contentType) ? (
@@ -311,7 +331,8 @@ export function CommunityFeed() {
                       )}
                     </div>
                   )}
-                  {post.isOwner && (
+                  {post.isOwner &&
+                    (post.source === "post" || !post.source) && (
                     <button
                       type="button"
                       onClick={() => void removePost(post.id)}

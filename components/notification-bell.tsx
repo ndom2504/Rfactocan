@@ -82,7 +82,7 @@ export function NotificationBell({ locale }: { locale: Locale }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center p-4 pb-6 pt-16 sm:pb-10"
           role="dialog"
           aria-modal="true"
           aria-label={t(locale, "notifications")}
@@ -93,7 +93,7 @@ export function NotificationBell({ locale }: { locale: Locale }) {
             aria-label="Close"
             onClick={close}
           />
-          <div className="relative z-10 flex max-h-[min(80vh,32rem)] w-full max-w-md flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl">
+          <div className="relative z-10 flex max-h-[min(65vh,28rem)] w-full max-w-md flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-base font-semibold">
                 {t(locale, "notifications")}

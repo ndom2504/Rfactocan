@@ -25,6 +25,31 @@ const createSchema = z.object({
   attachments: z.array(attachmentSchema).max(3).optional(),
 });
 
+type FeedAuthor = {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  country: string | null;
+  verified: boolean;
+  ratingAvg: number;
+  ratingCount: number;
+};
+
+type FeedItem = {
+  id: string;
+  kind: string;
+  title: string | null;
+  body: string;
+  attachments: CommunityAttachment[];
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+  href: string | null;
+  source: "post" | "service" | "shop" | "trip";
+  author: FeedAuthor;
+  isOwner: boolean;
+};
+
 function serializePost(post: {
   id: string;
   kind: string;
@@ -44,7 +69,7 @@ function serializePost(post: {
     ratingAvg: number;
     ratingCount: number;
   };
-}) {
+}): FeedItem {
   return {
     id: post.id,
     kind: post.kind,
@@ -53,6 +78,8 @@ function serializePost(post: {
     attachments: parseAttachmentsJson(post.attachmentsJson),
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
+    href: null,
+    source: "post",
     author: {
       id: post.author.id,
       displayName: post.author.displayName,
@@ -63,8 +90,13 @@ function serializePost(post: {
       ratingAvg: post.author.ratingAvg,
       ratingCount: post.author.ratingCount,
     },
-    isOwner: false as boolean,
+    isOwner: false,
   };
+}
+
+function matchesKindFilter(kind: string, filter: string) {
+  if (!filter) return true;
+  return kind === filter;
 }
 
 export async function GET(request: Request) {
@@ -80,36 +112,216 @@ export async function GET(request: Request) {
     80
   );
 
-  const posts = await prisma.communityPost.findMany({
-    where: {
-      status: "OPEN",
-      ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
-        ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
-        : {}),
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          displayName: true,
-          avatarUrl: true,
-          bio: true,
-          country: true,
-          kycStatus: true,
-          ratingAvg: true,
-          ratingCount: true,
+  const feed: FeedItem[] = [];
+
+  try {
+    const posts = await prisma.communityPost.findMany({
+      where: {
+        status: "OPEN",
+        ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
+          ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
+          : {}),
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+            bio: true,
+            country: true,
+            kycStatus: true,
+            ratingAvg: true,
+            ratingCount: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-    take,
-  });
+      orderBy: { createdAt: "desc" },
+      take,
+    });
+    for (const p of posts) {
+      feed.push({
+        ...serializePost(p),
+        isOwner: p.authorId === session.id || session.role === "ADMIN",
+      });
+    }
+  } catch (error) {
+    console.error("CommunityPost query failed (table missing on DB?):", error);
+  }
+
+  // Same réseau pro items Android surfaced (services / boutiques / voyages)
+  const includeNetwork =
+    !kind ||
+    kind === "BUSINESS" ||
+    kind === "OPPORTUNITY" ||
+    kind === "COMMUNITY";
+
+  if (includeNetwork) {
+    const [services, shops, trips] = await Promise.all([
+      matchesKindFilter("BUSINESS", kind) || matchesKindFilter("COMMUNITY", kind)
+        ? prisma.serviceListing.findMany({
+            where: { status: "OPEN" },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  bio: true,
+                  country: true,
+                  kycStatus: true,
+                  ratingAvg: true,
+                  ratingCount: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 25,
+          })
+        : Promise.resolve([]),
+      matchesKindFilter("BUSINESS", kind)
+        ? prisma.shop.findMany({
+            where: { status: "OPEN" },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  bio: true,
+                  country: true,
+                  kycStatus: true,
+                  ratingAvg: true,
+                  ratingCount: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 20,
+          })
+        : Promise.resolve([]),
+      matchesKindFilter("OPPORTUNITY", kind) || matchesKindFilter("COMMUNITY", kind)
+        ? prisma.trip.findMany({
+            where: { status: "OPEN" },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  bio: true,
+                  country: true,
+                  kycStatus: true,
+                  ratingAvg: true,
+                  ratingCount: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 20,
+          })
+        : Promise.resolve([]),
+    ]);
+
+    for (const s of services) {
+      const author = s.user;
+      feed.push({
+        id: `svc:${s.id}`,
+        kind: "BUSINESS",
+        title: s.title,
+        body: s.description,
+        attachments: [],
+        createdAt: s.createdAt,
+        href: `/services/listing/${s.id}`,
+        source: "service",
+        author: {
+          id: author.id,
+          displayName: author.displayName,
+          avatarUrl: author.avatarUrl,
+          bio: author.bio,
+          country: author.country ?? s.country,
+          verified: author.kycStatus === "VERIFIED",
+          ratingAvg: author.ratingAvg,
+          ratingCount: author.ratingCount,
+        },
+        isOwner: author.id === session.id,
+      });
+    }
+
+    for (const shop of shops) {
+      const author = shop.user;
+      feed.push({
+        id: `shop:${shop.id}`,
+        kind: "BUSINESS",
+        title: shop.name,
+        body: shop.description?.trim() || shop.name,
+        attachments: shop.logoUrl
+          ? [
+              {
+                url: shop.logoUrl,
+                name: shop.name,
+                contentType: "image/jpeg",
+                size: 0,
+              },
+            ]
+          : [],
+        createdAt: shop.createdAt,
+        href: `/shops/${shop.id}`,
+        source: "shop",
+        author: {
+          id: author.id,
+          displayName: author.displayName,
+          avatarUrl: author.avatarUrl ?? shop.logoUrl,
+          bio: author.bio,
+          country: author.country ?? shop.country,
+          verified: author.kycStatus === "VERIFIED",
+          ratingAvg: author.ratingAvg,
+          ratingCount: author.ratingCount,
+        },
+        isOwner: author.id === session.id,
+      });
+    }
+
+    for (const trip of trips) {
+      const author = trip.user;
+      feed.push({
+        id: `trip:${trip.id}`,
+        kind: "OPPORTUNITY",
+        title: `${trip.fromCity} → ${trip.toCity}`,
+        body: [
+          trip.weightKg != null ? `Capacité ${trip.weightKg} kg` : null,
+          trip.departAt
+            ? `Départ ${new Date(trip.departAt).toLocaleDateString("fr-CA")}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ") || "Voyage publié sur Rfacto",
+        attachments: [],
+        createdAt: trip.createdAt,
+        href: `/trips/${trip.id}`,
+        source: "trip",
+        author: {
+          id: author.id,
+          displayName: author.displayName,
+          avatarUrl: author.avatarUrl,
+          bio: author.bio,
+          country: author.country ?? trip.fromCountry,
+          verified: author.kycStatus === "VERIFIED",
+          ratingAvg: author.ratingAvg,
+          ratingCount: author.ratingCount,
+        },
+        isOwner: author.id === session.id,
+      });
+    }
+  }
+
+  feed.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   return NextResponse.json({
-    posts: posts.map((p) => ({
-      ...serializePost(p),
-      isOwner: p.authorId === session.id || session.role === "ADMIN",
-    })),
+    posts: feed.slice(0, take),
   });
 }
 
@@ -148,38 +360,49 @@ export async function POST(request: Request) {
 
   const kind = parsed.data.kind as CommunityPostKind;
 
-  const post = await prisma.communityPost.create({
-    data: {
-      authorId: session.id,
-      kind,
-      title: parsed.data.title?.trim() || null,
-      body: parsed.data.body.trim(),
-      attachmentsJson: JSON.stringify(attachments),
-      status: "OPEN",
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          displayName: true,
-          avatarUrl: true,
-          bio: true,
-          country: true,
-          kycStatus: true,
-          ratingAvg: true,
-          ratingCount: true,
+  try {
+    const post = await prisma.communityPost.create({
+      data: {
+        authorId: session.id,
+        kind,
+        title: parsed.data.title?.trim() || null,
+        body: parsed.data.body.trim(),
+        attachmentsJson: JSON.stringify(attachments),
+        status: "OPEN",
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+            bio: true,
+            country: true,
+            kycStatus: true,
+            ratingAvg: true,
+            ratingCount: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  return NextResponse.json(
-    {
-      post: {
-        ...serializePost(post),
-        isOwner: true,
+    return NextResponse.json(
+      {
+        post: {
+          ...serializePost(post),
+          isOwner: true,
+        },
       },
-    },
-    { status: 201 }
-  );
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("CommunityPost create failed:", error);
+    return NextResponse.json(
+      {
+        error:
+          "Publication impossible. Vérifiez que la table CommunityPost est créée en production (prisma/neon-community-posts.sql).",
+      },
+      { status: 500 }
+    );
+  }
 }
