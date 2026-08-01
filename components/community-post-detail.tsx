@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CommunityMediaGrid } from "@/components/community-media-grid";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
-import { isImageAttachment, type CommunityAttachment } from "@/lib/community";
+import type { CommunityAttachment } from "@/lib/community";
 import type { DictKey } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils";
 
@@ -161,29 +162,11 @@ export function CommunityPostDetail() {
         )}
         <p className="whitespace-pre-wrap text-sm leading-relaxed">{post.body}</p>
         {(post.attachments?.length ?? 0) > 0 && (
-          <div className="space-y-2">
-            {post.attachments.map((a, i) =>
-              isImageAttachment(a.contentType) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={`${post.id}-a-${i}`}
-                  src={a.url}
-                  alt={a.name}
-                  className="max-h-96 w-full rounded-lg object-cover"
-                />
-              ) : (
-                <a
-                  key={`${post.id}-a-${i}`}
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--accent)]"
-                >
-                  PDF · {a.name}
-                </a>
-              )
-            )}
-          </div>
+          <CommunityMediaGrid
+            attachments={post.attachments}
+            postId={post.id}
+            maxHeightClass="max-h-[640px]"
+          />
         )}
         <p className="text-xs text-[var(--muted)]">
           {post.viewCount} {t("community_views")} · {post.commentCount}{" "}

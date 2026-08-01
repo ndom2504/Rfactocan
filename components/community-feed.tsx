@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { CommunityMediaGrid } from "@/components/community-media-grid";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import {
@@ -294,8 +295,8 @@ export function CommunityFeed() {
       ) : (
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
           {posts.map((post) => (
-            <li key={post.id} className="py-5">
-              <div className="flex gap-3">
+            <li key={post.id} className="py-4">
+              <div className="flex gap-3 px-0 sm:px-0">
                 <UserAvatar
                   name={post.author.displayName}
                   avatarUrl={post.author.avatarUrl}
@@ -321,93 +322,79 @@ export function CommunityFeed() {
                       {post.author.bio}
                     </p>
                   )}
-                  {post.title && (
-                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--accent)]">
-                      {post.href ? (
-                        <Link href={post.href} className="hover:underline">
-                          {post.title}
-                        </Link>
-                      ) : (
-                        post.title
-                      )}
-                    </h2>
-                  )}
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
-                    {post.body}
-                  </p>
-                  {(post.source === "post" || !post.source) && (
-                    <p className="mt-2 text-xs text-[var(--muted)]">
-                      {post.viewCount ?? 0} {t("community_views")} ·{" "}
-                      {post.commentCount ?? 0} {t("community_comments")}
-                    </p>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
-                    <Link
-                      href={
-                        post.href ||
-                        (post.source === "post" || !post.source
-                          ? `/community/${post.id}`
-                          : "/messages")
-                      }
-                      title={t("community_connect_hint")}
-                      className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-                    >
-                      {t("community_connect")}
-                    </Link>
-                    <Link
-                      href="/messages"
-                      className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-                    >
-                      {t("community_message")}
-                    </Link>
-                    <Link
-                      href={
-                        post.source === "post" || !post.source
-                          ? `/community/${post.id}`
-                          : post.href || "/community"
-                      }
-                      className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent-soft)]"
-                    >
-                      {t("community_see")}
-                    </Link>
-                  </div>
-                  {(post.attachments?.length ?? 0) > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {post.attachments.map((a, i) =>
-                        isImageAttachment(a.contentType) ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            key={`${post.id}-a-${i}`}
-                            src={a.url}
-                            alt={a.name}
-                            className="max-h-80 w-full rounded-lg object-cover"
-                          />
-                        ) : (
-                          <a
-                            key={`${post.id}-a-${i}`}
-                            href={a.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--accent)] hover:bg-[var(--surface-2)]"
-                          >
-                            PDF · {a.name}
-                          </a>
-                        )
-                      )}
-                    </div>
-                  )}
-                  {post.isOwner &&
-                    (post.source === "post" || !post.source) && (
-                    <button
-                      type="button"
-                      onClick={() => void removePost(post.id)}
-                      className="mt-3 text-xs text-[var(--muted)] hover:text-red-700"
-                    >
-                      {t("community_delete")}
-                    </button>
-                  )}
                 </div>
               </div>
+
+              {post.title && (
+                <h2 className="mt-3 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--accent)]">
+                  {post.href ? (
+                    <Link href={post.href} className="hover:underline">
+                      {post.title}
+                    </Link>
+                  ) : (
+                    post.title
+                  )}
+                </h2>
+              )}
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
+                {post.body}
+              </p>
+
+              {(post.attachments?.length ?? 0) > 0 && (
+                <div className="mt-3 -mx-1 overflow-hidden sm:mx-0">
+                  <CommunityMediaGrid
+                    attachments={post.attachments}
+                    postId={post.id}
+                  />
+                </div>
+              )}
+
+              {(post.source === "post" || !post.source) && (
+                <p className="mt-2 text-xs text-[var(--muted)]">
+                  {post.viewCount ?? 0} {t("community_views")} ·{" "}
+                  {post.commentCount ?? 0} {t("community_comments")}
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
+                <Link
+                  href={
+                    post.href ||
+                    (post.source === "post" || !post.source
+                      ? `/community/${post.id}`
+                      : "/messages")
+                  }
+                  title={t("community_connect_hint")}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+                >
+                  {t("community_connect")}
+                </Link>
+                <Link
+                  href="/messages"
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+                >
+                  {t("community_message")}
+                </Link>
+                <Link
+                  href={
+                    post.source === "post" || !post.source
+                      ? `/community/${post.id}`
+                      : post.href || "/community"
+                  }
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                >
+                  {t("community_see")}
+                </Link>
+              </div>
+              {post.isOwner &&
+                (post.source === "post" || !post.source) && (
+                  <button
+                    type="button"
+                    onClick={() => void removePost(post.id)}
+                    className="mt-2 text-xs text-[var(--muted)] hover:text-red-700"
+                  >
+                    {t("community_delete")}
+                  </button>
+                )}
             </li>
           ))}
         </ul>
