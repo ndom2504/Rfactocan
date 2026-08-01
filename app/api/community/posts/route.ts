@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { CommunityPostKind } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth";
 import {
   COMMUNITY_POST_KINDS,
@@ -8,7 +9,7 @@ import {
 } from "@/lib/community";
 import { prisma } from "@/lib/prisma";
 
-const kinds = COMMUNITY_POST_KINDS as unknown as [string, ...string[]];
+const kindSchema = z.enum(["BUSINESS", "OPPORTUNITY", "COMMUNITY"]);
 
 const attachmentSchema = z.object({
   url: z.string().min(1).max(800),
@@ -18,7 +19,7 @@ const attachmentSchema = z.object({
 });
 
 const createSchema = z.object({
-  kind: z.enum(kinds),
+  kind: kindSchema,
   title: z.string().trim().max(120).optional(),
   body: z.string().trim().min(10).max(4000),
   attachments: z.array(attachmentSchema).max(3).optional(),
@@ -145,10 +146,12 @@ export async function POST(request: Request) {
     }
   }
 
+  const kind = parsed.data.kind as CommunityPostKind;
+
   const post = await prisma.communityPost.create({
     data: {
       authorId: session.id,
-      kind: parsed.data.kind,
+      kind,
       title: parsed.data.title?.trim() || null,
       body: parsed.data.body.trim(),
       attachmentsJson: JSON.stringify(attachments),

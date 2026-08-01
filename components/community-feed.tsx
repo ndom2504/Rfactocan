@@ -10,6 +10,7 @@ import {
   type CommunityAttachment,
   type CommunityPostKindId,
 } from "@/lib/community";
+import type { DictKey } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils";
 
 type FeedPost = {
@@ -32,7 +33,7 @@ type FeedPost = {
   };
 };
 
-const kindLabelKey: Record<CommunityPostKindId, string> = {
+const kindLabelKey: Record<CommunityPostKindId, DictKey> = {
   BUSINESS: "community_kind_business",
   OPPORTUNITY: "community_kind_opportunity",
   COMMUNITY: "community_kind_community",
