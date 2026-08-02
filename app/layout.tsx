@@ -51,9 +51,9 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        // New light JPEG URL — WhatsApp often skips heavy PNGs and caches old previews.
-        url: "https://www.rfacto.com/og-share.jpg",
-        secureUrl: "https://www.rfacto.com/og-share.jpg",
+        // Cache-bust filename — WhatsApp/Facebook keep old OG previews for a long time.
+        url: "https://www.rfacto.com/og-communaute.jpg",
+        secureUrl: "https://www.rfacto.com/og-communaute.jpg",
         type: "image/jpeg",
         width: 1200,
         height: 675,
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["https://www.rfacto.com/og-share.jpg"],
+    images: ["https://www.rfacto.com/og-communaute.jpg"],
   },
 };
 

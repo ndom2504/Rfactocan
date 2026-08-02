@@ -71,8 +71,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
           ]
         : [
             {
-              url: "https://www.rfacto.com/og-share.jpg",
-              secureUrl: "https://www.rfacto.com/og-share.jpg",
+              url: "https://www.rfacto.com/og-communaute.jpg",
+              secureUrl: "https://www.rfacto.com/og-communaute.jpg",
               type: "image/jpeg",
               width: 1200,
               height: 675,
@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: imageUrl ? [imageUrl] : ["https://www.rfacto.com/og-share.jpg"],
+      images: imageUrl ? [imageUrl] : ["https://www.rfacto.com/og-communaute.jpg"],
     },
   };
 }
