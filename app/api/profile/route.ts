@@ -3,26 +3,28 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const mediaUrl = z
+  .string()
+  .max(2000)
+  .refine(
+    (v) =>
+      v.startsWith("/uploads/") ||
+      v.startsWith("/api/media?") ||
+      v.startsWith("https://") ||
+      v.startsWith("http://"),
+    "URL de média invalide"
+  );
+
 const schema = z.object({
   displayName: z.string().min(2).max(80).optional(),
   bio: z.string().max(500).optional(),
   country: z.string().max(80).optional(),
-  avatarUrl: z
-    .string()
-    .max(2000)
-    .refine(
-      (v) =>
-        v.startsWith("/uploads/") ||
-        v.startsWith("/api/media?") ||
-        v.startsWith("https://") ||
-        v.startsWith("http://"),
-      "URL de photo invalide"
-    )
-    .optional()
-    .nullable(),
+  avatarUrl: mediaUrl.optional().nullable(),
+  bannerUrl: mediaUrl.optional().nullable(),
   role: z.enum(["SENDER", "TRAVELER", "BOTH"]).optional(),
   language: z.enum(["fr", "en"]).optional(),
   preferredCurrency: z.enum(["CAD", "USD", "EUR", "XOF", "XAF"]).optional(),
+  acceptPublicationCharter: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -57,9 +59,14 @@ export async function PATCH(request: Request) {
 
   try {
     const body = schema.parse(await request.json());
+    const { acceptPublicationCharter, ...rest } = body;
+    const data: Record<string, unknown> = { ...rest };
+    if (acceptPublicationCharter === true) {
+      data.publicationCharterAcceptedAt = new Date();
+    }
     const user = await prisma.user.update({
       where: { id: session.id },
-      data: body,
+      data,
     });
     return NextResponse.json({ user });
   } catch (error) {

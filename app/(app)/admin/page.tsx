@@ -87,6 +87,13 @@ type AdminData = {
     reason: string;
     details: string | null;
     createdAt: string;
+    communityPostId?: string | null;
+    communityPost?: {
+      id: string;
+      title: string | null;
+      body: string;
+      status: string;
+    } | null;
     reporter: { displayName: string; email: string };
     targetUser: { id: string; displayName: string; email: string };
   }>;
@@ -179,6 +186,20 @@ function formatCents(cents: number, currency = "CAD") {
 export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null);
   const [error, setError] = useState("");
+  const [communityPosts, setCommunityPosts] = useState<
+    Array<{
+      id: string;
+      kind: string;
+      title: string | null;
+      body: string;
+      status: string;
+      createdAt: string;
+      viewCount: number;
+      commentCount: number;
+      reportCount: number;
+      author: { id: string; displayName: string; email: string };
+    }>
+  >([]);
   const [userLetter, setUserLetter] = useState<string>("");
   const [userQuery, setUserQuery] = useState("");
   const [userQueryDraft, setUserQueryDraft] = useState("");
@@ -212,11 +233,35 @@ export default function AdminPage() {
     setData(json);
   }
 
+  async function loadCommunityPosts() {
+    const res = await fetch("/api/admin/community-posts?limit=50");
+    const json = await res.json();
+    if (res.ok) setCommunityPosts(json.posts ?? []);
+  }
+
   useEffect(() => {
     void load();
+    void loadCommunityPosts();
     // initial load only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function setCommunityStatus(
+    postId: string,
+    status: "OPEN" | "HIDDEN" | "REMOVED"
+  ) {
+    const res = await fetch("/api/admin/community-posts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postId, status }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      window.alert(json.error ?? "Action impossible");
+      return;
+    }
+    await loadCommunityPosts();
+  }
 
   function applyUserLetter(next: string) {
     setUserLetter(next);
@@ -1006,6 +1051,59 @@ export default function AdminPage() {
 
       <section className="space-y-3">
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Publications communauté
+        </h2>
+        {communityPosts.length === 0 && (
+          <p className="text-sm text-[var(--muted)]">Aucune publication.</p>
+        )}
+        {communityPosts.map((p) => (
+          <Card key={p.id}>
+            <CardTitle className="text-base">
+              {p.title || p.body.slice(0, 60)}
+            </CardTitle>
+            <CardDescription>
+              {p.author.displayName} · {p.kind} · {p.status} ·{" "}
+              {formatDate(p.createdAt)} · {p.commentCount} com. ·{" "}
+              {p.reportCount} signal.
+            </CardDescription>
+            <p className="mt-2 line-clamp-2 text-sm text-[var(--muted)]">
+              {p.body}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {p.status !== "OPEN" && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void setCommunityStatus(p.id, "OPEN")}
+                >
+                  Restaurer
+                </Button>
+              )}
+              {p.status !== "HIDDEN" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void setCommunityStatus(p.id, "HIDDEN")}
+                >
+                  Masquer
+                </Button>
+              )}
+              {p.status !== "REMOVED" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void setCommunityStatus(p.id, "REMOVED")}
+                >
+                  Retirer
+                </Button>
+              )}
+            </div>
+          </Card>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
           Signalements ouverts
         </h2>
         {data.openReports.length === 0 && (
@@ -1014,13 +1112,30 @@ export default function AdminPage() {
         {data.openReports.map((r) => (
           <Card key={r.id}>
             <CardTitle className="text-base">
-              {r.targetUser.displayName} signalé par {r.reporter.displayName}
+              {r.communityPost
+                ? `Publication signalée (${r.targetUser.displayName})`
+                : `${r.targetUser.displayName} signalé`}{" "}
+              par {r.reporter.displayName}
             </CardTitle>
             <CardDescription>
               {r.reason}
               {r.details ? ` — ${r.details}` : ""}
+              {r.communityPost
+                ? ` — « ${(r.communityPost.title || r.communityPost.body).slice(0, 80)} »`
+                : ""}
             </CardDescription>
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap gap-2">
+              {r.communityPost && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    void setCommunityStatus(r.communityPost!.id, "HIDDEN")
+                  }
+                >
+                  Masquer la publication
+                </Button>
+              )}
               <Button size="sm" onClick={() => resolveReport(r.id)}>
                 Marquer résolu
               </Button>

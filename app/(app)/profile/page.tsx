@@ -38,6 +38,8 @@ type User = {
   bio: string | null;
   country: string | null;
   avatarUrl: string | null;
+  bannerUrl?: string | null;
+  publicationCharterAcceptedAt?: string | null;
   role: string;
   language?: string;
   preferredCurrency?: string;
@@ -66,6 +68,8 @@ function ProfileForm() {
   const [bio, setBio] = useState("");
   const [country, setCountry] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [charterAccepted, setCharterAccepted] = useState(false);
   const [primaryIntent, setPrimaryIntent] = useState<PrimaryIntent>("both");
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
   const [language, setLanguage] = useState("fr");
@@ -87,6 +91,8 @@ function ProfileForm() {
       setBio(data.user.bio ?? "");
       setCountry(data.user.country ?? "");
       setAvatarUrl(data.user.avatarUrl ?? null);
+      setBannerUrl(data.user.bannerUrl ?? null);
+      setCharterAccepted(Boolean(data.user.publicationCharterAcceptedAt));
       const prefs = loadUserIntent();
       setPrimaryIntent(
         data.user.role === "ADMIN"
@@ -170,6 +176,57 @@ function ProfileForm() {
     }
     setUser(saveData.user);
     setMessage(t("profile_saved"));
+  }
+
+  async function onUploadBanner(file: File) {
+    setUploading(true);
+    setError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) {
+      setUploading(false);
+      setError(data.error ?? "Upload échoué");
+      return;
+    }
+    const url = data.url as string;
+    setBannerUrl(url);
+    const saveRes = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bannerUrl: url }),
+    });
+    const saveData = await saveRes.json();
+    setUploading(false);
+    if (!saveRes.ok) {
+      setError(saveData.error ?? "Bannière uploadée mais non enregistrée");
+      return;
+    }
+    setUser(saveData.user);
+    setMessage(t("profile_saved"));
+  }
+
+  async function acceptCharter() {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acceptPublicationCharter: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Erreur");
+        return;
+      }
+      setUser(data.user);
+      setCharterAccepted(true);
+      setMessage(t("pub_charter_accepted"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -454,6 +511,33 @@ function ProfileForm() {
         </div>
       </Card>
 
+      <Card>
+        <CardTitle>{t("pub_charter_profile_title")}</CardTitle>
+        <CardDescription>{t("pub_charter_profile_desc")}</CardDescription>
+        <p className="mt-3 text-sm text-[var(--muted)]">{t("pub_charter_lead")}</p>
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
+          <li>{t("pub_charter_a1_title")}</li>
+          <li>{t("pub_charter_a2_title")}</li>
+          <li>{t("pub_charter_a6_title")}</li>
+        </ul>
+        <div className="mt-4 space-y-2">
+          <Link href="/publication-charter" className="block">
+            <Button variant="outline" className="w-full">
+              {t("pub_charter_cta")}
+            </Button>
+          </Link>
+          {charterAccepted ? (
+            <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+              {t("pub_charter_accepted")}
+            </Badge>
+          ) : (
+            <Button disabled={busy} onClick={() => void acceptCharter()}>
+              {t("pub_charter_accept")}
+            </Button>
+          )}
+        </div>
+      </Card>
+
       {user.isAmbassador &&
         user.kycStatus === "VERIFIED" &&
         user.agentCode && (
@@ -466,6 +550,58 @@ function ProfileForm() {
       <Card>
         <CardTitle>{t("profile_title")}</CardTitle>
         <CardDescription>{user.email}</CardDescription>
+        <div className="mt-4 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
+          <div className="relative h-28 w-full bg-[var(--surface)] sm:h-36">
+            {bannerUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={bannerUrl}
+                alt={t("profile_banner")}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-xs text-[var(--muted)]">
+                {t("profile_banner_none")}
+              </div>
+            )}
+          </div>
+          <div className="space-y-2 p-3">
+            <Label>{t("profile_banner")}</Label>
+            <p className="text-xs text-[var(--muted)]">{t("profile_banner_hint")}</p>
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={uploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void onUploadBanner(file);
+                e.target.value = "";
+              }}
+            />
+            {bannerUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploading}
+                onClick={async () => {
+                  setBannerUrl(null);
+                  const res = await fetch("/api/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ bannerUrl: null }),
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    setUser(data.user);
+                    setMessage(t("profile_saved"));
+                  }
+                }}
+              >
+                {t("profile_banner_remove")}
+              </Button>
+            )}
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {user.kycStatus === "VERIFIED" && (
             <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">

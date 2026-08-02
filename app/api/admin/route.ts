@@ -87,6 +87,9 @@ export async function GET(request: Request) {
     include: {
       reporter: { select: { id: true, displayName: true, email: true } },
       targetUser: { select: { id: true, displayName: true, email: true } },
+      communityPost: {
+        select: { id: true, title: true, body: true, status: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });

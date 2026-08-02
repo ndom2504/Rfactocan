@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
+import { CommunityPostActions } from "@/components/community-post-actions";
 import {
   absoluteShareUrl,
   CommunityShareButton,
@@ -253,6 +254,25 @@ export function CommunityPostDetail() {
             className="[&_button]:bg-[var(--surface-2)]"
           />
         </div>
+        <CommunityPostActions
+          post={post}
+          onUpdated={(updated) =>
+            setPost((p) =>
+              p
+                ? {
+                    ...p,
+                    kind: String(updated.kind),
+                    title: updated.title,
+                    body: updated.body,
+                    attachments: updated.attachments ?? p.attachments,
+                  }
+                : p
+            )
+          }
+          onDeleted={() => {
+            window.location.href = "/community";
+          }}
+        />
       </article>
 
       <section id="comments" className="space-y-4 scroll-mt-24">

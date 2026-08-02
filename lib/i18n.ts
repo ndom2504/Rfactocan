@@ -34,6 +34,19 @@ const dict = {
     community_empty: "Aucune publication pour le moment. Soyez le premier.",
     community_delete: "Supprimer",
     community_delete_confirm: "Supprimer cette publication ?",
+    community_edit: "Modifier",
+    community_edit_save: "Enregistrer les modifications",
+    community_report: "Signaler",
+    community_report_title: "Signaler cette publication",
+    community_report_reason: "Motif du signalement",
+    community_report_details: "Détails (optionnel)",
+    community_report_send: "Envoyer le signalement",
+    community_report_sent: "Signalement envoyé. Merci.",
+    community_report_reason_spam: "Spam ou publicité abusive",
+    community_report_reason_hate: "Propos haineux ou harcèlement",
+    community_report_reason_illegal: "Contenu illégal ou dangereux",
+    community_report_reason_other: "Autre",
+    community_manage: "Gérer",
     community_connect: "Connecter",
     community_connected: "Connecté",
     community_connections: "connexions",
@@ -1072,6 +1085,45 @@ const dict = {
     bank_to_setup: "Compte bancaire à configurer",
     account_verified: "Compte vérifié",
     profile_saved: "Profil mis à jour.",
+    profile_banner: "Bannière de profil",
+    profile_banner_hint:
+      "Image de couverture affichée sur votre profil (jpeg, png, webp — max 2 Mo).",
+    profile_banner_remove: "Retirer la bannière",
+    profile_banner_none: "Aucune bannière",
+    pub_charter_title: "Charte des publications",
+    pub_charter_lead:
+      "En publiant sur le feed communautaire Rfacto, vous vous engagez à respecter les règles suivantes, alignées sur nos valeurs : crédibilité, sécurité et croissance.",
+    pub_charter_a1_title: "1. Contenu crédible et utile",
+    pub_charter_a1_text:
+      "Publiez des informations sincères liées aux affaires, opportunités ou à la vie communautaire. Interdiction des fausses annonces et des promesses trompeuses.",
+    pub_charter_a2_title: "2. Respect et sécurité",
+    pub_charter_a2_text:
+      "Aucun contenu haineux, harcelant, discriminatoire, pornographique ou violent. Protégez la vie privée d’autrui : pas de données personnelles d’autrui sans consentement.",
+    pub_charter_a3_title: "3. Légalité",
+    pub_charter_a3_text:
+      "Interdiction de promouvoir des biens ou services illégaux, la contrebande, ou de contourner les lois et douanes des pays concernés.",
+    pub_charter_a4_title: "4. Publicité et spam",
+    pub_charter_a4_text:
+      "La promotion de votre activité est bienvenue si elle est claire et non agressive. Pas de spam, de répétition abusive ni de liens trompeurs.",
+    pub_charter_a5_title: "5. Médias et droits",
+    pub_charter_a5_text:
+      "Vous devez détenir les droits sur les images et fichiers joints, ou disposer d’une autorisation. Rfacto peut retirer un contenu signalé ou non conforme.",
+    pub_charter_a6_title: "6. Modération",
+    pub_charter_a6_text:
+      "Vous pouvez modifier ou supprimer vos publications. Tout membre peut signaler un contenu. Les administrateurs peuvent masquer ou retirer une publication. Un abus répété peut entraîner une suspension.",
+    pub_charter_footer:
+      "Cette charte complète le programme de confiance et la politique de responsabilité Rfacto.",
+    pub_charter_accept: "J’ai lu et j’accepte la charte des publications",
+    pub_charter_accepted: "Charte acceptée",
+    pub_charter_cta: "Lire la charte complète",
+    pub_charter_profile_title: "Publications communautaires",
+    pub_charter_profile_desc:
+      "Règles pour publier, modifier, supprimer ou signaler du contenu sur le feed.",
+    admin_community_posts: "Publications communauté",
+    admin_community_empty: "Aucune publication.",
+    admin_community_hide: "Masquer",
+    admin_community_restore: "Restaurer",
+    admin_community_remove: "Retirer",
 
     // Messages
     messages_title: "Messages",
@@ -1129,6 +1181,19 @@ const dict = {
     community_empty: "No posts yet. Be the first.",
     community_delete: "Delete",
     community_delete_confirm: "Delete this post?",
+    community_edit: "Edit",
+    community_edit_save: "Save changes",
+    community_report: "Report",
+    community_report_title: "Report this post",
+    community_report_reason: "Reason",
+    community_report_details: "Details (optional)",
+    community_report_send: "Submit report",
+    community_report_sent: "Report sent. Thank you.",
+    community_report_reason_spam: "Spam or abusive ads",
+    community_report_reason_hate: "Hate speech or harassment",
+    community_report_reason_illegal: "Illegal or dangerous content",
+    community_report_reason_other: "Other",
+    community_manage: "Manage",
     community_connect: "Connect",
     community_connected: "Connected",
     community_connections: "connections",
@@ -2149,6 +2214,45 @@ const dict = {
     bank_to_setup: "Bank account to set up",
     account_verified: "Verified account",
     profile_saved: "Profile updated.",
+    profile_banner: "Profile banner",
+    profile_banner_hint:
+      "Cover image shown on your profile (jpeg, png, webp — max 2 MB).",
+    profile_banner_remove: "Remove banner",
+    profile_banner_none: "No banner",
+    pub_charter_title: "Publication charter",
+    pub_charter_lead:
+      "By posting on the Rfacto community feed, you agree to the following rules, aligned with our values: credibility, security and growth.",
+    pub_charter_a1_title: "1. Credible and useful content",
+    pub_charter_a1_text:
+      "Post sincere information about business, opportunities or community life. No fake ads or misleading promises.",
+    pub_charter_a2_title: "2. Respect and safety",
+    pub_charter_a2_text:
+      "No hate, harassment, discrimination, pornography or violence. Protect others’ privacy: no third-party personal data without consent.",
+    pub_charter_a3_title: "3. Legality",
+    pub_charter_a3_text:
+      "Do not promote illegal goods or services, smuggling, or ways to bypass laws and customs of the countries involved.",
+    pub_charter_a4_title: "4. Ads and spam",
+    pub_charter_a4_text:
+      "Promoting your activity is welcome if clear and non-aggressive. No spam, abusive repetition or misleading links.",
+    pub_charter_a5_title: "5. Media and rights",
+    pub_charter_a5_text:
+      "You must own the rights to attached images and files, or have permission. Rfacto may remove reported or non-compliant content.",
+    pub_charter_a6_title: "6. Moderation",
+    pub_charter_a6_text:
+      "You may edit or delete your posts. Any member may report content. Admins may hide or remove a post. Repeated abuse may lead to suspension.",
+    pub_charter_footer:
+      "This charter complements the Rfacto trust program and responsibility policy.",
+    pub_charter_accept: "I have read and accept the publication charter",
+    pub_charter_accepted: "Charter accepted",
+    pub_charter_cta: "Read the full charter",
+    pub_charter_profile_title: "Community publications",
+    pub_charter_profile_desc:
+      "Rules for publishing, editing, deleting or reporting content on the feed.",
+    admin_community_posts: "Community posts",
+    admin_community_empty: "No posts.",
+    admin_community_hide: "Hide",
+    admin_community_restore: "Restore",
+    admin_community_remove: "Remove",
 
     messages_title: "Messages",
     messages_subtitle: "Conversations linked to your bookings.",

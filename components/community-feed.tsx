@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
+import { CommunityPostActions } from "@/components/community-post-actions";
 import {
   absoluteShareUrl,
   CommunityShareButton,
@@ -148,9 +149,7 @@ export function CommunityFeed() {
   }
 
   async function removePost(id: string) {
-    if (!confirm(t("community_delete_confirm"))) return;
-    const res = await fetch(`/api/community/posts/${id}`, { method: "DELETE" });
-    if (res.ok) setPosts((prev) => prev.filter((p) => p.id !== id));
+    setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
   async function toggleConnect(authorId: string, currentlyConnected: boolean) {
@@ -463,16 +462,25 @@ export function CommunityFeed() {
                   body={post.body}
                 />
               </div>
-              {post.isOwner &&
-                (post.source === "post" || !post.source) && (
-                  <button
-                    type="button"
-                    onClick={() => void removePost(post.id)}
-                    className="mt-2 text-xs text-[var(--muted)] hover:text-red-700"
-                  >
-                    {t("community_delete")}
-                  </button>
-                )}
+              <CommunityPostActions
+                post={post}
+                onUpdated={(updated) =>
+                  setPosts((prev) =>
+                    prev.map((p) =>
+                      p.id === updated.id
+                        ? {
+                            ...p,
+                            kind: updated.kind as FeedPost["kind"],
+                            title: updated.title,
+                            body: updated.body,
+                            attachments: updated.attachments ?? p.attachments,
+                          }
+                        : p
+                    )
+                  )
+                }
+                onDeleted={(id) => void removePost(id)}
+              />
             </li>
           ))}
         </ul>
