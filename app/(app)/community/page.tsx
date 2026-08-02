@@ -7,14 +7,9 @@ export default async function CommunityPage() {
 
   return (
     <div className="space-y-6" data-tour="community">
-      <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          {t(locale, "community_title")}
-        </h1>
-        <p className="mt-1 text-[var(--muted)]">
-          {t(locale, "community_subtitle")}
-        </p>
-      </div>
+      <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
+        {t(locale, "community_title")}
+      </h1>
       <CommunityFeed />
     </div>
   );

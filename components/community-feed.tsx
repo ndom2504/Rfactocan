@@ -65,6 +65,7 @@ export function CommunityFeed() {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,6 +86,21 @@ export function CommunityFeed() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!composerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeComposer();
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- closeComposer is stable enough for modal lifecycle
+  }, [composerOpen, busy, uploading]);
 
   async function onFilesSelected(files: FileList | null) {
     if (!files?.length) return;
@@ -140,12 +156,19 @@ export function CommunityFeed() {
       setTitle("");
       setBody("");
       setAttachments([]);
+      setComposerOpen(false);
       setPosts((prev) => [data.post, ...prev]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setBusy(false);
     }
+  }
+
+  function closeComposer() {
+    if (busy || uploading) return;
+    setComposerOpen(false);
+    setError(null);
   }
 
   async function removePost(id: string) {
@@ -192,129 +215,194 @@ export function CommunityFeed() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <section className="border-b border-[var(--border)] pb-6">
-        <p className="text-sm text-[var(--muted)]">{t("community_guidelines")}</p>
-        <div className="mt-4 space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {COMMUNITY_POST_KINDS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setKind(k)}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                  kind === k
-                    ? "bg-[var(--rfacto-green)] text-white"
-                    : "bg-[var(--surface-2)] text-[var(--foreground)] hover:bg-[var(--surface-3)]"
-                }`}
-              >
-                {t(kindLabelKey[k])}
-              </button>
-            ))}
-          </div>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={120}
-            placeholder={t("community_title_placeholder")}
-            className="w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
-          />
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={4}
-            maxLength={4000}
-            placeholder={t("community_body_placeholder")}
-            className="w-full resize-y rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="cursor-pointer text-sm font-medium text-[var(--accent)]">
-              {uploading ? t("loading") : t("community_attach")}
-              <input
-                type="file"
-                className="hidden"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                multiple
-                disabled={uploading || attachments.length >= 3}
-                onChange={(e) => {
-                  void onFilesSelected(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <span className="text-xs text-[var(--muted)]">
-              {t("community_attach_hint")}
-            </span>
-          </div>
-          {attachments.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-3">
-              {attachments.map((a, i) => (
-                <div
-                  key={`${a.url}-${i}`}
-                  className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
-                >
-                  {isImageAttachment(a.contentType) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={a.url}
-                      alt={a.name}
-                      className="h-40 w-full object-cover"
-                    />
-                  ) : (
-                    <a
-                      href={a.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex h-40 flex-col items-center justify-center gap-2 px-3 text-center"
-                    >
-                      <span className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--accent)]">
-                        PDF
-                      </span>
-                      <span className="line-clamp-2 text-xs text-[var(--muted)]">
-                        {a.name}
-                      </span>
-                      <span className="text-[11px] text-[var(--accent)] underline">
-                        {t("community_preview_open")}
-                      </span>
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    className="absolute right-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs text-white hover:bg-black/80"
-                    onClick={() =>
-                      setAttachments((prev) => prev.filter((_, idx) => idx !== i))
-                    }
-                    aria-label={t("close")}
-                  >
-                    ✕
-                  </button>
-                  {isImageAttachment(a.contentType) && (
-                    <p className="truncate border-t border-[var(--border)] px-2 py-1.5 text-[11px] text-[var(--muted)]">
-                      {a.name}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          {attachments.length > 0 && (
-            <p className="text-xs text-[var(--muted)]">
-              {t("community_preview_hint")}
-            </p>
-          )}
-          {error && (
-            <p className="text-sm text-red-700" role="alert">
-              {error}
-            </p>
-          )}
-          <Button
-            disabled={busy || uploading || body.trim().length < 10}
-            onClick={() => void publish()}
-            className="w-full sm:w-auto"
-          >
-            {busy ? t("loading") : t("community_publish")}
-          </Button>
-        </div>
+      <section className="flex flex-col items-start gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-base font-medium text-[var(--foreground)] sm:text-lg">
+          {t("community_announce_prompt")}
+        </p>
+        <Button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setComposerOpen(true);
+          }}
+          className="w-full shrink-0 sm:w-auto"
+        >
+          {t("community_announce")}
+        </Button>
       </section>
+
+      {!composerOpen && error && (
+        <p className="text-sm text-red-700" role="alert">
+          {error}
+        </p>
+      )}
+
+      {composerOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          role="presentation"
+          onClick={closeComposer}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("community_announce_modal_title")}
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+                  {t("community_announce_modal_title")}
+                </h2>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  {t("community_guidelines")}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full px-2 py-1 text-sm text-[var(--muted)] hover:bg-[var(--surface-2)]"
+                onClick={closeComposer}
+                aria-label={t("close")}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {COMMUNITY_POST_KINDS.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setKind(k)}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                      kind === k
+                        ? "bg-[var(--rfacto-green)] text-white"
+                        : "bg-[var(--surface-2)] text-[var(--foreground)] hover:bg-[var(--surface-3)]"
+                    }`}
+                  >
+                    {t(kindLabelKey[k])}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={120}
+                placeholder={t("community_title_placeholder")}
+                className="w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
+              />
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={4}
+                maxLength={4000}
+                placeholder={t("community_body_placeholder")}
+                className="w-full resize-y rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="cursor-pointer text-sm font-medium text-[var(--accent)]">
+                  {uploading ? t("loading") : t("community_attach")}
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    multiple
+                    disabled={uploading || attachments.length >= 3}
+                    onChange={(e) => {
+                      void onFilesSelected(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <span className="text-xs text-[var(--muted)]">
+                  {t("community_attach_hint")}
+                </span>
+              </div>
+              {attachments.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {attachments.map((a, i) => (
+                    <div
+                      key={`${a.url}-${i}`}
+                      className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
+                    >
+                      {isImageAttachment(a.contentType) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={a.url}
+                          alt={a.name}
+                          className="h-40 w-full object-cover"
+                        />
+                      ) : (
+                        <a
+                          href={a.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-40 flex-col items-center justify-center gap-2 px-3 text-center"
+                        >
+                          <span className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--accent)]">
+                            PDF
+                          </span>
+                          <span className="line-clamp-2 text-xs text-[var(--muted)]">
+                            {a.name}
+                          </span>
+                          <span className="text-[11px] text-[var(--accent)] underline">
+                            {t("community_preview_open")}
+                          </span>
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        className="absolute right-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs text-white hover:bg-black/80"
+                        onClick={() =>
+                          setAttachments((prev) =>
+                            prev.filter((_, idx) => idx !== i)
+                          )
+                        }
+                        aria-label={t("close")}
+                      >
+                        ✕
+                      </button>
+                      {isImageAttachment(a.contentType) && (
+                        <p className="truncate border-t border-[var(--border)] px-2 py-1.5 text-[11px] text-[var(--muted)]">
+                          {a.name}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {attachments.length > 0 && (
+                <p className="text-xs text-[var(--muted)]">
+                  {t("community_preview_hint")}
+                </p>
+              )}
+              {error && (
+                <p className="text-sm text-red-700" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy || uploading}
+                  onClick={closeComposer}
+                >
+                  {t("close")}
+                </Button>
+                <Button
+                  disabled={busy || uploading || body.trim().length < 10}
+                  onClick={() => void publish()}
+                >
+                  {busy ? t("loading") : t("community_publish")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <FilterChip
