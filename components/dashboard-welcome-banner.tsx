@@ -7,15 +7,18 @@ import { useI18n } from "@/components/locale-provider";
 type Props = {
   displayName: string;
   avatarUrl?: string | null;
+  bannerUrl?: string | null;
   kycVerified?: boolean;
 };
 
 export function DashboardWelcomeBanner({
   displayName,
   avatarUrl,
+  bannerUrl,
   kycVerified,
 }: Props) {
   const { t } = useI18n();
+  const customBanner = Boolean(bannerUrl);
 
   return (
     <section
@@ -23,14 +26,23 @@ export function DashboardWelcomeBanner({
       className="w-full overflow-hidden border-b border-[var(--border)] bg-[var(--surface)]"
     >
       <div className="relative h-40 w-full bg-[var(--rfacto-green-dark)] sm:h-48 md:h-[min(42vw,420px)] lg:h-[min(38vw,480px)]">
-        <Image
-          src="/images/home/slide-boutique.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-top md:object-contain md:object-center"
-        />
+        {customBanner ? (
+          // eslint-disable-next-line @next/next/no-img-element -- user uploads /api/media URLs
+          <img
+            src={bannerUrl!}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        ) : (
+          <Image
+            src="/images/home/slide-boutique.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-top md:object-contain md:object-center"
+          />
+        )}
         <div
           className="absolute inset-0 opacity-100 md:opacity-20"
           style={{

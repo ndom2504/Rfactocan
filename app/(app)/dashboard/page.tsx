@@ -60,6 +60,7 @@ export default async function DashboardPage() {
       <DashboardWelcomeBanner
         displayName={user.displayName}
         avatarUrl={user.avatarUrl}
+        bannerUrl={user.bannerUrl}
         kycVerified={user.kycStatus === "VERIFIED"}
       />
 

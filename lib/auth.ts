@@ -18,6 +18,7 @@ export type SessionUser = {
   isAmbassador: boolean;
   agentCode: string | null;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   ratingAvg: number;
   ratingCount: number;
   preferredCurrency: string;
@@ -106,6 +107,7 @@ async function sessionUserFromToken(
       isAmbassador: user.isAmbassador,
       agentCode: user.agentCode,
       avatarUrl: user.avatarUrl,
+      bannerUrl: user.bannerUrl,
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,
       preferredCurrency: user.preferredCurrency || "CAD",
