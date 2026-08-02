@@ -4,6 +4,7 @@ import type { CommunityPostKind } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth";
 import {
   COMMUNITY_POST_KINDS,
+  isAllowedCommunityContentType,
   parseAttachmentsJson,
   type CommunityAttachment,
 } from "@/lib/community";
@@ -16,7 +17,7 @@ const attachmentSchema = z.object({
   url: z.string().min(1).max(800),
   name: z.string().min(1).max(180),
   contentType: z.string().min(3).max(120),
-  size: z.number().int().nonnegative().max(5 * 1024 * 1024),
+  size: z.number().int().nonnegative().max(25 * 1024 * 1024),
 });
 
 const createSchema = z.object({
@@ -382,14 +383,12 @@ export async function POST(request: Request) {
 
   const attachments: CommunityAttachment[] = parsed.data.attachments ?? [];
   for (const a of attachments) {
-    const okType =
-      a.contentType === "application/pdf" ||
-      a.contentType === "image/jpeg" ||
-      a.contentType === "image/png" ||
-      a.contentType === "image/webp";
-    if (!okType) {
+    if (!isAllowedCommunityContentType(a.contentType)) {
       return NextResponse.json(
-        { error: "Pièce jointe non autorisée (images ou PDF uniquement)." },
+        {
+          error:
+            "Pièce jointe non autorisée (images, vidéos mp4/webm/mov ou PDF uniquement).",
+        },
         { status: 400 }
       );
     }

@@ -2,6 +2,7 @@
 
 import {
   isImageAttachment,
+  isVideoAttachment,
   type CommunityAttachment,
 } from "@/lib/community";
 
@@ -16,7 +17,10 @@ export function CommunityMediaGrid({
   if (!attachments.length) return null;
 
   const images = attachments.filter((a) => isImageAttachment(a.contentType));
-  const files = attachments.filter((a) => !isImageAttachment(a.contentType));
+  const videos = attachments.filter((a) => isVideoAttachment(a.contentType));
+  const files = attachments.filter(
+    (a) => !isImageAttachment(a.contentType) && !isVideoAttachment(a.contentType)
+  );
 
   return (
     <div className="space-y-2">
@@ -54,6 +58,18 @@ export function CommunityMediaGrid({
           ))}
         </div>
       )}
+      {videos.map((a, i) => (
+        <video
+          key={`${postId}-vid-${i}`}
+          src={a.url}
+          controls
+          playsInline
+          preload="metadata"
+          className="block h-auto w-full bg-black"
+        >
+          <track kind="captions" />
+        </video>
+      ))}
       {files.map((a, i) => (
         <a
           key={`${postId}-file-${i}`}

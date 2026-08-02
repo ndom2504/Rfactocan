@@ -15,6 +15,7 @@ import { useI18n } from "@/components/locale-provider";
 import {
   COMMUNITY_POST_KINDS,
   isImageAttachment,
+  isVideoAttachment,
   type CommunityAttachment,
   type CommunityPostKindId,
 } from "@/lib/community";
@@ -307,7 +308,7 @@ export function CommunityFeed() {
                   <input
                     type="file"
                     className="hidden"
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,application/pdf"
                     multiple
                     disabled={uploading || attachments.length >= 3}
                     onChange={(e) => {
@@ -333,6 +334,14 @@ export function CommunityFeed() {
                           src={a.url}
                           alt={a.name}
                           className="h-40 w-full object-cover"
+                        />
+                      ) : isVideoAttachment(a.contentType) ? (
+                        <video
+                          src={a.url}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          className="h-40 w-full bg-black object-contain"
                         />
                       ) : (
                         <a
@@ -364,7 +373,8 @@ export function CommunityFeed() {
                       >
                         ✕
                       </button>
-                      {isImageAttachment(a.contentType) && (
+                      {(isImageAttachment(a.contentType) ||
+                        isVideoAttachment(a.contentType)) && (
                         <p className="truncate border-t border-[var(--border)] px-2 py-1.5 text-[11px] text-[var(--muted)]">
                           {a.name}
                         </p>

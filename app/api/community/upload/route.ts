@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
+import {
+  isAllowedCommunityContentType,
+  maxBytesForCommunityContentType,
+  COMMUNITY_ALLOWED_IMAGES,
+  COMMUNITY_ALLOWED_VIDEOS,
+} from "@/lib/community";
 import { uploadCommunityFile } from "@/lib/storage";
 
-const MAX_IMAGE = 2 * 1024 * 1024;
-const MAX_DOC = 5 * 1024 * 1024;
-const ALLOWED_IMAGES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const ALLOWED_DOCS = new Set(["application/pdf"]);
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const session = await getSessionUser();
@@ -22,25 +26,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
   }
 
-  const isImage = ALLOWED_IMAGES.has(file.type);
-  const isDoc = ALLOWED_DOCS.has(file.type);
-  if (!isImage && !isDoc) {
+  const type = (file.type || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  if (!isAllowedCommunityContentType(type)) {
     return NextResponse.json(
       {
         error:
-          "Fichier non autorisé. Images (jpeg, png, webp) ou PDF uniquement — cadre affaires / opportunités / communauté.",
+          "Fichier non autorisé. Images (jpeg, png, webp), vidéos (mp4, webm, mov) ou PDF — cadre affaires / opportunités / communauté.",
       },
       { status: 400 }
     );
   }
 
-  const max = isImage ? MAX_IMAGE : MAX_DOC;
+  const max = maxBytesForCommunityContentType(type);
   if (file.size > max) {
+    const isImage = COMMUNITY_ALLOWED_IMAGES.has(type);
+    const isVideo = COMMUNITY_ALLOWED_VIDEOS.has(type);
     return NextResponse.json(
       {
         error: isImage
           ? "Image trop volumineuse (max 2 Mo)."
-          : "PDF trop volumineux (max 5 Mo).",
+          : isVideo
+            ? "Vidéo trop volumineuse (max 25 Mo)."
+            : "PDF trop volumineux (max 5 Mo).",
       },
       { status: 400 }
     );
@@ -51,7 +58,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       url,
       name: file.name.slice(0, 180),
-      contentType: file.type,
+      contentType: type || file.type,
       size: file.size,
     });
   } catch (error) {

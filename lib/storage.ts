@@ -4,7 +4,12 @@ import path from "path";
 import { getAppUrl } from "@/lib/app-url";
 
 function extensionFor(contentType: string) {
-  const ext = contentType.split("/")[1] ?? "bin";
+  const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  if (type === "image/jpeg") return "jpg";
+  if (type === "video/quicktime") return "mov";
+  if (type === "video/mp4") return "mp4";
+  if (type === "video/webm") return "webm";
+  const ext = type.split("/")[1] ?? "bin";
   return ext === "jpeg" ? "jpg" : ext;
 }
 
@@ -76,7 +81,7 @@ export async function uploadIdDocument(file: File, userId: string) {
   return uploadFile(file, userId, "id-docs");
 }
 
-/** Community feed attachments (images or PDF business docs). */
+/** Community feed attachments (images, short videos or PDF business docs). */
 export async function uploadCommunityFile(file: File, userId: string) {
   return uploadFile(file, userId, "community");
 }
