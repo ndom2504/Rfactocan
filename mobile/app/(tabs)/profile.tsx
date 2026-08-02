@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, Text } from "react-native";
+import { Alert, Linking, Platform, ScrollView, Text } from "react-native";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import {
@@ -22,6 +22,7 @@ export default function ProfileScreen() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setDisplayName(user?.displayName ?? "");
@@ -49,6 +50,63 @@ export default function ProfileScreen() {
     }
   }
 
+  function confirmDeleteAccount() {
+    if (Platform.OS === "ios" && typeof Alert.prompt === "function") {
+      Alert.prompt(
+        "Supprimer mon compte",
+        "Tapez SUPPRIMER pour confirmer. Action définitive.",
+        [
+          { text: "Annuler", style: "cancel" },
+          {
+            text: "Supprimer",
+            style: "destructive",
+            onPress: (value?: string) => {
+              if (value !== "SUPPRIMER") {
+                Alert.alert(
+                  "Confirmation incorrecte",
+                  "Le compte n'a pas été supprimé."
+                );
+                return;
+              }
+              void deleteAccount();
+            },
+          },
+        ],
+        "plain-text"
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Supprimer mon compte",
+      "Cette action est définitive. Continuer ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => void deleteAccount(),
+        },
+      ]
+    );
+  }
+
+  async function deleteAccount() {
+    setDeleting(true);
+    setError("");
+    try {
+      await api("/api/profile", {
+        method: "DELETE",
+        body: JSON.stringify({ confirm: "SUPPRIMER" }),
+      });
+      await logout();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Suppression impossible");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <Screen>
       <ScrollView>
@@ -73,6 +131,26 @@ export default function ProfileScreen() {
           <Button label="Enregistrer" onPress={save} loading={loading} />
         </Card>
         <Button label="Se déconnecter" variant="outline" onPress={logout} />
+        <Card>
+          <Muted>
+            Suppression définitive : vos données personnelles seront
+            anonymisées. Impossible s'il reste des réservations ou litiges
+            ouverts.
+          </Muted>
+          <Button
+            label="Supprimer mon compte"
+            variant="outline"
+            loading={deleting}
+            onPress={confirmDeleteAccount}
+          />
+          <Button
+            label="En savoir plus"
+            variant="outline"
+            onPress={() =>
+              void Linking.openURL("https://rfacto.com/delete-account")
+            }
+          />
+        </Card>
       </ScrollView>
     </Screen>
   );

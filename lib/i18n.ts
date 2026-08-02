@@ -492,11 +492,11 @@ const dict = {
       "Vous pouvez demander la suppression de votre compte Rfacto et des données personnelles associées. Cette page répond aux exigences Google Play (Account deletion).",
     delete_account_how_title: "Comment faire la demande",
     delete_account_how_1:
-      "Connectez-vous à l'application ou au site avec le compte à supprimer (si possible).",
+      "Connectez-vous, ouvrez Mon profil, puis utilisez « Supprimer mon compte » en bas de la page.",
     delete_account_how_2:
-      "Envoyez un e-mail à contact@rfacto.com depuis l'adresse e-mail associée au compte.",
+      "Ou envoyez un e-mail à contact@rfacto.com depuis l'adresse e-mail associée au compte.",
     delete_account_how_3:
-      "Indiquez clairement « Demande de suppression de compte » et le nom d'affichage du compte.",
+      "Indiquez clairement « Demande de suppression de compte » et le nom d'affichage du compte si vous passez par e-mail.",
     delete_account_email_title: "Adresse de contact",
     delete_account_email_text:
       "Toute demande de suppression doit être envoyée à :",
@@ -1084,6 +1084,20 @@ const dict = {
       "Image de couverture affichée sur votre profil (jpeg, png, webp — max 2 Mo).",
     profile_banner_remove: "Retirer la bannière",
     profile_banner_none: "Aucune bannière",
+    delete_account_profile_title: "Supprimer mon compte",
+    delete_account_profile_desc:
+      "Cette action est définitive : vos données personnelles seront anonymisées et vous serez déconnecté.",
+    delete_account_profile_hint:
+      "Impossible si des réservations, paiements ou litiges sont encore en cours. Vous pouvez aussi écrire à contact@rfacto.com.",
+    delete_account_profile_cta: "Supprimer mon compte",
+    delete_account_profile_info: "En savoir plus",
+    delete_account_profile_confirm_prompt:
+      'Pour confirmer, tapez SUPPRIMER (en majuscules) :',
+    delete_account_profile_confirm_mismatch:
+      "Confirmation incorrecte. Le compte n'a pas été supprimé.",
+    delete_account_profile_confirm:
+      "Confirmer la suppression définitive de votre compte Rfacto ?",
+    delete_account_profile_error: "Suppression impossible",
     pub_charter_title: "Charte des publications",
     pub_charter_lead:
       "En publiant sur le feed communautaire Rfacto, vous vous engagez à respecter les règles suivantes, alignées sur nos valeurs : crédibilité, sécurité et croissance.",
@@ -1626,11 +1640,11 @@ const dict = {
       "You can request deletion of your Rfacto account and associated personal data. This page meets Google Play account deletion requirements.",
     delete_account_how_title: "How to request deletion",
     delete_account_how_1:
-      "Sign in to the app or website with the account you want deleted (if possible).",
+      "Sign in, open My profile, then use “Delete my account” at the bottom of the page.",
     delete_account_how_2:
-      "Email contact@rfacto.com from the email address linked to the account.",
+      "Or email contact@rfacto.com from the email address linked to the account.",
     delete_account_how_3:
-      "Clearly write “Account deletion request” and include your display name.",
+      "Clearly write “Account deletion request” and include your display name if you email us.",
     delete_account_email_title: "Contact address",
     delete_account_email_text: "Send all deletion requests to:",
     delete_account_what_title: "What is deleted",
@@ -2207,6 +2221,20 @@ const dict = {
       "Cover image shown on your profile (jpeg, png, webp — max 2 MB).",
     profile_banner_remove: "Remove banner",
     profile_banner_none: "No banner",
+    delete_account_profile_title: "Delete my account",
+    delete_account_profile_desc:
+      "This is permanent: your personal data will be anonymized and you will be signed out.",
+    delete_account_profile_hint:
+      "Not possible while bookings, payments or disputes are still open. You can also email contact@rfacto.com.",
+    delete_account_profile_cta: "Delete my account",
+    delete_account_profile_info: "Learn more",
+    delete_account_profile_confirm_prompt:
+      "To confirm, type SUPPRIMER (uppercase):",
+    delete_account_profile_confirm_mismatch:
+      "Confirmation did not match. Your account was not deleted.",
+    delete_account_profile_confirm:
+      "Confirm permanent deletion of your Rfacto account?",
+    delete_account_profile_error: "Deletion failed",
     pub_charter_title: "Publication charter",
     pub_charter_lead:
       "By posting on the Rfacto community feed, you agree to the following rules, aligned with our values: credibility, security and growth.",

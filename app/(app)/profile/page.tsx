@@ -229,6 +229,36 @@ function ProfileForm() {
     }
   }
 
+  async function deleteAccount() {
+    const typed = window.prompt(t("delete_account_profile_confirm_prompt"));
+    if (typed !== "SUPPRIMER") {
+      if (typed !== null) {
+        window.alert(t("delete_account_profile_confirm_mismatch"));
+      }
+      return;
+    }
+    if (!window.confirm(t("delete_account_profile_confirm"))) {
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "SUPPRIMER" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? t("delete_account_profile_error"));
+        return;
+      }
+      window.location.href = "/";
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage("");
@@ -755,6 +785,35 @@ function ProfileForm() {
           </Button>
         </form>
       </Card>
+
+      {user.role !== "ADMIN" && (
+        <Card className="mt-6 border-red-200 bg-red-50/40">
+          <CardTitle className="text-red-900">
+            {t("delete_account_profile_title")}
+          </CardTitle>
+          <CardDescription className="mt-2">
+            {t("delete_account_profile_desc")}
+          </CardDescription>
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            {t("delete_account_profile_hint")}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button
+              type="button"
+              variant="danger"
+              disabled={busy}
+              onClick={() => void deleteAccount()}
+            >
+              {t("delete_account_profile_cta")}
+            </Button>
+            <Link href="/delete-account">
+              <Button type="button" variant="outline">
+                {t("delete_account_profile_info")}
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
