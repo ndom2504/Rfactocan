@@ -689,15 +689,9 @@ const dict = {
     home_carousel_prev: "Slide précédent",
     home_carousel_next: "Slide suivant",
     home_carousel_explore: "Explorer",
-    home_slide_emploi: "Emploi & opportunités",
-    home_slide_emploi_alt:
-      "Bannière Rfacto : recherche d'emploi et contact avec des employeurs",
-    home_slide_boutique: "Boutique en ligne",
-    home_slide_boutique_alt:
-      "Bannière Rfacto : créer sa boutique et vendre depuis son téléphone",
-    home_slide_fournisseurs: "Fournisseurs mondiaux",
-    home_slide_fournisseurs_alt:
-      "Bannière Rfacto : trouver des fournisseurs fiables partout dans le monde",
+    home_slide_communaute: "Communauté WhatsApp",
+    home_slide_communaute_alt:
+      "Bannière Rfacto Communauté : rejoindre le réseau mondial d'entraide et de développement des affaires",
     home_pillar_connect_title: "Connecter",
     home_pillar_connect_text:
       "Réseau de voyageurs, services et commerçants pour créer des opportunités locales et internationales.",
@@ -1827,15 +1821,9 @@ const dict = {
     home_carousel_prev: "Previous slide",
     home_carousel_next: "Next slide",
     home_carousel_explore: "Explore",
-    home_slide_emploi: "Jobs & opportunities",
-    home_slide_emploi_alt:
-      "Rfacto banner: job search and contact with employers",
-    home_slide_boutique: "Online shop",
-    home_slide_boutique_alt:
-      "Rfacto banner: create your shop and sell from your phone",
-    home_slide_fournisseurs: "Global suppliers",
-    home_slide_fournisseurs_alt:
-      "Rfacto banner: find reliable suppliers worldwide",
+    home_slide_communaute: "WhatsApp community",
+    home_slide_communaute_alt:
+      "Rfacto Community banner: join the global mutual-aid and business development network",
     home_pillar_connect_title: "Connect",
     home_pillar_connect_text:
       "A network of travelers, services and merchants creating local and international opportunities.",

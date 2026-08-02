@@ -10,13 +10,7 @@ import { RFACTO_SLIDES, RFACTO_SLIDE_MS } from "@/lib/rfacto-slides";
 
 const SLIDES = RFACTO_SLIDES.map((s) => ({
   ...s,
-  href: s.id === "emploi" ? "/services" : "/shops",
-  labelKey:
-    s.id === "emploi"
-      ? ("home_slide_emploi" as const)
-      : s.id === "boutique"
-        ? ("home_slide_boutique" as const)
-        : ("home_slide_fournisseurs" as const),
+  labelKey: "home_slide_communaute" as const,
 }));
 
 const SLIDE_MS = RFACTO_SLIDE_MS;
@@ -38,7 +32,7 @@ export function HomeHeroCarousel({ startHref }: Props) {
   }, []);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || SLIDES.length <= 1) return;
     const started = Date.now();
     setTick(0);
     const id = window.setInterval(() => {
@@ -53,6 +47,7 @@ export function HomeHeroCarousel({ startHref }: Props) {
   }, [paused, index]);
 
   useEffect(() => {
+    if (SLIDES.length <= 1) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "ArrowRight") go(index + 1);
       if (e.key === "ArrowLeft") go(index - 1);
@@ -63,6 +58,7 @@ export function HomeHeroCarousel({ startHref }: Props) {
 
   const progress = Math.min(1, tick / SLIDE_MS);
   const active = SLIDES[index]!;
+  const adHref = whatsapp;
 
   return (
     <section
@@ -72,7 +68,6 @@ export function HomeHeroCarousel({ startHref }: Props) {
       aria-roledescription="carousel"
       aria-label={t("home_carousel_label")}
     >
-      {/* Ambient brand wash behind contained mobile images */}
       <div
         className="pointer-events-none absolute inset-0 opacity-90"
         style={{
@@ -82,36 +77,52 @@ export function HomeHeroCarousel({ startHref }: Props) {
       />
 
       <div className="relative mx-auto flex min-h-[min(92vh,920px)] w-full max-w-[1400px] flex-col">
-        {/* Story progress bars */}
-        <div className="absolute inset-x-0 top-0 z-20 flex gap-1.5 px-4 pt-3 sm:px-6 sm:pt-4">
-          {SLIDES.map((slide, i) => (
-            <button
-              key={slide.id}
-              type="button"
-              aria-label={t(slide.labelKey)}
-              aria-current={i === index}
-              onClick={() => go(i)}
-              className="group h-1.5 flex-1 overflow-hidden rounded-full bg-white/25 transition hover:bg-white/35"
-            >
-              <span
-                className="block h-full origin-left rounded-full bg-white transition-[width] duration-75 ease-linear"
-                style={{
-                  width:
-                    i < index
-                      ? "100%"
-                      : i === index
-                        ? `${progress * 100}%`
-                        : "0%",
-                }}
-              />
-            </button>
-          ))}
-        </div>
+        {SLIDES.length > 1 ? (
+          <div className="absolute inset-x-0 top-0 z-20 flex gap-1.5 px-4 pt-3 sm:px-6 sm:pt-4">
+            {SLIDES.map((slide, i) => (
+              <button
+                key={slide.id}
+                type="button"
+                aria-label={t(slide.labelKey)}
+                aria-current={i === index}
+                onClick={() => go(i)}
+                className="group h-1.5 flex-1 overflow-hidden rounded-full bg-white/25 transition hover:bg-white/35"
+              >
+                <span
+                  className="block h-full origin-left rounded-full bg-white transition-[width] duration-75 ease-linear"
+                  style={{
+                    width:
+                      i < index
+                        ? "100%"
+                        : i === index
+                          ? `${progress * 100}%`
+                          : "0%",
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-        {/* Slides */}
         <div className="relative flex-1">
           {SLIDES.map((slide, i) => {
             const on = i === index;
+            const image = (
+              <div
+                className={`absolute inset-0 transition-transform duration-[6500ms] ease-out ${
+                  on ? "scale-[1.04]" : "scale-100"
+                }`}
+              >
+                <Image
+                  src={slide.src}
+                  alt={t(slide.altKey)}
+                  fill
+                  priority={i === 0}
+                  sizes="(max-width: 768px) 100vw, 1400px"
+                  className="object-contain object-center md:object-cover md:object-[center_20%]"
+                />
+              </div>
+            );
             return (
               <div
                 key={slide.id}
@@ -120,32 +131,29 @@ export function HomeHeroCarousel({ startHref }: Props) {
                 }`}
                 aria-hidden={!on}
               >
-                <div
-                  className={`absolute inset-0 transition-transform duration-[6500ms] ease-out ${
-                    on ? "scale-[1.04]" : "scale-100"
-                  }`}
-                >
-                  <Image
-                    src={slide.src}
-                    alt={t(slide.altKey)}
-                    fill
-                    priority={i === 0}
-                    sizes="(max-width: 768px) 100vw, 1400px"
-                    className="object-contain object-center md:object-cover md:object-[center_20%]"
-                  />
-                </div>
+                {adHref && on ? (
+                  <a
+                    href={adHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0 block"
+                    aria-label={t("cta_join_whatsapp")}
+                  >
+                    {image}
+                  </a>
+                ) : (
+                  image
+                )}
               </div>
             );
           })}
 
-          {/* Soft vignette so dock stays readable */}
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[rgba(27,59,20,0.94)] via-[rgba(27,59,20,0.4)] to-transparent"
             aria-hidden
           />
         </div>
 
-        {/* Interactive dock */}
         <div className="relative z-20 mx-auto w-full max-w-3xl px-4 pb-6 pt-2 sm:px-6 sm:pb-8">
           <div className="rounded-2xl border border-white/15 bg-white/10 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-md sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -157,24 +165,26 @@ export function HomeHeroCarousel({ startHref }: Props) {
                   {t(active.labelKey)}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => go(index - 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
-                  aria-label={t("home_carousel_prev")}
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={() => go(index + 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
-                  aria-label={t("home_carousel_next")}
-                >
-                  ›
-                </button>
-              </div>
+              {SLIDES.length > 1 ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => go(index - 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
+                    aria-label={t("home_carousel_prev")}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => go(index + 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
+                    aria-label={t("home_carousel_next")}
+                  >
+                    ›
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -184,15 +194,6 @@ export function HomeHeroCarousel({ startHref }: Props) {
                   className="h-12 w-full bg-white text-base font-semibold !text-[var(--rfacto-green-dark)] shadow-lg shadow-black/20 hover:bg-white/90 hover:!text-[var(--rfacto-green-dark)]"
                 >
                   {t("cta_start_here")}
-                </Button>
-              </Link>
-              <Link href={active.href} className="sm:flex-1">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 w-full border-white/40 bg-transparent text-sm font-medium text-white hover:bg-white/10"
-                >
-                  {t("home_carousel_explore")}
                 </Button>
               </Link>
               {whatsapp ? (
@@ -211,22 +212,6 @@ export function HomeHeroCarousel({ startHref }: Props) {
                 </a>
               ) : null}
             </div>
-          </div>
-
-          <div className="mt-3 flex justify-center gap-2">
-            {SLIDES.map((slide, i) => (
-              <button
-                key={`dot-${slide.id}`}
-                type="button"
-                onClick={() => go(i)}
-                aria-label={t(slide.labelKey)}
-                className={`h-2 rounded-full transition-all ${
-                  i === index
-                    ? "w-8 bg-white"
-                    : "w-2 bg-white/40 hover:bg-white/70"
-                }`}
-              />
-            ))}
           </div>
         </div>
       </div>

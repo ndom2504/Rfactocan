@@ -35,7 +35,7 @@ export function DashboardWelcomeBanner({
           />
         ) : (
           <Image
-            src="/images/home/slide-boutique.png"
+            src="/images/home/slide-communaute.png"
             alt=""
             fill
             priority
