@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
     let targetUserId = body.targetUserId ?? "";
-    let communityPostId: string | null = body.communityPostId ?? null;
+    const communityPostId: string | null = body.communityPostId ?? null;
 
     if (communityPostId) {
       const post = await prisma.communityPost.findFirst({
