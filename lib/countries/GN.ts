@@ -16,6 +16,7 @@ export const GN: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["orange_money", "mtn_momo", "mobile_money", "bank"],

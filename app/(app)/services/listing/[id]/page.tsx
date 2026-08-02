@@ -123,7 +123,10 @@ export default function ServiceListingDetailPage() {
 
         {(listing.products?.length ?? 0) > 0 && (
           <p className="mt-3 text-sm text-[var(--muted)]">
-            {t("services_sale_products")}:{" "}
+            {listing.category === "formation"
+              ? t("services_formation_topics")
+              : t("services_sale_products")}
+            :{" "}
             {listing.products!
               .map((p) =>
                 productLabel(

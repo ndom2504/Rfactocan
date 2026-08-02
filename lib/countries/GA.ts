@@ -41,6 +41,7 @@ export const GA: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["airtel_money", "moov_money", "mobile_money", "bank"],

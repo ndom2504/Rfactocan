@@ -23,6 +23,7 @@ export const MA: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["stripe", "bank", "mobile_money"],

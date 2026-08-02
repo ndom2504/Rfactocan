@@ -21,6 +21,7 @@ export const SERVICE_CATEGORIES = [
   "sport",
   "vente",
   "informatique",
+  "formation",
   "transport",
   "transitaire",
   "autre",
@@ -436,6 +437,63 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
     ],
   },
   {
+    id: "formation",
+    labelFr: "Formation",
+    labelEn: "Training",
+    hintFr:
+      "Cours et accompagnement : langues, programmation, dropshipping, métiers en ligne…",
+    hintEn:
+      "Courses and coaching: languages, programming, dropshipping, online trades…",
+    isParcel: false,
+    types: [
+      {
+        id: "langues",
+        labelFr: "Langues",
+        labelEn: "Languages",
+      },
+      {
+        id: "programmation",
+        labelFr: "Programmation & tech",
+        labelEn: "Programming & tech",
+      },
+      {
+        id: "dropshipping",
+        labelFr: "Dropshipping & e-commerce",
+        labelEn: "Dropshipping & e-commerce",
+      },
+      {
+        id: "metiers_en_ligne",
+        labelFr: "Métiers en ligne",
+        labelEn: "Online trades",
+      },
+      {
+        id: "marketing_digital",
+        labelFr: "Marketing digital",
+        labelEn: "Digital marketing",
+      },
+      {
+        id: "bureautique",
+        labelFr: "Bureautique & gestion",
+        labelEn: "Office & business skills",
+      },
+      {
+        id: "design_creation",
+        labelFr: "Design & création",
+        labelEn: "Design & creation",
+      },
+      {
+        id: "business_entrepreneuriat",
+        labelFr: "Business & entrepreneuriat",
+        labelEn: "Business & entrepreneurship",
+      },
+      {
+        id: "autre_formation",
+        labelFr: "Autre formation",
+        labelEn: "Other training",
+      },
+    ],
+  },
+  {
     id: "transport",
     labelFr: "Transport",
     labelEn: "Transport",
@@ -620,11 +678,236 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
 export const PRICE_UNITS = [
   { id: "forfait", labelFr: "Forfait", labelEn: "Flat fee" },
   { id: "heure", labelFr: "Par heure", labelEn: "Per hour" },
+  { id: "session", labelFr: "Par session / cours", labelEn: "Per session / class" },
   { id: "jour", labelFr: "Par jour", labelEn: "Per day" },
   { id: "nuit", labelFr: "Par nuit", labelEn: "Per night" },
 ] as const;
 
 export type PriceUnitId = (typeof PRICE_UNITS)[number]["id"];
+
+/** Thèmes / cours suggérés par domaine de formation. */
+export const FORMATION_TOPICS_BY_DOMAIN: Record<string, ServiceTypeDef[]> = {
+  langues: [
+    { id: "francais", labelFr: "Français", labelEn: "French" },
+    { id: "anglais", labelFr: "Anglais", labelEn: "English" },
+    { id: "espagnol", labelFr: "Espagnol", labelEn: "Spanish" },
+    { id: "portugais", labelFr: "Portugais", labelEn: "Portuguese" },
+    { id: "arabe", labelFr: "Arabe", labelEn: "Arabic" },
+    { id: "chinois", labelFr: "Chinois", labelEn: "Chinese" },
+    { id: "allemand", labelFr: "Allemand", labelEn: "German" },
+    { id: "italien", labelFr: "Italien", labelEn: "Italian" },
+    { id: "conversation", labelFr: "Conversation", labelEn: "Conversation" },
+    { id: "prep_examens", labelFr: "Préparation examens", labelEn: "Exam prep" },
+  ],
+  programmation: [
+    { id: "html_css", labelFr: "HTML / CSS", labelEn: "HTML / CSS" },
+    { id: "javascript", labelFr: "JavaScript", labelEn: "JavaScript" },
+    { id: "typescript", labelFr: "TypeScript", labelEn: "TypeScript" },
+    { id: "python", labelFr: "Python", labelEn: "Python" },
+    { id: "java", labelFr: "Java", labelEn: "Java" },
+    { id: "php", labelFr: "PHP", labelEn: "PHP" },
+    { id: "react_next", labelFr: "React / Next.js", labelEn: "React / Next.js" },
+    {
+      id: "mobile_dev",
+      labelFr: "Développement mobile",
+      labelEn: "Mobile development",
+    },
+    {
+      id: "bases_donnees",
+      labelFr: "Bases de données",
+      labelEn: "Databases",
+    },
+    { id: "devops", labelFr: "DevOps / cloud", labelEn: "DevOps / cloud" },
+    {
+      id: "algo_bases",
+      labelFr: "Algorithmes & bases",
+      labelEn: "Algorithms & fundamentals",
+    },
+  ],
+  dropshipping: [
+    { id: "shopify", labelFr: "Shopify", labelEn: "Shopify" },
+    { id: "aliexpress", labelFr: "AliExpress / sourcing", labelEn: "AliExpress / sourcing" },
+    {
+      id: "personal_shopper",
+      labelFr: "Personal shopper",
+      labelEn: "Personal shopper",
+    },
+    {
+      id: "pubs_meta",
+      labelFr: "Publicités Meta / TikTok",
+      labelEn: "Meta / TikTok ads",
+    },
+    {
+      id: "niche_produits",
+      labelFr: "Choix de niche / produits",
+      labelEn: "Niche / product research",
+    },
+    {
+      id: "logistique_ds",
+      labelFr: "Logistique & livraisons",
+      labelEn: "Logistics & shipping",
+    },
+    {
+      id: "boutique_en_ligne",
+      labelFr: "Création de boutique",
+      labelEn: "Store setup",
+    },
+    {
+      id: "funnels_conversion",
+      labelFr: "Funnels & conversion",
+      labelEn: "Funnels & conversion",
+    },
+  ],
+  metiers_en_ligne: [
+    {
+      id: "assistant_virtuel",
+      labelFr: "Assistant(e) virtuel(le)",
+      labelEn: "Virtual assistant",
+    },
+    {
+      id: "community_manager",
+      labelFr: "Community manager",
+      labelEn: "Community manager",
+    },
+    {
+      id: "redaction_web",
+      labelFr: "Rédaction web",
+      labelEn: "Web writing",
+    },
+    { id: "traduction", labelFr: "Traduction", labelEn: "Translation" },
+    {
+      id: "customer_support",
+      labelFr: "Support client en ligne",
+      labelEn: "Online customer support",
+    },
+    {
+      id: "coaching_en_ligne",
+      labelFr: "Coaching en ligne",
+      labelEn: "Online coaching",
+    },
+    {
+      id: "freelance_debutant",
+      labelFr: "Se lancer en freelance",
+      labelEn: "Getting started freelancing",
+    },
+    {
+      id: "vente_services",
+      labelFr: "Vendre ses services (Fiverr, etc.)",
+      labelEn: "Selling services (Fiverr, etc.)",
+    },
+  ],
+  marketing_digital: [
+    { id: "seo", labelFr: "SEO", labelEn: "SEO" },
+    {
+      id: "google_ads",
+      labelFr: "Google Ads",
+      labelEn: "Google Ads",
+    },
+    {
+      id: "meta_ads",
+      labelFr: "Publicité Facebook / Instagram",
+      labelEn: "Facebook / Instagram ads",
+    },
+    {
+      id: "email_marketing",
+      labelFr: "Email marketing",
+      labelEn: "Email marketing",
+    },
+    {
+      id: "content_marketing",
+      labelFr: "Content marketing",
+      labelEn: "Content marketing",
+    },
+    {
+      id: "influence",
+      labelFr: "Influence / partenariats",
+      labelEn: "Influencer / partnerships",
+    },
+    {
+      id: "analytics",
+      labelFr: "Analytics & tracking",
+      labelEn: "Analytics & tracking",
+    },
+  ],
+  bureautique: [
+    { id: "word", labelFr: "Word", labelEn: "Word" },
+    { id: "excel", labelFr: "Excel", labelEn: "Excel" },
+    { id: "powerpoint", labelFr: "PowerPoint", labelEn: "PowerPoint" },
+    {
+      id: "google_workspace",
+      labelFr: "Google Workspace",
+      labelEn: "Google Workspace",
+    },
+    {
+      id: "compta_base",
+      labelFr: "Comptabilité de base",
+      labelEn: "Basic accounting",
+    },
+    {
+      id: "gestion_pme",
+      labelFr: "Gestion PME",
+      labelEn: "SME management",
+    },
+  ],
+  design_creation: [
+    { id: "canva", labelFr: "Canva", labelEn: "Canva" },
+    { id: "photoshop", labelFr: "Photoshop", labelEn: "Photoshop" },
+    {
+      id: "video_short",
+      labelFr: "Vidéo short / Reels / TikTok",
+      labelEn: "Short video / Reels / TikTok",
+    },
+    { id: "photo", labelFr: "Photographie", labelEn: "Photography" },
+    {
+      id: "identite_visuelle",
+      labelFr: "Identité visuelle / logo",
+      labelEn: "Brand identity / logo",
+    },
+  ],
+  business_entrepreneuriat: [
+    {
+      id: "business_plan",
+      labelFr: "Business plan",
+      labelEn: "Business plan",
+    },
+    {
+      id: "ecommerce",
+      labelFr: "E-commerce",
+      labelEn: "E-commerce",
+    },
+    {
+      id: "import_export",
+      labelFr: "Import-export",
+      labelEn: "Import-export",
+    },
+    {
+      id: "soft_skills",
+      labelFr: "Soft skills",
+      labelEn: "Soft skills",
+    },
+    { id: "leadership", labelFr: "Leadership", labelEn: "Leadership" },
+    {
+      id: "vente_negociation",
+      labelFr: "Vente & négociation",
+      labelEn: "Sales & negotiation",
+    },
+    {
+      id: "finance_perso",
+      labelFr: "Finance personnelle",
+      labelEn: "Personal finance",
+    },
+  ],
+  autre_formation: [
+    { id: "divers_formation", labelFr: "Divers", labelEn: "Miscellaneous" },
+  ],
+};
+
+export function formationTopicsForDomain(domainId: string): ServiceTypeDef[] {
+  return (
+    FORMATION_TOPICS_BY_DOMAIN[domainId] ??
+    FORMATION_TOPICS_BY_DOMAIN.autre_formation
+  );
+}
 
 /** Produits suggérés par secteur de vente (serviceType de la catégorie `vente`). */
 export const SALE_PRODUCTS_BY_SECTOR: Record<string, ServiceTypeDef[]> = {
@@ -717,6 +1000,13 @@ export function productLabel(
   productId: string,
   locale: "fr" | "en" = "fr"
 ): string {
+  if (FORMATION_TOPICS_BY_DOMAIN[sectorId]) {
+    const topic = FORMATION_TOPICS_BY_DOMAIN[sectorId].find(
+      (p) => p.id === productId
+    );
+    if (topic) return locale === "en" ? topic.labelEn : topic.labelFr;
+    return productId;
+  }
   const found = saleProductsForSector(sectorId).find((p) => p.id === productId);
   if (found) return locale === "en" ? found.labelEn : found.labelFr;
   return productId;

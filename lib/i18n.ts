@@ -73,7 +73,7 @@ const dict = {
       "Connecter = s’abonner à cette personne. Le compteur sous l’avatar indique le nombre de connexions.",
     services_title: "Colis & services",
     services_subtitle:
-      "Parcourez les catégories ou publiez une offre : sport, vente, informatique, hébergement…",
+      "Parcourez les catégories ou publiez une offre : formation, sport, vente, informatique, hébergement…",
     services_publish: "Publier un service",
     services_publish_hint:
       "Pour les commerciaux : fret, cargo, transport et autres services par catégorie.",
@@ -87,6 +87,13 @@ const dict = {
     services_sale_product_filter: "Filtrer par produit",
     services_sale_product_custom: "Produit spécifique…",
     services_sale_product_add: "Ajouter",
+    services_formation_domain: "Domaine de formation",
+    services_formation_topics: "Thèmes / cours",
+    services_formation_topics_hint:
+      "Sélectionnez les thèmes enseignés (langues, programmation, dropshipping…), ou ajoutez un thème.",
+    services_formation_topic_filter: "Filtrer par thème",
+    services_formation_topic_custom: "Thème spécifique…",
+    services_formation_topic_add: "Ajouter",
     services_photos: "Photos de l’offre (max 5)",
     services_photos_hint:
       "La première photo sert d’affiche (logo ou image du service). jpeg, png, webp, gif.",
@@ -1230,7 +1237,7 @@ const dict = {
       "Connect = follow this person. The counter under the avatar shows how many connections they have.",
     services_title: "Parcels & services",
     services_subtitle:
-      "Browse categories or publish an offer: sport, sales, IT, lodging…",
+      "Browse categories or publish an offer: training, sport, sales, IT, lodging…",
     services_publish: "Publish a service",
     services_publish_hint:
       "For businesses: freight, cargo, transport and other services by category.",
@@ -1244,6 +1251,13 @@ const dict = {
     services_sale_product_filter: "Filter by product",
     services_sale_product_custom: "Specific product…",
     services_sale_product_add: "Add",
+    services_formation_domain: "Training domain",
+    services_formation_topics: "Topics / courses",
+    services_formation_topics_hint:
+      "Select the topics you teach (languages, programming, dropshipping…), or add a custom topic.",
+    services_formation_topic_filter: "Filter by topic",
+    services_formation_topic_custom: "Specific topic…",
+    services_formation_topic_add: "Add",
     services_photos: "Offer photos (max 5)",
     services_photos_hint:
       "The first photo is the cover (logo or service image). jpeg, png, webp, gif.",

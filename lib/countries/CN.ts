@@ -22,6 +22,7 @@ export const CN: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["stripe", "bank"],

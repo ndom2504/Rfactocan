@@ -24,6 +24,7 @@ export const SN: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["orange_money", "mobile_money", "bank"],

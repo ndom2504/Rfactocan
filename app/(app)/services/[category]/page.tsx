@@ -14,6 +14,7 @@ import {
   isServiceCategoryId,
   productLabel,
   saleProductsForSector,
+  formationTopicsForDomain,
   serviceTypeLabel,
 } from "@/lib/services-catalog";
 import { formatMoney } from "@/lib/currency";
@@ -171,7 +172,9 @@ export default function ServiceCategoryPage() {
           <Label>
             {category === "vente"
               ? t("services_sale_sector")
-              : t("services_type")}
+              : category === "formation"
+                ? t("services_formation_domain")
+                : t("services_type")}
           </Label>
           <Select value={type} onChange={(e) => setType(e.target.value)}>
             <option value="">{t("all")}</option>
@@ -201,6 +204,29 @@ export default function ServiceCategoryPage() {
               {(type
                 ? saleProductsForSector(type)
                 : cat.types.flatMap((tp) => saleProductsForSector(tp.id))
+              )
+                .filter(
+                  (p, i, arr) => arr.findIndex((x) => x.id === p.id) === i
+                )
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {locale === "en" ? p.labelEn : p.labelFr}
+                  </option>
+                ))}
+            </Select>
+          </div>
+        )}
+        {category === "formation" && (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>{t("services_formation_topic_filter")}</Label>
+            <Select
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+            >
+              <option value="">{t("all")}</option>
+              {(type
+                ? formationTopicsForDomain(type)
+                : cat.types.flatMap((tp) => formationTopicsForDomain(tp.id))
               )
                 .filter(
                   (p, i, arr) => arr.findIndex((x) => x.id === p.id) === i

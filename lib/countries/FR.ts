@@ -24,6 +24,7 @@ export const FR: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["stripe", "bank"],

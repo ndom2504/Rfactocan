@@ -23,6 +23,7 @@ import {
   parseTransportServiceType,
   productLabel,
   saleProductsForSector,
+  formationTopicsForDomain,
   transportServiceTypesForMode,
 } from "@/lib/services-catalog";
 import {
@@ -64,6 +65,11 @@ function NewServiceForm() {
     () => (category === "vente" ? saleProductsForSector(serviceType) : []),
     [category, serviceType]
   );
+  const formationTopics = useMemo(
+    () =>
+      category === "formation" ? formationTopicsForDomain(serviceType) : [],
+    [category, serviceType]
+  );
   const cities = useMemo(() => getCities(country), [country]);
   const publishable = SERVICE_CATALOG.filter((c) => !c.isParcel);
   const transportTypes = useMemo(
@@ -84,7 +90,7 @@ function NewServiceForm() {
   }, [category, cat, serviceType]);
 
   useEffect(() => {
-    if (category !== "vente") {
+    if (category !== "vente" && category !== "formation") {
       setProducts([]);
       setCustomProduct("");
       return;
@@ -147,7 +153,9 @@ function NewServiceForm() {
       availableTo: String(fd.get("availableTo") || "") || undefined,
       photos,
       websiteUrl: websiteUrl.trim() || undefined,
-      ...(category === "vente" ? { products } : {}),
+      ...(category === "vente" || category === "formation"
+        ? { products }
+        : {}),
     };
     const res = await fetch("/api/services", {
       method: "POST",
@@ -198,7 +206,9 @@ function NewServiceForm() {
               <Label>
                 {category === "vente"
                   ? t("services_sale_sector")
-                  : t("services_type")}
+                  : category === "formation"
+                    ? t("services_formation_domain")
+                    : t("services_type")}
               </Label>
               <Select
                 value={serviceType}
@@ -300,6 +310,71 @@ function NewServiceForm() {
                 }}
               >
                 {t("services_sale_product_add")}
+              </Button>
+            </div>
+            {products.length > 0 && (
+              <p className="text-xs text-[var(--muted)]">
+                {products
+                  .map((p) =>
+                    productLabel(serviceType, p, locale === "en" ? "en" : "fr")
+                  )
+                  .join(" · ")}
+              </p>
+            )}
+          </div>
+        )}
+
+        {category === "formation" && (
+          <div className="space-y-2">
+            <Label>{t("services_formation_topics")}</Label>
+            <p className="text-xs text-[var(--muted)]">
+              {t("services_formation_topics_hint")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {formationTopics.map((p) => {
+                const selected = products.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() =>
+                      setProducts((prev) =>
+                        selected
+                          ? prev.filter((x) => x !== p.id)
+                          : [...prev, p.id].slice(0, 20)
+                      )
+                    }
+                    className={`rounded-md border px-3 py-1.5 text-sm ${
+                      selected
+                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                        : "border-[var(--border)] text-[var(--foreground)]"
+                    }`}
+                  >
+                    {locale === "en" ? p.labelEn : p.labelFr}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                value={customProduct}
+                onChange={(e) => setCustomProduct(e.target.value)}
+                placeholder={t("services_formation_topic_custom")}
+                className="max-w-xs"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const value = customProduct.trim();
+                  if (!value) return;
+                  setProducts((prev) =>
+                    prev.includes(value) ? prev : [...prev, value].slice(0, 20)
+                  );
+                  setCustomProduct("");
+                }}
+              >
+                {t("services_formation_topic_add")}
               </Button>
             </div>
             {products.length > 0 && (

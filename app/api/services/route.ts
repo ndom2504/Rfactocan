@@ -127,7 +127,9 @@ export async function POST(request: Request) {
     }
 
     const products =
-      body.category === "vente" ? parseProductsJson(body.products ?? []) : [];
+      body.category === "vente" || body.category === "formation"
+        ? parseProductsJson(body.products ?? [])
+        : [];
     const websiteUrl = normalizeWebsiteUrl(body.websiteUrl);
     if (body.websiteUrl?.trim() && !websiteUrl) {
       return NextResponse.json(

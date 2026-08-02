@@ -16,6 +16,7 @@ export const CG: CountryConfig = {
     "evenements",
     "transport",
     "transitaire",
+    "formation",
     "autre",
   ],
   payments: ["mtn_momo", "airtel_money", "mobile_money", "bank"],
