@@ -62,6 +62,12 @@ export default async function MarketingLayout({
                 {t(locale, "nav_privacy")}
               </Link>
               <Link
+                href="/child-safety"
+                className="hover:text-[var(--foreground)]"
+              >
+                {t(locale, "nav_child_safety")}
+              </Link>
+              <Link
                 href="/delete-account"
                 className="hover:text-[var(--foreground)]"
               >

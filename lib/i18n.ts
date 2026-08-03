@@ -518,6 +518,42 @@ const dict = {
     privacy_s13_title: "13. Contact",
     privacy_s13_text:
       "RapidFacto / Rfacto — contact@rfacto.com — Site : https://www.rfacto.com",
+
+    // Child safety standards (Google Play / public CSAE standards)
+    nav_child_safety: "Sécurité des enfants",
+    child_safety_title: "Normes liées à la sécurité des enfants",
+    child_safety_updated: "Dernière mise à jour : 3 août 2026",
+    child_safety_lead:
+      "Ces normes décrivent la politique de RapidFacto (« Rfacto ») contre l’exploitation d’enfants et les abus sexuels sur mineurs (CSAE / CSAM). Elles s’appliquent au site www.rfacto.com et à l’application mobile Rfacto. Zéro tolérance : tout contenu, comportement ou tentative liée à l’exploitation sexuelle d’enfants est strictement interdit.",
+    child_safety_scope:
+      "Cette page est publique, accessible dans le monde entier, et constitue la référence publiée de nos standards de sécurité des enfants pour les utilisateurs, partenaires et autorités de distribution (notamment Google Play).",
+    child_safety_s1_title: "1. Tolérance zéro",
+    child_safety_s1_text:
+      "Rfacto interdit toute forme d’exploitation d’enfants, d’abus sexuels sur mineurs, de matériel d’abus sexuels d’enfants (CSAM), de grooming, de sollicitation sexuelle de mineurs, de captation ou de partage d’images intimes de mineurs, ainsi que toute apologie, facilitation ou commerce y afférent. Ces interdictions s’appliquent aux profils, messages, annonces, médias (images, vidéos, documents), boutiques, services, communauté et tout autre canal de l’application.",
+    child_safety_s2_title: "2. Public et âge",
+    child_safety_s2_text:
+      "Rfacto est une plateforme d’affaires, de logistique collaborative et de services destinée aux adultes. Les mineurs ne sont pas une cible d’usage. Les utilisateurs doivent fournir des informations exactes. Toute tentative de se faire passer pour un mineur à des fins d’exploitation, ou de viser des mineurs, est interdite et entraîne des sanctions immédiates.",
+    child_safety_s3_title: "3. Contenu interdit",
+    child_safety_s3_text:
+      "Sont notamment interdits :\n• tout contenu sexuel impliquant un mineur (réel ou fictif) ;\n• tout échange, demande, offre ou lien visant à obtenir, produire, diffuser ou monétiser du CSAM ;\n• le chat, la publication ou le partage visant le grooming ou la rencontre sexuelle avec un mineur ;\n• les annonces ou services qui instrumentalistraient des mineurs à des fins d’exploitation sexual ou autre.\nRfacto n’héberge pas et n’autorise pas ce type de contenu. Lorsque de tels éléments sont détectés ou signalés, ils sont retirés au plus vite.",
+    child_safety_s4_title: "4. Signalement et détection",
+    child_safety_s4_text:
+      "Les utilisateurs peuvent signaler du contenu ou un comportement via l’application (fonction de signalement des publications / support) ou par e-mail à contact@rfacto.com (objet recommandé : « Signalement sécurité enfants »). Nous examinons les signalements prioritaires relatifs à la sécurité des enfants. Selon le canal concerné (communauté, messages liés aux réservations, profils), l’équipe peut suspendre le contenu, limiter l’accès au compte et conserver les éléments nécessaires aux analyses et, le cas échéant, aux autorités compétentes.",
+    child_safety_s5_title: "5. Modération et mesures",
+    child_safety_s5_text:
+      "En cas de violation soupçonnée ou confirmée de ces normes, Rfacto peut, sans préavis lorsque nécessaire : retirer le contenu ; restreindre, suspendre ou résilier le compte ; bloquer l’accès aux fonctions de publication, messagerie ou paiement ; conserver des preuves techniques utiles ; et coopérer avec les forces de l’ordre. Les récidives ou les cas graves entraînent un bannissement permanent.",
+    child_safety_s6_title: "6. Signalement aux autorités",
+    child_safety_s6_text:
+      "Lorsque la loi l’exige ou que les faits le justifient (y compris le CSAM et les menaces graves pour des mineurs), Rfacto peut signaler le contenu et les informations pertinentes aux autorités compétentes et aux organisations habilitées (selon le pays et le cadre juridique applicable), et conserver des données conformément à nos obligations légales et à notre politique de confidentialité.",
+    child_safety_s7_title: "7. Engagements de la plateforme",
+    child_safety_s7_text:
+      "Nous nous engageons à : maintenir ces normes publique et à jour ; prendre au sérieux chaque signalement de sécurité des enfants ; former l’équipe concernée aux enjeux de sécurité ; améliorer nos outils de signalement et de revue lorsque c’est pertinent ; et ne pas monétiser ni promouvoir de contenu lié à l’exploitation d’enfants.",
+    child_safety_s8_title: "8. Responsabilité des utilisateurs",
+    child_safety_s8_text:
+      "En utilisant Rfacto, vous acceptez ces normes. Vous ne devez pas téléverser, transmettre, stocker ni demander de contenu illégal impliquant des mineurs. Vous devez signaler rapidement tout contenu ou comportement suspect. Le non-respect peut entraîner des mesures de plateforme et des poursuites prévues par la loi.",
+    child_safety_s9_title: "9. Contact",
+    child_safety_s9_text:
+      "Pour toute question ou signalement lié à la sécurité des enfants :\nRapidFacto / Rfacto\nE-mail : contact@rfacto.com\nSite : https://www.rfacto.com\nURL canonique de ces normes : https://www.rfacto.com/child-safety",
     delete_account_title: "Suppression de compte",
     delete_account_lead:
       "Vous pouvez demander la suppression de votre compte Rfacto et des données personnelles associées. Cette page répond aux exigences Google Play (Account deletion).",
@@ -1697,6 +1733,42 @@ const dict = {
     privacy_s13_title: "13. Contact",
     privacy_s13_text:
       "RapidFacto / Rfacto — contact@rfacto.com — Website: https://www.rfacto.com",
+
+    // Child safety standards (Google Play / public CSAE standards)
+    nav_child_safety: "Child safety",
+    child_safety_title: "Child safety standards",
+    child_safety_updated: "Last updated: August 3, 2026",
+    child_safety_lead:
+      "These standards describe RapidFacto (“Rfacto”) policies against child sexual abuse and exploitation (CSAE / CSAM). They apply to www.rfacto.com and the Rfacto mobile app. Zero tolerance: any content, behavior, or attempt related to the sexual exploitation of children is strictly prohibited.",
+    child_safety_scope:
+      "This page is public, accessible worldwide, and is our published child-safety standards reference for users, partners, and distribution platforms (including Google Play).",
+    child_safety_s1_title: "1. Zero tolerance",
+    child_safety_s1_text:
+      "Rfacto prohibits any form of child exploitation, child sexual abuse, child sexual abuse material (CSAM), grooming, sexual solicitation of minors, obtaining or sharing intimate images of minors, and any promotion, facilitation, or trade related to the above. These bans apply to profiles, messages, posts, media (images, videos, documents), shops, services, community, and any other in-app channel.",
+    child_safety_s2_title: "2. Audience and age",
+    child_safety_s2_text:
+      "Rfacto is a business, collaborative logistics, and services platform intended for adults. Minors are not a target audience. Users must provide accurate information. Impersonating a minor for exploitation purposes, or targeting minors, is prohibited and will lead to immediate action.",
+    child_safety_s3_title: "3. Prohibited content",
+    child_safety_s3_text:
+      "The following are prohibited, including but not limited to:\n• any sexual content involving a minor (real or fictional);\n• any exchange, request, offer, or link seeking to obtain, produce, distribute, or monetize CSAM;\n• chat, posts, or sharing intended for grooming or sexual contact with a minor;\n• listings or services that would instrumentalize minors for sexual or other exploitation.\nRfacto does not host or allow such content. When detected or reported, it is removed as quickly as possible.",
+    child_safety_s4_title: "4. Reporting and detection",
+    child_safety_s4_text:
+      "Users may report content or behavior in the app (post reporting / support) or by email to contact@rfacto.com (recommended subject: “Child safety report”). We prioritize child-safety reports. Depending on the channel (community, booking messages, profiles), the team may take down content, restrict the account, and retain elements needed for review and, where appropriate, competent authorities.",
+    child_safety_s5_title: "5. Moderation and enforcement",
+    child_safety_s5_text:
+      "For suspected or confirmed violations of these standards, Rfacto may, without prior notice when necessary: remove content; restrict, suspend, or terminate the account; block publishing, messaging, or payment features; retain technical evidence; and cooperate with law enforcement. Serious or repeated cases result in permanent bans.",
+    child_safety_s6_title: "6. Reporting to authorities",
+    child_safety_s6_text:
+      "Where required by law or where facts warrant it (including CSAM and serious threats to minors), Rfacto may report relevant content and information to competent authorities and authorized organizations (depending on country and legal framework), and retain data in line with legal duties and our privacy policy.",
+    child_safety_s7_title: "7. Platform commitments",
+    child_safety_s7_text:
+      "We commit to: keep these standards public and up to date; treat every child-safety report seriously; train relevant staff on safety issues; improve reporting and review tools where appropriate; and never monetize or promote content related to child exploitation.",
+    child_safety_s8_title: "8. User responsibilities",
+    child_safety_s8_text:
+      "By using Rfacto, you accept these standards. You must not upload, transmit, store, or request illegal content involving minors. You must promptly report any suspicious content or behavior. Non-compliance may lead to platform measures and legal consequences.",
+    child_safety_s9_title: "9. Contact",
+    child_safety_s9_text:
+      "For child-safety questions or reports:\nRapidFacto / Rfacto\nEmail: contact@rfacto.com\nWebsite: https://www.rfacto.com\nCanonical URL for these standards: https://www.rfacto.com/child-safety",
     delete_account_title: "Account deletion",
     delete_account_lead:
       "You can request deletion of your Rfacto account and associated personal data. This page meets Google Play account deletion requirements.",
