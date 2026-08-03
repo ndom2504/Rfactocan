@@ -46,14 +46,22 @@ export function isImageAttachment(contentType: string) {
   return contentType.startsWith("image/");
 }
 
-export function isVideoAttachment(contentType: string) {
+export function isVideoAttachment(
+  contentType: string,
+  nameOrUrl?: string | null
+) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
-  return (
+  if (
     type.startsWith("video/") ||
     type === "video/mp4" ||
     type === "video/webm" ||
     type === "video/quicktime"
-  );
+  ) {
+    return true;
+  }
+  // Fallback when MIME is missing / octet-stream (common on mobile uploads).
+  const hay = (nameOrUrl || "").toLowerCase();
+  return /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(hay);
 }
 
 export const COMMUNITY_ALLOWED_IMAGES = new Set([

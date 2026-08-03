@@ -1,12 +1,13 @@
 "use client";
 
+import { CommunityVideoPlayer } from "@/components/community-video-player";
 import {
   isImageAttachment,
   isVideoAttachment,
   type CommunityAttachment,
 } from "@/lib/community";
 
-/** X-style media: full width, natural height (no crop). */
+/** Feed media: images and Facebook-style adaptive video previews. */
 export function CommunityMediaGrid({
   attachments,
   postId,
@@ -17,9 +18,13 @@ export function CommunityMediaGrid({
   if (!attachments.length) return null;
 
   const images = attachments.filter((a) => isImageAttachment(a.contentType));
-  const videos = attachments.filter((a) => isVideoAttachment(a.contentType));
+  const videos = attachments.filter(
+    (a) => isVideoAttachment(a.contentType, a.name || a.url)
+  );
   const files = attachments.filter(
-    (a) => !isImageAttachment(a.contentType) && !isVideoAttachment(a.contentType)
+    (a) =>
+      !isImageAttachment(a.contentType) &&
+      !isVideoAttachment(a.contentType, a.name || a.url)
   );
 
   return (
@@ -29,7 +34,7 @@ export function CommunityMediaGrid({
         <img
           src={images[0].url}
           alt={images[0].name}
-          className="block h-auto w-full"
+          className="block h-auto w-full max-h-[min(72vh,640px)] object-contain bg-[var(--surface-2)]"
         />
       )}
       {images.length === 2 && (
@@ -40,7 +45,7 @@ export function CommunityMediaGrid({
               key={`${postId}-img-${i}`}
               src={a.url}
               alt={a.name}
-              className="h-auto w-full object-contain"
+              className="h-auto w-full max-h-[min(60vh,480px)] object-contain"
             />
           ))}
         </div>
@@ -53,22 +58,13 @@ export function CommunityMediaGrid({
               key={`${postId}-img-${i}`}
               src={a.url}
               alt={a.name}
-              className="block h-auto w-full"
+              className="block h-auto w-full max-h-[min(50vh,400px)] object-contain"
             />
           ))}
         </div>
       )}
       {videos.map((a, i) => (
-        <video
-          key={`${postId}-vid-${i}`}
-          src={a.url}
-          controls
-          playsInline
-          preload="metadata"
-          className="block h-auto w-full bg-black"
-        >
-          <track kind="captions" />
-        </video>
+        <CommunityVideoPlayer key={`${postId}-vid-${i}`} src={a.url} />
       ))}
       {files.map((a, i) => (
         <a

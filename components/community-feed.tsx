@@ -12,6 +12,7 @@ import {
 import { communitySharePath } from "@/lib/community-share";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
+import { CommunityVideoPlayer } from "@/components/community-video-player";
 import {
   COMMUNITY_POST_KINDS,
   isImageAttachment,
@@ -335,14 +336,8 @@ export function CommunityFeed() {
                           alt={a.name}
                           className="h-40 w-full object-cover"
                         />
-                      ) : isVideoAttachment(a.contentType) ? (
-                        <video
-                          src={a.url}
-                          controls
-                          playsInline
-                          preload="metadata"
-                          className="h-40 w-full bg-black object-contain"
-                        />
+                      ) : isVideoAttachment(a.contentType, a.name || a.url) ? (
+                        <CommunityVideoPlayer src={a.url} compact />
                       ) : (
                         <a
                           href={a.url}
@@ -374,7 +369,7 @@ export function CommunityFeed() {
                         ✕
                       </button>
                       {(isImageAttachment(a.contentType) ||
-                        isVideoAttachment(a.contentType)) && (
+                        isVideoAttachment(a.contentType, a.name || a.url)) && (
                         <p className="truncate border-t border-[var(--border)] px-2 py-1.5 text-[11px] text-[var(--muted)]">
                           {a.name}
                         </p>
