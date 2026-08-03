@@ -12,7 +12,6 @@ import {
 import {
   blobAccess,
   isBlobConfigured,
-  toAppMediaUrlFromBlob,
   uploadCommunityFile,
 } from "@/lib/storage";
 
@@ -198,6 +197,3 @@ export async function GET() {
     blobConfigured: isBlobConfigured(),
   });
 }
-
-// Re-export helper used by client helpers if needed later
-export { toAppMediaUrlFromBlob };
