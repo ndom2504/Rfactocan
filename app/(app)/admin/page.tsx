@@ -207,6 +207,7 @@ export default function AdminPage() {
   const [userTo, setUserTo] = useState("");
   const [userFromDraft, setUserFromDraft] = useState("");
   const [userToDraft, setUserToDraft] = useState("");
+  const [exportingEmails, setExportingEmails] = useState(false);
 
   async function load(opts?: {
     letter?: string;
@@ -380,6 +381,34 @@ export default function AdminPage() {
       return;
     }
     await load();
+  }
+
+  async function downloadUsersEmailsCsv() {
+    setExportingEmails(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/users-emails-csv");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Export impossible");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers
+          .get("Content-Disposition")
+          ?.match(/filename="?([^"]+)"?/)?.[1] || "rfacto-users-emails.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Export CSV échoué");
+    } finally {
+      setExportingEmails(false);
+    }
   }
 
   async function resolveReport(reportId: string) {
@@ -738,6 +767,18 @@ export default function AdminPage() {
               {data.users.length >= 100 ? " (100 max affichés)" : ""}
             </p>
           </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={exportingEmails}
+              onClick={() => void downloadUsersEmailsCsv()}
+              title="CSV des courriels pour testeurs Google Play / App Store"
+            >
+              {exportingEmails
+                ? "Export…"
+                : "CSV courriels (testeurs store)"}
+            </Button>
           <form
             onSubmit={applyUserSearch}
             className="flex flex-wrap items-end gap-2"
@@ -780,6 +821,7 @@ export default function AdminPage() {
               </Button>
             )}
           </form>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
