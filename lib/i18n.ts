@@ -30,7 +30,8 @@ const dict = {
     community_body_placeholder:
       "Partagez une annonce, une opportunité ou une info communautaire…",
     community_attach: "Joindre un fichier",
-    community_attach_hint: "Images (jpeg/png/webp, 2 Mo), vidéos (mp4/webm/mov, 25 Mo) ou PDF (5 Mo), max 3.",
+    community_attach_hint:
+      "Images (jpeg/png/webp, 2 Mo), vidéos courtes (mp4/webm/mov, max 25 Mo) ou PDF (5 Mo), max 3. Compressez les vidéos longues.",
     community_attachments_max: "Maximum 3 fichiers par publication.",
     community_publish: "Publier l'annonce",
     community_empty: "Aucune annonce pour le moment. Soyez le premier.",
@@ -1252,7 +1253,8 @@ const dict = {
     community_body_placeholder:
       "Share an announcement, opportunity or community update…",
     community_attach: "Attach a file",
-    community_attach_hint: "Images (jpeg/png/webp, 2 MB), videos (mp4/webm/mov, 25 MB) or PDF (5 MB), max 3.",
+    community_attach_hint:
+      "Images (jpeg/png/webp, 2 MB), short videos (mp4/webm/mov, max 25 MB) or PDF (5 MB), max 3. Compress long videos.",
     community_attachments_max: "Maximum 3 files per post.",
     community_publish: "Publish announcement",
     community_empty: "No announcements yet. Be the first.",

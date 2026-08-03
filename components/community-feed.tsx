@@ -20,6 +20,7 @@ import {
   type CommunityAttachment,
   type CommunityPostKindId,
 } from "@/lib/community";
+import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import type { DictKey } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils";
 
@@ -116,20 +117,8 @@ export function CommunityFeed() {
     try {
       const next: CommunityAttachment[] = [...attachments];
       for (const file of Array.from(files).slice(0, remaining)) {
-        const form = new FormData();
-        form.append("file", file);
-        const res = await fetch("/api/community/upload", {
-          method: "POST",
-          body: form,
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Upload échoué");
-        next.push({
-          url: data.url,
-          name: data.name,
-          contentType: data.contentType,
-          size: data.size,
-        });
+        const att = await uploadCommunityAttachment(file);
+        next.push(att);
       }
       setAttachments(next);
     } catch (e) {

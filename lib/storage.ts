@@ -33,6 +33,11 @@ function toAppMediaUrl(blobUrl: string) {
   return `/api/media?url=${encoded}`;
 }
 
+/** Map a Vercel Blob URL to the URL stored in attachments JSON. */
+export function toAppMediaUrlFromBlob(blobUrl: string) {
+  return toAppMediaUrl(blobUrl);
+}
+
 /**
  * Upload an image to Vercel Blob when configured.
  * Local disk fallback only outside Vercel (dev without a Blob token).
