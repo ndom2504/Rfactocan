@@ -441,13 +441,32 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
-          Administration
-        </h1>
-        <p className="text-[var(--muted)]">
-          KYC, paiements escrow, suspensions et litiges.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
+            Administration
+          </h1>
+          <p className="text-[var(--muted)]">
+            KYC, paiements escrow, suspensions et litiges.
+          </p>
+        </div>
+        <div className="flex flex-col items-stretch gap-2 sm:items-end">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={exportingEmails}
+            onClick={() => void downloadUsersEmailsCsv()}
+            title="CSV des courriels pour testeurs Google Play / App Store"
+          >
+            {exportingEmails
+              ? "Export en cours…"
+              : "↓ CSV courriels (testeurs store)"}
+          </Button>
+          <p className="max-w-xs text-right text-xs text-[var(--muted)]">
+            E-mails des comptes actifs — pour listes de test Play Console &amp;
+            App Store.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
