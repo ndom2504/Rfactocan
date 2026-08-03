@@ -42,6 +42,13 @@ enum RequestStatus {
   CANCELLED
 }
 
+/// Type de besoin client (formulaire Commander).
+enum OrderNeedType {
+  PARCEL
+  SERVICE
+  PRODUCT
+}
+
 enum Urgency {
   LOW
   NORMAL
@@ -350,11 +357,22 @@ model Trip {
 model ParcelRequest {
   id            String        @id @default(cuid())
   userId        String
+  /// PARCEL (colis), SERVICE (prestation), PRODUCT (achat boutique).
+  needType      OrderNeedType @default(PARCEL)
+  /// Envoyer / recevoir (colis uniquement).
+  orderSide     String?
+  /// Catégorie métier (SERVICE).
+  serviceCategory String?
+  /// Type de prestation (SERVICE).
+  serviceType   String?
+  /// Catégorie boutique (PRODUCT).
+  productCategory String?
   fromCountry   String
   fromCity      String
   toCountry     String
   toCity        String
-  weightKg      Float
+  /// Poids colis ; 0 pour besoins service/produit.
+  weightKg      Float         @default(0)
   description   String
   photosJson    String        @default("[]")
   urgency       Urgency       @default(NORMAL)
@@ -373,6 +391,9 @@ model ParcelRequest {
   @@index([toCountry, toCity])
   @@index([userId])
   @@index([transportMode])
+  @@index([needType, status])
+  @@index([serviceCategory])
+  @@index([productCategory])
 }
 
 /// Offre de service collaboratif (hors flux colis Trip/ParcelRequest).

@@ -90,8 +90,19 @@ export default async function RequestsPage({ searchParams }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle>
-                      {req.fromCity} → {req.toCity}
+                      {req.needType === "SERVICE"
+                        ? `${req.toCity} · ${t(locale, "order_need_service")}`
+                        : req.needType === "PRODUCT"
+                          ? `${req.toCity} · ${t(locale, "order_need_product")}`
+                          : `${req.fromCity} → ${req.toCity}`}
                     </CardTitle>
+                    <Badge className="bg-[var(--surface-2)] text-[var(--foreground)]">
+                      {req.needType === "SERVICE"
+                        ? t(locale, "order_need_service")
+                        : req.needType === "PRODUCT"
+                          ? t(locale, "order_need_product")
+                          : t(locale, "order_need_parcel")}
+                    </Badge>
                     {isOwner && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
                         {t(locale, "my_listing")}
@@ -99,8 +110,11 @@ export default async function RequestsPage({ searchParams }: Props) {
                     )}
                   </div>
                   <CardDescription>
-                    {getCountryName(req.toCountry)} · {formatKg(req.weightKg)} ·{" "}
-                    {urgencyLabel(locale, req.urgency)}
+                    {getCountryName(req.toCountry)}
+                    {req.needType === "PARCEL" || !req.needType
+                      ? ` · ${formatKg(req.weightKg)}`
+                      : ""}{" "}
+                    · {urgencyLabel(locale, req.urgency)}
                     {req.desiredDate
                       ? ` · ${t(locale, "desired_date")} ${formatDate(req.desiredDate)}`
                       : ""}

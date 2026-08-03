@@ -94,6 +94,15 @@ export async function POST(request: Request) {
     if (!parcel || !trip) {
       return NextResponse.json({ error: "Ressource introuvable" }, { status: 404 });
     }
+    if (parcel.needType && parcel.needType !== "PARCEL") {
+      return NextResponse.json(
+        {
+          error:
+            "Les réservations voyage s’appliquent uniquement aux commandes de colis.",
+        },
+        { status: 400 }
+      );
+    }
 
     const isSender = parcel.userId === session.id;
     const isTraveler = trip.userId === session.id;
