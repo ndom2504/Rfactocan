@@ -357,3 +357,47 @@ export async function emailAmbassadorInvite(input: {
     ),
   });
 }
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Temporary bulk invite for Google Play closed testing. */
+export async function emailPlayStoreTestInvite(input: {
+  email: string;
+  displayName: string;
+  testingUrl: string;
+  storeUrl: string;
+}) {
+  const name = escapeHtml(input.displayName || "membre Rfacto");
+  return sendEmail({
+    to: input.email,
+    subject: "Rfacto — testez l'application Android (Google Play)",
+    html: layout(
+      "Invitation de test Android",
+      `<p>Bonjour ${name},</p>
+       <p>L'application mobile <strong>Rfacto</strong> est disponible en <strong>test interne</strong> sur Google Play. Votre adresse doit déjà être sur la liste des testeurs.</p>
+       <p><strong>Étapes (sur un téléphone Android) :</strong></p>
+       <ol style="padding-left:20px;margin:12px 0;">
+         <li>Ouvrez le lien d'adhésion au programme de test et acceptez.</li>
+         <li>Installez Rfacto depuis Google Play.</li>
+         <li>Connectez-vous avec le même compte e-mail que sur rfacto.com.</li>
+       </ol>
+       <p style="margin:20px 0 10px;">
+         <a href="${escapeHtml(input.testingUrl)}" style="display:inline-block;background:#28541D;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">1 — Devenir testeur</a>
+       </p>
+       <p style="margin:0 0 16px;">
+         <a href="${escapeHtml(input.storeUrl)}" style="display:inline-block;background:#14201c;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">2 — Ouvrir sur Play Store</a>
+       </p>
+       <p style="font-size:13px;color:#5f6f68;word-break:break-all;">
+         Test : ${escapeHtml(input.testingUrl)}<br/>
+         Store : ${escapeHtml(input.storeUrl)}
+       </p>
+       <p style="font-size:13px;color:#5f6f68;">Si le Play Store indique que l'app n'est pas disponible, assurez-vous d'avoir accepté le lien testeur avec le compte Google de votre téléphone.</p>`
+    ),
+  });
+}

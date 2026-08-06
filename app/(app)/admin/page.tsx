@@ -208,6 +208,7 @@ export default function AdminPage() {
   const [userFromDraft, setUserFromDraft] = useState("");
   const [userToDraft, setUserToDraft] = useState("");
   const [exportingEmails, setExportingEmails] = useState(false);
+  const [sendingPlayInvite, setSendingPlayInvite] = useState(false);
 
   async function load(opts?: {
     letter?: string;
@@ -411,6 +412,46 @@ export default function AdminPage() {
     }
   }
 
+  async function sendPlayStoreTestInvites() {
+    const ok = window.confirm(
+      "Envoyer l'invitation Google Play (tests internes) par e-mail à TOUS les comptes actifs non suspendus ?\n\n" +
+        "Liens inclus :\n" +
+        "• https://play.google.com/apps/testing/com.rfacto.app\n" +
+        "• https://play.google.com/store/apps/details?id=com.rfacto.app\n\n" +
+        "Action temporaire — peut prendre plusieurs minutes."
+    );
+    if (!ok) return;
+
+    setSendingPlayInvite(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/play-test-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        total?: number;
+        sent?: number;
+        failed?: number;
+        errors?: string[];
+      };
+      if (!res.ok) {
+        throw new Error(data.error || "Envoi impossible");
+      }
+      const detail =
+        data.errors?.length ? `\n\nExemples d'erreurs :\n${data.errors.join("\n")}` : "";
+      window.alert(
+        `Invitation Play Store envoyée.\n\nDestinataires : ${data.total ?? 0}\nRéussis : ${data.sent ?? 0}\nÉchecs : ${data.failed ?? 0}${detail}`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Envoi invitation Play échoué");
+    } finally {
+      setSendingPlayInvite(false);
+    }
+  }
+
   async function resolveReport(reportId: string) {
     await fetch("/api/reports", {
       method: "PATCH",
@@ -451,20 +492,32 @@ export default function AdminPage() {
           </p>
         </div>
         <div className="flex flex-col items-stretch gap-2 sm:items-end">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={exportingEmails}
-            onClick={() => void downloadUsersEmailsCsv()}
-            title="CSV des courriels pour testeurs Google Play / App Store"
-          >
-            {exportingEmails
-              ? "Export en cours…"
-              : "↓ CSV courriels (testeurs store)"}
-          </Button>
-          <p className="max-w-xs text-right text-xs text-[var(--muted)]">
-            E-mails des comptes actifs — pour listes de test Play Console &amp;
-            App Store.
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={exportingEmails || sendingPlayInvite}
+              onClick={() => void downloadUsersEmailsCsv()}
+              title="CSV des courriels pour testeurs Google Play / App Store"
+            >
+              {exportingEmails
+                ? "Export en cours…"
+                : "↓ CSV courriels (testeurs store)"}
+            </Button>
+            <Button
+              type="button"
+              disabled={sendingPlayInvite || exportingEmails}
+              onClick={() => void sendPlayStoreTestInvites()}
+              title="E-mail groupé temporaire — liens de test Google Play"
+            >
+              {sendingPlayInvite
+                ? "Envoi e-mails…"
+                : "✉ Invitation Play à tous"}
+            </Button>
+          </div>
+          <p className="max-w-sm text-right text-xs text-[var(--muted)]">
+            CSV pour la liste Play Console. Puis «&nbsp;Invitation Play à
+            tous&nbsp;» envoie les liens de test aux comptes actifs (temporaire).
           </p>
         </div>
       </div>
