@@ -11,6 +11,7 @@ const createSchema = z.object({
     "cosmetics",
     "auto_parts",
     "electronics",
+    "clothing_accessories",
   ]),
   name: z.string().min(2).max(120),
   description: z.string().max(4000).optional().default(""),

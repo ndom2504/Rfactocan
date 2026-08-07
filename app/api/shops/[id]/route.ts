@@ -26,6 +26,7 @@ const patchSchema = z.object({
       "cosmetics",
       "auto_parts",
       "electronics",
+      "clothing_accessories",
     ])
     .optional(),
   action: z.enum(["publish", "close", "draft"]).optional(),

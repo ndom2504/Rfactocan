@@ -3,6 +3,7 @@ export const SHOP_CATEGORY_IDS = [
   "cosmetics",
   "auto_parts",
   "electronics",
+  "clothing_accessories",
 ] as const;
 
 export type ShopCategoryId = (typeof SHOP_CATEGORY_IDS)[number];
@@ -43,6 +44,13 @@ export const SHOP_CATEGORIES: ShopCategory[] = [
     labelEn: "Electronics",
     hintFr: "Téléphones, ordis, gadgets",
     hintEn: "Phones, computers, gadgets",
+  },
+  {
+    id: "clothing_accessories",
+    labelFr: "Vêtements et accessoires",
+    labelEn: "Clothing & accessories",
+    hintFr: "Mode, chaussures, sacs, bijoux, accessoires",
+    hintEn: "Fashion, shoes, bags, jewelry, accessories",
   },
 ];
 
