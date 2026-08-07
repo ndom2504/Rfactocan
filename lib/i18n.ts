@@ -31,7 +31,7 @@ const dict = {
       "Partagez une annonce, une opportunité ou une info communautaire…",
     community_attach: "Joindre un fichier",
     community_attach_hint:
-      "Images (jpeg/png/webp, 2 Mo), vidéos courtes (mp4/webm/mov, max 25 Mo) ou PDF (5 Mo), max 3. Compressez les vidéos longues.",
+      "Images (jpeg/png/webp, 2 Mo), vidéos courtes (mp4/webm/mov, max 100 Mo) ou PDF (5 Mo), max 3. Compressez les vidéos longues.",
     community_attachments_max: "Maximum 3 fichiers par publication.",
     community_publish: "Publier l'annonce",
     community_empty: "Aucune annonce pour le moment. Soyez le premier.",
@@ -373,6 +373,10 @@ const dict = {
     shops_save_branding: "Enregistrer l'apparence",
     shops_branding_saved: "Apparence mise à jour",
     shops_product_photo: "Photo du produit",
+    shops_product_photos: "Photos du produit",
+    shops_product_photos_hint:
+      "Jusqu’à 8 images (jpeg, png, webp). La première est la photo de couverture.",
+    shops_product_photo_cover: "Couverture",
     shops_qty: "Quantité",
     shops_created: "Boutique créée",
     shops_need_product: "Ajoutez au moins un produit avant de publier.",
@@ -476,6 +480,56 @@ const dict = {
     back_home: "Retour à l'accueil",
     nav_responsibility: "Responsabilité",
     nav_privacy: "Confidentialité",
+    nav_terms: "CGU & mentions légales",
+    copyright_line: "© {year} Rfacto · RapidFacto. Tous droits réservés.",
+    copyright_ip_note:
+      "Logiciel, contenu, marque et identité visuelle protégés. Toute reproduction ou imitation non autorisée est interdite.",
+    terms_title: "Conditions d’utilisation & mentions légales",
+    terms_updated: "Dernière mise à jour : 7 août 2026",
+    terms_lead:
+      "Ces conditions régissent l’accès et l’usage du site www.rfacto.com et de l’application mobile Rfacto (ensemble, le « Service »), opérés sous la marque RapidFacto (« Rfacto », « nous »).",
+    terms_s1_title: "1. Mentions légales",
+    terms_s1_text:
+      "Éditeur / exploitant : RapidFacto (marque Rfacto). Contact : contact@rfacto.com. Site : https://www.rfacto.com. Plateforme de mise en relation (voyageurs, expéditeurs, services, boutiques). Ces mentions n’établissent pas un statut de transporteur, de commissionnaire de transport ou d’assureur par défaut.",
+    terms_s2_title: "2. Acceptation",
+    terms_s2_text:
+      "En créant un compte ou en utilisant le Service, vous acceptez les présentes conditions, la politique de confidentialité et la politique de responsabilité. Si vous n’acceptez pas, n’utilisez pas le Service. L’usage peut être réservé aux personnes majeures ou ayant l’âge numérique minimal légal dans votre pays (au moins 16 ans).",
+    terms_s3_title: "3. Description du Service",
+    terms_s3_text:
+      "Rfacto fournit des outils technologiques pour publier des trajets, des commandes, des services ou des produits de boutique, échanger via messagerie liée aux réservations, et, le cas échéant, sécuriser des paiements via des prestataires (ex. Stripe). Rfacto n’est pas partie au transport matériel du colis ni à l’exécution physique des prestations hors de son rôle d’intermédiaire technique.",
+    terms_s4_title: "4. Compte utilisateur",
+    terms_s4_text:
+      "Vous devez fournir des informations exactes, sécuriser vos identifiants et signaler tout usage non autorisé. Nous pouvons exiger une vérification d’identité (KYC) pour certaines fonctionnalités (paiements, retraits). Un seul compte par personne, sauf autorisation écrite. Vous êtes responsable de l’activité réalisée via votre compte.",
+    terms_s5_title: "5. Propriété intellectuelle",
+    terms_s5_text:
+      "Le Service — y compris le code logiciel (sous réserve de licences open source éventuelles), l’architecture, les interfaces, textes, graphismes, logos, icônes, charte graphique, photos, vidéos et contenus éditoriaux de Rfacto — est protégé par le droit d’auteur et, le cas échéant, par d’autres droits de propriété intellectuelle. Tous droits non expressément accordés sont réservés à RapidFacto / Rfacto. Toute copie, reverse engineering, extraction massive, republication, revente, ou création d’œuvres dérivées non autorisées est interdite.",
+    terms_s6_title: "6. Marques et identité",
+    terms_s6_text:
+      "Les noms « Rfacto », « RapidFacto », le logo et les éléments distinctifs associés constituent des signes distinctifs utilisés par RapidFacto. Toute utilisation non autorisée (y compris imitation de l’app, du site, du logo, du nom commercial, des pages de paiement fictives, ou usurpation d’identité de marque) est interdite et peut entraîner des poursuites civiles et/ou pénales (contrefaçon, concurrence déloyale, usurpation).",
+    terms_s7_title: "7. Contenu que vous publiez",
+    terms_s7_text:
+      "Vous conservez vos droits sur le contenu que vous soumettez (annonces, photos de produits, messages, etc.). Vous nous accordez une licence mondiale, non exclusive, gratuite, pour l’héberger, l’afficher et le diffuser dans le cadre du Service. Vous garantissez que vous avez les droits nécessaires et que le contenu ne viole pas la loi ni les droits de tiers. Nous pouvons retirer un contenu illicite, contrefaisant ou contraire à la charte.",
+    terms_s8_title: "8. Usages interdits",
+    terms_s8_text:
+      "Il est notamment interdit de : cloner ou imiter le Service pour tromper des utilisateurs ; extraire des données en masse ; harceler ; publier des biens illicites ; contourner les dispositifs de sécurité ou de paiement ; se faire passer pour Rfacto, un admin ou un autre utilisateur ; diffuser des logiciels malveillants. Tout signalement : contact@rfacto.com.",
+    terms_s9_title: "9. Paiements et frais",
+    terms_s9_text:
+      "Certaines transactions passent par des prestataires de paiement (ex. Stripe). Les fonds peuvent être placés en séquestre jusqu’à confirmation de livraison ou selon les règles du produit. Des frais de plateforme peuvent s’appliquer. Les disputes de paiement peuvent impliquer le prestataire et/ou notre médiation administrative.",
+    terms_s10_title: "10. Suspension et résiliation",
+    terms_s10_text:
+      "Nous pouvons suspendre ou résilier un compte en cas de violation des présentes, de risque de fraude, de contrefaçon de marque, ou d’obligation légale. Vous pouvez demander la suppression de votre compte selon la page dédiée et la politique de confidentialité, sous réserve des obligations de conservation.",
+    terms_s11_title: "11. Limitation de responsabilité",
+    terms_s11_text:
+      "Dans les limites permises par la loi, Rfacto n’est pas responsable des dommages liés au contenu matériel des colis, aux retards de tiers (transporteurs aériens, douanes), aux défaillances des utilisateurs, ou aux services hors ligne. Voir la page Responsabilité pour le détail du rôle d’intermédiaire.",
+    terms_s12_title: "12. Droit applicable",
+    terms_s12_text:
+      "Sous réserve des dispositions impératives de protection des consommateurs applicables, les présentes sont régies par le droit applicable au Canada (province du Québec lorsque pertinent pour un consommateur y résidant). Les tribunaux compétents sont ceux du siège ou, pour les consommateurs, ceux prévus par leur loi locale.",
+    terms_s13_title: "13. Contact signalements IP",
+    terms_s13_text:
+      "Pour signaler une contrefaçon de marque, une copie de l’app, un phishing ou un usage abusif de l’identité Rfacto : contact@rfacto.com — objet recommandé : « Propriété intellectuelle / contrefaçon ». Pour les données personnelles : même adresse (voir Politique de confidentialité).",
+    terms_s14_title: "14. Modifications",
+    terms_s14_text:
+      "Nous pouvons mettre à jour ces conditions. La date en tête de page sera actualisée. En cas de changement important, une information peut être donnée dans l’app ou par e-mail. L’usage continu après mise à jour vaut acceptation, sauf disposition légale contraire.",
     privacy_title: "Politique de confidentialité",
     privacy_updated: "Dernière mise à jour : 28 juillet 2026",
     privacy_lead:
@@ -865,6 +919,8 @@ const dict = {
     no_account: "Pas encore de compte ?",
     have_account: "Déjà un compte ?",
     sign_in: "Se connecter",
+    terms_accept_register:
+      "En créant un compte, vous acceptez les CGU & mentions légales et la politique de confidentialité.",
     create_account: "Créer mon compte",
     forgot_password: "Mot de passe oublié ?",
     forgot_title: "Mot de passe oublié",
@@ -1254,7 +1310,7 @@ const dict = {
       "Share an announcement, opportunity or community update…",
     community_attach: "Attach a file",
     community_attach_hint:
-      "Images (jpeg/png/webp, 2 MB), short videos (mp4/webm/mov, max 25 MB) or PDF (5 MB), max 3. Compress long videos.",
+      "Images (jpeg/png/webp, 2 MB), short videos (mp4/webm/mov, max 100 MB) or PDF (5 MB), max 3. Compress long videos.",
     community_attachments_max: "Maximum 3 files per post.",
     community_publish: "Publish announcement",
     community_empty: "No announcements yet. Be the first.",
@@ -1589,6 +1645,10 @@ const dict = {
     shops_save_branding: "Save appearance",
     shops_branding_saved: "Appearance updated",
     shops_product_photo: "Product photo",
+    shops_product_photos: "Product photos",
+    shops_product_photos_hint:
+      "Up to 8 images (jpeg, png, webp). The first is the cover photo.",
+    shops_product_photo_cover: "Cover",
     shops_qty: "Quantity",
     shops_created: "Shop created",
     shops_need_product: "Add at least one product before publishing.",
@@ -1692,6 +1752,56 @@ const dict = {
     back_home: "Back to home",
     nav_responsibility: "Responsibility",
     nav_privacy: "Privacy",
+    nav_terms: "Terms & legal notice",
+    copyright_line: "© {year} Rfacto · RapidFacto. All rights reserved.",
+    copyright_ip_note:
+      "Software, content, brand and visual identity are protected. Unauthorized copying or imitation is prohibited.",
+    terms_title: "Terms of use & legal notice",
+    terms_updated: "Last updated: August 7, 2026",
+    terms_lead:
+      "These terms govern access to and use of www.rfacto.com and the Rfacto mobile app (together, the “Service”), operated under the RapidFacto brand (“Rfacto”, “we”).",
+    terms_s1_title: "1. Legal notice",
+    terms_s1_text:
+      "Publisher / operator: RapidFacto (Rfacto brand). Contact: contact@rfacto.com. Website: https://www.rfacto.com. Matching platform (travelers, senders, services, shops). These notices do not make Rfacto a carrier, freight forwarder, or default insurer.",
+    terms_s2_title: "2. Acceptance",
+    terms_s2_text:
+      "By creating an account or using the Service, you accept these terms, the privacy policy and the responsibility policy. If you do not agree, do not use the Service. Use may be limited to adults or the minimum digital age in your country (at least 16).",
+    terms_s3_title: "3. Service description",
+    terms_s3_text:
+      "Rfacto provides technology tools to post trips, requests, services or shop products, message within bookings, and where applicable secure payments via providers (e.g. Stripe). Rfacto is not a party to the physical carriage of parcels nor to offline service performance beyond its role as a technical intermediary.",
+    terms_s4_title: "4. User account",
+    terms_s4_text:
+      "You must provide accurate information, protect your credentials and report unauthorized use. We may require identity verification (KYC) for some features (payments, payouts). One account per person unless we agree otherwise in writing. You are responsible for activity on your account.",
+    terms_s5_title: "5. Intellectual property",
+    terms_s5_text:
+      "The Service — including software (subject to any open-source licenses), architecture, interfaces, text, graphics, logos, icons, design system, photos, videos and editorial content of Rfacto — is protected by copyright and, as applicable, other IP rights. All rights not expressly granted are reserved to RapidFacto / Rfacto. Unauthorized copying, reverse engineering, mass extraction, republication, resale, or creation of derivative works is prohibited.",
+    terms_s6_title: "6. Trademarks and identity",
+    terms_s6_text:
+      "The names “Rfacto”, “RapidFacto”, the logo and associated distinctive elements are trade identifiers used by RapidFacto. Unauthorized use (including imitation of the app, site, logo, trade name, fake payment pages, or brand impersonation) is prohibited and may lead to civil and/or criminal action (counterfeiting, unfair competition, impersonation).",
+    terms_s7_title: "7. Content you post",
+    terms_s7_text:
+      "You retain rights in content you submit (listings, product photos, messages, etc.). You grant us a worldwide, non-exclusive, royalty-free license to host, display and distribute it as part of the Service. You warrant you have the necessary rights and that the content is lawful. We may remove unlawful, infringing or policy-violating content.",
+    terms_s8_title: "8. Prohibited uses",
+    terms_s8_text:
+      "You must not: clone or imitate the Service to mislead users; mass-scrape data; harass; list illegal goods; bypass security or payment controls; impersonate Rfacto, an admin or another user; distribute malware. Report abuse: contact@rfacto.com.",
+    terms_s9_title: "9. Payments and fees",
+    terms_s9_text:
+      "Some transactions go through payment providers (e.g. Stripe). Funds may be held in escrow until delivery confirmation or per product rules. Platform fees may apply. Payment disputes may involve the provider and/or our admin mediation.",
+    terms_s10_title: "10. Suspension and termination",
+    terms_s10_text:
+      "We may suspend or terminate an account for breach of these terms, fraud risk, brand counterfeiting, or legal duty. You may request account deletion per the dedicated page and privacy policy, subject to retention duties.",
+    terms_s11_title: "11. Limitation of liability",
+    terms_s11_text:
+      "To the extent permitted by law, Rfacto is not liable for damages related to parcel contents, third-party delays (airlines, customs), user failures, or offline services. See the Responsibility page for the intermediary role.",
+    terms_s12_title: "12. Governing law",
+    terms_s12_text:
+      "Subject to mandatory consumer protections, these terms are governed by the laws of Canada (Québec law when relevant for a consumer residing there). Competent courts are those of our seat or, for consumers, those required by local law.",
+    terms_s13_title: "13. IP & counterfeit reports",
+    terms_s13_text:
+      "To report brand counterfeiting, an app clone, phishing or misuse of Rfacto identity: contact@rfacto.com — recommended subject: “Intellectual property / counterfeit”. Privacy requests: same address (see Privacy policy).",
+    terms_s14_title: "14. Changes",
+    terms_s14_text:
+      "We may update these terms. The date at the top will change. For material updates we may notify you in-app or by email. Continued use after an update means acceptance, unless prohibited by law.",
     privacy_title: "Privacy policy",
     privacy_updated: "Last updated: July 28, 2026",
     privacy_lead:
@@ -2078,6 +2188,8 @@ const dict = {
     no_account: "No account yet?",
     have_account: "Already have an account?",
     sign_in: "Sign in",
+    terms_accept_register:
+      "By creating an account, you agree to the Terms & legal notice and the Privacy policy.",
     create_account: "Create my account",
     forgot_password: "Forgot password?",
     forgot_title: "Forgot password",

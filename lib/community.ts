@@ -80,8 +80,8 @@ export const COMMUNITY_ALLOWED_VIDEOS = new Set([
 
 export const COMMUNITY_MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 export const COMMUNITY_MAX_DOC_BYTES = 5 * 1024 * 1024;
-/** Short clips for community posts (keep within platform upload limits). */
-export const COMMUNITY_MAX_VIDEO_BYTES = 25 * 1024 * 1024;
+/** Community clip limit (direct-to-Blob upload; bypasses serverless body limit). */
+export const COMMUNITY_MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 export function isAllowedCommunityContentType(contentType: string) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";

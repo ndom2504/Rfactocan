@@ -49,16 +49,26 @@ export default async function MarketingLayout({
         </header>
         {children}
         <footer className="mx-auto max-w-6xl border-t border-[var(--border)] px-6 py-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--muted)]">
-            <p>© {new Date().getFullYear()} Rfacto · RapidFacto</p>
-            <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-4 text-sm text-[var(--muted)] sm:flex-row sm:items-start sm:justify-between">
+            <div className="max-w-md space-y-1">
+              <p className="font-medium text-[var(--foreground)]">
+                {t(locale, "copyright_line").replace(
+                  "{year}",
+                  String(new Date().getFullYear())
+                )}
+              </p>
+              <p className="text-xs leading-relaxed">
+                {t(locale, "copyright_ip_note")}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
               <Link href="/about" className="hover:text-[var(--foreground)]">
                 {t(locale, "cta_about_us")}
               </Link>
-              <Link
-                href="/privacy"
-                className="hover:text-[var(--foreground)]"
-              >
+              <Link href="/terms" className="hover:text-[var(--foreground)]">
+                {t(locale, "nav_terms")}
+              </Link>
+              <Link href="/privacy" className="hover:text-[var(--foreground)]">
                 {t(locale, "nav_privacy")}
               </Link>
               <Link

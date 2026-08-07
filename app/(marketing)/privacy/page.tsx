@@ -57,6 +57,9 @@ export default async function PrivacyPage() {
       ))}
 
       <div className="mt-10 flex flex-wrap gap-3">
+        <Link href="/terms">
+          <Button variant="outline">{t(locale, "nav_terms")}</Button>
+        </Link>
         <Link href="/responsibility">
           <Button variant="outline">{t(locale, "nav_responsibility")}</Button>
         </Link>

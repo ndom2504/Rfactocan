@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Stockage cloud non configuré (BLOB_READ_WRITE_TOKEN). Requis pour les vidéos.",
+          "Stockage cloud non configuré sur le serveur. Activez Vercel Blob (BLOB_READ_WRITE_TOKEN) en Production, puis redéployez. Les vidéos > 4 Mo en ont besoin.",
+        code: "BLOB_NOT_CONFIGURED",
       },
       { status: 503 }
     );
@@ -90,12 +91,25 @@ export async function POST(request: Request) {
       ...COMMUNITY_ALLOWED_DOCS,
     ];
 
+    const rwToken = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+    if (!rwToken) {
+      return NextResponse.json(
+        {
+          error:
+            "BLOB_READ_WRITE_TOKEN manquant (Production). Lier le store Vercel Blob au projet puis Redeploy.",
+          code: "BLOB_NOT_CONFIGURED",
+        },
+        { status: 503 }
+      );
+    }
+
     const token = await generateClientTokenFromReadWriteToken({
       pathname,
       allowedContentTypes: allowed,
       maximumSizeInBytes: Math.min(max, COMMUNITY_MAX_VIDEO_BYTES),
       addRandomSuffix: true,
       validUntil: Date.now() + 60 * 60 * 1000,
+      token: rwToken,
     });
 
     return NextResponse.json({

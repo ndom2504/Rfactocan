@@ -21,6 +21,7 @@ type Product = {
   description: string;
   priceCents: number;
   photoUrl: string | null;
+  photos?: string[];
   warranty: string | null;
   stockQty: number | null;
   highlights: string | null;
@@ -110,6 +111,13 @@ function ProductBuyForm() {
   const canBuy =
     !product.isOwner && product.shop.status === "OPEN" && !outOfStock;
 
+  const gallery =
+    product.photos && product.photos.length > 0
+      ? product.photos
+      : product.photoUrl
+        ? [product.photoUrl]
+        : [];
+
   return (
     <div className="mx-auto max-w-xl space-y-4">
       <Link
@@ -119,14 +127,29 @@ function ProductBuyForm() {
         ← {product.shop.name}
       </Link>
       <Card>
-        {product.photoUrl && (
-          <div className="mb-4 flex max-h-[28rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={product.photoUrl}
-              alt=""
-              className="max-h-[28rem] w-full object-contain"
-            />
+        {gallery.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <div className="flex max-h-[28rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={gallery[0]}
+                alt=""
+                className="max-h-[28rem] w-full object-contain"
+              />
+            </div>
+            {gallery.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {gallery.map((url) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={url}
+                    src={url}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-md object-cover"
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
         <CardTitle className="text-2xl">{product.title}</CardTitle>

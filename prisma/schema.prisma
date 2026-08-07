@@ -466,7 +466,10 @@ model ShopProduct {
   promoPriceCents Int?
   promoLabel      String?
   promoEndsAt     DateTime?
+  /// Cover / primary image (first of photosJson) for list cards & legacy clients
   photoUrl        String?
+  /// JSON string[] of product image URLs
+  photosJson      String    @default("[]")
   /// Warranty text (esp. electronics) e.g. "12 mois"
   warranty        String?
   /// Available stock units (null = not tracked)

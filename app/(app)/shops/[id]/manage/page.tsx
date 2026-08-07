@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoneyFromCents } from "@/lib/currency";
 import {
+  SHOP_PRODUCT_MAX_PHOTOS,
+  parseProductPhotos,
   shopCategoryHasElectronicsSpecs,
   shopCategoryLabel,
   shopDeliveryModeLabel,
@@ -27,6 +29,8 @@ type Product = {
   promoLabel: string | null;
   promoEndsAt: string | null;
   photoUrl: string | null;
+  photos?: string[];
+  photosJson?: string | null;
   warranty: string | null;
   stockQty: number | null;
   highlights: string | null;
@@ -95,7 +99,7 @@ export default function ManageShopPage() {
   const [promoPrice, setPromoPrice] = useState("");
   const [promoLabel, setPromoLabel] = useState("");
   const [promoEndsAt, setPromoEndsAt] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [warranty, setWarranty] = useState("");
   const [stockQty, setStockQty] = useState("");
   const [highlights, setHighlights] = useState("");
@@ -140,7 +144,7 @@ export default function ManageShopPage() {
     setPromoPrice("");
     setPromoLabel("");
     setPromoEndsAt("");
-    setPhotoUrl(null);
+    setPhotoUrls([]);
     setWarranty("");
     setStockQty("");
     setHighlights("");
@@ -156,7 +160,7 @@ export default function ManageShopPage() {
     );
     setPromoLabel(p.promoLabel ?? "");
     setPromoEndsAt(toDateInput(p.promoEndsAt));
-    setPhotoUrl(p.photoUrl);
+    setPhotoUrls(parseProductPhotos(p));
     setWarranty(p.warranty ?? "");
     setStockQty(p.stockQty != null ? String(p.stockQty) : "");
     setHighlights(p.highlights ?? "");
@@ -168,15 +172,33 @@ export default function ManageShopPage() {
     });
   }
 
-  async function uploadPhoto(file: File) {
+  async function uploadPhotos(files: FileList | File[]) {
+    const list = Array.from(files);
+    if (list.length === 0) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    const data = await res.json();
+    setError("");
+    const remaining = Math.max(0, SHOP_PRODUCT_MAX_PHOTOS - photoUrls.length);
+    const toUpload = list.slice(0, remaining);
+    const uploaded: string[] = [];
+    for (const file of toUpload) {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok && data.url) uploaded.push(data.url as string);
+      else {
+        setError(data.error ?? "Upload échoué");
+        break;
+      }
+    }
+    if (uploaded.length > 0) {
+      setPhotoUrls((prev) => [...prev, ...uploaded].slice(0, SHOP_PRODUCT_MAX_PHOTOS));
+    }
     setUploading(false);
-    if (res.ok) setPhotoUrl(data.url);
-    else setError(data.error ?? "Upload échoué");
+  }
+
+  function removePhoto(url: string) {
+    setPhotoUrls((prev) => prev.filter((u) => u !== url));
   }
 
   function productPayload() {
@@ -187,7 +209,8 @@ export default function ManageShopPage() {
       promoPrice: promoPrice ? Number(promoPrice) : null,
       promoLabel: promoLabel || null,
       promoEndsAt: promoEndsAt || null,
-      photoUrl,
+      photos: photoUrls,
+      photoUrl: photoUrls[0] ?? null,
       ...(shopCategoryHasElectronicsSpecs(shop?.category ?? "")
         ? {
             warranty: warranty || null,
@@ -540,25 +563,55 @@ export default function ManageShopPage() {
             </div>
           )}
           <div className="space-y-1">
-            <Label>{t("shops_product_photo")}</Label>
+            <Label>
+              {t("shops_product_photos")} ({photoUrls.length}/
+              {SHOP_PRODUCT_MAX_PHOTOS})
+            </Label>
             <Input
               type="file"
               accept="image/*"
+              multiple
+              disabled={
+                uploading || photoUrls.length >= SHOP_PRODUCT_MAX_PHOTOS
+              }
               onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void uploadPhoto(f);
+                const files = e.target.files;
+                if (files?.length) void uploadPhotos(files);
+                e.target.value = "";
               }}
             />
+            <p className="text-xs text-[var(--muted)]">
+              {t("shops_product_photos_hint")}
+            </p>
             {uploading && (
               <p className="text-xs text-[var(--muted)]">{t("loading")}</p>
             )}
-            {photoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photoUrl}
-                alt=""
-                className="mt-2 h-24 w-24 rounded-md object-cover"
-              />
+            {photoUrls.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {photoUrls.map((url, i) => (
+                  <div key={url} className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-24 w-24 rounded-md object-cover"
+                    />
+                    {i === 0 && (
+                      <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
+                        {t("shops_product_photo_cover")}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded bg-black/70 px-1.5 text-xs text-white"
+                      onClick={() => removePhoto(url)}
+                      aria-label={t("remove_photo")}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -597,11 +650,11 @@ export default function ManageShopPage() {
             }
           >
             <div className="flex gap-3">
-              {p.photoUrl && (
+              {(parseProductPhotos(p)[0] || p.photoUrl) && (
                 <div className="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={p.photoUrl}
+                    src={parseProductPhotos(p)[0] || p.photoUrl || ""}
                     alt=""
                     className="max-h-full max-w-full object-contain"
                   />

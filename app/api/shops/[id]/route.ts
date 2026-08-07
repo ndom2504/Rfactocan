@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import {
   effectiveProductPriceCents,
   hasActivePromo,
+  withProductPhotos,
 } from "@/lib/shops-catalog";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -68,11 +69,13 @@ export async function GET(_request: Request, context: Ctx) {
   const products = (isOwner
     ? shop.products
     : shop.products.filter((p) => p.active)
-  ).map((p) => ({
-    ...p,
-    effectivePriceCents: effectiveProductPriceCents(p),
-    hasPromo: hasActivePromo(p),
-  }));
+  ).map((p) =>
+    withProductPhotos({
+      ...p,
+      effectivePriceCents: effectiveProductPriceCents(p),
+      hasPromo: hasActivePromo(p),
+    })
+  );
 
   return NextResponse.json({
     shop: {

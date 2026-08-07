@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
 import { TransportFields } from "@/components/transport-fields";
+import { CountryCodeSelect } from "@/components/country-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ import {
 } from "@/lib/services-catalog";
 import { SHOP_CATEGORIES } from "@/lib/shops-catalog";
 import type { TransportMode } from "@/lib/transport";
+import { getCities } from "@/lib/corridors";
 
 const SERVICE_NEED_CATEGORIES = SERVICE_CATALOG.filter((c) => !c.isParcel);
 
@@ -45,6 +47,19 @@ export default function NewRequestPage() {
   const [productCategory, setProductCategory] = useState<string>(
     SHOP_CATEGORIES[0]?.id ?? "electronics"
   );
+  const [serviceCountry, setServiceCountry] = useState("CA");
+  const [serviceCity, setServiceCity] = useState("");
+  const [productCountry, setProductCountry] = useState("CA");
+  const [productCity, setProductCity] = useState("");
+
+  const serviceCities = useMemo(
+    () => getCities(serviceCountry),
+    [serviceCountry]
+  );
+  const productCities = useMemo(
+    () => getCities(productCountry),
+    [productCountry]
+  );
 
   const serviceTypes = useMemo(() => {
     return (
@@ -63,6 +78,18 @@ export default function NewRequestPage() {
       setServiceType(first);
     }
   }, [serviceTypes, serviceType]);
+
+  useEffect(() => {
+    if (serviceCities.length > 0 && !serviceCities.includes(serviceCity)) {
+      setServiceCity(serviceCities[0] ?? "");
+    }
+  }, [serviceCities, serviceCity]);
+
+  useEffect(() => {
+    if (productCities.length > 0 && !productCities.includes(productCity)) {
+      setProductCity(productCities[0] ?? "");
+    }
+  }, [productCities, productCity]);
 
   async function onUpload(file: File) {
     setUploading(true);
@@ -115,8 +142,8 @@ export default function NewRequestPage() {
         needType: "SERVICE",
         serviceCategory,
         serviceType,
-        country: String(fd.get("country")),
-        city: String(fd.get("city")),
+        country: serviceCountry,
+        city: serviceCity.trim() || String(fd.get("city") || ""),
         description: String(fd.get("description")),
         urgency: String(fd.get("urgency")),
         desiredDate: desired ? new Date(desired).toISOString() : undefined,
@@ -126,8 +153,8 @@ export default function NewRequestPage() {
       payload = {
         needType: "PRODUCT",
         productCategory,
-        country: String(fd.get("country")),
-        city: String(fd.get("city")),
+        country: productCountry,
+        city: productCity.trim() || String(fd.get("city") || ""),
         description: String(fd.get("description")),
         urgency: String(fd.get("urgency")),
         declaredValue: fd.get("declaredValue")
@@ -288,20 +315,41 @@ export default function NewRequestPage() {
               </Select>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="country">{t("country")}</Label>
-                <Input
-                  id="country"
-                  name="country"
-                  required
-                  placeholder="CA"
-                  maxLength={2}
-                  className="uppercase"
-                />
-              </div>
+              <CountryCodeSelect
+                name="country"
+                label={t("country")}
+                value={serviceCountry}
+                onChange={(code) => {
+                  setServiceCountry(code);
+                  setServiceCity("");
+                }}
+              />
               <div className="space-y-2">
                 <Label htmlFor="city">{t("city")}</Label>
-                <Input id="city" name="city" required />
+                {serviceCities.length > 0 ? (
+                  <Select
+                    id="city"
+                    name="city"
+                    value={serviceCity}
+                    onChange={(e) => setServiceCity(e.target.value)}
+                    required
+                  >
+                    <option value="">{t("services_choose_city")}</option>
+                    {serviceCities.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Input
+                    id="city"
+                    name="city"
+                    value={serviceCity}
+                    onChange={(e) => setServiceCity(e.target.value)}
+                    required
+                  />
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -340,20 +388,41 @@ export default function NewRequestPage() {
               </Select>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="country">{t("delivery_country")}</Label>
-                <Input
-                  id="country"
-                  name="country"
-                  required
-                  placeholder="CA"
-                  maxLength={2}
-                  className="uppercase"
-                />
-              </div>
+              <CountryCodeSelect
+                name="country"
+                label={t("delivery_country")}
+                value={productCountry}
+                onChange={(code) => {
+                  setProductCountry(code);
+                  setProductCity("");
+                }}
+              />
               <div className="space-y-2">
                 <Label htmlFor="city">{t("delivery_city")}</Label>
-                <Input id="city" name="city" required />
+                {productCities.length > 0 ? (
+                  <Select
+                    id="city"
+                    name="city"
+                    value={productCity}
+                    onChange={(e) => setProductCity(e.target.value)}
+                    required
+                  >
+                    <option value="">{t("services_choose_city")}</option>
+                    {productCities.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Input
+                    id="city"
+                    name="city"
+                    value={productCity}
+                    onChange={(e) => setProductCity(e.target.value)}
+                    required
+                  />
+                )}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import {
   effectiveProductPriceCents,
   hasActivePromo,
+  productPhotoFields,
+  withProductPhotos,
 } from "@/lib/shops-catalog";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -17,6 +19,7 @@ const patchSchema = z.object({
   promoLabel: z.string().max(80).optional().nullable(),
   promoEndsAt: z.string().optional().nullable(),
   photoUrl: z.string().max(2000).optional().nullable(),
+  photos: z.array(z.string().max(2000)).max(8).optional().nullable(),
   warranty: z.string().max(120).optional().nullable(),
   stockQty: z.coerce.number().int().min(0).max(1_000_000).optional().nullable(),
   highlights: z.string().max(2000).optional().nullable(),
@@ -77,7 +80,7 @@ export async function GET(_request: Request, context: Ctx) {
   }
 
   return NextResponse.json({
-    product: {
+    product: withProductPhotos({
       ...product,
       effectivePriceCents: effectiveProductPriceCents(product),
       hasPromo: hasActivePromo(product),
@@ -87,7 +90,7 @@ export async function GET(_request: Request, context: Ctx) {
           ? fromCents(product.promoPriceCents, product.shop.currency)
           : null,
       isOwner,
-    },
+    }),
   });
 }
 
@@ -112,7 +115,19 @@ export async function PATCH(request: Request, context: Ctx) {
 
     if (body.title !== undefined) data.title = body.title.trim();
     if (body.description !== undefined) data.description = body.description.trim();
-    if (body.photoUrl !== undefined) data.photoUrl = body.photoUrl || null;
+    if (body.photos !== undefined || body.photoUrl !== undefined) {
+      const fields = productPhotoFields({
+        photos: body.photos,
+        photoUrl:
+          body.photoUrl !== undefined
+            ? body.photoUrl
+            : body.photos === undefined
+              ? existing.photoUrl
+              : null,
+      });
+      data.photoUrl = fields.photoUrl;
+      data.photosJson = fields.photosJson;
+    }
     if (body.active !== undefined) data.active = body.active;
     if (existing.shop.category === "electronics") {
       if (body.warranty !== undefined) {
@@ -160,11 +175,11 @@ export async function PATCH(request: Request, context: Ctx) {
     });
 
     return NextResponse.json({
-      product: {
+      product: withProductPhotos({
         ...product,
         effectivePriceCents: effectiveProductPriceCents(product),
         hasPromo: hasActivePromo(product),
-      },
+      }),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

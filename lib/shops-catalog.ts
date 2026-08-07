@@ -98,6 +98,70 @@ export function hasActivePromo(product: {
   return effectiveProductPriceCents(product) < product.priceCents;
 }
 
+/** Max image URLs stored per shop product. */
+export const SHOP_PRODUCT_MAX_PHOTOS = 8;
+
+export function parseProductPhotos(product: {
+  photoUrl?: string | null;
+  photosJson?: string | null;
+  photos?: string[] | null;
+}): string[] {
+  if (Array.isArray(product.photos) && product.photos.length > 0) {
+    return product.photos
+      .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+      .map((u) => u.trim())
+      .slice(0, SHOP_PRODUCT_MAX_PHOTOS);
+  }
+  try {
+    const parsed = JSON.parse(product.photosJson || "[]") as unknown;
+    if (Array.isArray(parsed)) {
+      const urls = parsed
+        .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+        .map((u) => u.trim())
+        .slice(0, SHOP_PRODUCT_MAX_PHOTOS);
+      if (urls.length > 0) return urls;
+    }
+  } catch {
+    /* fall through */
+  }
+  return product.photoUrl?.trim() ? [product.photoUrl.trim()] : [];
+}
+
+/** Normalize write payload: keep `photoUrl` as cover (= first photo) for legacy clients. */
+export function productPhotoFields(input: {
+  photos?: string[] | null;
+  photoUrl?: string | null;
+}): { photoUrl: string | null; photosJson: string } {
+  const fromList = Array.isArray(input.photos)
+    ? input.photos
+        .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+        .map((u) => u.trim())
+        .slice(0, SHOP_PRODUCT_MAX_PHOTOS)
+    : [];
+  const list =
+    fromList.length > 0
+      ? fromList
+      : input.photoUrl?.trim()
+        ? [input.photoUrl.trim()]
+        : [];
+  return {
+    photoUrl: list[0] ?? null,
+    photosJson: JSON.stringify(list),
+  };
+}
+
+export function withProductPhotos<T extends {
+  photoUrl?: string | null;
+  photosJson?: string | null;
+}>(product: T): T & { photos: string[]; photoUrl: string | null } {
+  const photos = parseProductPhotos(product);
+  return {
+    ...product,
+    photos,
+    photoUrl: product.photoUrl || photos[0] || null,
+  };
+}
+
 export const SHOP_ORDER_STATUS_LABELS: Record<string, { fr: string; en: string }> =
   {
     AWAITING_PAYMENT: { fr: "En attente de paiement", en: "Awaiting payment" },

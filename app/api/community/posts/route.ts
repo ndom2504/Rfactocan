@@ -17,7 +17,7 @@ const attachmentSchema = z.object({
   url: z.string().min(1).max(800),
   name: z.string().min(1).max(180),
   contentType: z.string().min(3).max(120),
-  size: z.number().int().nonnegative().max(25 * 1024 * 1024),
+  size: z.number().int().nonnegative().max(100 * 1024 * 1024),
 });
 
 const createSchema = z.object({

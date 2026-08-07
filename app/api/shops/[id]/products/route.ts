@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import {
   effectiveProductPriceCents,
   hasActivePromo,
+  productPhotoFields,
+  withProductPhotos,
 } from "@/lib/shops-catalog";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -18,6 +20,7 @@ const createSchema = z.object({
   promoLabel: z.string().max(80).optional().nullable(),
   promoEndsAt: z.string().optional().nullable(),
   photoUrl: z.string().max(2000).optional().nullable(),
+  photos: z.array(z.string().max(2000)).max(8).optional().nullable(),
   warranty: z.string().max(120).optional().nullable(),
   stockQty: z.coerce.number().int().min(0).max(1_000_000).optional().nullable(),
   highlights: z.string().max(2000).optional().nullable(),
@@ -56,11 +59,13 @@ export async function GET(_request: Request, context: Ctx) {
   });
 
   return NextResponse.json({
-    products: products.map((p) => ({
-      ...p,
-      effectivePriceCents: effectiveProductPriceCents(p),
-      hasPromo: hasActivePromo(p),
-    })),
+    products: products.map((p) =>
+      withProductPhotos({
+        ...p,
+        effectivePriceCents: effectiveProductPriceCents(p),
+        hasPromo: hasActivePromo(p),
+      })
+    ),
   });
 }
 
@@ -91,6 +96,10 @@ export async function POST(request: Request, context: Ctx) {
     }
 
     const isElectronics = shop.category === "electronics";
+    const photos = productPhotoFields({
+      photos: body.photos,
+      photoUrl: body.photoUrl,
+    });
 
     const product = await prisma.shopProduct.create({
       data: {
@@ -101,7 +110,8 @@ export async function POST(request: Request, context: Ctx) {
         promoPriceCents,
         promoLabel: body.promoLabel?.trim() || null,
         promoEndsAt: body.promoEndsAt ? new Date(body.promoEndsAt) : null,
-        photoUrl: body.photoUrl || null,
+        photoUrl: photos.photoUrl,
+        photosJson: photos.photosJson,
         warranty: isElectronics
           ? body.warranty?.trim() || null
           : null,
@@ -119,11 +129,11 @@ export async function POST(request: Request, context: Ctx) {
 
     return NextResponse.json(
       {
-        product: {
+        product: withProductPhotos({
           ...product,
           effectivePriceCents: effectiveProductPriceCents(product),
           hasPromo: hasActivePromo(product),
-        },
+        }),
       },
       { status: 201 }
     );

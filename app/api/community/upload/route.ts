@@ -163,7 +163,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Fichier trop grand pour l’upload classique. Réessayez (l’app doit utiliser l’upload direct). Vidéos : max 25 Mo, ou compressez le clip.",
+          "Fichier trop grand pour l’upload classique. Réessayez (l’app doit utiliser l’upload direct). Vidéos : max 100 Mo, ou compressez le clip.",
         code: "USE_CLIENT_UPLOAD",
         access: blobAccess(),
       },

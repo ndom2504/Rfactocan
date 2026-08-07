@@ -177,6 +177,16 @@ function RegisterForm() {
           />
         </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
+        <p className="text-xs leading-relaxed text-[var(--muted)]">
+          {t("terms_accept_register")}{" "}
+          <Link href="/terms" className="text-[var(--accent)] underline">
+            {t("nav_terms")}
+          </Link>
+          {" · "}
+          <Link href="/privacy" className="text-[var(--accent)] underline">
+            {t("nav_privacy")}
+          </Link>
+        </p>
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? t("loading") : t("create_account")}
         </Button>

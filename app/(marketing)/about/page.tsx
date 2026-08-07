@@ -91,6 +91,9 @@ export default async function AboutPage() {
         <Link href="/register">
           <Button>{t(locale, "join_rfacto")}</Button>
         </Link>
+        <Link href="/terms">
+          <Button variant="outline">{t(locale, "nav_terms")}</Button>
+        </Link>
         <Link href="/trust">
           <Button variant="outline">{t(locale, "trust_program_cta")}</Button>
         </Link>
