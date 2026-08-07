@@ -5,12 +5,18 @@ import { TravelerSearch } from "@/components/traveler-search";
 import { RequestSearch } from "@/components/request-search";
 import { ServiceSearch } from "@/components/service-search";
 import { ShopSearch } from "@/components/shop-search";
+import { JobSearch } from "@/components/job-search";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/components/locale-provider";
 
-export type SearchMode = "voyageurs" | "services" | "boutiques" | "clients";
+export type SearchMode =
+  | "voyageurs"
+  | "services"
+  | "boutiques"
+  | "clients"
+  | "emplois";
 
 type Props = {
   /** Kept for compatibility — all modes are available. */
@@ -45,6 +51,7 @@ export function DashboardSearchHub(_props: Props) {
             <option value="services">{t("search_mode_services")}</option>
             <option value="boutiques">{t("search_mode_shops")}</option>
             <option value="clients">{t("search_mode_clients")}</option>
+            <option value="emplois">{t("search_mode_jobs")}</option>
           </Select>
         </div>
 
@@ -52,6 +59,7 @@ export function DashboardSearchHub(_props: Props) {
         {mode === "services" && <ServiceSearch hideHeading plain />}
         {mode === "boutiques" && <ShopSearch hideHeading plain />}
         {mode === "clients" && <RequestSearch hideHeading plain />}
+        {mode === "emplois" && <JobSearch hideHeading plain />}
       </Card>
     </section>
   );

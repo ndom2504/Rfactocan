@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { countryCodesForRegion } from "@/lib/regions";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 /**
- * Quick parcel-request search for dashboard (travelers looking for senders).
- * Filters open requests by q / country / city / region (destination or origin).
+ * Quick open-request search for dashboard.
+ * - Clients / colis: needType=PARCEL (default)
+ * - Emplois: needType=JOB (JOB_SEEK + JOB_OFFER)
  */
 export async function GET(request: Request) {
   const session = await getSessionUser();
@@ -19,7 +21,36 @@ export async function GET(request: Request) {
   const city = (searchParams.get("city") ?? "").trim();
   const region = (searchParams.get("region") ?? "").trim();
   const date = (searchParams.get("date") ?? "").trim();
+  const needTypeParam = (searchParams.get("needType") ?? "PARCEL").trim().toUpperCase();
   const limit = Math.min(Number(searchParams.get("limit") ?? 20) || 20, 50);
+
+  let needTypeFilter: Prisma.ParcelRequestWhereInput["needType"];
+  if (needTypeParam === "JOB" || needTypeParam === "JOBS") {
+    needTypeFilter = { in: ["JOB_SEEK", "JOB_OFFER"] };
+  } else if (
+    needTypeParam === "JOB_SEEK" ||
+    needTypeParam === "JOB_OFFER" ||
+    needTypeParam === "PARCEL" ||
+    needTypeParam === "SERVICE" ||
+    needTypeParam === "PRODUCT"
+  ) {
+    needTypeFilter = needTypeParam as
+      | "JOB_SEEK"
+      | "JOB_OFFER"
+      | "PARCEL"
+      | "SERVICE"
+      | "PRODUCT";
+  } else if (needTypeParam === "ALL") {
+    needTypeFilter = undefined;
+  } else {
+    needTypeFilter = "PARCEL";
+  }
+
+  const isJobSearch =
+    needTypeParam === "JOB" ||
+    needTypeParam === "JOBS" ||
+    needTypeParam === "JOB_SEEK" ||
+    needTypeParam === "JOB_OFFER";
 
   const regionCodes = region ? countryCodesForRegion(region) : [];
 
@@ -37,6 +68,7 @@ export async function GET(request: Request) {
     where: {
       status: "OPEN",
       userId: { not: session.id },
+      ...(needTypeFilter ? { needType: needTypeFilter } : {}),
       ...(dateFilter ? { desiredDate: dateFilter } : {}),
       ...(country
         ? {
@@ -68,6 +100,28 @@ export async function GET(request: Request) {
               { fromCountry: { contains: q, mode: "insensitive" } },
               { toCountry: { contains: q, mode: "insensitive" } },
               { description: { contains: q, mode: "insensitive" } },
+              ...(isJobSearch
+                ? [
+                    {
+                      jobTitle: {
+                        contains: q,
+                        mode: "insensitive" as const,
+                      },
+                    },
+                    {
+                      jobSector: {
+                        contains: q,
+                        mode: "insensitive" as const,
+                      },
+                    },
+                    {
+                      jobDiploma: {
+                        contains: q,
+                        mode: "insensitive" as const,
+                      },
+                    },
+                  ]
+                : []),
             ],
           }
         : {}),
@@ -93,6 +147,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     requests: requests.map((r) => ({
       requestId: r.id,
+      needType: r.needType,
       fromCountry: r.fromCountry,
       fromCity: r.fromCity,
       toCountry: r.toCountry,
@@ -102,6 +157,11 @@ export async function GET(request: Request) {
       desiredDate: r.desiredDate,
       description: r.description,
       photos: JSON.parse(r.photosJson || "[]") as string[],
+      jobTitle: r.jobTitle,
+      jobSector: r.jobSector,
+      jobExperience: r.jobExperience,
+      jobDiploma: r.jobDiploma,
+      jobCvUrl: r.jobCvUrl,
       user: r.user,
     })),
   });

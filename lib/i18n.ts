@@ -447,6 +447,13 @@ const dict = {
     search_mode_services: "Services",
     search_mode_shops: "Boutiques",
     search_mode_clients: "Clients",
+    search_mode_jobs: "Emplois",
+    search_jobs: "Emplois",
+    search_jobs_hint:
+      "Offres et profils candidats publiés dans Commander (emploi).",
+    search_jobs_placeholder: "Poste, secteur, ville, description…",
+    jobs_found: "emploi(s) trouvé(s)",
+    no_jobs_found: "Aucun emploi trouvé pour ces critères.",
     search_mode_livreurs: "Chercher des livreurs",
     search_mode_commandes: "Chercher des commandes",
     search_services: "Trouver un service",
@@ -1762,6 +1769,13 @@ const dict = {
     search_mode_services: "Services",
     search_mode_shops: "Shops",
     search_mode_clients: "Clients",
+    search_mode_jobs: "Jobs",
+    search_jobs: "Jobs",
+    search_jobs_hint:
+      "Job offers and candidate profiles published in Commander.",
+    search_jobs_placeholder: "Role, sector, city, description…",
+    jobs_found: "job(s) found",
+    no_jobs_found: "No jobs found for these filters.",
     search_shops: "Find a shop",
     search_shops_hint:
       "Search by name, product, category, city or seller.",

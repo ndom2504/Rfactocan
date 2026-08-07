@@ -85,7 +85,7 @@ export function RequestSearch({
   function runSearch() {
     setError("");
     startTransition(async () => {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ needType: "PARCEL" });
       if (q.trim()) params.set("q", q.trim());
       if (region) params.set("region", region);
       if (country) params.set("country", country);
