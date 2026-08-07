@@ -80,6 +80,9 @@ const dict = {
     services_publish: "Publier un service",
     services_publish_hint:
       "Pour les commerciaux : fret, cargo, transport et autres services par catégorie.",
+    services_edit_title: "Modifier le service",
+    services_edit_hint:
+      "Corrigez les informations de votre offre (titre, description, photos, tarif…).",
     services_see_list: "Voir les offres",
     services_back: "Toutes les catégories",
     services_type: "Métier / type",
@@ -1399,6 +1402,9 @@ const dict = {
     services_publish: "Publish a service",
     services_publish_hint:
       "For businesses: freight, cargo, transport and other services by category.",
+    services_edit_title: "Edit service",
+    services_edit_hint:
+      "Update your listing details (title, description, photos, pricing…).",
     services_see_list: "See offers",
     services_back: "All categories",
     services_type: "Trade / type",

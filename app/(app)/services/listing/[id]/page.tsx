@@ -248,6 +248,23 @@ export default function ServiceListingDetailPage() {
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {isOwner && (
+            <>
+              <Link href={`/services/listing/${listing.id}/edit`}>
+                <Button type="button" variant="outline">
+                  {t("edit")}
+                </Button>
+              </Link>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={closeListing}
+              >
+                {t("services_close")}
+              </Button>
+            </>
+          )}
           {!isOwner && (
             <Button
               type="button"
@@ -255,16 +272,6 @@ export default function ServiceListingDetailPage() {
               onClick={() => void contactProvider()}
             >
               {t("services_contact")}
-            </Button>
-          )}
-          {isOwner && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={closeListing}
-            >
-              {t("services_close")}
             </Button>
           )}
         </div>

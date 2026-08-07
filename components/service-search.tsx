@@ -145,60 +145,64 @@ export function ServiceSearch({ hideHeading = false, plain = false }: Props) {
             return (
               <Link key={item.id} href={`/services/listing/${item.id}`}>
                 <Card className="mb-2 overflow-hidden p-0 transition hover:border-[var(--accent)]">
-                  <div className="relative h-36 w-full bg-[var(--surface-2)] sm:h-40">
-                    {banner ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={banner}
-                        alt=""
-                        className="h-full w-full object-cover object-top"
+                  <div className="flex items-stretch gap-0">
+                    <div className="relative flex h-28 w-28 shrink-0 items-center justify-center bg-[var(--surface-2)] sm:h-36 sm:w-40">
+                      {banner ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={banner}
+                          alt=""
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      ) : (
+                        <div className="px-2 text-center text-xs text-[var(--muted)]">
+                          {t("services_no_cover")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 items-start gap-3 p-3 sm:p-4">
+                      <UserAvatar
+                        name={item.user?.displayName ?? "?"}
+                        avatarUrl={item.user?.avatarUrl}
+                        size="md"
                       />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
-                        {t("services_no_cover")}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-start gap-3 p-4">
-                    <UserAvatar
-                      name={item.user?.displayName ?? "?"}
-                      avatarUrl={item.user?.avatarUrl}
-                      size="md"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-base">{item.title}</CardTitle>
-                      <CardDescription>
-                        {serviceTypeLabel(
-                          item.category,
-                          item.serviceType,
-                          locale
-                        )}{" "}
-                        · {categoryLabel(item.category, locale)} · {item.city},{" "}
-                        {item.country}
-                        {item.priceAmount != null && (
-                          <>
-                            {" · "}
-                            {formatMoney(
-                              item.priceAmount,
-                              (item.currency as MoneyCurrency) || "CAD",
-                              locale === "en" ? "en-CA" : "fr-CA"
-                            )}
-                          </>
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-base leading-snug">
+                          {item.title}
+                        </CardTitle>
+                        <CardDescription>
+                          {serviceTypeLabel(
+                            item.category,
+                            item.serviceType,
+                            locale
+                          )}{" "}
+                          · {categoryLabel(item.category, locale)} · {item.city}
+                          , {item.country}
+                          {item.priceAmount != null && (
+                            <>
+                              {" · "}
+                              {formatMoney(
+                                item.priceAmount,
+                                (item.currency as MoneyCurrency) || "CAD",
+                                locale === "en" ? "en-CA" : "fr-CA"
+                              )}
+                            </>
+                          )}
+                        </CardDescription>
+                        {item.user?.displayName && (
+                          <p className="mt-1 text-xs text-[var(--muted)]">
+                            {item.user.displayName}
+                            {item.user.ratingCount
+                              ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
+                              : ""}
+                          </p>
                         )}
-                      </CardDescription>
-                      {item.user?.displayName && (
-                        <p className="mt-1 text-xs text-[var(--muted)]">
-                          {item.user.displayName}
-                          {item.user.ratingCount
-                            ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
-                            : ""}
-                        </p>
-                      )}
-                      {item.description && (
-                        <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
-                          {item.description}
-                        </p>
-                      )}
+                        {item.description && (
+                          <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>
