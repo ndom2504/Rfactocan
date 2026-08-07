@@ -13,6 +13,10 @@ import {
 } from "@/lib/services-catalog";
 import { isShopCategoryId } from "@/lib/shops-catalog";
 import {
+  isJobExperienceId,
+  isJobSectorId,
+} from "@/lib/jobs-catalog";
+import {
   normalizeTransportMode,
   normalizeTransportType,
 } from "@/lib/transport";
@@ -25,7 +29,7 @@ const emptyToUndefined = (value: unknown) => {
 
 const baseSchema = z.object({
   needType: z
-    .enum(["PARCEL", "SERVICE", "PRODUCT"])
+    .enum(["PARCEL", "SERVICE", "PRODUCT", "JOB_SEEK", "JOB_OFFER"])
     .optional()
     .default("PARCEL"),
   /** Colis: envoyer | recevoir (or send | receive). */
@@ -51,6 +55,11 @@ const baseSchema = z.object({
   serviceCategory: z.string().optional(),
   serviceType: z.string().optional(),
   productCategory: z.string().optional(),
+  jobTitle: z.string().max(120).optional(),
+  jobSector: z.string().optional(),
+  jobExperience: z.string().optional(),
+  jobDiploma: z.string().max(160).optional(),
+  jobCvUrl: z.string().max(2000).optional().nullable(),
 });
 
 function serializeRequest(
@@ -74,7 +83,8 @@ export async function GET(request: Request) {
     where: {
       status: "OPEN",
       ...(mine && session ? { userId: session.id } : {}),
-      ...(needType && ["PARCEL", "SERVICE", "PRODUCT"].includes(needType)
+      ...(needType &&
+      ["PARCEL", "SERVICE", "PRODUCT", "JOB_SEEK", "JOB_OFFER"].includes(needType)
         ? { needType: needType as OrderNeedTypeId }
         : {}),
     },
@@ -223,50 +233,124 @@ export async function POST(request: Request) {
       );
     }
 
-    // PRODUCT
-    const country = (
-      body.country ||
-      body.toCountry ||
-      body.fromCountry ||
-      ""
-    ).trim();
-    const city = (body.city || body.toCity || body.fromCity || "").trim();
-    const productCategory = (body.productCategory || "").trim();
+    if (needType === "PRODUCT") {
+      const country = (
+        body.country ||
+        body.toCountry ||
+        body.fromCountry ||
+        ""
+      ).trim();
+      const city = (body.city || body.toCity || body.fromCity || "").trim();
+      const productCategory = (body.productCategory || "").trim();
 
-    if (!country || !city) {
+      if (!country || !city) {
+        return NextResponse.json(
+          { error: "Indiquez le lieu de livraison (pays, ville)." },
+          { status: 400 }
+        );
+      }
+      if (!productCategory || !isShopCategoryId(productCategory)) {
+        return NextResponse.json(
+          { error: "Catégorie de produit invalide." },
+          { status: 400 }
+        );
+      }
+
+      const created = await prisma.parcelRequest.create({
+        data: {
+          userId: session.id,
+          needType: "PRODUCT",
+          productCategory,
+          fromCountry: country,
+          fromCity: city,
+          toCountry: country,
+          toCity: city,
+          weightKg: 0,
+          description: body.description,
+          photosJson: JSON.stringify(body.photos ?? []),
+          urgency: body.urgency,
+          declaredValue: body.declaredValue,
+          desiredDate: body.desiredDate ? new Date(body.desiredDate) : null,
+        },
+      });
       return NextResponse.json(
-        { error: "Indiquez le lieu de livraison (pays, ville)." },
-        { status: 400 }
+        { request: serializeRequest(created) },
+        { status: 201 }
       );
     }
-    if (!productCategory || !isShopCategoryId(productCategory)) {
+
+    // JOB_SEEK | JOB_OFFER
+    if (needType === "JOB_SEEK" || needType === "JOB_OFFER") {
+      const country = (
+        body.country ||
+        body.toCountry ||
+        body.fromCountry ||
+        ""
+      ).trim();
+      const city = (body.city || body.toCity || body.fromCity || "").trim();
+      const jobTitle = (body.jobTitle || "").trim();
+      const jobSector = (body.jobSector || "").trim();
+      const jobExperience = (body.jobExperience || "").trim();
+      const jobDiploma = (body.jobDiploma || "").trim() || null;
+      const jobCvUrl = (body.jobCvUrl || "").trim() || null;
+
+      if (!country || !city) {
+        return NextResponse.json(
+          { error: "Indiquez le pays et la ville." },
+          { status: 400 }
+        );
+      }
+      if (jobTitle.length < 2) {
+        return NextResponse.json(
+          {
+            error:
+              needType === "JOB_OFFER"
+                ? "Indiquez l’intitulé du poste."
+                : "Indiquez le titre de votre profil / poste ciblé.",
+          },
+          { status: 400 }
+        );
+      }
+      if (!jobSector || !isJobSectorId(jobSector)) {
+        return NextResponse.json(
+          { error: "Secteur d’emploi invalide." },
+          { status: 400 }
+        );
+      }
+      if (!jobExperience || !isJobExperienceId(jobExperience)) {
+        return NextResponse.json(
+          { error: "Niveau d’expérience invalide." },
+          { status: 400 }
+        );
+      }
+
+      const created = await prisma.parcelRequest.create({
+        data: {
+          userId: session.id,
+          needType,
+          jobTitle,
+          jobSector,
+          jobExperience,
+          jobDiploma,
+          jobCvUrl,
+          fromCountry: country,
+          fromCity: city,
+          toCountry: country,
+          toCity: city,
+          weightKg: 0,
+          description: body.description,
+          photosJson: JSON.stringify(body.photos ?? []),
+          urgency: body.urgency,
+          desiredDate: body.desiredDate ? new Date(body.desiredDate) : null,
+        },
+      });
       return NextResponse.json(
-        { error: "Catégorie de produit invalide." },
-        { status: 400 }
+        { request: serializeRequest(created) },
+        { status: 201 }
       );
     }
 
-    const created = await prisma.parcelRequest.create({
-      data: {
-        userId: session.id,
-        needType: "PRODUCT",
-        productCategory,
-        fromCountry: country,
-        fromCity: city,
-        toCountry: country,
-        toCity: city,
-        weightKg: 0,
-        description: body.description,
-        photosJson: JSON.stringify(body.photos ?? []),
-        urgency: body.urgency,
-        declaredValue: body.declaredValue,
-        desiredDate: body.desiredDate ? new Date(body.desiredDate) : null,
-      },
-    });
-    return NextResponse.json(
-      { request: serializeRequest(created) },
-      { status: 201 }
-    );
+    return NextResponse.json({ error: "Type de besoin invalide." }, { status: 400 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

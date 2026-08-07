@@ -83,7 +83,7 @@ export default function ServiceListingDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 md:max-w-3xl">
       <Link
         href={`/services/${listing.category}`}
         className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
@@ -91,35 +91,49 @@ export default function ServiceListingDetailPage() {
         ← {categoryLabel(listing.category, locale)}
       </Link>
 
-      <Card className="overflow-hidden">
-        {(listing.photos?.length ?? 0) > 0 && (
-          <div className="relative -mx-5 -mt-5 mb-5">
-            <MediaGallery
-              photos={listing.photos}
-              alt={listing.title}
-              maxHeightClass="max-h-[min(72vh,36rem)]"
+      {/* Media band separate from title (clearer on desktop) */}
+      {(listing.photos?.length ?? 0) > 0 && (
+        <div className="overflow-hidden rounded-xl bg-[var(--surface-2)] md:rounded-2xl md:border md:border-[var(--border)] md:shadow-sm">
+          <MediaGallery
+            photos={listing.photos}
+            alt={listing.title}
+            maxHeightClass="max-h-[min(72vh,36rem)] md:max-h-[min(48vh,28rem)]"
+          />
+        </div>
+      )}
+
+      <Card className="md:rounded-2xl">
+        <div className="flex items-start gap-3 md:gap-4">
+          <div className="shrink-0 rounded-full ring-2 ring-[var(--accent)]/30 ring-offset-2 ring-offset-[var(--surface)]">
+            <UserAvatar
+              name={listing.user.displayName}
+              avatarUrl={listing.user.avatarUrl}
+              size="lg"
             />
           </div>
-        )}
-
-        <p className="text-xs uppercase tracking-wide text-[var(--muted)]">
-          {serviceTypeLabel(listing.category, listing.serviceType, locale)}
-        </p>
-        <CardTitle className="mt-1 text-2xl">{listing.title}</CardTitle>
-        <CardDescription className="mt-2">
-          {listing.city}, {listing.country}
-          {listing.priceAmount != null && (
-            <>
-              {" · "}
-              {formatMoney(
-                listing.priceAmount,
-                (listing.currency as MoneyCurrency) || "CAD",
-                locale === "en" ? "en-CA" : "fr-CA"
-              )}{" "}
-              / {listing.priceUnit}
-            </>
-          )}
-        </CardDescription>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-wide text-[var(--muted)]">
+              {serviceTypeLabel(listing.category, listing.serviceType, locale)}
+            </p>
+            <CardTitle className="mt-1 text-2xl md:text-[1.75rem]">
+              {listing.title}
+            </CardTitle>
+            <CardDescription className="mt-2">
+              {listing.city}, {listing.country}
+              {listing.priceAmount != null && (
+                <>
+                  {" · "}
+                  {formatMoney(
+                    listing.priceAmount,
+                    (listing.currency as MoneyCurrency) || "CAD",
+                    locale === "en" ? "en-CA" : "fr-CA"
+                  )}{" "}
+                  / {listing.priceUnit}
+                </>
+              )}
+            </CardDescription>
+          </div>
+        </div>
 
         {(listing.products?.length ?? 0) > 0 && (
           <p className="mt-3 text-sm text-[var(--muted)]">
@@ -153,10 +167,7 @@ export default function ServiceListingDetailPage() {
           </p>
         ) : null}
 
-        <FormattedDescription
-          text={listing.description}
-          className="mt-4"
-        />
+        <FormattedDescription text={listing.description} className="mt-4" />
 
         {(listing.availableFrom || listing.availableTo) && (
           <p className="mt-3 text-sm text-[var(--muted)]">
@@ -175,23 +186,18 @@ export default function ServiceListingDetailPage() {
           </p>
         )}
 
-        <div className="mt-6 flex items-center gap-3 border-t border-[var(--border)] pt-4">
-          <UserAvatar
-            name={listing.user.displayName}
-            avatarUrl={listing.user.avatarUrl}
-            size="lg"
-          />
-          <div>
-            <p className="font-medium">{listing.user.displayName}</p>
-            <p className="text-sm text-[var(--muted)]">
-              {listing.user.ratingCount
-                ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
-                : t("services_no_rating")}
-              {listing.user.kycStatus === "VERIFIED"
-                ? ` · ${t("verified")}`
-                : ""}
-            </p>
-          </div>
+        <div className="mt-6 border-t border-[var(--border)] pt-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+            {listing.user.displayName}
+          </p>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {listing.user.ratingCount
+              ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
+              : t("services_no_rating")}
+            {listing.user.kycStatus === "VERIFIED"
+              ? ` · ${t("verified")}`
+              : ""}
+          </p>
         </div>
 
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}

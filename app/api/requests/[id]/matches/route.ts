@@ -164,6 +164,96 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ needType, matches, matchKind: "product" });
   }
 
+  // JOB_SEEK ↔ JOB_OFFER (mise en relation emploi)
+  if (needType === "JOB_SEEK" || needType === "JOB_OFFER") {
+    const targetNeed =
+      needType === "JOB_SEEK" ? ("JOB_OFFER" as const) : ("JOB_SEEK" as const);
+
+    const candidates = await prisma.parcelRequest.findMany({
+      where: {
+        status: "OPEN",
+        needType: targetNeed,
+        userId: { not: parcel.userId },
+        ...(parcel.jobSector ? { jobSector: parcel.jobSector } : {}),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            ratingAvg: true,
+            ratingCount: true,
+            verifiedAt: true,
+            avatarUrl: true,
+            kycStatus: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    const expRank: Record<string, number> = {
+      junior: 1,
+      mid: 2,
+      senior: 3,
+      expert: 4,
+    };
+
+    const matches = candidates
+      .map((other) => {
+        let score = 25;
+        if (
+          parcel.jobSector &&
+          other.jobSector &&
+          parcel.jobSector === other.jobSector
+        ) {
+          score += 35;
+        }
+        if (
+          other.toCountry.toLowerCase() === parcel.toCountry.toLowerCase()
+        ) {
+          score += 20;
+        }
+        if (other.toCity.toLowerCase() === parcel.toCity.toLowerCase()) {
+          score += 15;
+        }
+        const a = expRank[parcel.jobExperience || ""] ?? 0;
+        const b = expRank[other.jobExperience || ""] ?? 0;
+        if (a && b) {
+          const diff = Math.abs(a - b);
+          if (diff === 0) score += 10;
+          else if (diff === 1) score += 5;
+        }
+        return {
+          kind: "job" as const,
+          score: Math.min(score, 100),
+          request: {
+            id: other.id,
+            needType: other.needType,
+            jobTitle: other.jobTitle,
+            jobSector: other.jobSector,
+            jobExperience: other.jobExperience,
+            jobDiploma: other.jobDiploma,
+            jobCvUrl: other.jobCvUrl,
+            country: other.toCountry,
+            city: other.toCity,
+            description: other.description,
+            photos: JSON.parse(other.photosJson || "[]") as string[],
+            user: other.user,
+          },
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    return NextResponse.json({
+      needType,
+      matches,
+      matchKind: "job",
+      fromRequestId: parcel.id,
+    });
+  }
+
   // PARCEL → trips
   const trips = await prisma.trip.findMany({
     where: {

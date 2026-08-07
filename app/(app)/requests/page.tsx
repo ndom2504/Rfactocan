@@ -94,14 +94,22 @@ export default async function RequestsPage({ searchParams }: Props) {
                         ? `${req.toCity} · ${t(locale, "order_need_service")}`
                         : req.needType === "PRODUCT"
                           ? `${req.toCity} · ${t(locale, "order_need_product")}`
-                          : `${req.fromCity} → ${req.toCity}`}
+                          : req.needType === "JOB_SEEK"
+                            ? `${req.jobTitle || t(locale, "order_need_job_seek")} · ${req.toCity}`
+                            : req.needType === "JOB_OFFER"
+                              ? `${req.jobTitle || t(locale, "order_need_job_offer")} · ${req.toCity}`
+                              : `${req.fromCity} → ${req.toCity}`}
                     </CardTitle>
                     <Badge className="bg-[var(--surface-2)] text-[var(--foreground)]">
                       {req.needType === "SERVICE"
                         ? t(locale, "order_need_service")
                         : req.needType === "PRODUCT"
                           ? t(locale, "order_need_product")
-                          : t(locale, "order_need_parcel")}
+                          : req.needType === "JOB_SEEK"
+                            ? t(locale, "order_need_job_seek")
+                            : req.needType === "JOB_OFFER"
+                              ? t(locale, "order_need_job_offer")
+                              : t(locale, "order_need_parcel")}
                     </Badge>
                     {isOwner && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
@@ -134,7 +142,8 @@ export default async function RequestsPage({ searchParams }: Props) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  {existing ? (
+                  {existing &&
+                  (req.needType === "PARCEL" || !req.needType) ? (
                     <Link
                       href={`/bookings/${existing.id}`}
                       className={buttonVariants()}
@@ -145,6 +154,16 @@ export default async function RequestsPage({ searchParams }: Props) {
                     <Link
                       href={`/requests/${req.id}`}
                       className={buttonVariants({ variant: "outline" })}
+                    >
+                      {t(locale, "details")}
+                    </Link>
+                  ) : req.needType === "JOB_SEEK" ||
+                    req.needType === "JOB_OFFER" ||
+                    req.needType === "SERVICE" ||
+                    req.needType === "PRODUCT" ? (
+                    <Link
+                      href={`/requests/${req.id}`}
+                      className={buttonVariants()}
                     >
                       {t(locale, "details")}
                     </Link>

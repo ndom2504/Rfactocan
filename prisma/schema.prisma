@@ -47,6 +47,10 @@ enum OrderNeedType {
   PARCEL
   SERVICE
   PRODUCT
+  /// Demandeur d'emploi — profil candidature
+  JOB_SEEK
+  /// Employeur — offre d'emploi
+  JOB_OFFER
 }
 
 enum Urgency {
@@ -254,6 +258,8 @@ model User {
   communityComments CommunityComment[]
   connectionsFrom  UserConnection[] @relation("ConnectionsFrom")
   connectionsTo    UserConnection[] @relation("ConnectionsTo")
+  jobContactsSent     JobContact[] @relation("JobContactsSent")
+  jobContactsReceived JobContact[] @relation("JobContactsReceived")
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -367,11 +373,21 @@ model ParcelRequest {
   serviceType   String?
   /// Catégorie boutique (PRODUCT).
   productCategory String?
+  /// Emploi — intitulé poste / profil
+  jobTitle        String?
+  /// Emploi — secteur (jobs-catalog)
+  jobSector       String?
+  /// Emploi — expérience: junior | mid | senior | expert
+  jobExperience   String?
+  /// Emploi — diplôme / formation
+  jobDiploma      String?
+  /// Emploi — URL CV (PDF ou image)
+  jobCvUrl        String?
   fromCountry   String
   fromCity      String
   toCountry     String
   toCity        String
-  /// Poids colis ; 0 pour besoins service/produit.
+  /// Poids colis ; 0 pour besoins service/produit/emploi.
   weightKg      Float         @default(0)
   description   String
   photosJson    String        @default("[]")
@@ -387,6 +403,8 @@ model ParcelRequest {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings  Booking[]
   shopOrder ShopOrder?
+  jobContactsFrom JobContact[] @relation("JobContactFromRequest")
+  jobContactsTo   JobContact[] @relation("JobContactToRequest")
 
   @@index([toCountry, toCity])
   @@index([userId])
@@ -394,6 +412,28 @@ model ParcelRequest {
   @@index([needType, status])
   @@index([serviceCategory])
   @@index([productCategory])
+  @@index([jobSector, status])
+}
+
+/// Premier contact emploi (employeur ↔ candidat) sans booking.
+model JobContact {
+  id             String   @id @default(cuid())
+  fromUserId     String
+  toUserId       String
+  fromRequestId  String
+  toRequestId    String
+  message        String
+  status         String   @default("SENT")
+  createdAt      DateTime @default(now())
+
+  fromUser    User          @relation("JobContactsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User          @relation("JobContactsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+  fromRequest ParcelRequest @relation("JobContactFromRequest", fields: [fromRequestId], references: [id], onDelete: Cascade)
+  toRequest   ParcelRequest @relation("JobContactToRequest", fields: [toRequestId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toRequestId])
+  @@index([toUserId, createdAt])
+  @@index([fromUserId])
 }
 
 /// Offre de service collaboratif (hors flux colis Trip/ParcelRequest).

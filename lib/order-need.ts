@@ -2,7 +2,13 @@
  * Client order / need types for the Commander form.
  */
 
-export const ORDER_NEED_TYPES = ["PARCEL", "SERVICE", "PRODUCT"] as const;
+export const ORDER_NEED_TYPES = [
+  "PARCEL",
+  "SERVICE",
+  "PRODUCT",
+  "JOB_SEEK",
+  "JOB_OFFER",
+] as const;
 export type OrderNeedTypeId = (typeof ORDER_NEED_TYPES)[number];
 
 export function isOrderNeedType(value: string): value is OrderNeedTypeId {

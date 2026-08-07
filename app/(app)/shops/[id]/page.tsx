@@ -108,26 +108,38 @@ export default function ShopDetailPage() {
         )}
       </div>
 
-      {/* Banner — full image, no crop */}
-      <div className="overflow-hidden rounded-xl bg-[#0f1419]">
+      {/* Banner — mobile: contain (ok) · desktop: full-bleed cover strip */}
+      <div className="overflow-hidden rounded-xl bg-[#0f1419] md:rounded-2xl">
         {shop.coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={shop.coverUrl}
             alt=""
-            className="mx-auto block h-auto w-full max-h-[28rem] object-contain"
+            className="mx-auto block h-auto w-full max-h-[28rem] object-contain md:mx-0 md:h-60 md:max-h-none md:w-full md:object-cover md:object-center lg:h-72"
           />
         ) : (
-          <div className="flex min-h-40 w-full items-center justify-center bg-gradient-to-br from-[#1a2330] to-[#0f1419]">
+          <div className="flex min-h-40 w-full items-center justify-center bg-gradient-to-br from-[#1a2330] to-[#0f1419] md:h-60 lg:h-72">
             <span className="text-sm text-white/50">{t("shops_cover")}</span>
           </div>
         )}
       </div>
 
-      {/* Identity section: dark band, logo bubble, title + description */}
-      <section className="-mt-10 rounded-xl bg-[#12181f] px-4 pb-5 pt-0 text-white shadow-lg sm:-mt-12 sm:px-6 sm:pb-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
-          <div className="-mt-10 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#12181f] bg-[#1e2833] shadow-md sm:-mt-12 sm:h-28 sm:w-28">
+      {/*
+        Identity: logo + name + description.
+        Mobile keeps logo pull-up into the banner; desktop keeps a clear
+        separation (banner alone, then identity card).
+      */}
+      <section className="-mt-10 rounded-xl bg-[#12181f] px-4 pb-5 pt-0 text-white shadow-lg sm:-mt-12 sm:px-6 sm:pb-6 md:mt-0 md:rounded-2xl md:border md:border-white/10 md:px-8 md:pb-7 md:pt-6 md:shadow-xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5 md:items-center md:gap-6">
+          <div
+            className={[
+              "flex shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#12181f] bg-[#1e2833] shadow-md",
+              "h-24 w-24 -mt-10 sm:h-28 sm:w-28 sm:-mt-12",
+              /* desktop: logo = circular mark, no pull-over into banner */
+              "md:mt-0 md:h-32 md:w-32 md:border-[5px] md:border-white/15 md:shadow-lg md:ring-2 md:ring-[var(--accent)]/35",
+            ].join(" ")}
+            aria-label={t("shops_logo")}
+          >
             {logoSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -139,11 +151,14 @@ export default function ShopDetailPage() {
               <ShopInitials name={shop.name} />
             )}
           </div>
-          <div className="min-w-0 flex-1 pb-1 pt-2 sm:pt-0">
-            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <div className="min-w-0 flex-1 pb-1 pt-2 sm:pt-0 md:pt-0">
+            <p className="mb-1 hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45 md:block">
+              {t("shops_title")}
+            </p>
+            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.35rem] md:leading-tight">
               {shop.name}
             </h1>
-            <p className="mt-1 text-sm text-white/70">
+            <p className="mt-1.5 text-sm text-white/70 md:mt-2 md:text-[0.95rem]">
               {shopCategoryLabel(shop.category, locale)}
               {shop.city ? ` · ${shop.city}` : ""}
               {shop.country ? `, ${shop.country}` : ""}
@@ -157,7 +172,7 @@ export default function ShopDetailPage() {
           </div>
         </div>
         {shop.description && (
-          <div className="mt-4 max-w-3xl border-t border-white/10 pt-4 [&_li]:text-white/90 [&_p]:text-white/90 [&_ul]:marker:text-amber-200/90 [&_ol]:marker:text-amber-200/90">
+          <div className="mt-4 max-w-3xl border-t border-white/10 pt-4 md:mt-5 md:pt-5 [&_li]:text-white/90 [&_p]:text-white/90 [&_ul]:marker:text-amber-200/90 [&_ol]:marker:text-amber-200/90">
             <FormattedDescription
               text={shop.description}
               className="!text-base !text-white/90"
