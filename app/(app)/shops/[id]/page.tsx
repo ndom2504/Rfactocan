@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
+import { FormattedDescription } from "@/components/formatted-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -156,9 +157,12 @@ export default function ShopDetailPage() {
           </div>
         </div>
         {shop.description && (
-          <p className="mt-4 max-w-3xl border-t border-white/10 pt-4 text-base leading-relaxed text-white/90">
-            {shop.description}
-          </p>
+          <div className="mt-4 max-w-3xl border-t border-white/10 pt-4 [&_li]:text-white/90 [&_p]:text-white/90 [&_ul]:marker:text-amber-200/90 [&_ol]:marker:text-amber-200/90">
+            <FormattedDescription
+              text={shop.description}
+              className="!text-base !text-white/90"
+            />
+          </div>
         )}
       </section>
 

@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { MediaGallery } from "@/components/media-gallery";
+import { FormattedDescription } from "@/components/formatted-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -138,7 +139,10 @@ function ProductBuyForm() {
           {shopCategoryLabel(product.shop.category, locale)} ·{" "}
           {product.shop.user.displayName}
         </CardDescription>
-        <p className="mt-4 text-sm leading-relaxed">{product.description}</p>
+        <FormattedDescription
+          text={product.description}
+          className="mt-4"
+        />
 
         {isElectronics &&
           (product.warranty ||
@@ -169,9 +173,11 @@ function ProductBuyForm() {
               {product.highlights && (
                 <div>
                   <p className="text-[var(--muted)]">{t("shops_highlights")}</p>
-                  <p className="mt-1 whitespace-pre-line leading-relaxed">
-                    {product.highlights}
-                  </p>
+                  <FormattedDescription
+                    text={product.highlights}
+                    className="mt-1"
+                    dense
+                  />
                 </div>
               )}
             </div>

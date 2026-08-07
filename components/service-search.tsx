@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/locale-provider";
 import { UserAvatar } from "@/components/user-avatar";
-import { ServicePhotosButton } from "@/components/service-photos-button";
 import { categoryLabel, serviceTypeLabel } from "@/lib/services-catalog";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 
@@ -141,47 +140,71 @@ export function ServiceSearch({ hideHeading = false, plain = false }: Props) {
           {results.length === 0 && (
             <p className="text-sm text-[var(--muted)]">{t("services_empty")}</p>
           )}
-          {results.map((item) => (
-            <Link key={item.id} href={`/services/listing/${item.id}`}>
-              <Card className="mb-2 transition hover:border-[var(--accent)]">
-                <div className="flex items-start gap-3">
-                  <UserAvatar
-                    name={item.user?.displayName ?? "?"}
-                    avatarUrl={item.user?.avatarUrl}
-                    size="md"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base">{item.title}</CardTitle>
-                    <CardDescription>
-                      {serviceTypeLabel(item.category, item.serviceType, locale)} ·{" "}
-                      {categoryLabel(item.category, locale)} · {item.city},{" "}
-                      {item.country}
-                      {item.priceAmount != null && (
-                        <>
-                          {" · "}
-                          {formatMoney(
-                            item.priceAmount,
-                            (item.currency as MoneyCurrency) || "CAD",
-                            locale === "en" ? "en-CA" : "fr-CA"
-                          )}
-                        </>
-                      )}
-                    </CardDescription>
-                    {item.user?.displayName && (
-                      <p className="mt-1 text-xs text-[var(--muted)]">
-                        {item.user.displayName}
-                      </p>
-                    )}
-                    {(item.photos?.length ?? 0) > 0 && (
-                      <div className="mt-2">
-                        <ServicePhotosButton photos={item.photos ?? []} />
+          {results.map((item) => {
+            const banner = item.photos?.[0] ?? null;
+            return (
+              <Link key={item.id} href={`/services/listing/${item.id}`}>
+                <Card className="mb-2 overflow-hidden p-0 transition hover:border-[var(--accent)]">
+                  <div className="relative h-36 w-full bg-[var(--surface-2)] sm:h-40">
+                    {banner ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={banner}
+                        alt=""
+                        className="h-full w-full object-cover object-top"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
+                        {t("services_no_cover")}
                       </div>
                     )}
                   </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                  <div className="flex items-start gap-3 p-4">
+                    <UserAvatar
+                      name={item.user?.displayName ?? "?"}
+                      avatarUrl={item.user?.avatarUrl}
+                      size="md"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base">{item.title}</CardTitle>
+                      <CardDescription>
+                        {serviceTypeLabel(
+                          item.category,
+                          item.serviceType,
+                          locale
+                        )}{" "}
+                        · {categoryLabel(item.category, locale)} · {item.city},{" "}
+                        {item.country}
+                        {item.priceAmount != null && (
+                          <>
+                            {" · "}
+                            {formatMoney(
+                              item.priceAmount,
+                              (item.currency as MoneyCurrency) || "CAD",
+                              locale === "en" ? "en-CA" : "fr-CA"
+                            )}
+                          </>
+                        )}
+                      </CardDescription>
+                      {item.user?.displayName && (
+                        <p className="mt-1 text-xs text-[var(--muted)]">
+                          {item.user.displayName}
+                          {item.user.ratingCount
+                            ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
+                            : ""}
+                        </p>
+                      )}
+                      {item.description && (
+                        <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </>

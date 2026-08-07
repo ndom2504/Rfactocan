@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
 import { CommunityPostActions } from "@/components/community-post-actions";
+import { ExpandableText } from "@/components/expandable-text";
 import {
   absoluteShareUrl,
   CommunityShareButton,
@@ -474,9 +475,7 @@ export function CommunityFeed() {
                   )}
                 </h2>
               )}
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
-                {post.body}
-              </p>
+              <ExpandableText text={post.body} className="mt-2" />
 
               {(post.attachments?.length ?? 0) > 0 && (
                 <div className="mt-3 -mx-1 overflow-hidden sm:mx-0">

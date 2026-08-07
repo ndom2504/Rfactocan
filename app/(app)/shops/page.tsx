@@ -18,6 +18,8 @@ type ShopRow = {
   city: string;
   country: string;
   status: string;
+  coverUrl?: string | null;
+  logoUrl?: string | null;
   _count?: { products: number };
   user?: { displayName: string };
 };
@@ -119,21 +121,41 @@ export default function ShopsHubPage() {
           <p className="text-sm text-[var(--muted)]">{t("shops_no_shops")}</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {shops.map((s) => (
-              <Link key={s.id} href={`/shops/${s.id}`}>
-                <Card className="h-full transition hover:border-[var(--accent)]">
-                  <CardTitle className="text-base">{s.name}</CardTitle>
-                  <CardDescription>
-                    {shopCategoryLabel(s.category, locale)} · {s.city},{" "}
-                    {s.country}
-                    {s.user ? ` · ${s.user.displayName}` : ""}
-                  </CardDescription>
-                  <p className="mt-2 text-sm text-[var(--muted)]">
-                    {s._count?.products ?? 0} {t("shops_products").toLowerCase()}
-                  </p>
-                </Card>
-              </Link>
-            ))}
+            {shops.map((s) => {
+              const banner = s.coverUrl || s.logoUrl || null;
+              return (
+                <Link key={s.id} href={`/shops/${s.id}`}>
+                  <Card className="h-full overflow-hidden p-0 transition hover:border-[var(--accent)]">
+                    <div className="relative h-28 w-full bg-[var(--surface-2)]">
+                      {banner ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={banner}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
+                          {t("services_no_cover")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <CardTitle className="text-base">{s.name}</CardTitle>
+                      <CardDescription>
+                        {shopCategoryLabel(s.category, locale)} · {s.city},{" "}
+                        {s.country}
+                        {s.user ? ` · ${s.user.displayName}` : ""}
+                      </CardDescription>
+                      <p className="mt-2 text-sm text-[var(--muted)]">
+                        {s._count?.products ?? 0}{" "}
+                        {t("shops_products").toLowerCase()}
+                      </p>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

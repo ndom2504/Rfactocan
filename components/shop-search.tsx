@@ -22,6 +22,7 @@ type ShopHit = {
   country: string;
   city: string;
   coverUrl?: string | null;
+  logoUrl?: string | null;
   _count?: { products: number };
   user?: {
     displayName: string;
@@ -147,42 +148,59 @@ export function ShopSearch({ hideHeading = false, plain = false }: Props) {
           {results.length === 0 && (
             <p className="text-sm text-[var(--muted)]">{t("shops_no_shops")}</p>
           )}
-          {results.map((item) => (
-            <Link key={item.id} href={`/shops/${item.id}`}>
-              <Card className="mb-2 transition hover:border-[var(--accent)]">
-                <div className="flex items-start gap-3">
-                  <UserAvatar
-                    name={item.user?.displayName ?? "?"}
-                    avatarUrl={item.user?.avatarUrl}
-                    size="md"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base">{item.name}</CardTitle>
-                    <CardDescription>
-                      {shopCategoryLabel(item.category, locale)} · {item.city},{" "}
-                      {item.country}
-                      {item._count?.products != null
-                        ? ` · ${item._count.products} ${t("shops_products").toLowerCase()}`
-                        : ""}
-                    </CardDescription>
-                    {item.user?.displayName && (
-                      <p className="mt-1 text-xs text-[var(--muted)]">
-                        {item.user.displayName}
-                        {item.user.ratingCount
-                          ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
-                          : ""}
-                      </p>
-                    )}
-                    {item.description && (
-                      <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
-                        {item.description}
-                      </p>
+          {results.map((item) => {
+            const banner = item.coverUrl || item.logoUrl || null;
+            return (
+              <Link key={item.id} href={`/shops/${item.id}`}>
+                <Card className="mb-2 overflow-hidden p-0 transition hover:border-[var(--accent)]">
+                  <div className="relative h-36 w-full bg-[var(--surface-2)] sm:h-40">
+                    {banner ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={banner}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
+                        {t("services_no_cover")}
+                      </div>
                     )}
                   </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                  <div className="flex items-start gap-3 p-4">
+                    <UserAvatar
+                      name={item.user?.displayName ?? item.name}
+                      avatarUrl={item.logoUrl || item.user?.avatarUrl}
+                      size="md"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base">{item.name}</CardTitle>
+                      <CardDescription>
+                        {shopCategoryLabel(item.category, locale)} · {item.city},{" "}
+                        {item.country}
+                        {item._count?.products != null
+                          ? ` · ${item._count.products} ${t("shops_products").toLowerCase()}`
+                          : ""}
+                      </CardDescription>
+                      {item.user?.displayName && (
+                        <p className="mt-1 text-xs text-[var(--muted)]">
+                          {item.user.displayName}
+                          {item.user.ratingCount
+                            ? ` · ★ ${item.user.ratingAvg.toFixed(1)}`
+                            : ""}
+                        </p>
+                      )}
+                      {item.description && (
+                        <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </>

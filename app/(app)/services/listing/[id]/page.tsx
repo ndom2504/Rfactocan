@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { MediaGallery } from "@/components/media-gallery";
+import { FormattedDescription } from "@/components/formatted-description";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 import {
   categoryLabel,
@@ -152,9 +153,10 @@ export default function ServiceListingDetailPage() {
           </p>
         ) : null}
 
-        <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">
-          {listing.description}
-        </p>
+        <FormattedDescription
+          text={listing.description}
+          className="mt-4"
+        />
 
         {(listing.availableFrom || listing.availableTo) && (
           <p className="mt-3 text-sm text-[var(--muted)]">
