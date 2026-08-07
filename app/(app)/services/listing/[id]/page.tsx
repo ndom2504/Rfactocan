@@ -105,7 +105,7 @@ export default function ServiceListingDetailPage() {
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
-      setError(data.error || t("error"));
+      setError(data.error || "Erreur");
       return;
     }
     const threadId = data.thread?.id;
