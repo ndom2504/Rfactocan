@@ -11,7 +11,6 @@ import { MediaGallery } from "@/components/media-gallery";
 import { FormattedDescription } from "@/components/formatted-description";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 import {
-  categoryLabel,
   productLabel,
   serviceTypeLabel,
 } from "@/lib/services-catalog";
@@ -126,14 +125,34 @@ export default function ServiceListingDetailPage() {
   const canContact =
     !isOwner && Boolean(meId) && meVerified && peerVerified;
 
+  function goBack() {
+    if (typeof window !== "undefined") {
+      const ref = document.referrer;
+      try {
+        if (ref && new URL(ref).origin === window.location.origin) {
+          router.back();
+          return;
+        }
+      } catch {
+        /* ignore bad referrer */
+      }
+      if (window.history.length > 1) {
+        router.back();
+        return;
+      }
+    }
+    router.push(`/services/${listing.category}`);
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 md:max-w-3xl">
-      <Link
-        href={`/services/${listing.category}`}
+      <button
+        type="button"
+        onClick={goBack}
         className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
       >
-        ← {categoryLabel(listing.category, locale)}
-      </Link>
+        ← {t("back")}
+      </button>
 
       {/* Media band separate from title (clearer on desktop) */}
       {(listing.photos?.length ?? 0) > 0 && (
@@ -276,11 +295,7 @@ export default function ServiceListingDetailPage() {
         </div>
         {!isOwner && meId && !canContact && (
           <p className="mt-2 text-xs text-[var(--muted)]">
-            {!meVerified && peerVerified
-              ? t("dm_verified_you")
-              : meVerified && !peerVerified
-                ? t("dm_verified_peer")
-                : t("dm_verified_required")}
+            {t("dm_verified_required")}
           </p>
         )}
       </Card>
