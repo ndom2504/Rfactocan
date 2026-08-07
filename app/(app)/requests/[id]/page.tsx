@@ -240,6 +240,10 @@ export default function RequestDetailPage({
     setContactedIds((prev) => new Set(prev).add(toRequestId));
     setActiveContactId(null);
     setContactMessage("");
+    const threadId = data.threadId || data.thread?.id;
+    if (threadId) {
+      router.push(`/messages/dm/${threadId}`);
+    }
   }
 
   if (!request) {

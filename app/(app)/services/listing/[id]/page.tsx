@@ -52,6 +52,8 @@ export default function ServiceListingDetailPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [meId, setMeId] = useState("");
+  const [meKyc, setMeKyc] = useState("");
 
   useEffect(() => {
     fetch(`/api/services/${id}`)
@@ -61,6 +63,14 @@ export default function ServiceListingDetailPage() {
         setListing(data.listing);
       })
       .catch((e: Error) => setError(e.message));
+    fetch("/api/auth/me")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        setMeId(data.user?.id ?? "");
+        setMeKyc(data.user?.kycStatus ?? "");
+      })
+      .catch(() => {});
   }, [id]);
 
   async function closeListing() {
@@ -75,12 +85,47 @@ export default function ServiceListingDetailPage() {
     }
   }
 
+  async function contactProvider() {
+    if (!listing) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch("/api/dm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        toUserId: listing.userId || listing.user.id,
+        contextType: "SERVICE",
+        contextId: listing.id,
+        body:
+          locale === "en"
+            ? `Hello, I am interested in your service « ${listing.title} ».`
+            : `Bonjour, je suis intéressé(e) par votre service « ${listing.title} ».`,
+      }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      setError(data.error || t("error"));
+      return;
+    }
+    const threadId = data.thread?.id;
+    if (threadId) router.push(`/messages/dm/${threadId}`);
+    else router.push("/messages");
+  }
+
   if (error && !listing) {
     return <p className="text-red-700">{error}</p>;
   }
   if (!listing) {
     return <p className="text-[var(--muted)]">{t("loading")}</p>;
   }
+
+  const isOwner = Boolean(meId) && meId === listing.userId;
+  const canContact =
+    !isOwner &&
+    Boolean(meId) &&
+    meKyc === "VERIFIED" &&
+    listing.user.kycStatus === "VERIFIED";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 md:max-w-3xl">
@@ -203,18 +248,31 @@ export default function ServiceListingDetailPage() {
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/messages">
-            <Button>{t("services_contact")}</Button>
-          </Link>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={busy}
-            onClick={closeListing}
-          >
-            {t("services_close")}
-          </Button>
+          {!isOwner && (
+            <Button
+              type="button"
+              disabled={busy || !canContact}
+              onClick={() => void contactProvider()}
+            >
+              {t("services_contact")}
+            </Button>
+          )}
+          {isOwner && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={closeListing}
+            >
+              {t("services_close")}
+            </Button>
+          )}
         </div>
+        {!isOwner && meId && !canContact && (
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            {t("dm_verified_required")}
+          </p>
+        )}
       </Card>
     </div>
   );

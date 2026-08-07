@@ -244,6 +244,9 @@ model User {
   shopOrdersAsBuyer ShopOrder[]    @relation("ShopOrderBuyer")
   bookingsAsSender Booking[]       @relation("BookingSender")
   messages         Message[]
+  directThreadsAsLow   DirectThread[] @relation("DirectThreadLow")
+  directThreadsAsHigh  DirectThread[] @relation("DirectThreadHigh")
+  directMessagesSent   DirectMessage[] @relation("DirectMessageSender")
   reviewsGiven     Review[]        @relation("ReviewsGiven")
   reviewsReceived  Review[]        @relation("ReviewsReceived")
   reportsFiled     Report[]        @relation("ReportsFiled")
@@ -686,6 +689,48 @@ model Message {
 
   @@index([bookingId, createdAt])
   @@index([bookingId, readAt])
+}
+
+/// Fil de discussion direct entre 2 utilisateurs (services / emploi — pas colis).
+/// userLowId / userHighId = ids triés pour unicité du couple.
+model DirectThread {
+  id              String    @id @default(cuid())
+  userLowId       String
+  userHighId      String
+  /// SERVICE | JOB
+  lastContextType String?
+  lastContextId   String?
+  lastMessageAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  userLow  User @relation("DirectThreadLow", fields: [userLowId], references: [id], onDelete: Cascade)
+  userHigh User @relation("DirectThreadHigh", fields: [userHighId], references: [id], onDelete: Cascade)
+  messages DirectMessage[]
+
+  @@unique([userLowId, userHighId])
+  @@index([lastMessageAt])
+  @@index([userLowId])
+  @@index([userHighId])
+}
+
+model DirectMessage {
+  id            String    @id @default(cuid())
+  threadId      String
+  senderId      String
+  body          String
+  attachmentUrl String?
+  /// SERVICE | JOB (contexte du message)
+  contextType   String?
+  contextId     String?
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  thread DirectThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User         @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@index([threadId, readAt])
 }
 
 model Review {

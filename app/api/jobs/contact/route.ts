@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import {
+  assertBothVerified,
+  getOrCreateDirectThread,
+} from "@/lib/dm";
 import { isJobNeedType } from "@/lib/jobs-catalog";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
@@ -12,8 +16,8 @@ const schema = z.object({
 });
 
 /**
- * Premier contact emploi : propriétaire d'une annonce JOB_SEEK / JOB_OFFER
- * écrit un message court au propriétaire de l'annonce opposée.
+ * Premier contact emploi + ouverture d'un fil DM (utilisateurs vérifiés).
+ * Les colis restent sur le chat booking — hors de ce flux.
  */
 export async function POST(request: Request) {
   const session = await getSessionUser();
@@ -77,6 +81,24 @@ export async function POST(request: Request) {
       );
     }
 
+    const verified = await assertBothVerified(session.id, toReq.userId);
+    if (!verified.ok) {
+      return NextResponse.json(
+        {
+          error: verified.error,
+          code: "code" in verified ? verified.code : undefined,
+        },
+        { status: verified.status }
+      );
+    }
+
+    const defaultFr =
+      fromReq.needType === "JOB_SEEK"
+        ? `Bonjour, mon profil correspond à « ${toReq.jobTitle || "votre offre"} ». Pouvez-nous échanger ?`
+        : `Bonjour, votre profil nous intéresse pour « ${fromReq.jobTitle || "notre poste"} ». Pouvons-nous échanger ?`;
+
+    const message = (body.message || defaultFr).trim();
+
     const existing = await prisma.jobContact.findUnique({
       where: {
         fromUserId_toRequestId: {
@@ -85,32 +107,39 @@ export async function POST(request: Request) {
         },
       },
     });
-    if (existing) {
-      return NextResponse.json(
-        {
-          error: "Vous avez déjà envoyé un message pour cette annonce.",
-          contact: existing,
+
+    const contact =
+      existing ??
+      (await prisma.jobContact.create({
+        data: {
+          fromUserId: session.id,
+          toUserId: toReq.userId,
+          fromRequestId: fromReq.id,
+          toRequestId: toReq.id,
+          message,
+          status: "SENT",
         },
-        { status: 409 }
-      );
-    }
+      }));
 
-    const defaultFr =
-      fromReq.needType === "JOB_SEEK"
-        ? `Bonjour, mon profil correspond à « ${toReq.jobTitle || "votre offre"} ». Pouvez-vous me contacter ?`
-        : `Bonjour, votre profil nous intéresse pour « ${fromReq.jobTitle || "notre poste"} ». Pouvons-nous échanger ?`;
+    const thread = await getOrCreateDirectThread({
+      meId: session.id,
+      peerId: toReq.userId,
+      contextType: "JOB",
+      contextId: toReq.id,
+    });
 
-    const message = (body.message || defaultFr).trim();
-
-    const contact = await prisma.jobContact.create({
+    await prisma.directMessage.create({
       data: {
-        fromUserId: session.id,
-        toUserId: toReq.userId,
-        fromRequestId: fromReq.id,
-        toRequestId: toReq.id,
-        message,
-        status: "SENT",
+        threadId: thread.id,
+        senderId: session.id,
+        body: message,
+        contextType: "JOB",
+        contextId: toReq.id,
       },
+    });
+    await prisma.directThread.update({
+      where: { id: thread.id },
+      data: { lastMessageAt: new Date() },
     });
 
     const me = await prisma.user.findUnique({
@@ -125,10 +154,13 @@ export async function POST(request: Request) {
       body: `${me?.displayName || "Un membre"} vous a contacté concernant « ${
         toReq.jobTitle || fromReq.jobTitle || "emploi"
       } ».`,
-      href: `/requests/${toReq.id}`,
+      href: `/messages/dm/${thread.id}`,
     });
 
-    return NextResponse.json({ contact }, { status: 201 });
+    return NextResponse.json(
+      { contact, threadId: thread.id, thread: { id: thread.id } },
+      { status: existing ? 200 : 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
