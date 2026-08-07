@@ -44,10 +44,16 @@ export async function createIdentitySession(userId: string, email: string) {
         return existing;
       }
       if (existing.status === "requires_input" && existing.url) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { kycStatus: "REQUIRES_INPUT" },
-        });
+        // Do not overwrite admin/manual VERIFIED via session reuse.
+        if (
+          user.kycStatus !== "VERIFIED" &&
+          user.manualIdDocStatus !== "APPROVED"
+        ) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { kycStatus: "REQUIRES_INPUT" },
+          });
+        }
         return existing;
       }
     }
@@ -141,6 +147,10 @@ export async function syncIdentitySessionStatus(
   });
   if (!user) return null;
 
+  /** Manual/admin approval or prior success must not be wiped by Stripe retries. */
+  const alreadyTrusted =
+    user.kycStatus === "VERIFIED" || user.manualIdDocStatus === "APPROVED";
+
   if (status === "verified") {
     return prisma.user.update({
       where: { id: user.id },
@@ -149,11 +159,31 @@ export async function syncIdentitySessionStatus(
         kycVerifiedAt: new Date(),
         verifiedAt: new Date(),
         // Close leftover manual ID fallback once Stripe KYC succeeds
-        ...(user.manualIdDocUrl || user.manualIdDocStatus === "SUBMITTED"
+        ...(user.manualIdDocUrl ||
+        user.manualIdDocStatus === "SUBMITTED" ||
+        user.manualIdDocStatus === "APPROVED"
           ? { manualIdDocStatus: "APPROVED" as const }
           : {}),
       },
     });
+  }
+
+  // Heal demoted rows where admin/manual already approved identity.
+  if (alreadyTrusted && user.kycStatus !== "VERIFIED") {
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        kycStatus: "VERIFIED",
+        kycVerifiedAt: user.kycVerifiedAt ?? new Date(),
+        verifiedAt: user.verifiedAt ?? new Date(),
+        manualIdDocStatus: "APPROVED",
+      },
+    });
+  }
+
+  // Never demote a verified (or manually approved) member.
+  if (alreadyTrusted) {
+    return user;
   }
 
   if (status === "requires_input") {

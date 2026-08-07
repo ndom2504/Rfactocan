@@ -286,6 +286,10 @@ const dict = {
     dm_context_job: "Emploi",
     dm_verified_required:
       "Vous et le prestataire devez être vérifiés (KYC) pour discuter en direct.",
+    dm_verified_you:
+      "Vérifiez votre identité (Profil → KYC) pour contacter ce prestataire.",
+    dm_verified_peer:
+      "Ce prestataire n’a pas encore terminé la vérification d’identité.",
     online: "En ligne",
     type_message: "Écrire un message…",
     delivery_country: "Pays de livraison",
@@ -1602,6 +1606,10 @@ const dict = {
     dm_context_job: "Job",
     dm_verified_required:
       "You and the provider must both be verified (KYC) to chat directly.",
+    dm_verified_you:
+      "Verify your identity (Profile → KYC) to contact this provider.",
+    dm_verified_peer:
+      "This provider has not completed identity verification yet.",
     online: "Online",
     type_message: "Type a message…",
     delivery_country: "Delivery country",

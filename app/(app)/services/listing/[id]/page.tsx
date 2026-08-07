@@ -121,11 +121,10 @@ export default function ServiceListingDetailPage() {
   }
 
   const isOwner = Boolean(meId) && meId === listing.userId;
+  const meVerified = meKyc === "VERIFIED";
+  const peerVerified = listing.user.kycStatus === "VERIFIED";
   const canContact =
-    !isOwner &&
-    Boolean(meId) &&
-    meKyc === "VERIFIED" &&
-    listing.user.kycStatus === "VERIFIED";
+    !isOwner && Boolean(meId) && meVerified && peerVerified;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 md:max-w-3xl">
@@ -277,7 +276,11 @@ export default function ServiceListingDetailPage() {
         </div>
         {!isOwner && meId && !canContact && (
           <p className="mt-2 text-xs text-[var(--muted)]">
-            {t("dm_verified_required")}
+            {!meVerified && peerVerified
+              ? t("dm_verified_you")
+              : meVerified && !peerVerified
+                ? t("dm_verified_peer")
+                : t("dm_verified_required")}
           </p>
         )}
       </Card>
