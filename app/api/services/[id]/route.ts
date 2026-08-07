@@ -22,7 +22,11 @@ const patchSchema = z.object({
   description: z.string().min(10).max(4000).optional(),
   country: z.string().min(2).max(2).optional(),
   city: z.string().min(2).max(80).optional(),
-  priceAmount: z.coerce.number().nonnegative().optional().nullable(),
+  priceAmount: z.coerce
+    .number()
+    .positive({ message: "Le prix du service est obligatoire." })
+    .optional()
+    .nullable(),
   priceUnit: z.enum(priceUnits).optional(),
   currency: z.string().optional(),
   availableFrom: z.string().optional().nullable(),

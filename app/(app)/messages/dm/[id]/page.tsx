@@ -5,9 +5,12 @@ import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatDate } from "@/lib/utils";
+import { loadUserIntent } from "@/lib/user-intent";
 
 type Peer = {
   id: string;
@@ -22,6 +25,14 @@ type DmMessage = {
   senderId: string;
   createdAt: string;
   attachmentUrl?: string | null;
+  contextType?: string | null;
+  contextId?: string | null;
+};
+
+type Thread = {
+  id: string;
+  lastContextType?: string | null;
+  lastContextId?: string | null;
 };
 
 export default function DirectMessageChatPage() {
@@ -29,11 +40,18 @@ export default function DirectMessageChatPage() {
   const { t } = useI18n();
   const [meId, setMeId] = useState("");
   const [peer, setPeer] = useState<Peer | null>(null);
+  const [thread, setThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showPayForm, setShowPayForm] = useState(false);
+  const [payTitle, setPayTitle] = useState("");
+  const [payDescription, setPayDescription] = useState("");
+  const [payAmount, setPayAmount] = useState("");
+  const [payReceiver, setPayReceiver] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -47,6 +65,7 @@ export default function DirectMessageChatPage() {
     if (msgRes.ok) {
       setMessages(msgData.messages ?? []);
       setPeer(msgData.peer ?? null);
+      setThread(msgData.thread ?? null);
       setError("");
     } else {
       setError(msgData.error || "Erreur");
@@ -56,6 +75,8 @@ export default function DirectMessageChatPage() {
 
   useEffect(() => {
     void load();
+    const prefs = loadUserIntent();
+    if (prefs.payoutIdentifier) setPayReceiver(prefs.payoutIdentifier);
     const timer = setInterval(() => void load(), 5000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,6 +85,23 @@ export default function DirectMessageChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (thread?.lastContextType === "SERVICE" && thread.lastContextId) {
+      fetch(`/api/services/${thread.lastContextId}`)
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data = await res.json();
+          const listing = data.listing;
+          if (!listing) return;
+          setPayTitle(listing.title || "");
+          if (listing.priceAmount != null) {
+            setPayAmount(String(listing.priceAmount));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [thread?.lastContextType, thread?.lastContextId]);
 
   async function onSend(e: FormEvent) {
     e.preventDefault();
@@ -87,6 +125,44 @@ export default function DirectMessageChatPage() {
     } else {
       void load();
     }
+  }
+
+  async function onRequestPayment(e: FormEvent) {
+    e.preventDefault();
+    if (!peer || payBusy) return;
+    setPayBusy(true);
+    setError("");
+    const amount = Number(payAmount.replace(",", "."));
+    if (!payTitle.trim() || !Number.isFinite(amount) || amount <= 0) {
+      setError(t("svc_pay_need_service_price"));
+      setPayBusy(false);
+      return;
+    }
+    const res = await fetch("/api/service-payments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientId: peer.id,
+        threadId: id,
+        listingId:
+          thread?.lastContextType === "SERVICE"
+            ? thread.lastContextId
+            : undefined,
+        title: payTitle.trim(),
+        description: payDescription.trim(),
+        amount,
+        receiverHint: payReceiver.trim() || undefined,
+      }),
+    });
+    const data = await res.json();
+    setPayBusy(false);
+    if (!res.ok) {
+      setError(data.error || "Erreur");
+      return;
+    }
+    setShowPayForm(false);
+    setPayDescription("");
+    void load();
   }
 
   if (loading) {
@@ -119,6 +195,75 @@ export default function DirectMessageChatPage() {
         </Link>
       </div>
 
+      {peer && meId && (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPayForm((v) => !v)}
+          >
+            {showPayForm ? t("cancel") : t("svc_pay_request")}
+          </Button>
+        </div>
+      )}
+
+      {showPayForm && peer && (
+        <form
+          onSubmit={onRequestPayment}
+          className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+        >
+          <p className="text-sm font-medium">{t("svc_pay_request")}</p>
+          <p className="text-xs text-[var(--muted)]">{t("svc_pay_request_hint")}</p>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-title">{t("svc_pay_service_name")}</Label>
+            <Input
+              id="pay-title"
+              value={payTitle}
+              onChange={(e) => setPayTitle(e.target.value)}
+              required
+              minLength={3}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-amount">{t("svc_pay_amount")}</Label>
+            <Input
+              id="pay-amount"
+              type="number"
+              step="0.01"
+              min="1"
+              value={payAmount}
+              onChange={(e) => setPayAmount(e.target.value)}
+              required
+              placeholder="50.00"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-desc">{t("description")}</Label>
+            <Textarea
+              id="pay-desc"
+              value={payDescription}
+              onChange={(e) => setPayDescription(e.target.value)}
+              rows={2}
+              maxLength={2000}
+              placeholder={t("svc_pay_desc_placeholder")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-receiver">{t("svc_pay_receiver_hint")}</Label>
+            <Input
+              id="pay-receiver"
+              value={payReceiver}
+              onChange={(e) => setPayReceiver(e.target.value)}
+              placeholder={t("svc_pay_receiver_placeholder")}
+            />
+          </div>
+          <Button type="submit" disabled={payBusy}>
+            {payBusy ? t("loading") : t("svc_pay_send_request")}
+          </Button>
+        </form>
+      )}
+
       {error && <p className="text-sm text-red-700">{error}</p>}
 
       <div className="flex min-h-[50vh] flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -127,6 +272,12 @@ export default function DirectMessageChatPage() {
         )}
         {messages.map((m) => {
           const mine = m.senderId === meId;
+          const paymentLink =
+            m.contextType === "SERVICE" &&
+            m.contextId &&
+            m.body.includes("/service-payments/")
+              ? `/service-payments/${m.contextId}`
+              : null;
           return (
             <div
               key={m.id}
@@ -137,6 +288,16 @@ export default function DirectMessageChatPage() {
               }`}
             >
               <p className="whitespace-pre-wrap break-words">{m.body}</p>
+              {paymentLink && (
+                <Link
+                  href={paymentLink}
+                  className={`mt-2 inline-block text-xs font-semibold underline ${
+                    mine ? "text-white" : "text-[var(--accent)]"
+                  }`}
+                >
+                  {t("svc_pay_open")}
+                </Link>
+              )}
               <p
                 className={`mt-1 text-[10px] ${
                   mine ? "text-white/70" : "text-[var(--muted)]"

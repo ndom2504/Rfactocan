@@ -119,6 +119,7 @@ export default function ServiceListingDetailPage() {
     return <p className="text-[var(--muted)]">{t("loading")}</p>;
   }
 
+  const category = listing.category;
   const isOwner = Boolean(meId) && meId === listing.userId;
   const meVerified = meKyc === "VERIFIED";
   const peerVerified = listing.user.kycStatus === "VERIFIED";
@@ -141,7 +142,7 @@ export default function ServiceListingDetailPage() {
         return;
       }
     }
-    router.push(`/services/${listing.category}`);
+    router.push(`/services/${category}`);
   }
 
   return (
@@ -151,7 +152,7 @@ export default function ServiceListingDetailPage() {
         onClick={goBack}
         className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
       >
-        ← {t("back")}
+        ← {t("services_back")}
       </button>
 
       {/* Media band separate from title (clearer on desktop) */}

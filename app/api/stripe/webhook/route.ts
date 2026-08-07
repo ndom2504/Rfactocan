@@ -9,6 +9,7 @@ import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { markShopOrderPaid } from "@/lib/shop-payments";
+import { markServicePaymentPaid } from "@/lib/service-payments";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
 export const runtime = "nodejs";
@@ -228,6 +229,13 @@ export async function POST(request: Request) {
             orderId: pi.metadata.shopOrderId,
             paymentIntentId: pi.id,
           });
+        } else if (
+          pi.metadata?.type === "service_payment" ||
+          pi.metadata?.servicePaymentId
+        ) {
+          await markServicePaymentPaid(pi.metadata.servicePaymentId as string, {
+            paymentIntentId: pi.id,
+          });
         } else {
           await handlePaymentIntent(pi, "CAPTURED");
         }
@@ -262,6 +270,20 @@ export async function POST(request: Request) {
             sessionId: session.id,
             paymentIntentId: piId ?? null,
           });
+          break;
+        }
+
+        if (
+          session.metadata?.type === "service_payment" ||
+          session.metadata?.servicePaymentId
+        ) {
+          const spId = session.metadata.servicePaymentId;
+          if (spId) {
+            await markServicePaymentPaid(spId, {
+              sessionId: session.id,
+              paymentIntentId: piId ?? undefined,
+            });
+          }
           break;
         }
 

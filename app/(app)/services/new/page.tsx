@@ -450,8 +450,9 @@ function NewServiceForm() {
               id="priceAmount"
               name="priceAmount"
               type="number"
-              min={0}
+              min={0.01}
               step="0.01"
+              required
             />
           </div>
           <div className="space-y-1.5">
