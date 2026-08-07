@@ -885,6 +885,8 @@ const dict = {
       "À venir : renforcement KYC, gel automatique des fonds en litige, scoring avancé, push de proximité généralisé.",
     close: "Fermer",
     view_photos: "Voir photos",
+    media_gallery_label: "Galerie photos",
+    media_gallery_swipe: "Glisser pour voir · appuyer pour agrandir",
     section_airbnb_title: "L'Airbnb du bagage international",
     section_airbnb_text:
       "Une marketplace P2P : comme Uber connecte conducteurs et passagers, Rfacto connecte l'espace bagage des livreurs aux besoins d'envoi et de réception.",
@@ -2155,6 +2157,8 @@ const dict = {
       "Coming: stronger KYC, automatic fund freeze on dispute, advanced scoring, wider proximity push.",
     close: "Close",
     view_photos: "View photos",
+    media_gallery_label: "Photo gallery",
+    media_gallery_swipe: "Swipe to browse · tap to enlarge",
     section_airbnb_title: "The Airbnb of international baggage",
     section_airbnb_text:
       "A P2P marketplace: like Uber connects drivers and riders, Rfacto connects carriers' spare space with send and receive needs.",

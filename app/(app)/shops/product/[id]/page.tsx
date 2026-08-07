@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
+import { MediaGallery } from "@/components/media-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -128,28 +129,8 @@ function ProductBuyForm() {
       </Link>
       <Card>
         {gallery.length > 0 && (
-          <div className="mb-4 space-y-2">
-            <div className="flex max-h-[28rem] min-h-[16rem] items-center justify-center overflow-hidden rounded-md bg-[var(--surface-2)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={gallery[0]}
-                alt=""
-                className="max-h-[28rem] w-full object-contain"
-              />
-            </div>
-            {gallery.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {gallery.map((url) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={url}
-                    src={url}
-                    alt=""
-                    className="h-16 w-16 shrink-0 rounded-md object-cover"
-                  />
-                ))}
-              </div>
-            )}
+          <div className="mb-4">
+            <MediaGallery photos={gallery} alt={product.title} />
           </div>
         )}
         <CardTitle className="text-2xl">{product.title}</CardTitle>

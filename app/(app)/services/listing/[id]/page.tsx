@@ -7,7 +7,7 @@ import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
-import { ServicePhotosButton } from "@/components/service-photos-button";
+import { MediaGallery } from "@/components/media-gallery";
 import { formatMoney, type MoneyCurrency } from "@/lib/currency";
 import {
   categoryLabel,
@@ -91,16 +91,15 @@ export default function ServiceListingDetailPage() {
       </Link>
 
       <Card className="overflow-hidden">
-        {listing.photos?.[0] ? (
-          <div className="relative -mx-5 -mt-5 mb-5 overflow-hidden bg-[var(--surface-2,#eef2ef)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={listing.photos[0]}
-              alt=""
-              className="block h-auto w-full"
+        {(listing.photos?.length ?? 0) > 0 && (
+          <div className="relative -mx-5 -mt-5 mb-5">
+            <MediaGallery
+              photos={listing.photos}
+              alt={listing.title}
+              maxHeightClass="max-h-[min(72vh,36rem)]"
             />
           </div>
-        ) : null}
+        )}
 
         <p className="text-xs uppercase tracking-wide text-[var(--muted)]">
           {serviceTypeLabel(listing.category, listing.serviceType, locale)}
@@ -172,12 +171,6 @@ export default function ServiceListingDetailPage() {
                 )
               : "…"}
           </p>
-        )}
-
-        {(listing.photos?.length ?? 0) > 1 && (
-          <div className="mt-4">
-            <ServicePhotosButton photos={listing.photos} />
-          </div>
         )}
 
         <div className="mt-6 flex items-center gap-3 border-t border-[var(--border)] pt-4">
