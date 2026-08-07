@@ -6,6 +6,20 @@ export const COMMUNITY_POST_KINDS = [
 
 export type CommunityPostKindId = (typeof COMMUNITY_POST_KINDS)[number];
 
+/** Extra feed filter chips (not used for publishing posts). */
+export const COMMUNITY_FEED_FILTERS = [
+  ...COMMUNITY_POST_KINDS,
+  "JOB",
+] as const;
+
+export type CommunityFeedFilterId = (typeof COMMUNITY_FEED_FILTERS)[number];
+
+export function isCommunityFeedFilter(
+  value: string
+): value is CommunityFeedFilterId {
+  return (COMMUNITY_FEED_FILTERS as readonly string[]).includes(value);
+}
+
 export type CommunityAttachment = {
   url: string;
   name: string;

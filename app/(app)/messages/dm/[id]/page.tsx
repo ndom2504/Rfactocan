@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { loadUserIntent } from "@/lib/user-intent";
 
 type Peer = {
@@ -35,6 +35,21 @@ type Thread = {
   lastContextId?: string | null;
 };
 
+function isImageUrl(url: string) {
+  if (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(url)) return true;
+  if (url.includes("/api/media")) return true;
+  if (url.includes("blob.vercel-storage.com")) return true;
+  return false;
+}
+
+function isAttachmentOnlyBody(body: string) {
+  return (
+    body === "Pièce jointe" ||
+    body === "Attachment" ||
+    body === "📎"
+  );
+}
+
 export default function DirectMessageChatPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
@@ -43,9 +58,12 @@ export default function DirectMessageChatPage() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showPayForm, setShowPayForm] = useState(false);
   const [payTitle, setPayTitle] = useState("");
   const [payDescription, setPayDescription] = useState("");
@@ -53,6 +71,7 @@ export default function DirectMessageChatPage() {
   const [payReceiver, setPayReceiver] = useState("");
   const [payBusy, setPayBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     const [meRes, msgRes] = await Promise.all([
@@ -87,6 +106,16 @@ export default function DirectMessageChatPage() {
   }, [messages.length]);
 
   useEffect(() => {
+    if (!pendingFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(pendingFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pendingFile]);
+
+  useEffect(() => {
     if (thread?.lastContextType === "SERVICE" && thread.lastContextId) {
       fetch(`/api/services/${thread.lastContextId}`)
         .then(async (res) => {
@@ -103,15 +132,50 @@ export default function DirectMessageChatPage() {
     }
   }, [thread?.lastContextType, thread?.lastContextId]);
 
+  function clearAttachment() {
+    setPendingFile(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  async function uploadFile(file: File): Promise<string | null> {
+    setUploading(true);
+    setError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    setUploading(false);
+    if (!res.ok) {
+      setError(data.error ?? t("attach_failed"));
+      return null;
+    }
+    return data.url as string;
+  }
+
   async function onSend(e: FormEvent) {
     e.preventDefault();
-    if (!text.trim() || sending) return;
+    if (sending || uploading) return;
+    const bodyText = text.trim();
+    if (!bodyText && !pendingFile) return;
+
     setSending(true);
     setError("");
+    let attachmentUrl: string | null = null;
+    if (pendingFile) {
+      attachmentUrl = await uploadFile(pendingFile);
+      if (!attachmentUrl) {
+        setSending(false);
+        return;
+      }
+    }
+
     const res = await fetch(`/api/dm/${id}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body: text.trim() }),
+      body: JSON.stringify({
+        body: bodyText || undefined,
+        attachmentUrl,
+      }),
     });
     const data = await res.json();
     setSending(false);
@@ -120,6 +184,7 @@ export default function DirectMessageChatPage() {
       return;
     }
     setText("");
+    clearAttachment();
     if (data.message) {
       setMessages((prev) => [...prev, data.message]);
     } else {
@@ -287,7 +352,40 @@ export default function DirectMessageChatPage() {
                   : "bg-[var(--surface-2)] text-[var(--foreground)]"
               }`}
             >
-              <p className="whitespace-pre-wrap break-words">{m.body}</p>
+              {m.attachmentUrl && (
+                <div className="mb-2 space-y-2">
+                  <a
+                    href={m.attachmentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block overflow-hidden rounded-lg"
+                  >
+                    {isImageUrl(m.attachmentUrl) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.attachmentUrl}
+                        alt={t("attachment_label")}
+                        className="max-h-48 w-full object-cover"
+                      />
+                    ) : (
+                      <span className="underline">{t("open_attachment")}</span>
+                    )}
+                  </a>
+                  <a
+                    href={m.attachmentUrl}
+                    download
+                    className={cn(
+                      "inline-flex text-xs font-medium underline",
+                      mine ? "text-white/90" : "text-[var(--accent)]"
+                    )}
+                  >
+                    {t("download_attachment")}
+                  </a>
+                </div>
+              )}
+              {m.body && !isAttachmentOnlyBody(m.body) && (
+                <p className="whitespace-pre-wrap break-words">{m.body}</p>
+              )}
               {paymentLink && (
                 <Link
                   href={paymentLink}
@@ -311,18 +409,78 @@ export default function DirectMessageChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={onSend} className="flex flex-col gap-2 sm:flex-row">
-        <Textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={2}
-          maxLength={4000}
-          placeholder={t("type_message")}
-          className="flex-1"
-        />
-        <Button type="submit" disabled={sending || !text.trim()}>
-          {sending ? "…" : t("send")}
-        </Button>
+      <form onSubmit={onSend} className="space-y-3">
+        {previewUrl && (
+          <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt=""
+              className="h-14 w-14 rounded object-cover"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">{pendingFile?.name}</p>
+              <p className="text-xs text-[var(--muted)]">
+                {t("attachment_ready")}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearAttachment}
+            >
+              {t("remove_photo")}
+            </Button>
+          </div>
+        )}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              setPendingFile(file);
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            title={t("attach_file")}
+            disabled={sending || uploading}
+            onClick={() => fileRef.current?.click()}
+            aria-label={t("attach_file")}
+            className="shrink-0"
+          >
+            <span className="text-lg leading-none">+</span>
+          </Button>
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={2}
+            maxLength={4000}
+            placeholder={t("type_message")}
+            disabled={sending || uploading}
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            disabled={
+              sending || uploading || (!text.trim() && !pendingFile)
+            }
+            className="shrink-0"
+          >
+            {uploading
+              ? t("uploading")
+              : sending
+                ? t("loading")
+                : t("send")}
+          </Button>
+        </div>
+        <p className="text-xs text-[var(--muted)]">{t("attach_hint")}</p>
       </form>
     </div>
   );

@@ -15,10 +15,12 @@ import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import { CommunityVideoPlayer } from "@/components/community-video-player";
 import {
+  COMMUNITY_FEED_FILTERS,
   COMMUNITY_POST_KINDS,
   isImageAttachment,
   isVideoAttachment,
   type CommunityAttachment,
+  type CommunityFeedFilterId,
   type CommunityPostKindId,
 } from "@/lib/community";
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
@@ -27,13 +29,13 @@ import { formatDate } from "@/lib/utils";
 
 type FeedPost = {
   id: string;
-  kind: CommunityPostKindId;
+  kind: string;
   title: string | null;
   body: string;
   attachments: CommunityAttachment[];
   createdAt: string;
   href?: string | null;
-  source?: "post" | "service" | "shop" | "trip";
+  source?: "post" | "service" | "shop" | "trip" | "job";
   isOwner: boolean;
   viewCount?: number;
   commentCount?: number;
@@ -51,17 +53,18 @@ type FeedPost = {
   };
 };
 
-const kindLabelKey: Record<CommunityPostKindId, DictKey> = {
+const kindLabelKey: Record<string, DictKey> = {
   BUSINESS: "community_kind_business",
   OPPORTUNITY: "community_kind_opportunity",
   COMMUNITY: "community_kind_community",
+  JOB: "community_kind_jobs",
 };
 
 export function CommunityFeed() {
   const { t } = useI18n();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"" | CommunityPostKindId>("");
+  const [filter, setFilter] = useState<"" | CommunityFeedFilterId>("");
   const [kind, setKind] = useState<CommunityPostKindId>("BUSINESS");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -405,11 +408,11 @@ export function CommunityFeed() {
           label={t("all")}
           onClick={() => setFilter("")}
         />
-        {COMMUNITY_POST_KINDS.map((k) => (
+        {COMMUNITY_FEED_FILTERS.map((k) => (
           <FilterChip
             key={k}
             active={filter === k}
-            label={t(kindLabelKey[k])}
+            label={t(kindLabelKey[k] ?? "community_kind_community")}
             onClick={() => setFilter(k)}
           />
         ))}

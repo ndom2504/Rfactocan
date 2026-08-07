@@ -49,7 +49,7 @@ type FeedItem = {
   createdAt: Date | string;
   updatedAt?: Date | string;
   href: string | null;
-  source: "post" | "service" | "shop" | "trip";
+  source: "post" | "service" | "shop" | "trip" | "job";
   author: FeedAuthor;
   isOwner: boolean;
   viewCount: number;
@@ -127,50 +127,54 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-    const posts = await prisma.communityPost.findMany({
-      where: {
-        status: "OPEN",
-        ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
-          ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
-          : {}),
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            displayName: true,
-            avatarUrl: true,
-            bio: true,
-            country: true,
-            kycStatus: true,
-            ratingAvg: true,
-            ratingCount: true,
-          },
+    // JOB is feed-only; skip DB posts filter for that chip
+    if (kind !== "JOB") {
+      const posts = await prisma.communityPost.findMany({
+        where: {
+          status: "OPEN",
+          ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
+            ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
+            : {}),
         },
-        _count: { select: { comments: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take,
-    });
-    for (const p of posts) {
-      feed.push({
-        ...serializePost(p),
-        isOwner: p.authorId === session.id || session.role === "ADMIN",
+        include: {
+          author: {
+            select: {
+              id: true,
+              displayName: true,
+              avatarUrl: true,
+              bio: true,
+              country: true,
+              kycStatus: true,
+              ratingAvg: true,
+              ratingCount: true,
+            },
+          },
+          _count: { select: { comments: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take,
       });
+      for (const p of posts) {
+        feed.push({
+          ...serializePost(p),
+          isOwner: p.authorId === session.id || session.role === "ADMIN",
+        });
+      }
     }
   } catch (error) {
     console.error("CommunityPost query failed (table missing on DB?):", error);
   }
 
-  // Same réseau pro items Android surfaced (services / boutiques / voyages)
+  // Same réseau pro items Android surfaced (services / boutiques / voyages / emplois)
   const includeNetwork =
     !kind ||
     kind === "BUSINESS" ||
     kind === "OPPORTUNITY" ||
-    kind === "COMMUNITY";
+    kind === "COMMUNITY" ||
+    kind === "JOB";
 
   if (includeNetwork) {
-    const [services, shops, trips] = await Promise.all([
+    const [services, shops, trips, jobs] = await Promise.all([
       matchesKindFilter("BUSINESS", kind) || matchesKindFilter("COMMUNITY", kind)
         ? prisma.serviceListing.findMany({
             where: { status: "OPEN" },
@@ -232,6 +236,33 @@ export async function GET(request: Request) {
             },
             orderBy: { createdAt: "desc" },
             take: 20,
+          })
+        : Promise.resolve([]),
+      matchesKindFilter("JOB", kind) ||
+      matchesKindFilter("OPPORTUNITY", kind) ||
+      !kind
+        ? prisma.parcelRequest.findMany({
+            where: {
+              status: "OPEN",
+              needType: { in: ["JOB_SEEK", "JOB_OFFER"] },
+              userId: { not: session.id },
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  avatarUrl: true,
+                  bio: true,
+                  country: true,
+                  kycStatus: true,
+                  ratingAvg: true,
+                  ratingCount: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 25,
           })
         : Promise.resolve([]),
     ]);
@@ -327,6 +358,45 @@ export async function GET(request: Request) {
           avatarUrl: author.avatarUrl,
           bio: author.bio,
           country: author.country ?? trip.fromCountry,
+          verified: author.kycStatus === "VERIFIED",
+          ratingAvg: author.ratingAvg,
+          ratingCount: author.ratingCount,
+          connectionCount: 0,
+          connectedByMe: false,
+        },
+        isOwner: author.id === session.id,
+        viewCount: 0,
+        commentCount: 0,
+      });
+    }
+
+    for (const job of jobs) {
+      const author = job.user;
+      const place = [job.toCity, job.toCountry].filter(Boolean).join(", ");
+      const roleLabel =
+        job.needType === "JOB_OFFER" ? "Offre d'emploi" : "Recherche d'emploi";
+      feed.push({
+        id: `job:${job.id}`,
+        kind: "JOB",
+        title: job.jobTitle?.trim() || roleLabel,
+        body: [
+          roleLabel,
+          job.jobSector ? `Secteur : ${job.jobSector}` : null,
+          place || null,
+          job.description?.slice(0, 280) || null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        attachments: [],
+        createdAt: job.createdAt,
+        href: `/requests/${job.id}`,
+        source: "job",
+        author: {
+          id: author.id,
+          displayName: author.displayName,
+          avatarUrl: author.avatarUrl,
+          bio: author.bio,
+          country: author.country ?? job.toCountry,
           verified: author.kycStatus === "VERIFIED",
           ratingAvg: author.ratingAvg,
           ratingCount: author.ratingCount,

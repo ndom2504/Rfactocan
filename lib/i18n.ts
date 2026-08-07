@@ -26,6 +26,7 @@ const dict = {
     community_kind_business: "Affaires",
     community_kind_opportunity: "Opportunités",
     community_kind_community: "Communauté",
+    community_kind_jobs: "Emplois",
     community_title_placeholder: "Titre (optionnel)",
     community_body_placeholder:
       "Partagez une annonce, une opportunité ou une info communautaire…",
@@ -1387,6 +1388,7 @@ const dict = {
     community_kind_business: "Business",
     community_kind_opportunity: "Opportunities",
     community_kind_community: "Community",
+    community_kind_jobs: "Jobs",
     community_title_placeholder: "Title (optional)",
     community_body_placeholder:
       "Share an announcement, opportunity or community update…",

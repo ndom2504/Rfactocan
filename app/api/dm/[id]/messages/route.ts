@@ -8,10 +8,28 @@ import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
+const attachmentUrlSchema = z
+  .string()
+  .max(2000)
+  .refine(
+    (value) => {
+      if (value.startsWith("/api/media") || value.startsWith("/uploads/")) {
+        return true;
+      }
+      try {
+        const parsed = new URL(value);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    },
+    { message: "URL de pièce jointe invalide." }
+  );
+
 const postSchema = z
   .object({
     body: z.string().max(4000).optional().nullable(),
-    attachmentUrl: z.string().max(2000).optional().nullable(),
+    attachmentUrl: attachmentUrlSchema.optional().nullable(),
     contextType: z.enum(["SERVICE", "JOB"]).optional().nullable(),
     contextId: z.string().optional().nullable(),
   })
@@ -99,7 +117,7 @@ export async function POST(request: Request, { params }: Params) {
       data: {
         threadId: id,
         senderId: session.id,
-        body: text || (body.attachmentUrl ? "📎" : ""),
+        body: text || (body.attachmentUrl ? "Pièce jointe" : ""),
         attachmentUrl: body.attachmentUrl || null,
         contextType: body.contextType ?? thread.lastContextType,
         contextId: body.contextId ?? thread.lastContextId,
