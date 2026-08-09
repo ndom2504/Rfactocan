@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getAmbassadorKpis } from "@/lib/ambassador-stats";
 import { prisma } from "@/lib/prisma";
 
-/** KPI ambassadeur (filleuls + volume réseau + estimation gains). */
+/** KPI Héraut Réseau (filleuls + volume réseau + estimation gains). */
 export async function GET() {
   const session = await getSessionUser();
   if (!session) {
@@ -20,7 +20,7 @@ export async function GET() {
   });
 
   if (!me?.isAmbassador || me.kycStatus !== "VERIFIED" || !me.agentCode) {
-    return NextResponse.json({ error: "Accès ambassadeur requis" }, { status: 403 });
+    return NextResponse.json({ error: "Accès Héraut Réseau requis" }, { status: 403 });
   }
 
   const kpis = await getAmbassadorKpis(session.id);

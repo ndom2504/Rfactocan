@@ -344,11 +344,11 @@ export async function emailAmbassadorInvite(input: {
 }) {
   return sendEmail({
     to: input.email,
-    subject: "Votre code agent ambassadeur Rfacto",
+    subject: "Votre code agent Héraut Réseau Rfacto",
     html: layout(
-      "Vous êtes ambassadeur Rfacto",
+      "Vous êtes Héraut Réseau Rfacto",
       `<p>Bonjour ${input.displayName},</p>
-       <p>L'équipe Rfacto vous a nommé <strong>ambassadeur</strong>. Voici votre code agent personnel :</p>
+       <p>L'équipe Rfacto vous a nommé <strong>Héraut Réseau</strong>. Voici votre code agent personnel :</p>
        <p style="font-size:28px;letter-spacing:0.12em;font-weight:700;text-align:center;margin:24px 0;color:#28541D;">${input.agentCode}</p>
        <p>Partagez ce lien d'inscription pour que les nouveaux utilisateurs soient associés à votre code :</p>
        <p><a href="${input.inviteUrl}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Lien d'inscription personnalisé</a></p>

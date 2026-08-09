@@ -695,7 +695,7 @@ const dict = {
       "Le service Rfacto est opéré sous la marque RapidFacto. Pour toute question relative à vos données : contact@rfacto.com.",
     privacy_s2_title: "2. Données que nous collectons",
     privacy_s2_text:
-      "Selon votre usage : identité et contact (nom d'affichage, e-mail, téléphone le cas échéant, pays) ; données de compte (mot de passe hashé, préférences de langue et devise, photo de profil) ; données de vérification (statut KYC via Stripe Identity) ; données de transaction (annonces, trajets, demandes, réservations, messages liés aux réservations) ; données de paiement traitées par Stripe (nous ne stockons pas vos numéros de carte complets) ; données techniques (adresse IP, type d'appareil, journaux serveur) ; localisation approximative ou précise si vous activez les alertes de proximité ; jetons de notification push (FCM) si vous autorisez les notifications ; et, le cas échéant, code agent / affiliation ambassadeur lors de l'inscription.",
+      "Selon votre usage : identité et contact (nom d'affichage, e-mail, téléphone le cas échéant, pays) ; données de compte (mot de passe hashé, préférences de langue et devise, photo de profil) ; données de vérification (statut KYC via Stripe Identity) ; données de transaction (annonces, trajets, demandes, réservations, messages liés aux réservations) ; données de paiement traitées par Stripe (nous ne stockons pas vos numéros de carte complets) ; données techniques (adresse IP, type d'appareil, journaux serveur) ; localisation approximative ou précise si vous activez les alertes de proximité ; jetons de notification push (FCM) si vous autorisez les notifications ; et, le cas échéant, code agent / affiliation Héraut Réseau lors de l'inscription.",
     privacy_s3_title: "3. Finalités",
     privacy_s3_text:
       "Nous utilisons ces données pour créer et gérer votre compte, mettre en relation clients, voyageurs et prestataires de services, sécuriser les paiements (séquestre / Connect), vérifier l'identité lorsque requis, assurer le support et la médiation des litiges, envoyer des communications transactionnelles (e-mail, OTP, notifications), améliorer le service et respecter nos obligations légales.",
@@ -784,32 +784,32 @@ const dict = {
     delete_account_delay_title: "Délai",
     delete_account_delay_text:
       "Nous traitons les demandes dans un délai raisonnable, en général sous 30 jours, sauf obligation légale contraire. Vous recevrez une confirmation par e-mail.",
-    ambassador_badge: "Espace ambassadeur",
-    ambassador_open_cta: "Espace Ambassadeur",
+    ambassador_badge: "Espace Héraut Réseau",
+    ambassador_open_cta: "Espace Héraut Réseau",
     ambassador_close: "Fermer",
-    ambassador_become_cta: "Devenir Ambassadeur",
-    ambassador_apply_pending_cta: "Demande ambassadeur en cours",
-    ambassador_apply_title: "Devenir Ambassadeur Rfacto",
+    ambassador_become_cta: "Héraut Réseau",
+    ambassador_apply_pending_cta: "Demande Héraut Réseau en cours",
+    ambassador_apply_title: "Héraut Réseau Rfacto",
     ambassador_apply_lead:
-      "Rejoignez le programme ambassadeur pour inviter votre réseau et gagner sur l'activité créée. Un admin vous contactera sur WhatsApp pour valider votre candidature.",
+      "Un Héraut Réseau est un acteur de proximité de l’écosystème Rfacto. Il anime sa communauté, crée des connexions, encourage les échanges de services et de compétences, et contribue à faire connaître Rfacto autour de lui. Désormais, chaque membre de notre communauté est un Héraut Réseau. Chaque Héraut pourra également recevoir des missions pour participer activement au développement de notre réseau. Demandez ici l’accès au programme (invitations, indicateurs) : un admin vous contactera sur WhatsApp.",
     ambassador_apply_step1:
-      "Vous publiez un lien d'invitation personnel après validation.",
+      "Après validation, vous disposez d’un lien d’invitation personnel à partager.",
     ambassador_apply_step2:
-      "Vos filleuls s'inscrivent via votre lien et sont attribués à votre réseau.",
+      "Les personnes inscrites via votre lien sont rattachées à votre réseau.",
     ambassador_apply_step3:
-      "Plus ils sont actifs (colis, services, boutiques), plus votre impact grandit.",
+      "Plus elles échangent services et compétences, plus votre impact grandit.",
     ambassador_apply_step4:
-      "L'équipe Rfacto vous contacte sur WhatsApp pour finaliser la validation.",
+      "L’équipe Rfacto vous contacte sur WhatsApp et peut vous confier des missions de développement.",
     ambassador_apply_whatsapp: "Votre numéro WhatsApp",
     ambassador_apply_whatsapp_hint:
-      "Avec indicatif pays (ex. +241…). L'admin vous écrira directement.",
+      "Avec indicatif pays (ex. +241…). L’admin vous écrira directement.",
     ambassador_apply_submit: "Envoyer la demande",
     ambassador_apply_sent: "Demande envoyée — un admin vous contactera bientôt.",
     ambassador_apply_pending:
-      "Votre demande est en cours d'examen. Un admin vous contactera sur WhatsApp.",
+      "Votre demande est en cours d’examen. Un admin vous contactera sur WhatsApp.",
     ambassador_apply_rejected:
       "Votre précédente demande a été refusée. Vous pouvez renvoyer une nouvelle demande avec un numéro à jour.",
-    ambassador_apply_already: "Vous êtes déjà ambassadeur. Merci !",
+    ambassador_apply_already: "Vous êtes Héraut Réseau. Merci !",
     promo_images_continue: "Continuer",
     promo_images_shop_title: "Finalisez votre boutique",
     promo_images_shop_body:
@@ -834,14 +834,14 @@ const dict = {
     manual_id_hint: "Jpeg, png, webp ou PDF — max 5 Mo.",
     manual_id_note_label: "Note (optionnel)",
     manual_id_note_placeholder: "Ex. Stripe Identity bloqué / selfie refusé…",
-    ambassador_earn_title: "Gagner avec Rfacto en tant qu'ambassadeur",
+    ambassador_earn_title: "Gagner avec Rfacto en tant que Héraut Réseau",
     ambassador_earn_lead:
-      "Bonjour {name} — votre KYC est validé. Voici comment monétiser votre réseau sur Rfacto.",
+      "Bonjour {name} — votre KYC est validé. Voici comment monétiser et animer votre réseau sur Rfacto.",
     ambassador_code_label: "Votre code agent",
-    ambassador_copy_link: "Copier mon lien d'invitation",
+    ambassador_copy_link: "Copier mon lien d’invitation",
     ambassador_copied: "Lien copié",
-    ambassador_copy_prompt: "Copiez votre lien ambassadeur :",
-    ambassador_referrals: "filleul(s) inscrit(s)",
+    ambassador_copy_prompt: "Copiez votre lien Héraut Réseau :",
+    ambassador_referrals: "membre(s) rattaché(s)",
     ambassador_kpi_referrals: "Nombre de filleuls",
     ambassador_kpi_kyc: "Filleuls KYC validés",
     ambassador_kpi_volume: "Volume réseau (indicatif)",
@@ -852,13 +852,13 @@ const dict = {
     ambassador_earn_step1:
       "Partagez votre lien personnel (WhatsApp, réseaux, communauté). Chaque inscription via ce lien vous est attribuée.",
     ambassador_earn_step2:
-      "Aidez vos filleuls à publier un trajet, une demande de colis ou un service — plus ils sont actifs, plus votre réseau crée de valeur.",
+      "Aidez votre réseau à publier un trajet, une demande, un service — créez des connexions et des échanges de compétences.",
     ambassador_earn_step3:
       "Gagnez aussi vous-même : voyageur, prestataire ou commercial — les paiements passent par Stripe Connect une fois le KYC validé.",
     ambassador_earn_step4:
-      "Les inscriptions attribuées sont suivies par Rfacto pour le programme de récompenses ambassadeurs (primes / commissions selon le programme en cours).",
+      "Les inscriptions et missions attribuées sont suivies par Rfacto pour le programme Héraut Réseau (primes / commissions selon le barème en cours).",
     ambassador_earn_note:
-      "Astuce : un filleul qui complète son premier échange (réservation ou service) compte davantage pour votre performance d'ambassadeur. Contactez le support pour le barème actuel du programme.",
+      "Astuce : un membre rattaché qui complète un premier échange (réservation ou service) compte davantage pour votre impact de Héraut. Contactez le support pour le barème et les missions disponibles.",
     trust_program_cta: "Notre programme de crédibilité et confiance",
     trust_program_title: "Programme de crédibilité et confiance",
     trust_program_lead:
@@ -910,7 +910,7 @@ const dict = {
       "En place : charte communautaire ci-dessous, litiges dans l’app, équipe notifiée, médiation et règles claires sur ce que la plateforme fait / ne fait pas.",
     trust_s4_i2_title: "Assistance incidents",
     trust_s4_i2_text:
-      "En place : ouverture de litige depuis la réservation + ambassadeurs qualité sur le terrain. Pas de hotline 24/7 pour l’instant — réponses via l’app et le support.",
+      "En place : ouverture de litige depuis la réservation + Hérauts Réseau qualité sur le terrain. Pas de hotline 24/7 pour l’instant — réponses via l’app et le support.",
     trust_s4_i3_title: "Charte de responsabilité",
     trust_s4_i3_text:
       "Disponible : politique publique (rôle de la plateforme, devoirs des utilisateurs, douane, contenus autorisés).",
@@ -1013,7 +1013,7 @@ const dict = {
     about_obj_2:
       "10 000 utilisateurs inscrits la première année, puis 100 000 à moyen terme.",
     about_obj_3:
-      "500 ambassadeurs et animateurs de communauté pour animer les réseaux locaux.",
+      "500 Hérauts Réseau pour animer les communautés locales et créer des connexions.",
     about_obj_4:
       "Un groupe WhatsApp officiel par pays couvert, plus des groupes de testeurs avant chaque lancement majeur.",
     about_values_title: "Nos valeurs",
@@ -1025,10 +1025,10 @@ const dict = {
     about_trust_cta: "Voir le programme de confiance",
     about_org_title: "Notre modèle organisationnel",
     about_org_text:
-      "Trois rôles produits — Client, Voyageur, Service — sur un même compte selon le besoin. Une équipe admin / support pour la sécurité et les litiges. Des ambassadeurs locaux pour la croissance et l’animation. Des communautés WhatsApp nationales pour l’écoute et le feedback.",
-    about_ambassadors_title: "Ambassadeurs & réseau WhatsApp",
+      "Trois rôles produits — Client, Voyageur, Service — sur un même compte selon le besoin. Une équipe admin / support pour la sécurité et les litiges. Des Hérauts Réseau pour la proximité, la croissance et l’animation. Des communautés WhatsApp nationales pour l’écoute et le feedback.",
+    about_ambassadors_title: "Hérauts Réseau & WhatsApp",
     about_ambassadors_text:
-      "Étapes de création du réseau : (1) inscription et validation du profil ; (2) intégration dans un groupe de testeurs ; (3) formation courte aux règles Rfacto ; (4) ouverture / animation du groupe WhatsApp du pays ; (5) recrutement de nouveaux membres et remontée des besoins terrain.",
+      "Un Héraut Réseau anime sa communauté, crée des connexions et fait connaître Rfacto. Chaque membre est un Héraut ; des missions peuvent être proposées pour développer le réseau. Étapes : (1) inscription et profil ; (2) testeurs ; (3) formation aux règles ; (4) animation WhatsApp pays ; (5) recrutement et remontée des besoins terrain.",
     about_community_title: "Notre communauté",
     about_community_text:
       "Pays déjà prévus ou en déploiement : Canada, France, Côte d’Ivoire, Bénin, Sénégal, Cameroun, Gabon, RDC, Congo-Brazzaville, Guinée, Maroc, Ghana, Chine — puis élargissement mondial. Chaque pays vise une communauté WhatsApp officielle (ex. RFacto Canada, RFacto Côte d’Ivoire).",
@@ -2126,7 +2126,7 @@ const dict = {
       "The Rfacto service is operated under the RapidFacto brand. For any privacy question: contact@rfacto.com.",
     privacy_s2_title: "2. Data we collect",
     privacy_s2_text:
-      "Depending on your use: identity and contact (display name, email, phone if provided, country); account data (hashed password, language and currency preferences, profile photo); verification data (KYC status via Stripe Identity); transaction data (listings, trips, requests, bookings, booking-related messages); payment data processed by Stripe (we do not store full card numbers); technical data (IP address, device type, server logs); approximate or precise location if you enable nearby alerts; push notification tokens (FCM) if you allow notifications; and, where applicable, ambassador agent / referral codes at signup.",
+      "Depending on your use: identity and contact (display name, email, phone if provided, country); account data (hashed password, language and currency preferences, profile photo); verification data (KYC status via Stripe Identity); transaction data (listings, trips, requests, bookings, booking-related messages); payment data processed by Stripe (we do not store full card numbers); technical data (IP address, device type, server logs); approximate or precise location if you enable nearby alerts; push notification tokens (FCM) if you allow notifications; and, where applicable, Network Herald agent / referral codes at signup.",
     privacy_s3_title: "3. Purposes",
     privacy_s3_text:
       "We use this data to create and manage your account, connect clients, travelers and service providers, secure payments (escrow / Connect), verify identity when required, provide support and dispute mediation, send transactional communications (email, OTP, notifications), improve the service and comply with legal obligations.",
@@ -2214,22 +2214,22 @@ const dict = {
     delete_account_delay_title: "Timeline",
     delete_account_delay_text:
       "We process requests within a reasonable time, generally within 30 days, unless the law requires otherwise. You will receive email confirmation.",
-    ambassador_badge: "Ambassador space",
-    ambassador_open_cta: "Ambassador space",
+    ambassador_badge: "Network Herald space",
+    ambassador_open_cta: "Network Herald space",
     ambassador_close: "Close",
-    ambassador_become_cta: "Become an Ambassador",
-    ambassador_apply_pending_cta: "Ambassador request pending",
-    ambassador_apply_title: "Become a Rfacto Ambassador",
+    ambassador_become_cta: "Network Herald",
+    ambassador_apply_pending_cta: "Network Herald request pending",
+    ambassador_apply_title: "Rfacto Network Herald",
     ambassador_apply_lead:
-      "Join the ambassador program to invite your network and earn from activity you create. An admin will contact you on WhatsApp to validate your application.",
+      "A Network Herald is a local actor in the Rfacto ecosystem. They animate their community, create connections, encourage service and skill exchanges, and help make Rfacto known around them. Every community member is a Network Herald. Each Herald may also receive missions to actively grow our network. Request program access here (invites, metrics): an admin will contact you on WhatsApp.",
     ambassador_apply_step1:
       "After approval you get a personal invite link to share.",
     ambassador_apply_step2:
       "People who sign up via your link are attributed to your network.",
     ambassador_apply_step3:
-      "The more active they are (parcels, services, shops), the more impact you create.",
+      "The more they exchange services and skills, the greater your impact.",
     ambassador_apply_step4:
-      "The Rfacto team contacts you on WhatsApp to complete validation.",
+      "The Rfacto team contacts you on WhatsApp and may assign network-growth missions.",
     ambassador_apply_whatsapp: "Your WhatsApp number",
     ambassador_apply_whatsapp_hint:
       "Include country code (e.g. +241…). An admin will message you directly.",
@@ -2239,7 +2239,7 @@ const dict = {
       "Your request is under review. An admin will contact you on WhatsApp.",
     ambassador_apply_rejected:
       "Your previous request was declined. You can submit again with an updated number.",
-    ambassador_apply_already: "You are already an ambassador. Thank you!",
+    ambassador_apply_already: "You are a Network Herald. Thank you!",
     promo_images_continue: "Continue",
     promo_images_shop_title: "Finish setting up your shop",
     promo_images_shop_body:
@@ -2264,14 +2264,14 @@ const dict = {
     manual_id_hint: "Jpeg, png, webp or PDF — max 5 MB.",
     manual_id_note_label: "Note (optional)",
     manual_id_note_placeholder: "E.g. Stripe Identity blocked / selfie rejected…",
-    ambassador_earn_title: "Earn with Rfacto as an ambassador",
+    ambassador_earn_title: "Earn with Rfacto as a Network Herald",
     ambassador_earn_lead:
-      "Hi {name} — your KYC is verified. Here’s how to monetize your network on Rfacto.",
+      "Hi {name} — your KYC is verified. Here’s how to monetize and animate your network on Rfacto.",
     ambassador_code_label: "Your agent code",
     ambassador_copy_link: "Copy my invite link",
     ambassador_copied: "Link copied",
-    ambassador_copy_prompt: "Copy your ambassador link:",
-    ambassador_referrals: "referred signup(s)",
+    ambassador_copy_prompt: "Copy your Network Herald link:",
+    ambassador_referrals: "linked member(s)",
     ambassador_kpi_referrals: "Referral count",
     ambassador_kpi_kyc: "KYC-verified referrals",
     ambassador_kpi_volume: "Network volume (indicative)",
@@ -2282,13 +2282,13 @@ const dict = {
     ambassador_earn_step1:
       "Share your personal link (WhatsApp, social, community). Every signup via that link is attributed to you.",
     ambassador_earn_step2:
-      "Help your referrals publish a trip, parcel request or service — the more active they are, the more value your network creates.",
+      "Help your network publish a trip, request or service — create connections and skill exchanges.",
     ambassador_earn_step3:
       "Earn yourself too: as traveler, provider or seller — payouts go through Stripe Connect once KYC is verified.",
     ambassador_earn_step4:
-      "Attributed signups are tracked by Rfacto for the ambassador rewards program (bonuses / commissions per the current program).",
+      "Signups and assigned missions are tracked by Rfacto for the Network Herald program (bonuses / commissions per the current schedule).",
     ambassador_earn_note:
-      "Tip: a referral who completes a first exchange (booking or service) counts more toward your ambassador performance. Contact support for the current reward schedule.",
+      "Tip: a linked member who completes a first exchange (booking or service) counts more toward your Herald impact. Contact support for the reward schedule and available missions.",
     trust_program_cta: "Our credibility & trust program",
     trust_program_title: "Credibility & trust program",
     trust_program_lead:
@@ -2340,7 +2340,7 @@ const dict = {
       "Live: community charter below, in-app disputes, team notified, mediation, and clear rules on what the platform does / does not do.",
     trust_s4_i2_title: "Incident assistance",
     trust_s4_i2_text:
-      "Live: open a dispute from the booking + quality ambassadors on the ground. No 24/7 hotline yet — support via the app.",
+      "Live: open a dispute from the booking + quality Network Heralds on the ground. No 24/7 hotline yet — support via the app.",
     trust_s4_i3_title: "Responsibility charter",
     trust_s4_i3_text:
       "Available: public policy (platform role, user duties, customs, allowed goods).",
@@ -2442,7 +2442,7 @@ const dict = {
     about_obj_2:
       "10,000 registered users in year one, then 100,000 over the medium term.",
     about_obj_3:
-      "500 ambassadors and community leads to animate local networks.",
+      "500 Network Heralds to animate local communities and create connections.",
     about_obj_4:
       "One official WhatsApp group per covered country, plus tester groups before each major launch.",
     about_values_title: "Our values",
@@ -2454,10 +2454,10 @@ const dict = {
     about_trust_cta: "View the trust program",
     about_org_title: "Our organizational model",
     about_org_text:
-      "Three product roles — Client, Traveler, Service — on one account as needed. An admin / support team for safety and disputes. Local ambassadors for growth and animation. National WhatsApp communities for listening and feedback.",
-    about_ambassadors_title: "Ambassadors & WhatsApp network",
+      "Three product roles — Client, Traveler, Service — on one account as needed. An admin / support team for safety and disputes. Network Heralds for proximity, growth and animation. National WhatsApp communities for listening and feedback.",
+    about_ambassadors_title: "Network Heralds & WhatsApp",
     about_ambassadors_text:
-      "Network build steps: (1) sign up and validate your profile; (2) join a tester group; (3) short Rfacto rules training; (4) open / run the country WhatsApp group; (5) recruit members and surface field needs.",
+      "A Network Herald animates their community, creates connections and makes Rfacto known. Every member is a Herald; missions may be offered to grow the network. Steps: (1) sign up and profile; (2) testers; (3) rules training; (4) country WhatsApp animation; (5) recruit members and surface field needs.",
     about_community_title: "Our community",
     about_community_text:
       "Countries planned or rolling out: Canada, France, Côte d’Ivoire, Benin, Senegal, Cameroon, Gabon, DRC, Congo-Brazzaville, Guinea, Morocco, Ghana, China — then worldwide. Each country targets an official WhatsApp community (e.g. RFacto Canada, RFacto Côte d’Ivoire).",

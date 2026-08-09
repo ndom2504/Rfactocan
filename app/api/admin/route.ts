@@ -524,7 +524,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Cet utilisateur n'est pas ambassadeur actif (nommez-le d'abord).",
+              "Cet utilisateur n'est pas Héraut Réseau actif (nommez-le d'abord).",
           },
           { status: 400 }
         );

@@ -323,7 +323,7 @@ export default function AdminPage() {
     }
     if (actionName === "email_ambassador_invite") {
       window.alert(
-        `Email envoyé à ${json.email ?? "l'ambassadeur"} avec le code ${json.agentCode ?? ""}.`
+        `Email envoyé à ${json.email ?? "le Héraut Réseau"} avec le code ${json.agentCode ?? ""}.`
       );
     }
     await load();
@@ -336,7 +336,7 @@ export default function AdminPage() {
     try {
       await navigator.clipboard.writeText(url);
     } catch {
-      window.prompt("Copiez le lien ambassadeur :", url);
+      window.prompt("Copiez le lien Héraut Réseau :", url);
     }
   }
 
@@ -673,7 +673,7 @@ export default function AdminPage() {
 
       <section className="space-y-3">
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-          Demandes ambassadeur
+          Demandes Héraut Réseau
         </h2>
         <p className="text-sm text-[var(--muted)]">
           Candidatures avec numéro WhatsApp pour contact direct.
@@ -966,13 +966,13 @@ export default function AdminPage() {
                   )}
                   {u.isAmbassador && (
                     <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
-                      Ambassadeur
+                      Héraut Réseau
                     </Badge>
                   )}
                   {!u.isAmbassador &&
                     u.ambassadorRequestStatus === "PENDING" && (
                       <Badge className="bg-amber-100 text-amber-900">
-                        Demande ambassadeur
+                        Demande Héraut Réseau
                       </Badge>
                     )}
                   {!u.isAmbassador &&
@@ -1060,7 +1060,7 @@ export default function AdminPage() {
                     variant="secondary"
                     onClick={() => action(u.id, "promote_ambassador")}
                   >
-                    Nommer ambassadeur
+                    Nommer Héraut Réseau
                   </Button>
                 ) : (
                   <>

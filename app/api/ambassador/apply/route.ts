@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     }
     if (existing.isAmbassador) {
       return NextResponse.json(
-        { error: "Vous êtes déjà ambassadeur." },
+        { error: "Vous êtes déjà Héraut Réseau." },
         { status: 400 }
       );
     }
