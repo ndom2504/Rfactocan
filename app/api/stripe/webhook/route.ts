@@ -165,6 +165,14 @@ async function handlePaymentIntent(
       where: { id: payment.id },
       data: { status: "CAPTURED" },
     });
+    try {
+      const { accrueForBookingPayment } = await import(
+        "@/lib/herald-commissions"
+      );
+      await accrueForBookingPayment(bookingId);
+    } catch (err) {
+      console.error("Herald commission webhook CAPTURED", bookingId, err);
+    }
   }
 }
 

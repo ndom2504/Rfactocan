@@ -372,11 +372,33 @@ const dict = {
     suggested_products: "Produits suggérés",
     view_service: "Voir le service",
     view_product: "Voir le produit",
-    payout_channel: "Réception de paiement",
+    payout_channel: "Canal de retrait (portefeuille)",
     payout_channel_hint:
-      "Comment souhaitez-vous recevoir vos gains après une livraison ?",
+      "Afrique / petite clientèle : Mobile Money. Gros volumes : compte bancaire (ou Stripe Connect au Canada). Ce canal reçoit vos commissions Héraut et gains.",
     payout_bank: "Compte bancaire",
-    payout_mobile: "Compte mobile",
+    payout_mobile: "Mobile Money",
+    wallet_title: "Portefeuille Rfacto",
+    wallet_lead:
+      "Liez un numéro Mobile Money ou un compte bancaire pour retirer vos gains. Le solde reste dans l’app jusqu’à votre demande de retrait.",
+    wallet_save_link: "Enregistrer mon compte de retrait",
+    wallet_linked_ok: "Compte de retrait lié au portefeuille.",
+    wallet_save_error: "Impossible d’enregistrer le canal de retrait.",
+    wallet_bank_manual_hint:
+      "Compte bancaire local (virement) — utile en Afrique. Au Canada, activez aussi Stripe Connect ci-dessus pour le virement automatique.",
+    wallet_bank_holder: "Titulaire du compte",
+    wallet_bank_holder_ph: "Nom complet tel qu’en banque",
+    wallet_bank_name: "Banque",
+    wallet_bank_name_ph: "Ex. Ecobank, BOA, RBC…",
+    wallet_bank_account: "N° de compte",
+    wallet_bank_account_ph: "Numéro de compte",
+    wallet_bank_iban: "IBAN / RIB (optionnel)",
+    wallet_withdraw: "Retirer mon solde",
+    wallet_withdraw_pending: "Retrait en cours de traitement",
+    wallet_withdraw_ok_stripe: "Virement Stripe envoyé vers votre compte bancaire.",
+    wallet_withdraw_ok_manual:
+      "Demande enregistrée. L’équipe envoie le montant sur votre Mobile Money ou compte bancaire.",
+    wallet_withdraw_need_link:
+      "Liez d’abord un Mobile Money ou un compte bancaire dans Profil.",
     payout_mobile_money: "Mobile Money",
     payout_orange: "Orange Money",
     payout_moov: "Moov Money",
@@ -387,8 +409,8 @@ const dict = {
     payout_provider: "Opérateur / réseau",
     payout_identifier: "Identifiant (téléphone ou courriel Interac)",
     payout_identifier_hint:
-      "Ex. numéro Mobile Money ou adresse Interac. Stocké sur cet appareil seulement.",
-    payout_mobile_saved: "Compte mobile enregistré sur cet appareil.",
+      "Numéro Mobile Money (avec indicatif pays) ou courriel Interac. Enregistré sur votre compte pour les retraits.",
+    payout_mobile_saved: "Compte de retrait prêt.",
     country: "Pays",
     country_detecting: "Détection du pays…",
     country_suggested: "Pays suggéré : {name}",
@@ -846,9 +868,11 @@ const dict = {
     ambassador_kpi_kyc: "Filleuls KYC validés",
     ambassador_kpi_volume: "Volume réseau (indicatif)",
     ambassador_kpi_payments: "paiement(s) capturé(s)",
-    ambassador_kpi_estimate: "Estimation gains (indicatif)",
+    ambassador_kpi_estimate: "Solde commissions",
     ambassador_kpi_estimate_hint:
-      "~{pct} % des frais plateforme du réseau — barème programme",
+      "{pct} % des frais plateforme · solde dû + déjà versé",
+    ambassador_kpi_accrued: "À verser",
+    ambassador_kpi_paid: "Déjà versé",
     ambassador_earn_step1:
       "Partagez votre lien personnel (WhatsApp, réseaux, communauté). Chaque inscription via ce lien vous est attribuée.",
     ambassador_earn_step2:
@@ -856,9 +880,9 @@ const dict = {
     ambassador_earn_step3:
       "Gagnez aussi vous-même : voyageur, prestataire ou commercial — les paiements passent par Stripe Connect une fois le KYC validé.",
     ambassador_earn_step4:
-      "Les inscriptions et missions attribuées sont suivies par Rfacto pour le programme Héraut Réseau (primes / commissions selon le barème en cours).",
+      "À chaque paiement capturé d’un membre de votre réseau, {pct} % des frais plateforme Rfacto vous sont crédités automatiquement (colis, services, boutiques).",
     ambassador_earn_note:
-      "Astuce : un membre rattaché qui complète un premier échange (réservation ou service) compte davantage pour votre impact de Héraut. Contactez le support pour le barème et les missions disponibles.",
+      "Astuce : un membre rattaché qui complète un premier échange (réservation ou service) renforce votre impact de Héraut. Les virements se font via Stripe Connect une fois le KYC validé (seuil ou action admin).",
     trust_program_cta: "Notre programme de crédibilité et confiance",
     trust_program_title: "Programme de crédibilité et confiance",
     trust_program_lead:
@@ -1804,11 +1828,33 @@ const dict = {
     suggested_products: "Suggested products",
     view_service: "View service",
     view_product: "View product",
-    payout_channel: "Payout method",
+    payout_channel: "Withdrawal channel (wallet)",
     payout_channel_hint:
-      "How do you want to receive earnings after a delivery?",
+      "Africa / smaller volume: Mobile Money. Larger volume: bank account (or Stripe Connect in Canada). This channel receives Herald commissions and earnings.",
     payout_bank: "Bank account",
-    payout_mobile: "Mobile account",
+    payout_mobile: "Mobile Money",
+    wallet_title: "Rfacto wallet",
+    wallet_lead:
+      "Link a Mobile Money number or bank account to withdraw your earnings. Balances stay in the app until you request a withdrawal.",
+    wallet_save_link: "Save my payout account",
+    wallet_linked_ok: "Payout account linked to your wallet.",
+    wallet_save_error: "Could not save payout channel.",
+    wallet_bank_manual_hint:
+      "Local bank details (wire) — useful in Africa. In Canada also enable Stripe Connect above for automatic payouts.",
+    wallet_bank_holder: "Account holder",
+    wallet_bank_holder_ph: "Full name as on the bank account",
+    wallet_bank_name: "Bank",
+    wallet_bank_name_ph: "E.g. Ecobank, BOA, RBC…",
+    wallet_bank_account: "Account number",
+    wallet_bank_account_ph: "Account number",
+    wallet_bank_iban: "IBAN / RIB (optional)",
+    wallet_withdraw: "Withdraw balance",
+    wallet_withdraw_pending: "Withdrawal being processed",
+    wallet_withdraw_ok_stripe: "Stripe transfer sent to your bank account.",
+    wallet_withdraw_ok_manual:
+      "Request saved. The team will send funds to your Mobile Money or bank account.",
+    wallet_withdraw_need_link:
+      "First link Mobile Money or a bank account in Profile.",
     payout_mobile_money: "Mobile Money",
     payout_orange: "Orange Money",
     payout_moov: "Moov Money",
@@ -1819,8 +1865,8 @@ const dict = {
     payout_provider: "Provider / network",
     payout_identifier: "Identifier (phone or Interac email)",
     payout_identifier_hint:
-      "E.g. Mobile Money number or Interac address. Stored on this device only.",
-    payout_mobile_saved: "Mobile payout saved on this device.",
+      "Mobile Money number (with country code) or Interac email. Saved on your account for withdrawals.",
+    payout_mobile_saved: "Payout account ready.",
     country: "Country",
     country_detecting: "Detecting country…",
     country_suggested: "Suggested country: {name}",
@@ -2276,9 +2322,11 @@ const dict = {
     ambassador_kpi_kyc: "KYC-verified referrals",
     ambassador_kpi_volume: "Network volume (indicative)",
     ambassador_kpi_payments: "captured payment(s)",
-    ambassador_kpi_estimate: "Estimated earnings (indicative)",
+    ambassador_kpi_estimate: "Commission balance",
     ambassador_kpi_estimate_hint:
-      "~{pct}% of network platform fees — program schedule",
+      "{pct}% of platform fees · accrued + already paid",
+    ambassador_kpi_accrued: "To pay out",
+    ambassador_kpi_paid: "Already paid",
     ambassador_earn_step1:
       "Share your personal link (WhatsApp, social, community). Every signup via that link is attributed to you.",
     ambassador_earn_step2:
@@ -2286,9 +2334,9 @@ const dict = {
     ambassador_earn_step3:
       "Earn yourself too: as traveler, provider or seller — payouts go through Stripe Connect once KYC is verified.",
     ambassador_earn_step4:
-      "Signups and assigned missions are tracked by Rfacto for the Network Herald program (bonuses / commissions per the current schedule).",
+      "On each captured payment from someone in your network, {pct}% of Rfacto platform fees are credited to you automatically (parcels, services, shops).",
     ambassador_earn_note:
-      "Tip: a linked member who completes a first exchange (booking or service) counts more toward your Herald impact. Contact support for the reward schedule and available missions.",
+      "Tip: a linked member who completes a first exchange (booking or service) strengthens your Herald impact. Payouts go through Stripe Connect after KYC (threshold or admin action).",
     trust_program_cta: "Our credibility & trust program",
     trust_program_title: "Credibility & trust program",
     trust_program_lead:

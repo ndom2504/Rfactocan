@@ -284,6 +284,22 @@ model User {
   meetProfile         MeetProfile?
   meetContactsSent    MeetContact[] @relation("MeetContactsSent")
   meetContactsReceived MeetContact[] @relation("MeetContactsReceived")
+  heraldCommissions   HeraldCommission[] @relation("HeraldCommissions")
+  heraldCommissionReferrals HeraldCommission[] @relation("HeraldCommissionReferral")
+  heraldPayouts       HeraldPayout[]
+  /// Canal de retrait par défaut pour le portefeuille (gains, commissions Héraut…)
+  payoutChannel       String?
+  /// Opérateur mobile / Interac (voir lib/user-intent PayoutProvider)
+  payoutProvider      String?
+  /// Téléphone e164 ou courriel Interac
+  payoutIdentifier    String?
+  /// Détails bancaires (Afrique + gros clients ; JSON léger)
+  payoutBankName      String?
+  payoutBankHolder    String?
+  payoutBankAccount   String?
+  /// IBAN / RIB si disponible
+  payoutBankIban      String?
+  walletWithdrawals   WalletWithdrawal[]
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -713,6 +729,121 @@ model Payment {
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([status])
+}
+
+/// Commission Héraut Réseau : part des frais plateforme sur paiements des filleuls.
+enum HeraldCommissionSource {
+  BOOKING
+  SERVICE
+  SHOP
+}
+
+enum HeraldCommissionStatus {
+  /// Droit constaté (paiement capturé / service & shop payés)
+  ACCRUED
+  /// Bloqué (litige)
+  HELD
+  /// Annulé (remboursement)
+  REVERSED
+  /// Virement Stripe effectué
+  PAID
+  FAILED
+}
+
+model HeraldCommission {
+  id               String                  @id @default(cuid())
+  heraldId         String
+  /// Filleul dont l'activité a généré la commission
+  referralUserId   String
+  sourceType       HeraldCommissionSource
+  /// bookingId | servicePaymentId | shopOrderId
+  sourceId         String
+  platformFeeCents Int
+  rewardBps        Int
+  rewardCents      Int
+  currency         String                  @default("cad")
+  status           HeraldCommissionStatus  @default(ACCRUED)
+  stripeTransferId String?
+  payoutId         String?
+  paidAt           DateTime?
+  reversedAt       DateTime?
+  note             String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  herald   User          @relation("HeraldCommissions", fields: [heraldId], references: [id], onDelete: Cascade)
+  referral User          @relation("HeraldCommissionReferral", fields: [referralUserId], references: [id], onDelete: Cascade)
+  payout   HeraldPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceType, sourceId, heraldId])
+  @@index([heraldId, status])
+  @@index([referralUserId])
+  @@index([status, createdAt])
+  @@index([payoutId])
+}
+
+/// Virement batch des commissions Héraut (Stripe Transfer).
+model HeraldPayout {
+  id               String   @id @default(cuid())
+  heraldId         String
+  amountCents      Int
+  currency         String   @default("cad")
+  stripeTransferId String?  @unique
+  status           String   @default("PAID")
+  note             String?
+  createdAt        DateTime @default(now())
+
+  herald       User               @relation(fields: [heraldId], references: [id], onDelete: Cascade)
+  commissions  HeraldCommission[]
+
+  @@index([heraldId, createdAt])
+}
+
+enum WalletWithdrawalStatus {
+  REQUESTED
+  APPROVED
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum WalletWithdrawalSource {
+  HERALD_COMMISSIONS
+  EARNINGS
+  MANUAL
+}
+
+/// Demande de retrait portefeuille → mobile money ou banque (traitement admin / API partenaire).
+model WalletWithdrawal {
+  id               String                   @id @default(cuid())
+  userId           String
+  amountCents      Int
+  currency         String                   @default("cad")
+  status           WalletWithdrawalStatus   @default(REQUESTED)
+  source           WalletWithdrawalSource   @default(HERALD_COMMISSIONS)
+  /// mobile | bank | stripe
+  channel          String
+  provider         String?
+  /// Snapshot destinataire au moment de la demande
+  destinationHint  String
+  bankName         String?
+  bankHolder       String?
+  bankAccount      String?
+  bankIban         String?
+  note             String?
+  adminNote        String?
+  processedById    String?
+  processedAt      DateTime?
+  /// Liens optionnels vers un HeraldPayout Stripe
+  heraldPayoutId   String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@index([source])
 }
 
 model CorridorConfig {

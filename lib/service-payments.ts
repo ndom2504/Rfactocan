@@ -55,9 +55,19 @@ export async function markServicePaymentPaid(
     where: { id: paymentId },
   });
   if (!existing) return null;
-  if (existing.status === "PAID") return existing;
+  if (existing.status === "PAID") {
+    try {
+      const { accrueForServicePayment } = await import(
+        "@/lib/herald-commissions"
+      );
+      await accrueForServicePayment(paymentId);
+    } catch (err) {
+      console.error("Herald commission service (already paid)", paymentId, err);
+    }
+    return existing;
+  }
 
-  return prisma.servicePaymentRequest.update({
+  const updated = await prisma.servicePaymentRequest.update({
     where: { id: paymentId },
     data: {
       status: "PAID",
@@ -72,6 +82,17 @@ export async function markServicePaymentPaid(
       providerConfirmedAt: new Date(),
     },
   });
+
+  try {
+    const { accrueForServicePayment } = await import(
+      "@/lib/herald-commissions"
+    );
+    await accrueForServicePayment(paymentId);
+  } catch (err) {
+    console.error("Herald commission service paid", paymentId, err);
+  }
+
+  return updated;
 }
 
 export async function createServiceCardCheckout(input: {

@@ -240,6 +240,23 @@ export async function GET(request: Request) {
     },
   });
 
+  const pendingWalletWithdrawals = await prisma.walletWithdrawal.findMany({
+    where: { status: { in: ["REQUESTED", "APPROVED"] } },
+    orderBy: { createdAt: "asc" },
+    take: 50,
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          country: true,
+          phone: true,
+        },
+      },
+    },
+  });
+
   const usersMatching = await prisma.user.count({ where: userWhere });
 
   const recentPayments = await prisma.payment.findMany({
@@ -331,6 +348,7 @@ export async function GET(request: Request) {
     users: allUsers,
     pendingManualIds,
     pendingAmbassadorRequests,
+    pendingWalletWithdrawals,
     usersMatching,
     usersFilter: {
       letter,
@@ -356,9 +374,16 @@ const userPatchSchema = z.object({
     "revoke_ambassador",
     "email_ambassador_invite",
     "reject_ambassador_request",
+    "payout_herald_commissions",
+    "complete_wallet_withdrawal",
   ]),
-  userId: z.string(),
+  userId: z.string().optional(),
+  withdrawalId: z.string().optional(),
   note: z.string().max(500).optional(),
+  /** Force payout under the minimum threshold */
+  force: z.boolean().optional(),
+  /** SENT | FAILED | CANCELLED for wallet withdrawals */
+  mark: z.enum(["SENT", "FAILED", "CANCELLED"]).optional(),
 });
 
 const bookingPatchSchema = z.object({
@@ -422,9 +447,33 @@ export async function PATCH(request: Request) {
 
     const body = userPatchSchema.parse(raw);
 
+    if (body.action === "complete_wallet_withdrawal") {
+      if (!body.withdrawalId || !body.mark) {
+        return NextResponse.json(
+          { error: "withdrawalId et mark requis." },
+          { status: 400 }
+        );
+      }
+      const { adminCompleteWalletWithdrawal } = await import("@/lib/wallet");
+      const result = await adminCompleteWalletWithdrawal(
+        body.withdrawalId,
+        session.id,
+        { mark: body.mark, adminNote: body.note }
+      );
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ ok: true, status: result.status });
+    }
+
+    if (!body.userId) {
+      return NextResponse.json({ error: "userId requis" }, { status: 400 });
+    }
+    const userId = body.userId;
+
     if (body.action === "promote_ambassador") {
       const existing = await prisma.user.findUnique({
-        where: { id: body.userId },
+        where: { id: userId },
         select: {
           id: true,
           agentCode: true,
@@ -440,7 +489,7 @@ export async function PATCH(request: Request) {
       }
       const agentCode = existing.agentCode ?? (await generateAgentCode());
       const user = await prisma.user.update({
-        where: { id: body.userId },
+        where: { id: userId },
         data: {
           isAmbassador: true,
           agentCode,
@@ -467,7 +516,7 @@ export async function PATCH(request: Request) {
 
     if (body.action === "reject_ambassador_request") {
       const user = await prisma.user.update({
-        where: { id: body.userId },
+        where: { id: userId },
         data: {
           ambassadorRequestStatus: "REJECTED",
         },
@@ -484,7 +533,7 @@ export async function PATCH(request: Request) {
 
     if (body.action === "revoke_ambassador") {
       const user = await prisma.user.update({
-        where: { id: body.userId },
+        where: { id: userId },
         data: { isAmbassador: false },
         select: {
           id: true,
@@ -505,7 +554,7 @@ export async function PATCH(request: Request) {
 
     if (body.action === "email_ambassador_invite") {
       const user = await prisma.user.findUnique({
-        where: { id: body.userId },
+        where: { id: userId },
         select: {
           id: true,
           email: true,
@@ -562,9 +611,38 @@ export async function PATCH(request: Request) {
       });
     }
 
+    if (body.action === "payout_herald_commissions") {
+      const { payoutHeraldAccrued } = await import("@/lib/herald-commissions");
+      const result = await payoutHeraldAccrued(userId, {
+        force: body.force ?? true,
+        note: body.note?.trim() || "Admin payout",
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: result.error, amountCents: result.amountCents },
+          { status: 400 }
+        );
+      }
+      if ("skipped" in result && result.skipped) {
+        return NextResponse.json({
+          ok: true,
+          skipped: true,
+          reason: result.reason,
+          amountCents: result.amountCents,
+        });
+      }
+      return NextResponse.json({
+        ok: true,
+        amountCents: result.amountCents,
+        payoutId: result.payoutId,
+        stripeTransferId: result.stripeTransferId,
+        commissionCount: result.commissionCount,
+      });
+    }
+
     if (body.action === "reject_manual_id") {
       const user = await prisma.user.update({
-        where: { id: body.userId },
+        where: { id: userId },
         data: {
           manualIdDocStatus: "REJECTED",
           manualIdDocNote: body.note?.trim() || "Pièce refusée par l'admin",
@@ -604,7 +682,7 @@ export async function PATCH(request: Request) {
                 : { role: "ADMIN" as const };
 
     const user = await prisma.user.update({
-      where: { id: body.userId },
+      where: { id: userId },
       data,
     });
 

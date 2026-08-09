@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/components/locale-provider";
 import { paymentsForCountry } from "@/lib/countries";
 import { resolveCountryCode } from "@/lib/detect-country";
@@ -34,10 +35,17 @@ type Props = {
 
 export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
   const { t } = useI18n();
-  const [channel, setChannel] = useState<PayoutChannel>("bank");
+  const [channel, setChannel] = useState<PayoutChannel>("mobile");
   const [provider, setProvider] = useState<PayoutProvider>("mobile_money");
   const [identifier, setIdentifier] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankHolder, setBankHolder] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [bankIban, setBankIban] = useState("");
   const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const resolvedCode = useMemo(
     () => resolveCountryCode(countryCode) ?? countryCode ?? null,
@@ -66,7 +74,7 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
     !countryPayments ||
     mobileProviders.some((p) => countryPayments.includes(p));
 
-  function persist(partial: {
+  function persistLocal(partial: {
     payoutChannel?: PayoutChannel;
     payoutProvider?: PayoutProvider;
     payoutIdentifier?: string;
@@ -74,12 +82,92 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
     saveUserIntent(partial);
   }
 
+  async function saveToServer(override?: {
+    payoutChannel?: PayoutChannel;
+    payoutProvider?: PayoutProvider;
+    payoutIdentifier?: string;
+    payoutBankName?: string;
+    payoutBankHolder?: string;
+    payoutBankAccount?: string;
+    payoutBankIban?: string;
+  }) {
+    setSaving(true);
+    setError(null);
+    setSavedMsg(null);
+    const ch = override?.payoutChannel ?? channel;
+    const body = {
+      payoutChannel: ch,
+      payoutProvider: override?.payoutProvider ?? provider,
+      payoutIdentifier: override?.payoutIdentifier ?? identifier,
+      payoutBankName: override?.payoutBankName ?? bankName,
+      payoutBankHolder: override?.payoutBankHolder ?? bankHolder,
+      payoutBankAccount: override?.payoutBankAccount ?? bankAccount,
+      payoutBankIban: override?.payoutBankIban ?? bankIban,
+    };
+    try {
+      const res = await fetch("/api/wallet", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? t("wallet_save_error"));
+        return;
+      }
+      persistLocal({
+        payoutChannel: ch,
+        payoutProvider: body.payoutProvider as PayoutProvider,
+        payoutIdentifier: body.payoutIdentifier,
+      });
+      setSavedMsg(t("wallet_linked_ok"));
+    } catch {
+      setError(t("wallet_save_error"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   useEffect(() => {
-    const prefs = loadUserIntent();
-    setChannel(prefs.payoutChannel);
-    setProvider(prefs.payoutProvider);
-    setIdentifier(prefs.payoutIdentifier);
-    setReady(true);
+    let cancelled = false;
+    void (async () => {
+      const local = loadUserIntent();
+      try {
+        const res = await fetch("/api/wallet");
+        if (res.ok) {
+          const data = await res.json();
+          const d = data.destination;
+          if (!cancelled && d) {
+            const ch =
+              d.payoutChannel === "bank" || d.payoutChannel === "mobile"
+                ? d.payoutChannel
+                : local.payoutChannel;
+            setChannel(ch);
+            setProvider(
+              (d.payoutProvider as PayoutProvider) || local.payoutProvider
+            );
+            setIdentifier(d.payoutIdentifier || local.payoutIdentifier || "");
+            setBankName(d.payoutBankName || "");
+            setBankHolder(d.payoutBankHolder || "");
+            setBankAccount(d.payoutBankAccount || "");
+            setBankIban(d.payoutBankIban || "");
+            setReady(true);
+            return;
+          }
+        }
+      } catch {
+        /* offline → local */
+      }
+      if (!cancelled) {
+        setChannel(local.payoutChannel);
+        setProvider(local.payoutProvider);
+        setIdentifier(local.payoutIdentifier);
+        setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -88,16 +176,16 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
       const next = mobileProviders[0];
       if (next) {
         setProvider(next);
-        persist({ payoutProvider: next });
+        persistLocal({ payoutProvider: next });
       }
     }
     if (channel === "bank" && !allowBank && allowMobile) {
       setChannel("mobile");
-      persist({ payoutChannel: "mobile" });
+      persistLocal({ payoutChannel: "mobile" });
     }
     if (channel === "mobile" && !allowMobile && allowBank) {
       setChannel("bank");
-      persist({ payoutChannel: "bank" });
+      persistLocal({ payoutChannel: "bank" });
     }
   }, [ready, mobileProviders, provider, channel, allowBank, allowMobile]);
 
@@ -105,6 +193,13 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
 
   return (
     <div className="space-y-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-4">
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-[var(--foreground)]">
+          {t("wallet_title")}
+        </p>
+        <p className="text-xs text-[var(--muted)]">{t("wallet_lead")}</p>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="payoutChannel">{t("payout_channel")}</Label>
         <Select
@@ -113,16 +208,59 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
           onChange={(e) => {
             const v = e.target.value as PayoutChannel;
             setChannel(v);
-            persist({ payoutChannel: v });
+            persistLocal({ payoutChannel: v });
           }}
         >
+          {allowMobile && (
+            <option value="mobile">{t("payout_mobile")}</option>
+          )}
           {allowBank && <option value="bank">{t("payout_bank")}</option>}
-          {allowMobile && <option value="mobile">{t("payout_mobile")}</option>}
         </Select>
         <p className="text-xs text-[var(--muted)]">{t("payout_channel_hint")}</p>
       </div>
 
-      {channel === "bank" && bankSlot}
+      {channel === "bank" && (
+        <div className="space-y-3">
+          {bankSlot}
+          <p className="text-xs text-[var(--muted)]">{t("wallet_bank_manual_hint")}</p>
+          <div className="space-y-2">
+            <Label htmlFor="bankHolder">{t("wallet_bank_holder")}</Label>
+            <Input
+              id="bankHolder"
+              value={bankHolder}
+              onChange={(e) => setBankHolder(e.target.value)}
+              placeholder={t("wallet_bank_holder_ph")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankName">{t("wallet_bank_name")}</Label>
+            <Input
+              id="bankName"
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              placeholder={t("wallet_bank_name_ph")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankAccount">{t("wallet_bank_account")}</Label>
+            <Input
+              id="bankAccount"
+              value={bankAccount}
+              onChange={(e) => setBankAccount(e.target.value)}
+              placeholder={t("wallet_bank_account_ph")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankIban">{t("wallet_bank_iban")}</Label>
+            <Input
+              id="bankIban"
+              value={bankIban}
+              onChange={(e) => setBankIban(e.target.value)}
+              placeholder="IBAN / RIB (optionnel)"
+            />
+          </div>
+        </div>
+      )}
 
       {channel === "mobile" && (
         <div className="space-y-3">
@@ -134,7 +272,7 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
               onChange={(e) => {
                 const v = e.target.value as PayoutProvider;
                 setProvider(v);
-                persist({ payoutProvider: v });
+                persistLocal({ payoutProvider: v });
               }}
             >
               {mobileProviders.map((p) => (
@@ -151,23 +289,33 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
               value={identifier}
               onChange={(e) => {
                 setIdentifier(e.target.value);
-                persist({ payoutIdentifier: e.target.value });
+                persistLocal({ payoutIdentifier: e.target.value });
               }}
               placeholder={
-                provider === "interac" ? "email@exemple.com" : "+1…"
+                provider === "interac" ? "email@exemple.com" : "+225…"
               }
             />
             <p className="text-xs text-[var(--muted)]">
               {t("payout_identifier_hint")}
             </p>
           </div>
-          {identifier.trim() && (
-            <p className="text-xs text-[var(--accent)]">
-              {t("payout_mobile_saved")}
-            </p>
-          )}
         </div>
       )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          disabled={saving}
+          onClick={() => void saveToServer()}
+        >
+          {saving ? t("loading") : t("wallet_save_link")}
+        </Button>
+        {savedMsg && (
+          <p className="text-xs text-[var(--accent)]">{savedMsg}</p>
+        )}
+        {error && <p className="text-xs text-red-600">{error}</p>}
+      </div>
     </div>
   );
 }

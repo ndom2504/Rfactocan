@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getAmbassadorKpis } from "@/lib/ambassador-stats";
 import { prisma } from "@/lib/prisma";
 
-/** KPI Héraut Réseau (filleuls + volume réseau + estimation gains). */
+/** KPI + solde commissions Héraut Réseau (ledger 10 % des frais plateforme). */
 export async function GET() {
   const session = await getSessionUser();
   if (!session) {
@@ -20,9 +20,33 @@ export async function GET() {
   });
 
   if (!me?.isAmbassador || me.kycStatus !== "VERIFIED" || !me.agentCode) {
-    return NextResponse.json({ error: "Accès Héraut Réseau requis" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Accès Héraut Réseau requis" },
+      { status: 403 }
+    );
   }
 
-  const kpis = await getAmbassadorKpis(session.id);
-  return NextResponse.json({ kpis });
+  const [kpis, recentCommissions] = await Promise.all([
+    getAmbassadorKpis(session.id),
+    prisma.heraldCommission.findMany({
+      where: { heraldId: session.id },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        sourceType: true,
+        sourceId: true,
+        platformFeeCents: true,
+        rewardBps: true,
+        rewardCents: true,
+        currency: true,
+        status: true,
+        createdAt: true,
+        paidAt: true,
+        referral: { select: { id: true, displayName: true } },
+      },
+    }),
+  ]);
+
+  return NextResponse.json({ kpis, recentCommissions });
 }

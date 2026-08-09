@@ -237,6 +237,15 @@ export const stripePaymentProvider: PaymentProvider = {
         stripeTransferId: transfer.id,
       },
     });
+
+    try {
+      const { accrueForBookingPayment } = await import(
+        "@/lib/herald-commissions"
+      );
+      await accrueForBookingPayment(bookingId);
+    } catch (err) {
+      console.error("Herald commission after booking capture", bookingId, err);
+    }
   },
 
   async cancelAuthorization(bookingId) {

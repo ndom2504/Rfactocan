@@ -82,6 +82,27 @@ type AdminData = {
     ambassadorRequestStatus: string;
     createdAt: string;
   }>;
+  pendingWalletWithdrawals?: Array<{
+    id: string;
+    amountCents: number;
+    currency: string;
+    status: string;
+    channel: string;
+    provider: string | null;
+    destinationHint: string;
+    bankName: string | null;
+    bankHolder: string | null;
+    bankAccount: string | null;
+    bankIban: string | null;
+    createdAt: string;
+    user: {
+      id: string;
+      email: string;
+      displayName: string;
+      country: string | null;
+      phone: string | null;
+    };
+  }>;
   openReports: Array<{
     id: string;
     reason: string;
@@ -302,12 +323,16 @@ export default function AdminPage() {
   async function action(
     userId: string,
     actionName: string,
-    extra?: { note?: string }
+    extra?: { note?: string; force?: boolean; withdrawalId?: string; mark?: string }
   ) {
     const res = await fetch("/api/admin", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, action: actionName, ...extra }),
+      body: JSON.stringify({
+        userId: userId || undefined,
+        action: actionName,
+        ...extra,
+      }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -325,6 +350,21 @@ export default function AdminPage() {
       window.alert(
         `Email envoyé à ${json.email ?? "le Héraut Réseau"} avec le code ${json.agentCode ?? ""}.`
       );
+    }
+    if (actionName === "payout_herald_commissions") {
+      if (json.skipped) {
+        window.alert(
+          json.reason ??
+            `Aucune commission à verser${json.amountCents != null ? ` (solde ${json.amountCents} ¢)` : ""}.`
+        );
+      } else {
+        window.alert(
+          `Commissions versées : ${((json.amountCents as number) / 100).toFixed(2)} $ · ${json.commissionCount ?? "?"} lignes · transfer ${json.stripeTransferId ?? "—"}`
+        );
+      }
+    }
+    if (actionName === "complete_wallet_withdrawal") {
+      window.alert(`Retrait marqué : ${json.status ?? "OK"}`);
     }
     await load();
   }
@@ -666,6 +706,77 @@ export default function AdminPage() {
               <span className="text-xs text-[var(--muted)]">
                 {formatDate(p.createdAt)}
               </span>
+            </div>
+          </Card>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Retraits portefeuille (Mobile Money / banque)
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          Après envoi réel (MoMo ou virement bancaire), marquez « Envoyé ».
+          {(data.pendingWalletWithdrawals?.length ?? 0) === 0
+            ? " Aucune demande en attente."
+            : ` ${data.pendingWalletWithdrawals!.length} en attente.`}
+        </p>
+        {(data.pendingWalletWithdrawals ?? []).map((w) => (
+          <Card
+            key={w.id}
+            className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">
+                  {w.user.displayName} ·{" "}
+                  {formatMoneyFromCents(w.amountCents, w.currency || "CAD")}
+                </CardTitle>
+                <CardDescription>
+                  {w.user.email}
+                  {w.user.country ? ` · ${w.user.country}` : ""}
+                  {w.user.phone ? ` · ${w.user.phone}` : ""}
+                </CardDescription>
+                <p className="mt-2 text-sm">
+                  <span className="font-medium uppercase">{w.channel}</span>
+                  {w.provider ? ` · ${w.provider}` : ""} · {w.destinationHint}
+                </p>
+                {(w.bankAccount || w.bankIban) && (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {[w.bankHolder, w.bankName, w.bankIban || w.bankAccount]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {formatDate(w.createdAt)} · {w.status}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    void action("", "complete_wallet_withdrawal", {
+                      withdrawalId: w.id,
+                      mark: "SENT",
+                    })
+                  }
+                >
+                  Marquer envoyé
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() =>
+                    void action("", "complete_wallet_withdrawal", {
+                      withdrawalId: w.id,
+                      mark: "CANCELLED",
+                    })
+                  }
+                >
+                  Annuler
+                </Button>
+              </div>
             </div>
           </Card>
         ))}
@@ -1079,6 +1190,24 @@ export default function AdminPage() {
                       onClick={() => action(u.id, "email_ambassador_invite")}
                     >
                       Envoyer par email
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            "Verser le solde des commissions Héraut (ACCRUED) via Stripe Connect ?"
+                          )
+                        ) {
+                          return;
+                        }
+                        void action(u.id, "payout_herald_commissions", {
+                          force: true,
+                        });
+                      }}
+                    >
+                      Payer commissions
                     </Button>
                     <Button
                       size="sm"

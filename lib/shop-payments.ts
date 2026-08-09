@@ -201,10 +201,18 @@ export async function markShopOrderPaid(opts: {
     include: { product: { select: { id: true, stockQty: true } } },
   });
   if (!order) return null;
-  if (order.status === "PAID" || order.status === "FULFILLED") return order;
+  if (order.status === "PAID" || order.status === "FULFILLED") {
+    try {
+      const { accrueForShopOrder } = await import("@/lib/herald-commissions");
+      await accrueForShopOrder(order.id);
+    } catch (err) {
+      console.error("Herald commission shop (already paid)", order.id, err);
+    }
+    return order;
+  }
 
-  return prisma.$transaction(async (tx) => {
-    const updated = await tx.shopOrder.update({
+  const updated = await prisma.$transaction(async (tx) => {
+    const next = await tx.shopOrder.update({
       where: { id: order.id },
       data: {
         status: "PAID",
@@ -226,6 +234,15 @@ export async function markShopOrderPaid(opts: {
       });
     }
 
-    return updated;
+    return next;
   });
+
+  try {
+    const { accrueForShopOrder } = await import("@/lib/herald-commissions");
+    await accrueForShopOrder(updated.id);
+  } catch (err) {
+    console.error("Herald commission shop paid", updated.id, err);
+  }
+
+  return updated;
 }

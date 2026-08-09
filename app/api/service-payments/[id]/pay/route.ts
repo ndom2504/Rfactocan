@@ -236,6 +236,14 @@ export async function POST(request: Request, ctx: Ctx) {
           clientMarkedPaidAt: payment.clientMarkedPaidAt ?? new Date(),
         },
       });
+      try {
+        const { accrueForServicePayment } = await import(
+          "@/lib/herald-commissions"
+        );
+        await accrueForServicePayment(id);
+      } catch (err) {
+        console.error("Herald commission service confirm", id, err);
+      }
       await notifyUser({
         userId: payment.clientId,
         type: "SERVICE_PAYMENT",
