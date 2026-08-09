@@ -318,6 +318,18 @@ const dict = {
       "Seuls les membres avec un profil Rencontre privée actif peuvent contacter.",
     meet_not_found: "Profil rencontre introuvable ou masqué.",
     meet_years: "ans",
+    meet_update: "Mettre à jour mon profil",
+    meet_delete: "Supprimer mon profil",
+    meet_delete_confirm:
+      "Supprimer définitivement votre profil Rencontre privée et les demandes de contact associées ?",
+    meet_deleted: "Profil rencontre supprimé.",
+    meet_manage_title: "Rencontre privée",
+    meet_manage_body:
+      "Créez, modifiez ou supprimez votre profil affaires / amour. Les critères filtrent les annonces.",
+    meet_edit_profile: "Gérer mon profil",
+    order_need_meet: "Rencontre privée",
+    order_need_meet_hint:
+      "Créez votre profil de rencontre privée (affaires ou amour) avec critères et photo masquable.",
     order_product_category: "Catégorie boutique",
     order_product_description: "Quel produit recherchez-vous ?",
     order_service_description: "Décrivez le service dont vous avez besoin",
@@ -1738,6 +1750,18 @@ const dict = {
       "Only members with an active Private meetup profile can contact others.",
     meet_not_found: "Meetup profile not found or hidden.",
     meet_years: "y/o",
+    meet_update: "Update my profile",
+    meet_delete: "Delete my profile",
+    meet_delete_confirm:
+      "Permanently delete your Private meetup profile and related contact requests?",
+    meet_deleted: "Meetup profile deleted.",
+    meet_manage_title: "Private meetup",
+    meet_manage_body:
+      "Create, edit or delete your business/romance profile. Criteria filter announcements.",
+    meet_edit_profile: "Manage my profile",
+    order_need_meet: "Private meetup",
+    order_need_meet_hint:
+      "Create your private meetup profile (business or romance) with filters and optional hidden photo.",
     order_product_category: "Shop category",
     order_product_description: "What product are you looking for?",
     order_service_description: "Describe the service you need",

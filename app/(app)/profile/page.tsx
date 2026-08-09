@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -576,6 +576,22 @@ function ProfileForm() {
             displayName={user.displayName}
           />
         )}
+
+      <Card>
+        <CardTitle>{t("meet_manage_title")}</CardTitle>
+        <CardDescription>{t("meet_manage_body")}</CardDescription>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/meet" className={buttonVariants()}>
+            {t("meet_edit_profile")}
+          </Link>
+          <Link
+            href="/community?kind=MEET"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            {t("meet_see_matches")}
+          </Link>
+        </div>
+      </Card>
 
       <Card>
         <CardTitle>{t("profile_title")}</CardTitle>

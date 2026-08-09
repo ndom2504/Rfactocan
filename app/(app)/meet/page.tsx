@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
+import { CountryCodeSelect } from "@/components/country-select";
 import { useI18n } from "@/components/locale-provider";
+import { getCities } from "@/lib/corridors";
 import { cn } from "@/lib/utils";
 
 type MeetKind = "BUSINESS" | "ROMANCE";
@@ -37,7 +40,7 @@ const emptyForm = (): ProfileForm => ({
   myGender: "UNSPECIFIED",
   birthYear: "",
   city: "",
-  country: "",
+  country: "GA",
   seekGender: "UNSPECIFIED",
   ageMin: "",
   ageMax: "",
@@ -54,9 +57,12 @@ export default function MeetProfilePage() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
+  const cities = useMemo(() => getCities(form.country), [form.country]);
   const [incoming, setIncoming] = useState<
     Array<{
       id: string;
@@ -76,6 +82,7 @@ export default function MeetProfilePage() {
         const pData = await pRes.json();
         if (!cancelled && pRes.ok && pData.profile) {
           const p = pData.profile;
+          setHasProfile(true);
           setForm({
             kind: p.kind,
             headline: p.headline || "",
@@ -83,7 +90,7 @@ export default function MeetProfilePage() {
             myGender: p.myGender || "UNSPECIFIED",
             birthYear: p.birthYear ? String(p.birthYear) : "",
             city: p.city || "",
-            country: p.country || "",
+            country: p.country || "GA",
             seekGender: p.seekGender || "UNSPECIFIED",
             ageMin: p.ageMin != null ? String(p.ageMin) : "",
             ageMax: p.ageMax != null ? String(p.ageMax) : "",
@@ -166,6 +173,7 @@ export default function MeetProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur");
       setSaved(true);
+      setHasProfile(true);
       if (form.active) {
         router.refresh();
       }
@@ -173,6 +181,26 @@ export default function MeetProfilePage() {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function deleteProfile() {
+    if (!window.confirm(t("meet_delete_confirm"))) return;
+    setDeleting(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch("/api/meet/profile", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Erreur");
+      setForm(emptyForm());
+      setHasProfile(false);
+      setStep(0);
+      setSaved(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -355,22 +383,42 @@ export default function MeetProfilePage() {
                 placeholder="1990"
               />
             </div>
-            <div>
-              <Label htmlFor="city">{t("meet_city")}</Label>
+          </div>
+          <CountryCodeSelect
+            name="meetCountry"
+            label={t("meet_country")}
+            value={form.country}
+            onChange={(code) => {
+              setForm((f) => ({
+                ...f,
+                country: code,
+                city: "",
+              }));
+              setSaved(false);
+            }}
+          />
+          <div>
+            <Label htmlFor="city">{t("meet_city")}</Label>
+            {cities.length > 0 ? (
+              <Select
+                id="city"
+                value={form.city}
+                onChange={(e) => setField("city", e.target.value)}
+              >
+                <option value="">{t("services_choose_city")}</option>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Select>
+            ) : (
               <Input
                 id="city"
                 value={form.city}
                 onChange={(e) => setField("city", e.target.value)}
               />
-            </div>
-            <div>
-              <Label htmlFor="country">{t("meet_country")}</Label>
-              <Input
-                id="country"
-                value={form.country}
-                onChange={(e) => setField("country", e.target.value)}
-              />
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -490,7 +538,9 @@ export default function MeetProfilePage() {
         </p>
       )}
       {saved && (
-        <p className="text-sm text-[var(--accent)]">{t("meet_saved")}</p>
+        <p className="text-sm text-[var(--accent)]">
+          {hasProfile ? t("meet_saved") : t("meet_deleted")}
+        </p>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -504,13 +554,24 @@ export default function MeetProfilePage() {
             {t("meet_next")}
           </Button>
         ) : (
-          <Button type="button" disabled={saving || uploading} onClick={() => void save()}>
-            {saving ? t("loading") : t("meet_save")}
+          <Button type="button" disabled={saving || uploading || deleting} onClick={() => void save()}>
+            {saving ? t("loading") : hasProfile ? t("meet_update") : t("meet_save")}
           </Button>
         )}
         <Link href="/community?kind=MEET" className={buttonVariants({ variant: "outline" })}>
           {t("meet_see_matches")}
         </Link>
+        {hasProfile && (
+          <Button
+            type="button"
+            variant="outline"
+            className="text-red-700 border-red-200"
+            disabled={deleting || saving}
+            onClick={() => void deleteProfile()}
+          >
+            {deleting ? t("loading") : t("meet_delete")}
+          </Button>
+        )}
       </div>
     </div>
   );

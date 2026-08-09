@@ -163,3 +163,38 @@ export async function PUT(request: Request) {
     );
   }
 }
+
+/** Supprime définitivement le profil rencontre privée de l'utilisateur. */
+export async function DELETE() {
+  const session = await getSessionUser();
+  if (!session) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  try {
+    const existing = await prisma.meetProfile.findUnique({
+      where: { userId: session.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ ok: true, deleted: false });
+    }
+
+    await prisma.$transaction([
+      prisma.meetContact.deleteMany({
+        where: {
+          OR: [{ fromUserId: session.id }, { toUserId: session.id }],
+        },
+      }),
+      prisma.meetProfile.delete({ where: { userId: session.id } }),
+    ]);
+
+    return NextResponse.json({ ok: true, deleted: true });
+  } catch (error) {
+    console.error("MeetProfile DELETE failed:", error);
+    return NextResponse.json(
+      { error: "Suppression impossible." },
+      { status: 500 }
+    );
+  }
+}

@@ -42,7 +42,7 @@ export default function NewRequestPage() {
   const [uploadingCv, setUploadingCv] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [jobCvUrl, setJobCvUrl] = useState<string | null>(null);
-  const [needType, setNeedType] = useState<OrderNeedTypeId>("PARCEL");
+  const [needType, setNeedType] = useState<OrderNeedTypeId | "MEET">("PARCEL");
   const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
   const [serviceCategory, setServiceCategory] = useState<string>(
@@ -146,6 +146,10 @@ export default function NewRequestPage() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (needType === "MEET") {
+      router.push("/meet");
+      return;
+    }
     setLoading(true);
     setError("");
     saveUserIntent({ orderIntent });
@@ -232,19 +236,22 @@ export default function NewRequestPage() {
     router.refresh();
   }
 
-  const isJob = isJobNeedType(needType);
+  const isJob = needType !== "MEET" && isJobNeedType(needType);
 
-  const subtitle = isJob
-    ? needType === "JOB_SEEK"
-      ? t("order_need_job_seek_hint")
-      : t("order_need_job_offer_hint")
-    : needType === "SERVICE"
-      ? t("order_need_service_hint")
-      : needType === "PRODUCT"
-        ? t("order_need_product_hint")
-        : orderIntent === "recevoir"
-          ? t("order_receive_hint")
-          : t("new_request_subtitle");
+  const subtitle =
+    needType === "MEET"
+      ? t("order_need_meet_hint")
+      : isJob
+      ? needType === "JOB_SEEK"
+        ? t("order_need_job_seek_hint")
+        : t("order_need_job_offer_hint")
+      : needType === "SERVICE"
+        ? t("order_need_service_hint")
+        : needType === "PRODUCT"
+          ? t("order_need_product_hint")
+          : orderIntent === "recevoir"
+            ? t("order_receive_hint")
+            : t("new_request_subtitle");
 
   const needHint =
     needType === "PARCEL"
@@ -255,7 +262,9 @@ export default function NewRequestPage() {
           ? t("order_need_product_hint")
           : needType === "JOB_SEEK"
             ? t("order_need_job_seek_hint")
-            : t("order_need_job_offer_hint");
+            : needType === "MEET"
+              ? t("order_need_meet_hint")
+              : t("order_need_job_offer_hint");
 
   return (
     <Card className="max-w-2xl">
@@ -268,9 +277,9 @@ export default function NewRequestPage() {
             id="needType"
             value={needType}
             onChange={(e) => {
-              const next = e.target.value as OrderNeedTypeId;
+              const next = e.target.value as OrderNeedTypeId | "MEET";
               setNeedType(next);
-              if (!isJobNeedType(next)) setJobCvUrl(null);
+              if (next === "MEET" || !isJobNeedType(next)) setJobCvUrl(null);
             }}
           >
             <option value="PARCEL">{t("order_need_parcel")}</option>
@@ -278,9 +287,19 @@ export default function NewRequestPage() {
             <option value="PRODUCT">{t("order_need_product")}</option>
             <option value="JOB_SEEK">{t("order_need_job_seek")}</option>
             <option value="JOB_OFFER">{t("order_need_job_offer")}</option>
+            <option value="MEET">{t("order_need_meet")}</option>
           </Select>
           <p className="text-xs text-[var(--muted)]">{needHint}</p>
         </div>
+
+        {needType === "MEET" && (
+          <div className="space-y-3 rounded-md border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <p className="text-sm text-[var(--muted)]">{t("order_need_meet_hint")}</p>
+            <Button type="button" onClick={() => router.push("/meet")}>
+              {t("meet_create_cta")}
+            </Button>
+          </div>
+        )}
 
         {needType === "PARCEL" && (
           <>
@@ -667,6 +686,8 @@ export default function NewRequestPage() {
           </>
         )}
 
+        {needType !== "MEET" && (
+        <>
         <div className="space-y-2">
           <Label htmlFor="description">
             {needType === "PRODUCT"
@@ -735,6 +756,8 @@ export default function NewRequestPage() {
         <Button type="submit" disabled={loading || uploading || uploadingCv}>
           {loading ? t("loading") : t("publish")}
         </Button>
+        </>
+        )}
       </form>
     </Card>
   );
