@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export type DmContextType = "SERVICE" | "JOB";
+export type DmContextType = "SERVICE" | "JOB" | "MEET";
 
 export function pairUserIds(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];

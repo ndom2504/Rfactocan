@@ -72,10 +72,29 @@ export default async function RequestsPage({ searchParams }: Props) {
               {t(locale, "my_requests")}
             </Link>
           )}
+          <Link
+            href="/meet"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            {t(locale, "meet_nav_cta")}
+          </Link>
           <Link href="/requests/new" className={buttonVariants()}>
             {t(locale, "publish_request")}
           </Link>
         </div>
+      </div>
+
+      <div className="border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+        <p className="font-medium">{t(locale, "meet_banner_title")}</p>
+        <p className="mt-0.5 text-sm text-[var(--muted)]">
+          {t(locale, "meet_banner_body")}
+        </p>
+        <Link
+          href="/meet"
+          className="mt-2 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
+        >
+          {t(locale, "meet_create_cta")} →
+        </Link>
       </div>
 
       <div className="grid gap-4">

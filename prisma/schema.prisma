@@ -281,6 +281,9 @@ model User {
   connectionsTo    UserConnection[] @relation("ConnectionsTo")
   jobContactsSent     JobContact[] @relation("JobContactsSent")
   jobContactsReceived JobContact[] @relation("JobContactsReceived")
+  meetProfile         MeetProfile?
+  meetContactsSent    MeetContact[] @relation("MeetContactsSent")
+  meetContactsReceived MeetContact[] @relation("MeetContactsReceived")
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -749,13 +752,80 @@ model Message {
   @@index([bookingId, readAt])
 }
 
-/// Fil de discussion direct entre 2 utilisateurs (services / emploi — pas colis).
+/// Affaire (réseau pro) ou amour — profil de rencontre privée.
+enum MeetKind {
+  BUSINESS
+  ROMANCE
+}
+
+enum MeetGender {
+  MALE
+  FEMALE
+  OTHER
+  UNSPECIFIED
+}
+
+enum MeetContactStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+/// Profil rencontre privée (1:1 User). Visible dans Annonces via matching.
+model MeetProfile {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  kind         MeetKind
+  headline     String
+  bio          String?
+  myGender     MeetGender @default(UNSPECIFIED)
+  birthYear    Int?
+  city         String?
+  country      String?
+  seekGender   MeetGender @default(UNSPECIFIED)
+  ageMin       Int?
+  ageMax       Int?
+  interests    String?
+  photoUrl     String?
+  /// false = photo masquée pour les autres (algorithme / fiches)
+  photoVisible Boolean    @default(true)
+  /// Publié dans le fil Rencontre privée
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([kind, active, updatedAt])
+  @@index([country, city])
+}
+
+/// Demande de contact rencontre — la messagerie s’ouvre seulement si mutuelle (ACCEPTED).
+model MeetContact {
+  id         String            @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  message    String?
+  status     MeetContactStatus @default(PENDING)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  fromUser User @relation("MeetContactsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("MeetContactsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, status])
+  @@index([fromUserId, status])
+}
+
+/// Fil de discussion direct entre 2 utilisateurs (services / emploi / rencontre — pas colis).
 /// userLowId / userHighId = ids triés pour unicité du couple.
 model DirectThread {
   id              String    @id @default(cuid())
   userLowId       String
   userHighId      String
-  /// SERVICE | JOB
+  /// SERVICE | JOB | MEET
   lastContextType String?
   lastContextId   String?
   lastMessageAt   DateTime?
@@ -778,7 +848,7 @@ model DirectMessage {
   senderId      String
   body          String
   attachmentUrl String?
-  /// SERVICE | JOB (contexte du message)
+  /// SERVICE | JOB | MEET (contexte du message)
   contextType   String?
   contextId     String?
   readAt        DateTime?

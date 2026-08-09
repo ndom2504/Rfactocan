@@ -35,7 +35,7 @@ type FeedPost = {
   attachments: CommunityAttachment[];
   createdAt: string;
   href?: string | null;
-  source?: "post" | "service" | "shop" | "trip" | "job";
+  source?: "post" | "service" | "shop" | "trip" | "job" | "meet";
   isOwner: boolean;
   viewCount?: number;
   commentCount?: number;
@@ -58,6 +58,7 @@ const kindLabelKey: Record<string, DictKey> = {
   OPPORTUNITY: "community_kind_opportunity",
   COMMUNITY: "community_kind_community",
   JOB: "community_kind_jobs",
+  MEET: "community_kind_meet",
 };
 
 export function CommunityFeed() {
@@ -73,6 +74,20 @@ export function CommunityFeed() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const k = new URLSearchParams(window.location.search).get("kind");
+      if (
+        k &&
+        (COMMUNITY_FEED_FILTERS as readonly string[]).includes(k.toUpperCase())
+      ) {
+        setFilter(k.toUpperCase() as CommunityFeedFilterId);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -421,7 +436,18 @@ export function CommunityFeed() {
       {loading ? (
         <p className="text-sm text-[var(--muted)]">{t("loading")}</p>
       ) : posts.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">{t("community_empty")}</p>
+        <div className="space-y-2 text-sm text-[var(--muted)]">
+          <p>{t("community_empty")}</p>
+          {filter === "MEET" && (
+            <p>
+              <Link href="/meet" className="font-medium text-[var(--accent)] hover:underline">
+                {t("meet_create_cta")}
+              </Link>
+              {" — "}
+              {t("meet_subtitle")}
+            </p>
+          )}
+        </div>
       ) : (
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
           {posts.map((post) => (

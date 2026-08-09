@@ -12,7 +12,7 @@ import { prisma } from "@/lib/prisma";
 
 const startSchema = z.object({
   toUserId: z.string().min(1),
-  contextType: z.enum(["SERVICE", "JOB"]).optional(),
+  contextType: z.enum(["SERVICE", "JOB", "MEET"]).optional(),
   contextId: z.string().min(1).optional(),
   body: z.string().min(1).max(4000).optional(),
 });
@@ -76,8 +76,8 @@ export async function GET() {
 }
 
 /**
- * POST — start / open a direct thread with a verified peer.
- * Parcels stay on booking chat; this is services + jobs only.
+ * POST — start / open a direct thread (services / jobs avec KYC).
+ * Rencontre privée : uniquement si contact mutuel ACCEPTED (pas de cold DM).
  */
 export async function POST(request: Request) {
   const session = await getSessionUser();
@@ -94,16 +94,50 @@ export async function POST(request: Request) {
       );
     }
 
-    const verified = await assertBothVerified(session.id, body.toUserId);
-    if (!verified.ok) {
-      return NextResponse.json(
-        { error: verified.error, code: "code" in verified ? verified.code : undefined },
-        { status: verified.status }
-      );
-    }
-
     const contextType = (body.contextType as DmContextType | undefined) ?? null;
     const contextId = body.contextId ?? null;
+
+    if (contextType === "MEET") {
+      const mutual = await prisma.meetContact.findFirst({
+        where: {
+          status: "ACCEPTED",
+          OR: [
+            { fromUserId: session.id, toUserId: body.toUserId },
+            { fromUserId: body.toUserId, toUserId: session.id },
+          ],
+        },
+      });
+      if (!mutual) {
+        return NextResponse.json(
+          {
+            error:
+              "Messagerie rencontre réservée aux contacts mutuels. Envoyez une demande depuis le profil.",
+          },
+          { status: 403 }
+        );
+      }
+      const peerUser = await prisma.user.findUnique({
+        where: { id: body.toUserId },
+        select: { status: true, displayName: true },
+      });
+      if (!peerUser || peerUser.status === "SUSPENDED") {
+        return NextResponse.json(
+          { error: "Utilisateur indisponible." },
+          { status: 404 }
+        );
+      }
+    } else {
+      const verified = await assertBothVerified(session.id, body.toUserId);
+      if (!verified.ok) {
+        return NextResponse.json(
+          {
+            error: verified.error,
+            code: "code" in verified ? verified.code : undefined,
+          },
+          { status: verified.status }
+        );
+      }
+    }
 
     const thread = await getOrCreateDirectThread({
       meId: session.id,
@@ -128,14 +162,14 @@ export async function POST(request: Request) {
         data: { lastMessageAt: message.createdAt },
       });
 
-      const meName =
-        verified.users.find((u) => u.id === session.id)?.displayName ||
-        session.displayName ||
-        "Un membre";
+      const me = await prisma.user.findUnique({
+        where: { id: session.id },
+        select: { displayName: true },
+      });
       await notifyUser({
         userId: body.toUserId,
         type: "DIRECT_MESSAGE",
-        title: `Message de ${meName}`,
+        title: `Message de ${me?.displayName || session.displayName || "Un membre"}`,
         body: body.body.trim().slice(0, 120),
         href: `/messages/dm/${thread.id}`,
       });

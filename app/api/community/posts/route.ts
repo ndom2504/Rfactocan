@@ -9,6 +9,7 @@ import {
   type CommunityAttachment,
 } from "@/lib/community";
 import { loadAuthorConnections } from "@/lib/connections";
+import { scoreMeetMatch, toPublicMeetProfile } from "@/lib/meet";
 import { prisma } from "@/lib/prisma";
 
 const kindSchema = z.enum(["BUSINESS", "OPPORTUNITY", "COMMUNITY"]);
@@ -49,7 +50,7 @@ type FeedItem = {
   createdAt: Date | string;
   updatedAt?: Date | string;
   href: string | null;
-  source: "post" | "service" | "shop" | "trip" | "job";
+  source: "post" | "service" | "shop" | "trip" | "job" | "meet";
   author: FeedAuthor;
   isOwner: boolean;
   viewCount: number;
@@ -127,8 +128,8 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-    // JOB is feed-only; skip DB posts filter for that chip
-    if (kind !== "JOB") {
+    // JOB / MEET are feed-only; skip DB posts filter for those chips
+    if (kind !== "JOB" && kind !== "MEET") {
       const posts = await prisma.communityPost.findMany({
         where: {
           status: "OPEN",
@@ -165,15 +166,16 @@ export async function GET(request: Request) {
     console.error("CommunityPost query failed (table missing on DB?):", error);
   }
 
-  // Same réseau pro items Android surfaced (services / boutiques / voyages / emplois)
+  // Same réseau pro items Android surfaced (services / boutiques / voyages / emplois / rencontre)
   const includeNetwork =
     !kind ||
     kind === "BUSINESS" ||
     kind === "OPPORTUNITY" ||
     kind === "COMMUNITY" ||
-    kind === "JOB";
+    kind === "JOB" ||
+    kind === "MEET";
 
-  if (includeNetwork) {
+  if (includeNetwork && kind !== "MEET") {
     const [services, shops, trips, jobs] = await Promise.all([
       matchesKindFilter("BUSINESS", kind) || matchesKindFilter("COMMUNITY", kind)
         ? prisma.serviceListing.findMany({
@@ -407,6 +409,102 @@ export async function GET(request: Request) {
         viewCount: 0,
         commentCount: 0,
       });
+    }
+  }
+
+  // Rencontre privée : matching selon le profil de l'utilisateur
+  if (!kind || kind === "MEET" || kind === "OPPORTUNITY") {
+    try {
+      const myMeet = await prisma.meetProfile.findUnique({
+        where: { userId: session.id },
+      });
+      if (myMeet?.active) {
+        const candidates = await prisma.meetProfile.findMany({
+          where: {
+            active: true,
+            kind: myMeet.kind,
+            userId: { not: session.id },
+            user: { status: { not: "SUSPENDED" } },
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                displayName: true,
+                avatarUrl: true,
+                bio: true,
+                country: true,
+                kycStatus: true,
+                ratingAvg: true,
+                ratingCount: true,
+              },
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 80,
+        });
+
+        const scored = candidates
+          .map((p) => ({
+            profile: p,
+            score: scoreMeetMatch(myMeet, p),
+          }))
+          .filter((x) => x.score >= 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 40);
+
+        for (const { profile: p, score } of scored) {
+          const pub = toPublicMeetProfile(p, {
+            viewerId: session.id,
+            matchScore: score,
+          });
+          const place = [pub.city, pub.country].filter(Boolean).join(", ");
+          const kindFr =
+            p.kind === "BUSINESS" ? "Rencontre affaires" : "Rencontre amour";
+          const ageBit = pub.age != null ? `${pub.age} ans` : null;
+          feed.push({
+            id: `meet:${p.id}`,
+            kind: "MEET",
+            title: pub.headline,
+            body: [kindFr, place || null, ageBit, pub.interests, pub.bio?.slice(0, 220)]
+              .filter(Boolean)
+              .join(" · "),
+            attachments:
+              pub.photoUrl && pub.photoVisible
+                ? [
+                    {
+                      url: pub.photoUrl,
+                      name: "presentation",
+                      contentType: "image/jpeg",
+                      size: 0,
+                    },
+                  ]
+                : [],
+            createdAt: p.updatedAt,
+            href: `/meet/${p.userId}`,
+            source: "meet",
+            author: {
+              id: p.user.id,
+              displayName: p.user.displayName,
+              avatarUrl: pub.photoUrl || (pub.photoVisible ? p.user.avatarUrl : null),
+              bio: p.user.bio,
+              country: p.user.country ?? pub.country,
+              verified: p.user.kycStatus === "VERIFIED",
+              ratingAvg: p.user.ratingAvg,
+              ratingCount: p.user.ratingCount,
+              connectionCount: 0,
+              connectedByMe: false,
+            },
+            isOwner: false,
+            viewCount: 0,
+            commentCount: 0,
+          });
+        }
+      } else if (kind === "MEET") {
+        // No matches without profile — leave feed empty for this filter
+      }
+    } catch (error) {
+      console.error("Meet profiles feed inject failed:", error);
     }
   }
 

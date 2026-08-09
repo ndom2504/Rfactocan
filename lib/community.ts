@@ -10,6 +10,7 @@ export type CommunityPostKindId = (typeof COMMUNITY_POST_KINDS)[number];
 export const COMMUNITY_FEED_FILTERS = [
   ...COMMUNITY_POST_KINDS,
   "JOB",
+  "MEET",
 ] as const;
 
 export type CommunityFeedFilterId = (typeof COMMUNITY_FEED_FILTERS)[number];
