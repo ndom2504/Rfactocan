@@ -53,6 +53,12 @@ export async function GET(request: Request) {
     serviceProviders,
     shopsOpen,
     shopOrdersPaid,
+    meetProfilesTotal,
+    meetProfilesActive,
+    meetBusiness,
+    meetRomance,
+    meetContactsPending,
+    meetContactsAccepted,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.trip.count(),
@@ -80,6 +86,16 @@ export async function GET(request: Request) {
     prisma.shopOrder.count({
       where: { status: { in: ["PAID", "FULFILLED"] } },
     }),
+    prisma.meetProfile.count().catch(() => 0),
+    prisma.meetProfile.count({ where: { active: true } }).catch(() => 0),
+    prisma.meetProfile
+      .count({ where: { kind: "BUSINESS", active: true } })
+      .catch(() => 0),
+    prisma.meetProfile
+      .count({ where: { kind: "ROMANCE", active: true } })
+      .catch(() => 0),
+    prisma.meetContact.count({ where: { status: "PENDING" } }).catch(() => 0),
+    prisma.meetContact.count({ where: { status: "ACCEPTED" } }).catch(() => 0),
   ]);
 
   const openReports = await prisma.report.findMany({
@@ -342,6 +358,12 @@ export async function GET(request: Request) {
       servicesByCategory,
       shopsOpen,
       shopOrdersPaid,
+      meetProfilesTotal,
+      meetProfilesActive,
+      meetBusiness,
+      meetRomance,
+      meetContactsPending,
+      meetContactsAccepted,
     },
     openReports,
     openDisputes,

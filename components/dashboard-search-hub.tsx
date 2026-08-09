@@ -6,6 +6,7 @@ import { RequestSearch } from "@/components/request-search";
 import { ServiceSearch } from "@/components/service-search";
 import { ShopSearch } from "@/components/shop-search";
 import { JobSearch } from "@/components/job-search";
+import { MeetSearch } from "@/components/meet-search";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -16,7 +17,8 @@ export type SearchMode =
   | "services"
   | "boutiques"
   | "clients"
-  | "emplois";
+  | "emplois"
+  | "rencontres";
 
 type Props = {
   /** Kept for compatibility — all modes are available. */
@@ -52,6 +54,7 @@ export function DashboardSearchHub(_props: Props) {
             <option value="boutiques">{t("search_mode_shops")}</option>
             <option value="clients">{t("search_mode_clients")}</option>
             <option value="emplois">{t("search_mode_jobs")}</option>
+            <option value="rencontres">{t("search_mode_meet")}</option>
           </Select>
         </div>
 
@@ -60,6 +63,7 @@ export function DashboardSearchHub(_props: Props) {
         {mode === "boutiques" && <ShopSearch hideHeading plain />}
         {mode === "clients" && <RequestSearch hideHeading plain />}
         {mode === "emplois" && <JobSearch hideHeading plain />}
+        {mode === "rencontres" && <MeetSearch hideHeading plain />}
       </Card>
     </section>
   );

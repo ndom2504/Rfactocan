@@ -546,6 +546,19 @@ const dict = {
     search_mode_shops: "Boutiques",
     search_mode_clients: "Clients",
     search_mode_jobs: "Emplois",
+    search_mode_meet: "Rencontre privée",
+    search_meet: "Rencontre privée",
+    search_meet_hint:
+      "Profils affaires ou amour compatibles — ouvrir l’annonce pour contacter.",
+    search_meet_placeholder: "Titre, intérêts, ville, présentation…",
+    meet_kind_label: "Type",
+    meet_kind_auto: "Selon mon profil",
+    meet_found: "profil(s) trouvé(s)",
+    no_meet_found: "Aucun profil de rencontre pour ces critères.",
+    meet_search_error: "Recherche rencontre indisponible.",
+    meet_search_need_profile:
+      "Créez et activez votre profil de rencontre privée pour voir les correspondances.",
+    view_meet_profile: "Voir l’annonce",
     search_jobs: "Emplois",
     search_jobs_hint:
       "Offres et profils candidats publiés dans Commander (emploi).",
@@ -2001,6 +2014,19 @@ const dict = {
     search_mode_shops: "Shops",
     search_mode_clients: "Clients",
     search_mode_jobs: "Jobs",
+    search_mode_meet: "Private meetup",
+    search_meet: "Private meetup",
+    search_meet_hint:
+      "Matching business or romance profiles — open the listing to connect.",
+    search_meet_placeholder: "Headline, interests, city, bio…",
+    meet_kind_label: "Type",
+    meet_kind_auto: "From my profile",
+    meet_found: "profile(s) found",
+    no_meet_found: "No meetup profiles for these filters.",
+    meet_search_error: "Meetup search unavailable.",
+    meet_search_need_profile:
+      "Create and activate your private meetup profile to see matches.",
+    view_meet_profile: "View listing",
     search_jobs: "Jobs",
     search_jobs_hint:
       "Job offers and candidate profiles published in Commander.",

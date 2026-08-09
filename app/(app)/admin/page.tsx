@@ -32,6 +32,12 @@ type AdminData = {
     servicesByCategory?: Array<{ category: string; count: number }>;
     shopsOpen?: number;
     shopOrdersPaid?: number;
+    meetProfilesTotal?: number;
+    meetProfilesActive?: number;
+    meetBusiness?: number;
+    meetRomance?: number;
+    meetContactsPending?: number;
+    meetContactsAccepted?: number;
   };
   users: Array<{
     id: string;
@@ -578,6 +584,12 @@ export default function AdminPage() {
           ["Prestataires services", data.stats.serviceProviders ?? 0],
           ["Boutiques ouvertes", data.stats.shopsOpen ?? 0],
           ["Commandes boutique payées", data.stats.shopOrdersPaid ?? 0],
+          ["Rencontres (profils)", data.stats.meetProfilesTotal ?? 0],
+          ["Rencontres actives", data.stats.meetProfilesActive ?? 0],
+          ["Rencontres affaires", data.stats.meetBusiness ?? 0],
+          ["Rencontres amour", data.stats.meetRomance ?? 0],
+          ["Contacts rencontre en attente", data.stats.meetContactsPending ?? 0],
+          ["Contacts rencontre acceptés", data.stats.meetContactsAccepted ?? 0],
           ["Signalements", data.stats.openReports],
           ["Litiges ouverts", data.stats.openDisputes ?? 0],
           ["Offres en attente", data.pendingOffers?.length ?? 0],

@@ -19,12 +19,14 @@ export async function GET() {
     },
   });
 
-  if (!me?.isAmbassador || me.kycStatus !== "VERIFIED" || !me.agentCode) {
+  if (!me?.isAmbassador || !me.agentCode) {
     return NextResponse.json(
       { error: "Accès Héraut Réseau requis" },
       { status: 403 }
     );
   }
+
+  // KPIs visibles dès que Héraut + code agent (KYC requis seulement pour retirer)
 
   const [kpis, recentCommissions] = await Promise.all([
     getAmbassadorKpis(session.id),
