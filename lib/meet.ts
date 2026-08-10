@@ -89,8 +89,63 @@ export function scoreMeetMatch(
     return -1;
   }
 
+  return softMeetAffinity(me, other, otherAge);
+}
+
+/**
+ * Discovery score for dashboard search: same kind only (hard).
+ * Age / gender préférence n’excluent pas — ils abaissent juste le score.
+ */
+export function scoreMeetDiscover(
+  me: Pick<
+    MeetProfile,
+    | "kind"
+    | "myGender"
+    | "birthYear"
+    | "city"
+    | "country"
+    | "seekGender"
+    | "ageMin"
+    | "ageMax"
+  >,
+  other: Pick<
+    MeetProfile,
+    | "kind"
+    | "myGender"
+    | "birthYear"
+    | "city"
+    | "country"
+    | "seekGender"
+    | "ageMin"
+    | "ageMax"
+    | "active"
+  >
+): number {
+  if (!other.active) return -1;
+  if (me.kind !== other.kind) return -1;
+
+  const hard = scoreMeetMatch(me, other);
+  if (hard >= 0) return hard;
+
+  const otherAge = ageFromBirthYear(other.birthYear);
+  // Base discovery score (listable even if criteria not mutual)
+  return Math.max(1, softMeetAffinity(me, other, otherAge) - 8);
+}
+
+function softMeetAffinity(
+  me: Pick<
+    MeetProfile,
+    "city" | "country" | "ageMin" | "ageMax" | "birthYear"
+  >,
+  other: Pick<MeetProfile, "city" | "country" | "birthYear">,
+  otherAge: number | null
+): number {
   let score = 10;
-  if (me.country && other.country && me.country === other.country) score += 4;
+  if (me.country && other.country) {
+    const a = normalizePlace(me.country);
+    const b = normalizePlace(other.country);
+    if (a === b || a.includes(b) || b.includes(a)) score += 4;
+  }
   if (
     me.city &&
     other.city &&

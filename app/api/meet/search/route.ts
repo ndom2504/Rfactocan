@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import {
   ageFromBirthYear,
-  scoreMeetMatch,
+  scoreMeetDiscover,
   toPublicMeetProfile,
 } from "@/lib/meet";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Recherche tableaux de bord — profils rencontre privée actifs.
- * Nécessite un profil rencontre actif pour le matching (même type).
+ * Recherche tableaux de bord — profils rencontre privée actifs (même type).
+ * Mode découverte : critères âge/genre assouplis pour ne pas vider la liste.
  * Résultats → /meet/[userId]
  */
 export async function GET(request: Request) {
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim().toLowerCase();
-  const country = (searchParams.get("country") || "").trim().toUpperCase();
+  const country = (searchParams.get("country") || "").trim();
   const city = (searchParams.get("city") || "").trim().toLowerCase();
   const kindRaw = (searchParams.get("kind") || "").trim().toUpperCase();
   const kind =
@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         profiles: [],
         needProfile: true,
+        totalActiveSameKind: 0,
         message:
           "Créez et activez votre profil de rencontre privée pour voir les correspondances.",
       });
@@ -48,7 +49,20 @@ export async function GET(request: Request) {
         kind: targetKind,
         userId: { not: session.id },
         user: { status: { not: "SUSPENDED" } },
-        ...(country ? { country: { equals: country, mode: "insensitive" } } : {}),
+        ...(country
+          ? {
+              OR: [
+                { country: { equals: country, mode: "insensitive" } },
+                {
+                  country: {
+                    equals: country.toUpperCase(),
+                    mode: "insensitive",
+                  },
+                },
+                { country: { contains: country, mode: "insensitive" } },
+              ],
+            }
+          : {}),
         ...(city
           ? { city: { contains: city, mode: "insensitive" } }
           : {}),
@@ -71,10 +85,19 @@ export async function GET(request: Request) {
       take: 100,
     });
 
+    const totalActiveSameKind = await prisma.meetProfile.count({
+      where: {
+        active: true,
+        kind: targetKind,
+        userId: { not: session.id },
+        user: { status: { not: "SUSPENDED" } },
+      },
+    });
+
     let scored = candidates
       .map((p) => ({
         profile: p,
-        score: scoreMeetMatch(myMeet, p),
+        score: scoreMeetDiscover(myMeet, p),
       }))
       .filter((x) => x.score >= 0);
 
@@ -134,6 +157,13 @@ export async function GET(request: Request) {
       profiles,
       needProfile: false,
       myKind: myMeet.kind,
+      totalActiveSameKind,
+      message:
+        profiles.length === 0
+          ? totalActiveSameKind === 0
+            ? "Aucun autre profil rencontre publié pour l’instant (même type). Invitez des membres à créer le leur."
+            : "Aucun profil pour ces filtres. Essayez « Tous les pays » ou élargissez la recherche."
+          : undefined,
     });
   } catch (error) {
     console.error("Meet search failed:", error);
