@@ -16,6 +16,7 @@ export async function GET() {
       isAmbassador: true,
       kycStatus: true,
       agentCode: true,
+      _count: { select: { referrals: true } },
     },
   });
 
@@ -27,10 +28,36 @@ export async function GET() {
   }
 
   // KPIs visibles dès que Héraut + code agent (KYC requis seulement pour retirer)
+  let kpis;
+  try {
+    kpis = await getAmbassadorKpis(session.id);
+  } catch (e) {
+    console.error("getAmbassadorKpis failed:", e);
+    kpis = {
+      referralCount: me._count.referrals,
+      referralsKycVerified: 0,
+      networkPaymentsCount: 0,
+      networkVolumeCents: 0,
+      networkPlatformFeeCents: 0,
+      accruedRewardCents: 0,
+      paidRewardCents: 0,
+      estimatedRewardCents: 0,
+      rewardBps: 1000,
+      currency: "CAD",
+    };
+  }
 
-  const [kpis, recentCommissions] = await Promise.all([
-    getAmbassadorKpis(session.id),
-    prisma.heraldCommission.findMany({
+  // Fallback count via relation if query path diverged
+  if (
+    typeof kpis.referralCount === "number" &&
+    kpis.referralCount === 0 &&
+    me._count.referrals > 0
+  ) {
+    kpis = { ...kpis, referralCount: me._count.referrals };
+  }
+
+  const recentCommissions = await prisma.heraldCommission
+    .findMany({
       where: { heraldId: session.id },
       orderBy: { createdAt: "desc" },
       take: 25,
@@ -47,8 +74,11 @@ export async function GET() {
         paidAt: true,
         referral: { select: { id: true, displayName: true } },
       },
-    }),
-  ]);
+    })
+    .catch((e) => {
+      console.error("Herald recent commissions failed:", e);
+      return [];
+    });
 
   return NextResponse.json({ kpis, recentCommissions });
 }

@@ -28,6 +28,11 @@ export type AmbassadorKpis = {
   currency: string;
 };
 
+/**
+ * KPI Héraut — le compte de filleuls ne dépend PAS du ledger commissions.
+ * Les agrégats optionnels (paiements réseau / HeraldCommission) sont tolérants
+ * si les tables SQL Neon n’ont pas encore été appliquées en prod.
+ */
 export async function getAmbassadorKpis(
   ambassadorId: string
 ): Promise<AmbassadorKpis> {
@@ -46,70 +51,93 @@ export async function getAmbassadorKpis(
   let networkPaymentsCount = 0;
 
   if (ids.length > 0) {
-    const [bookingAgg, serviceAgg, shopAgg] = await Promise.all([
-      prisma.payment.aggregate({
-        where: {
-          status: "CAPTURED",
-          booking: {
-            OR: [
-              { senderId: { in: ids } },
-              { trip: { userId: { in: ids } } },
-            ],
+    try {
+      const [bookingAgg, serviceAgg, shopAgg] = await Promise.all([
+        prisma.payment.aggregate({
+          where: {
+            status: "CAPTURED",
+            booking: {
+              OR: [
+                { senderId: { in: ids } },
+                { trip: { userId: { in: ids } } },
+              ],
+            },
           },
-        },
-        _sum: {
-          amountCadCents: true,
-          platformFeeCents: true,
-        },
-        _count: true,
-      }),
-      prisma.servicePaymentRequest.aggregate({
-        where: {
-          status: "PAID",
-          OR: [{ clientId: { in: ids } }, { providerId: { in: ids } }],
-        },
-        _sum: {
-          amountCents: true,
-          platformFeeCents: true,
-        },
-        _count: true,
-      }),
-      prisma.shopOrder.aggregate({
-        where: {
-          status: { in: ["PAID", "FULFILLED"] },
-          OR: [
-            { buyerId: { in: ids } },
-            { shop: { userId: { in: ids } } },
-          ],
-        },
-        _sum: {
-          amountCents: true,
-          platformFeeCents: true,
-        },
-        _count: true,
-      }),
-    ]);
+          _sum: {
+            amountCadCents: true,
+            platformFeeCents: true,
+          },
+          _count: true,
+        }),
+        prisma.servicePaymentRequest
+          .aggregate({
+            where: {
+              status: "PAID",
+              OR: [{ clientId: { in: ids } }, { providerId: { in: ids } }],
+            },
+            _sum: {
+              amountCents: true,
+              platformFeeCents: true,
+            },
+            _count: true,
+          })
+          .catch(() => ({
+            _sum: { amountCents: 0, platformFeeCents: 0 },
+            _count: 0,
+          })),
+        prisma.shopOrder
+          .aggregate({
+            where: {
+              status: { in: ["PAID", "FULFILLED"] },
+              OR: [
+                { buyerId: { in: ids } },
+                { shop: { userId: { in: ids } } },
+              ],
+            },
+            _sum: {
+              amountCents: true,
+              platformFeeCents: true,
+            },
+            _count: true,
+          })
+          .catch(() => ({
+            _sum: { amountCents: 0, platformFeeCents: 0 },
+            _count: 0,
+          })),
+      ]);
 
-    networkVolumeCents =
-      (bookingAgg._sum.amountCadCents ?? 0) +
-      (serviceAgg._sum.amountCents ?? 0) +
-      (shopAgg._sum.amountCents ?? 0);
-    networkPlatformFeeCents =
-      (bookingAgg._sum.platformFeeCents ?? 0) +
-      (serviceAgg._sum.platformFeeCents ?? 0) +
-      (shopAgg._sum.platformFeeCents ?? 0);
-    networkPaymentsCount =
-      bookingAgg._count + serviceAgg._count + shopAgg._count;
+      networkVolumeCents =
+        (bookingAgg._sum.amountCadCents ?? 0) +
+        (serviceAgg._sum.amountCents ?? 0) +
+        (shopAgg._sum.amountCents ?? 0);
+      networkPlatformFeeCents =
+        (bookingAgg._sum.platformFeeCents ?? 0) +
+        (serviceAgg._sum.platformFeeCents ?? 0) +
+        (shopAgg._sum.platformFeeCents ?? 0);
+      networkPaymentsCount =
+        bookingAgg._count + serviceAgg._count + shopAgg._count;
+    } catch (e) {
+      console.error("Ambassador network KPIs failed:", e);
+    }
   }
 
-  const [accruedRewardCents, paidAgg] = await Promise.all([
-    getHeraldAccruedBalanceCents(ambassadorId),
-    prisma.heraldCommission.aggregate({
-      where: { heraldId: ambassadorId, status: "PAID" },
-      _sum: { rewardCents: true },
-    }),
-  ]);
-  const paidRewardCents = paidAgg._sum.rewardCents ?? 0;
+  let accruedRewardCents = 0;
+  let paidRewardCents = 0;
+  try {
+    const [accrued, paidAgg] = await Promise.all([
+      getHeraldAccruedBalanceCents(ambassadorId),
+      prisma.heraldCommission.aggregate({
+        where: { heraldId: ambassadorId, status: "PAID" },
+        _sum: { rewardCents: true },
+      }),
+    ]);
+    accruedRewardCents = accrued;
+    paidRewardCents = paidAgg._sum.rewardCents ?? 0;
+  } catch (e) {
+    // Tables HeraldCommission / payout absentes → KPIs filleuls restent valides
+    console.error("Herald commission balance KPIs failed:", e);
+  }
+
   const rewardBps = heraldRewardBps();
   const estimatedRewardCents = accruedRewardCents + paidRewardCents;
 

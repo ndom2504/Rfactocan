@@ -194,11 +194,16 @@ export async function reverseHeraldCommissionsForSource(
 }
 
 export async function getHeraldAccruedBalanceCents(heraldId: string) {
-  const agg = await prisma.heraldCommission.aggregate({
-    where: { heraldId, status: "ACCRUED" },
-    _sum: { rewardCents: true },
-  });
-  return agg._sum.rewardCents ?? 0;
+  try {
+    const agg = await prisma.heraldCommission.aggregate({
+      where: { heraldId, status: "ACCRUED" },
+      _sum: { rewardCents: true },
+    });
+    return agg._sum.rewardCents ?? 0;
+  } catch (e) {
+    console.error("getHeraldAccruedBalanceCents failed:", e);
+    return 0;
+  }
 }
 
 export type HeraldPayoutResult =

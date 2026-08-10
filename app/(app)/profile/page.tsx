@@ -568,9 +568,7 @@ function ProfileForm() {
         </div>
       </Card>
 
-      {user.isAmbassador &&
-        user.kycStatus === "VERIFIED" &&
-        user.agentCode && (
+      {user.isAmbassador && user.agentCode && (
           <AmbassadorEarnPanel
             agentCode={user.agentCode}
             displayName={user.displayName}

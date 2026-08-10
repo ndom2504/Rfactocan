@@ -24,9 +24,7 @@ export default async function DashboardPage() {
     user.role === "TRAVELER" || user.role === "BOTH" || user.role === "ADMIN";
 
   const showAmbassadorEarn =
-    user.isAmbassador &&
-    user.kycStatus === "VERIFIED" &&
-    Boolean(user.agentCode);
+    user.isAmbassador && Boolean(user.agentCode);
 
   const [trips, requests, bookings, ambassadorKpis, ambProfile] =
     await Promise.all([
@@ -46,7 +44,12 @@ export default async function DashboardPage() {
         orderBy: { updatedAt: "desc" },
         take: 5,
       }),
-      showAmbassadorEarn ? getAmbassadorKpis(user.id) : Promise.resolve(null),
+      showAmbassadorEarn
+        ? getAmbassadorKpis(user.id).catch((e) => {
+            console.error("Dashboard ambassador KPIs failed:", e);
+            return null;
+          })
+        : Promise.resolve(null),
       prisma.user.findUnique({
         where: { id: user.id },
         select: { ambassadorRequestStatus: true },

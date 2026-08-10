@@ -32,6 +32,7 @@ export async function GET() {
       ambassadorRequestStatus: true,
       ambassadorWhatsapp: true,
       ambassadorRequestedAt: true,
+      _count: { select: { referrals: true } },
     },
   });
 
@@ -39,7 +40,13 @@ export async function GET() {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
 
-  return NextResponse.json({ request: user });
+  const { _count, ...request } = user;
+  return NextResponse.json({
+    request: {
+      ...request,
+      referralCount: _count.referrals,
+    },
+  });
 }
 
 export async function POST(request: Request) {
