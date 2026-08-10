@@ -1038,7 +1038,7 @@ const dict = {
     about_title: "Qui sommes-nous",
     about_welcome_title: "Message de bienvenue",
     about_welcome_text:
-      "Bienvenue chez Rfacto (RapidFacto). Nous sommes une plateforme qui connecte voyageurs, prestataires de services et clients pour faciliter les envois, les prestations et la mise en lumière des talents — près de chez vous et à travers le monde.",
+      "Bienvenue chez Rfacto (RapidFacto). Nous connectons voyageurs, prestataires de services et clients pour faciliter les envois, les prestations et la mise en lumière des talents — près de chez vous et à travers le monde. Chaque membre est un Héraut Réseau : acteur de proximité qui anime sa communauté, crée des connexions et peut recevoir des missions pour développer le réseau.",
     about_vision_title: "Notre vision",
     about_vision_text:
       "Promouvoir l’usage des services en ligne et des outils numériques comme vecteur de transformation de notre environnement ; rapprocher les gens ; créer un écosystème qui met en évidence des services et activités connues et méconnues ; favoriser l’autonomie et redonner de l’espoir à ceux qui ont des talents non exploités.",
@@ -1153,7 +1153,7 @@ const dict = {
     tour_done: "Terminer",
     tour_welcome_title: "Bienvenue sur Rfacto",
     tour_welcome_body:
-      "Rfacto relie trois acteurs : voyageurs (bagages), services (fret, cargo, prestations) et clients (commandes). Un seul compte pour livrer, offrir un service ou commander.",
+      "Rfacto relie trois acteurs : voyageurs (bagages), services (fret, cargo, prestations) et clients (commandes). Un seul compte pour livrer, offrir un service ou commander. Chaque membre est un Héraut Réseau — acteur de proximité du réseau.",
     tour_publish_title: "Publier en un clic",
     tour_publish_body:
       "Le bouton Publier ouvre voyage, service ou commande — disponible partout dans l’app.",
@@ -2504,7 +2504,7 @@ const dict = {
     about_title: "About us",
     about_welcome_title: "Welcome",
     about_welcome_text:
-      "Welcome to Rfacto (RapidFacto). We connect travelers, service providers and clients to make shipments, local services and untapped talent easier to find — nearby and across the world.",
+      "Welcome to Rfacto (RapidFacto). We connect travelers, service providers and clients to make shipments, local services and talent easier to find — nearby and across the world. Every member is a Network Herald: a proximity actor who animates their community, builds connections, and may receive missions to grow the network.",
     about_vision_title: "Our vision",
     about_vision_text:
       "Promote online services and digital tools as a force for transforming our environment; bring people closer; build an ecosystem that surfaces known and lesser-known services and activities; foster autonomy and restore hope for people whose talents remain unused.",
