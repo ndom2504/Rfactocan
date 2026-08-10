@@ -34,7 +34,7 @@ export default async function AppLayout({
     <LocaleProvider locale={locale}>
       <PresenceHeartbeat />
       <div className="min-h-screen">
-        <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur">
+        <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
             <div className="flex items-center gap-6">
               <Link

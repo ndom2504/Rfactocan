@@ -1,5 +1,27 @@
 # Notes de version
 
+## 1.0.8 — 2026-08-09
+
+### Android
+- `versionName` **1.0.8** · `versionCode` **9**
+- Recherche **Rencontre privée** dans le hub dashboard
+- Espace Héraut : filleuls / KPI stables ; KYC non requis pour lire les stats
+- Build AAB à uploader sur le **test fermé** Play
+
+### Web (déjà en prod / à déployer)
+- Filtre recherche rencontre privée + admin KPI profils rencontre
+- Correctif crash dashboard Héraut + comptage filleuls (`f8f0976`)
+
+### Play Store (FR)
+Voir `RELEASE_NOTES.md` dans le projet Android.
+
+### Ops (si absent en prod Neon)
+- `prisma/neon-meet-profiles.sql`
+- `prisma/neon-herald-commissions.sql`
+- `prisma/neon-wallet-payout.sql`
+
+---
+
 ## 1.0.5 — 2026-08-07
 
 ### Android

@@ -2618,7 +2618,7 @@ const dict = {
     tour_done: "Done",
     tour_welcome_title: "Welcome to Rfacto",
     tour_welcome_body:
-      "Rfacto connects three actors: travelers (luggage), services (freight, cargo, local offers) and clients (orders). One account to deliver, offer a service, or order.",
+      "Rfacto connects three actors: travelers (luggage), services (freight, cargo, local offers) and clients (orders). One account to deliver, offer a service, or order. Every member is a Network Herald — a proximity actor of the network.",
     tour_publish_title: "Publish in one tap",
     tour_publish_body:
       "The Publish button opens trip, service, or order — available anywhere in the app.",
