@@ -1,5 +1,5 @@
 /**
- * Nomme un utilisateur ambassadeur Rfacto (génère le code agent + lien).
+ * Nomme un utilisateur Héraut Réseau Rfacto (génère le code agent + lien).
  *
  * Usage:
  *   npx tsx scripts/set-ambassador.ts playplay@rfacto.com
@@ -94,15 +94,15 @@ async function main() {
       data: {
         email,
         passwordHash: await bcrypt.hash(plain, 10),
-        displayName: isPlayPlay ? "PlayPlay Ambassadeur" : email.split("@")[0]!,
+        displayName: isPlayPlay ? "PlayPlay Héraut Réseau" : email.split("@")[0]!,
         role: "BOTH",
         status: "ACTIVE",
         country: "Canada",
         language: "fr",
         preferredCurrency: "CAD",
         bio: isPlayPlay
-          ? "Compte ambassadeur démo (Play / PlayPlay)."
-          : "Ambassadeur Rfacto.",
+          ? "Compte Héraut Réseau démo (Play / PlayPlay)."
+          : "Héraut Réseau Rfacto.",
       },
     });
     console.log(`Compte créé : ${email}`);
@@ -115,6 +115,16 @@ async function main() {
       isAmbassador: true,
       agentCode,
       status: "ACTIVE",
+      // Corriger les anciens libellés démo restés « Ambassadeur »
+      ...(user.displayName && /ambassad/i.test(user.displayName)
+        ? {
+            displayName: user.displayName
+              .replace(/PlayPlay\s+Ambassadeur/gi, "PlayPlay Héraut Réseau")
+              .replace(/Ambassadeur\s+Rfacto/gi, "Héraut Réseau Rfacto")
+              .replace(/\bAmbassadeur\b/gi, "Héraut Réseau")
+              .replace(/\bAmbassador\b/gi, "Network Herald"),
+          }
+        : {}),
     },
     select: {
       id: true,
@@ -130,7 +140,7 @@ async function main() {
     updated.agentCode!
   )}`;
 
-  console.log("Ambassadeur prêt :");
+  console.log("Héraut Réseau prêt :");
   console.log({
     id: updated.id,
     email: updated.email,
