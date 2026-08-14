@@ -6,6 +6,7 @@ import {
   assertThreadParticipant,
   getOrCreateDirectThread,
   otherUserId,
+  userIsServiceProviderInThread,
 } from "@/lib/dm";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
@@ -69,6 +70,8 @@ export async function POST(request: Request) {
 
     let threadId =
       typeof body.threadId === "string" ? body.threadId.trim() : "";
+    let threadContextType: string | null = "SERVICE";
+    let threadContextId: string | null = listing?.id ?? null;
     if (threadId) {
       const thread = await assertThreadParticipant(threadId, session.id);
       if (!thread) {
@@ -85,6 +88,8 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      threadContextType = thread.lastContextType;
+      threadContextId = listing?.id ?? thread.lastContextId;
     } else {
       const thread = await getOrCreateDirectThread({
         meId: session.id,
@@ -93,6 +98,22 @@ export async function POST(request: Request) {
         contextId: listing?.id ?? null,
       });
       threadId = thread.id;
+      threadContextType = thread.lastContextType;
+      threadContextId = listing?.id ?? thread.lastContextId;
+    }
+
+    const allowed = await userIsServiceProviderInThread({
+      meId: session.id,
+      peerId: body.clientId,
+      threadId,
+      lastContextType: threadContextType,
+      lastContextId: threadContextId,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Seul le prestataire peut demander un paiement." },
+        { status: 403 }
+      );
     }
 
     const currency =
@@ -165,7 +186,7 @@ export async function POST(request: Request) {
         data: {
           lastMessageAt: new Date(),
           lastContextType: "SERVICE",
-          lastContextId: payment.id,
+          ...(listing?.id ? { lastContextId: listing.id } : {}),
         },
       });
     } catch (e) {

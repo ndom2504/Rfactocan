@@ -89,3 +89,92 @@ export async function assertThreadParticipant(
   }
   return thread;
 }
+
+/** True only for the member who offers the service (listing owner / invoice provider). */
+export async function userIsServiceProviderInThread(input: {
+  meId: string;
+  peerId: string;
+  threadId: string;
+  lastContextType?: string | null;
+  lastContextId?: string | null;
+}): Promise<boolean> {
+  const { meId, peerId, threadId, lastContextType, lastContextId } = input;
+
+  if (lastContextId) {
+    try {
+      const listing = await prisma.serviceListing.findUnique({
+        where: { id: lastContextId },
+        select: { userId: true },
+      });
+      if (listing) return listing.userId === meId;
+    } catch (e) {
+      console.error("[dm] listing lookup", e);
+    }
+    try {
+      const pay = await prisma.servicePaymentRequest.findUnique({
+        where: { id: lastContextId },
+        select: { providerId: true, listingId: true },
+      });
+      if (pay) {
+        if (pay.listingId) {
+          const listing = await prisma.serviceListing.findUnique({
+            where: { id: pay.listingId },
+            select: { userId: true },
+          });
+          if (listing) return listing.userId === meId;
+        }
+        return pay.providerId === meId;
+      }
+    } catch (e) {
+      console.error("[dm] payment context lookup", e);
+    }
+  }
+
+  try {
+    const existing = await prisma.servicePaymentRequest.findFirst({
+      where: {
+        OR: [
+          { threadId },
+          {
+            OR: [
+              { providerId: meId, clientId: peerId },
+              { providerId: peerId, clientId: meId },
+            ],
+          },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      select: { providerId: true },
+    });
+    if (existing) return existing.providerId === meId;
+  } catch (e) {
+    console.error("[dm] payment pair lookup", e);
+  }
+
+  if (lastContextType !== "SERVICE") return false;
+
+  try {
+    const [mine, theirs] = await Promise.all([
+      prisma.serviceListing.findFirst({
+        where: { userId: meId },
+        select: { id: true },
+      }),
+      prisma.serviceListing.findFirst({
+        where: { userId: peerId },
+        select: { id: true },
+      }),
+    ]);
+    if (!mine) return false;
+    if (!theirs) return true;
+    const first = await prisma.directMessage.findFirst({
+      where: { threadId },
+      orderBy: { createdAt: "asc" },
+      select: { senderId: true },
+    });
+    // The client usually writes first from the listing page.
+    return Boolean(first && first.senderId !== meId);
+  } catch (e) {
+    console.error("[dm] provider heuristic", e);
+    return false;
+  }
+}

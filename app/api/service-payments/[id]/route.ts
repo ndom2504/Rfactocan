@@ -86,8 +86,9 @@ export async function GET(_request: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const { id } = await ctx.params;
-  const payment = await prisma.servicePaymentRequest.findUnique({
+  try {
+    const { id } = await ctx.params;
+    const payment = await prisma.servicePaymentRequest.findUnique({
     where: { id },
     include: {
       provider: {
@@ -174,4 +175,8 @@ export async function GET(_request: Request, ctx: Ctx) {
         ? "client"
         : "admin";
   return NextResponse.json(paymentPayload(await withProviderPayout(payment), role));
+  } catch (e) {
+    console.error("[service-payments] get", e);
+    return NextResponse.json({ error: "Demande introuvable" }, { status: 404 });
+  }
 }

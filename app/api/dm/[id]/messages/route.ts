@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { assertThreadParticipant, otherUserId } from "@/lib/dm";
+import { assertThreadParticipant, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
 import { isUserOnline } from "@/lib/presence";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
@@ -80,6 +80,19 @@ export async function GET(_request: Request, { params }: Params) {
     select: peerSelect,
   });
 
+  let canInvoice = false;
+  try {
+    canInvoice = await userIsServiceProviderInThread({
+      meId: session.id,
+      peerId,
+      threadId: id,
+      lastContextType: thread.lastContextType,
+      lastContextId: thread.lastContextId,
+    });
+  } catch (e) {
+    console.error("[dm] canInvoice", e);
+  }
+
   return NextResponse.json({
     thread: {
       id: thread.id,
@@ -87,6 +100,7 @@ export async function GET(_request: Request, { params }: Params) {
       lastContextId: thread.lastContextId,
     },
     messages,
+    canInvoice,
     peer: peer
       ? {
           ...peer,

@@ -70,6 +70,7 @@ export default function DirectMessageChatPage() {
   const [peer, setPeer] = useState<Peer | null>(null);
   const [thread, setThread] = useState<Thread | null>(null);
   const [invoices, setInvoices] = useState<ThreadPayment[]>([]);
+  const [canInvoice, setCanInvoice] = useState(false);
   const [payOk, setPayOk] = useState("");
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
@@ -103,6 +104,7 @@ export default function DirectMessageChatPage() {
       setMessages(msgData.messages ?? []);
       setPeer(msgData.peer ?? null);
       setThread(msgData.thread ?? null);
+      setCanInvoice(Boolean(msgData.canInvoice));
       setError("");
     } else {
       setError(msgData.error || "Erreur");
@@ -282,7 +284,7 @@ export default function DirectMessageChatPage() {
         </Link>
       </div>
 
-      {peer && meId && (
+      {peer && meId && canInvoice && (
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -295,7 +297,7 @@ export default function DirectMessageChatPage() {
         </div>
       )}
 
-      {showPayForm && peer && (
+      {showPayForm && peer && canInvoice && (
         <form
           onSubmit={onRequestPayment}
           className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
