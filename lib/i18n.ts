@@ -914,9 +914,9 @@ const dict = {
     promo_images_service_ok_title: "Service publié",
     promo_images_service_ok_body:
       "Bonne nouvelle : vous avez déjà des photos. Vous pourrez en ajouter d'autres depuis la fiche pour encore mieux promouvoir votre offre.",
-    manual_id_title: "Envoi manuel de pièce d'identité",
+    manual_id_title: "Autre pièce (sans passeport ni permis)",
     manual_id_lead:
-      "Si la vérification Stripe Identity échoue, envoyez une photo ou un PDF de votre pièce (passeport, permis ou carte d'identité). Un administrateur validera votre compte.",
+      "Envoyez une photo ou un PDF : carte d’assurance, carte santé / RAMQ, permis, passeport ou autre pièce. Un administrateur valide votre identité Rfacto.",
     manual_id_choose: "Choisir un fichier",
     manual_id_send: "Envoyer la pièce",
     manual_id_sending: "Envoi…",
@@ -1434,7 +1434,24 @@ const dict = {
     customs_ack:
       "Je respecte les lois douanières des pays de départ, transit et arrivée.",
     kyc_connect_hint:
-      "Identité vérifiée + compte bancaire (recevoir mes gains) requis. Configurez-les dans Profil.",
+      "Identité Rfacto et compte bancaire Stripe sont deux étapes séparées. Configurez-les dans Profil.",
+    trust_hint:
+      "Identité (badge / colis) et compte bancaire Stripe (virements carte) sont indépendants.",
+    identity_section_title: "1. Identité Rfacto",
+    identity_section_hint:
+      "Pour le badge vérifié et les colis. Si vous n’avez pas de passeport ou de permis canadien, envoyez une carte d’assurance.",
+    identity_stripe_hint:
+      "Stripe Identity : passeport, permis de conduire ou carte d’identité + selfie.",
+    identity_doc_type: "Type de pièce",
+    identity_doc_insurance: "Carte d’assurance",
+    identity_doc_health: "Carte santé / RAMQ",
+    identity_doc_passport: "Passeport",
+    identity_doc_license: "Permis de conduire",
+    identity_doc_id: "Carte d’identité",
+    identity_doc_other: "Autre pièce",
+    bank_section_title: "2. Compte bancaire Stripe",
+    bank_section_hint:
+      "Indépendant de l’identité Rfacto. Stripe demandera ses propres pièces pour les virements carte. Au Canada, Interac suffit pour les services.",
     payment_confirming:
       "Confirmation Stripe en cours… cette page se met à jour automatiquement.",
     payment_failed_hint:
@@ -1445,11 +1462,12 @@ const dict = {
     // Profile
     profile_title: "Mon profil",
     trust_payments: "Confiance & paiements",
-    trust_hint: "Obligatoire pour accepter des colis en tant que livreur.",
+    trust_hint:
+      "Identité (badge / colis) et compte bancaire Stripe (virements carte) sont indépendants.",
     verify_identity: "Vérifier mon identité",
-    receive_earnings: "Carte bancaire (Stripe Connect — optionnel)",
+    receive_earnings: "Lier mon compte bancaire Stripe",
     receive_earnings_hint:
-      "Uniquement pour les paiements par carte. Les services au Canada se règlent par Interac via Portefeuille — sans Stripe.",
+      "Stripe gère cette étape à part. Les services au Canada peuvent aussi passer par Interac, sans Stripe.",
     bank_ready:
       "Compte bancaire prêt : vous pouvez accepter des colis et recevoir vos gains après livraison.",
     payments_label: "Paiements",
@@ -2440,9 +2458,9 @@ const dict = {
     promo_images_service_ok_title: "Service published",
     promo_images_service_ok_body:
       "Nice — you already added photos. You can add more from the listing page to promote your offer even better.",
-    manual_id_title: "Manual ID document upload",
+    manual_id_title: "Other document (no passport or licence)",
     manual_id_lead:
-      "If Stripe Identity verification fails, upload a photo or PDF of your ID (passport, licence or national ID). An admin will validate your account.",
+      "Upload a photo or PDF: insurance card, health / RAMQ card, licence, passport or another ID. An admin validates your Rfacto identity.",
     manual_id_choose: "Choose a file",
     manual_id_send: "Submit ID document",
     manual_id_sending: "Uploading…",
@@ -2953,7 +2971,22 @@ const dict = {
     customs_ack:
       "I comply with customs laws of departure, transit and arrival countries.",
     kyc_connect_hint:
-      "Verified identity + bank account (receive earnings) required. Set them up in Profile.",
+      "Rfacto identity and Stripe bank setup are separate steps. Configure them in Profile.",
+    identity_section_title: "1. Rfacto identity",
+    identity_section_hint:
+      "For the verified badge and parcels. If you don’t have a passport or Canadian licence, upload an insurance card.",
+    identity_stripe_hint:
+      "Stripe Identity: passport, driver’s licence or national ID + selfie.",
+    identity_doc_type: "Document type",
+    identity_doc_insurance: "Insurance card",
+    identity_doc_health: "Health / RAMQ card",
+    identity_doc_passport: "Passport",
+    identity_doc_license: "Driver’s licence",
+    identity_doc_id: "National ID card",
+    identity_doc_other: "Other document",
+    bank_section_title: "2. Stripe bank account",
+    bank_section_hint:
+      "Independent from Rfacto identity. Stripe will ask for its own documents for card payouts. In Canada, Interac is enough for services.",
     payment_confirming:
       "Stripe confirmation in progress… this page updates automatically.",
     payment_failed_hint: "The previous payment failed. You can try again.",
@@ -2961,11 +2994,12 @@ const dict = {
 
     profile_title: "My profile",
     trust_payments: "Trust & payouts",
-    trust_hint: "Required to accept parcels as a carrier.",
+    trust_hint:
+      "Identity (badge / parcels) and Stripe bank (card payouts) are independent.",
     verify_identity: "Verify my identity",
-    receive_earnings: "Card payments (Stripe Connect — optional)",
+    receive_earnings: "Link my Stripe bank account",
     receive_earnings_hint:
-      "For card payments only. Service payments in Canada use Interac via Wallet — no Stripe required.",
+      "Stripe handles this step separately. Canadian services can also use Interac, without Stripe.",
     bank_ready:
       "Bank account ready: you can accept parcels and receive earnings after delivery.",
     payments_label: "Payouts",

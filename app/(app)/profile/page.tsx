@@ -81,6 +81,7 @@ function ProfileForm() {
   const [manualIdBusy, setManualIdBusy] = useState(false);
   const [manualIdFile, setManualIdFile] = useState<File | null>(null);
   const [manualIdNote, setManualIdNote] = useState("");
+  const [manualIdDocType, setManualIdDocType] = useState("insurance");
 
   async function load() {
     const res = await fetch("/api/profile");
@@ -348,7 +349,20 @@ function ProfileForm() {
     try {
       const form = new FormData();
       form.append("file", manualIdFile);
-      if (manualIdNote.trim()) form.append("note", manualIdNote.trim());
+      const typeLabel = t(
+        `identity_doc_${manualIdDocType}` as
+          | "identity_doc_insurance"
+          | "identity_doc_health"
+          | "identity_doc_passport"
+          | "identity_doc_license"
+          | "identity_doc_id"
+          | "identity_doc_other"
+      );
+      const note = [`[${typeLabel}]`, manualIdNote.trim()]
+        .filter(Boolean)
+        .join(" ")
+        .slice(0, 500);
+      if (note) form.append("note", note);
       const res = await fetch("/api/kyc/manual-id", {
         method: "POST",
         body: form,
@@ -404,20 +418,25 @@ function ProfileForm() {
           </Badge>
         </div>
 
-        <div className="mt-4 space-y-3">
-          {user.kycStatus !== "VERIFIED" && (
-            <div className="space-y-2">
-              <Button disabled={busy} onClick={startKyc}>
-                {busy ? t("loading") : t("verify_identity")}
-              </Button>
-              <p className="text-xs text-[var(--muted)]">
-                Redirection vers Stripe Identity (passeport / pièce + selfie).
-              </p>
-            </div>
-          )}
+        <div className="mt-4 space-y-6">
+          <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
+            <p className="text-sm font-medium">{t("identity_section_title")}</p>
+            <p className="text-xs text-[var(--muted)]">
+              {t("identity_section_hint")}
+            </p>
+            {user.kycStatus !== "VERIFIED" && (
+              <div className="space-y-2">
+                <Button disabled={busy} onClick={startKyc}>
+                  {busy ? t("loading") : t("verify_identity")}
+                </Button>
+                <p className="text-xs text-[var(--muted)]">
+                  {t("identity_stripe_hint")}
+                </p>
+              </div>
+            )}
 
-          {user.kycStatus !== "VERIFIED" && (
-            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
+            {user.kycStatus !== "VERIFIED" && (
+            <div className="space-y-3 border-t border-[var(--border)] pt-3">
               <div>
                 <p className="text-sm font-medium">{t("manual_id_title")}</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
@@ -461,6 +480,19 @@ function ProfileForm() {
               ) : null}
 
               <div className="space-y-2">
+                <Label htmlFor="manual-id-type">{t("identity_doc_type")}</Label>
+                <Select
+                  id="manual-id-type"
+                  value={manualIdDocType}
+                  onChange={(e) => setManualIdDocType(e.target.value)}
+                >
+                  <option value="insurance">{t("identity_doc_insurance")}</option>
+                  <option value="health">{t("identity_doc_health")}</option>
+                  <option value="passport">{t("identity_doc_passport")}</option>
+                  <option value="license">{t("identity_doc_license")}</option>
+                  <option value="id">{t("identity_doc_id")}</option>
+                  <option value="other">{t("identity_doc_other")}</option>
+                </Select>
                 <Label htmlFor="manual-id-file">{t("manual_id_choose")}</Label>
                 <Input
                   id="manual-id-file"
@@ -493,12 +525,17 @@ function ProfileForm() {
                 </Button>
               </div>
             </div>
-          )}
+            )}
+          </div>
 
-          <PayoutChannelPicker
-            countryCode={resolveCountryCode(country)}
-            bankSlot={
-              user.kycStatus === "VERIFIED" ? (
+          <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
+            <p className="text-sm font-medium">{t("bank_section_title")}</p>
+            <p className="text-xs text-[var(--muted)]">
+              {t("bank_section_hint")}
+            </p>
+            <PayoutChannelPicker
+              countryCode={resolveCountryCode(country)}
+              bankSlot={
                 <div className="space-y-2">
                   {!bankReady && (
                     <>
@@ -516,13 +553,9 @@ function ProfileForm() {
                     </p>
                   )}
                 </div>
-              ) : (
-                <p className="text-xs text-[var(--muted)]">
-                  {t("verify_identity")} — {t("kyc_step")}
-                </p>
-              )
-            }
-          />
+              }
+            />
+          </div>
         </div>
       </Card>
 

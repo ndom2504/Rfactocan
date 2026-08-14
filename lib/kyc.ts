@@ -9,7 +9,7 @@ const KYC_ERROR_HINTS: Record<string, string> = {
     "Vous avez refusé le consentement Stripe. Relancez la vérification et acceptez.",
   document_expired: "Le document est expiré. Utilisez une pièce valide.",
   document_type_not_allowed:
-    "Type de document non accepté. Utilisez passeport, permis ou carte d'identité.",
+    "Stripe Identity n’accepte que passeport, permis ou carte d’identité. Sans ces pièces, envoyez une carte d’assurance ou une autre pièce depuis Profil → Identité (validation manuelle).",
   document_unverified_other:
     "Document illisible ou photo trop floue. Reprenez avec un bon éclairage, sans reflets.",
   selfie_unverified_other:

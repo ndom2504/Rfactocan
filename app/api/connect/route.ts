@@ -20,15 +20,6 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
-  if (user.kycStatus !== "VERIFIED") {
-    return NextResponse.json(
-      {
-        error:
-          "Vérifiez d'abord votre identité (KYC) avant de configurer la réception de vos gains.",
-      },
-      { status: 400 }
-    );
-  }
 
   try {
     const url = await createConnectOnboardingLink(user.id, user.email);
