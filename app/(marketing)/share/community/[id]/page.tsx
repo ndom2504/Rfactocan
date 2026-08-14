@@ -11,6 +11,7 @@ import { isImageAttachment, parseAttachmentsJson } from "@/lib/community";
 import { prisma } from "@/lib/prisma";
 import { getAppUrl } from "@/lib/app-url";
 import { getSessionUser } from "@/lib/auth";
+import { FormattedDescription } from "@/components/formatted-description";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -112,9 +113,7 @@ export default async function CommunitySharePage({ params }: Params) {
             {title}
           </h1>
         )}
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]">
-          {post.body}
-        </p>
+        <FormattedDescription text={post.body} className="mt-3" />
       </div>
 
       {images.length > 0 && (

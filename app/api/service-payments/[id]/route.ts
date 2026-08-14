@@ -5,6 +5,7 @@ import {
   isInteracPreferredCurrency,
   providerHasInteracConfigured,
   providerInteracEmail,
+  type PayoutFields,
 } from "@/lib/service-interac";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -16,9 +17,29 @@ const providerSelect = {
   kycStatus: true,
   stripeConnectChargesEnabled: true,
   stripeConnectPayoutsEnabled: true,
-  payoutProvider: true,
-  payoutIdentifier: true,
 } as const;
+
+async function withProviderPayout<T extends { providerId: string; provider: object }>(
+  payment: T
+): Promise<T & { provider: T["provider"] & PayoutFields }> {
+  let payout: PayoutFields = {
+    payoutProvider: null,
+    payoutIdentifier: null,
+  };
+  try {
+    const row = await prisma.user.findUnique({
+      where: { id: payment.providerId },
+      select: { payoutProvider: true, payoutIdentifier: true },
+    });
+    if (row) payout = row;
+  } catch (e) {
+    console.error("[service-payments] payout lookup", e);
+  }
+  return {
+    ...payment,
+    provider: { ...payment.provider, ...payout },
+  };
+}
 
 function paymentPayload(
   payment: {
@@ -143,7 +164,7 @@ export async function GET(_request: Request, ctx: Ctx) {
         : session.id === updated.clientId
           ? "client"
           : "admin";
-    return NextResponse.json(paymentPayload(updated, role));
+    return NextResponse.json(paymentPayload(await withProviderPayout(updated), role));
   }
 
   const role =
@@ -152,5 +173,5 @@ export async function GET(_request: Request, ctx: Ctx) {
       : session.id === payment.clientId
         ? "client"
         : "admin";
-  return NextResponse.json(paymentPayload(payment, role));
+  return NextResponse.json(paymentPayload(await withProviderPayout(payment), role));
 }

@@ -73,11 +73,9 @@ export async function POST(request: Request) {
       listing = await prisma.serviceListing.findUnique({
         where: { id: body.listingId },
       });
+      // Ignore stale / foreign listing ids (e.g. lastContextId is a payment id).
       if (!listing || listing.userId !== session.id) {
-        return NextResponse.json(
-          { error: "Annonce de service introuvable." },
-          { status: 404 }
-        );
+        listing = null;
       }
     }
 
@@ -93,24 +91,31 @@ export async function POST(request: Request) {
     const { platformFeeCents, providerPayoutCents } =
       splitServiceAmount(amountCents);
 
-    const providerProfile = await prisma.user.findUnique({
-      where: { id: session.id },
-      select: {
-        payoutChannel: true,
-        payoutProvider: true,
-        payoutIdentifier: true,
-      },
-    });
-
-    const receiverHint = providerProfile
-      ? resolveServiceReceiverHint(body.receiverHint, providerProfile)
-      : body.receiverHint?.trim() || null;
+    let receiverHint = body.receiverHint?.trim() || null;
+    try {
+      const providerProfile = await prisma.user.findUnique({
+        where: { id: session.id },
+        select: {
+          payoutChannel: true,
+          payoutProvider: true,
+          payoutIdentifier: true,
+        },
+      });
+      if (providerProfile) {
+        receiverHint = resolveServiceReceiverHint(
+          body.receiverHint,
+          providerProfile
+        );
+      }
+    } catch (e) {
+      console.error("[service-payments] payout lookup", e);
+    }
 
     const payment = await prisma.servicePaymentRequest.create({
       data: {
         providerId: session.id,
         clientId: body.clientId,
-        listingId: body.listingId ?? null,
+        listingId: listing?.id ?? null,
         threadId: body.threadId ?? null,
         title: body.title.trim(),
         description: (body.description || "").trim(),

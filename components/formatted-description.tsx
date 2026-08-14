@@ -1,6 +1,7 @@
 "use client";
 
 import { parseDescription } from "@/lib/format-description";
+import { LinkedText } from "@/components/linked-text";
 
 type Props = {
   text: string | null | undefined;
@@ -23,19 +24,19 @@ export function FormattedDescription({
   if (blocks.length === 0) return null;
 
   const base = dense
-    ? "text-sm leading-relaxed text-[var(--muted)]"
-    : "text-sm leading-relaxed text-[var(--foreground)]";
+    ? "text-left text-sm leading-relaxed text-[var(--muted)]"
+    : "text-left text-sm leading-relaxed text-[var(--foreground)]";
 
   return (
-    <div className={`${base} space-y-3 ${className}`.trim()}>
+    <div className={`${base} space-y-3 [overflow-wrap:anywhere] ${className}`.trim()}>
       {blocks.map((block, i) => {
         if (block.type === "paragraph") {
           return (
-            <p key={i} className="whitespace-pre-wrap break-words">
+            <p key={i} className="break-words text-pretty">
               {block.lines.map((line, j) => (
                 <span key={j}>
                   {j > 0 ? <br /> : null}
-                  {line}
+                  <LinkedText text={line} />
                 </span>
               ))}
             </p>
@@ -49,7 +50,9 @@ export function FormattedDescription({
             >
               {block.items.map((item, j) => (
                 <li key={j} className="pl-0.5">
-                  <span className="whitespace-pre-wrap break-words">{item}</span>
+                  <span className="break-words">
+                    <LinkedText text={item} />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -62,7 +65,9 @@ export function FormattedDescription({
           >
             {block.items.map((item, j) => (
               <li key={j} className="pl-0.5">
-                <span className="whitespace-pre-wrap break-words">{item}</span>
+                <span className="break-words">
+                  <LinkedText text={item} />
+                </span>
               </li>
             ))}
           </ol>

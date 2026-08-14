@@ -70,6 +70,7 @@ export default function DirectMessageChatPage() {
   const [payAmount, setPayAmount] = useState("");
   const [payReceiver, setPayReceiver] = useState("");
   const [payBusy, setPayBusy] = useState(false);
+  const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -116,6 +117,7 @@ export default function DirectMessageChatPage() {
   }, [pendingFile]);
 
   useEffect(() => {
+    setListingIdForPay(null);
     if (thread?.lastContextType === "SERVICE" && thread.lastContextId) {
       fetch(`/api/services/${thread.lastContextId}`)
         .then(async (res) => {
@@ -123,9 +125,10 @@ export default function DirectMessageChatPage() {
           const data = await res.json();
           const listing = data.listing;
           if (!listing) return;
-          setPayTitle(listing.title || "");
+          setListingIdForPay(listing.id);
+          setPayTitle((prev) => prev || listing.title || "");
           if (listing.priceAmount != null) {
-            setPayAmount(String(listing.priceAmount));
+            setPayAmount((prev) => prev || String(listing.priceAmount));
           }
         })
         .catch(() => {});
@@ -209,10 +212,7 @@ export default function DirectMessageChatPage() {
       body: JSON.stringify({
         clientId: peer.id,
         threadId: id,
-        listingId:
-          thread?.lastContextType === "SERVICE"
-            ? thread.lastContextId
-            : undefined,
+        listingId: listingIdForPay || undefined,
         title: payTitle.trim(),
         description: payDescription.trim(),
         amount,

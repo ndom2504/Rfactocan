@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { sendFcmToUsers } from "@/lib/fcm";
 
 export async function notifyUser(input: {
   userId: string;
@@ -6,9 +7,10 @@ export async function notifyUser(input: {
   title: string;
   body: string;
   href?: string;
+  data?: Record<string, string>;
 }) {
   try {
-    return await prisma.notification.create({
+    const row = await prisma.notification.create({
       data: {
         userId: input.userId,
         type: input.type,
@@ -17,6 +19,17 @@ export async function notifyUser(input: {
         href: input.href,
       },
     });
+    void sendFcmToUsers({
+      userIds: [input.userId],
+      title: input.title,
+      body: input.body,
+      data: {
+        type: input.type,
+        href: input.href ?? "",
+        ...(input.data ?? {}),
+      },
+    });
+    return row;
   } catch (error) {
     console.error("[notification]", error);
     return null;

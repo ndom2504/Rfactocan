@@ -205,6 +205,7 @@ export function CommunityPostActions({ post, onUpdated, onDeleted }: Props) {
             value={body}
             onChange={(e) => setBody(e.target.value.slice(0, 4000))}
             rows={4}
+            className="whitespace-pre-wrap break-words leading-relaxed"
           />
           <Button disabled={busy || body.trim().length < 10} onClick={() => void saveEdit()}>
             {t("community_edit_save")}

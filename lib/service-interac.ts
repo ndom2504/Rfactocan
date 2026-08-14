@@ -4,7 +4,7 @@ export function isInteracPreferredCurrency(currency: string) {
   return currency.trim().toUpperCase() === "CAD";
 }
 
-type PayoutFields = {
+export type PayoutFields = {
   payoutChannel?: string | null;
   payoutProvider?: string | null;
   payoutIdentifier?: string | null;

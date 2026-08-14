@@ -15,6 +15,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
 import type { CommunityAttachment } from "@/lib/community";
 import type { DictKey } from "@/lib/i18n";
+import { FormattedDescription } from "@/components/formatted-description";
 import { formatDate } from "@/lib/utils";
 
 type Author = {
@@ -214,7 +215,7 @@ export function CommunityPostDetail() {
             {post.title}
           </h1>
         )}
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{post.body}</p>
+        <FormattedDescription text={post.body} className="mt-1" />
         {(post.attachments?.length ?? 0) > 0 && (
           <CommunityMediaGrid
             attachments={post.attachments}
@@ -300,7 +301,7 @@ export function CommunityPostDetail() {
                 ? t("community_reply_placeholder")
                 : t("community_comment_placeholder")
             }
-            className="w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
+            className="w-full whitespace-pre-wrap break-words rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[var(--ring)]"
           />
           <Button
             disabled={busy || body.trim().length < 1}
@@ -328,7 +329,7 @@ export function CommunityPostDetail() {
                     <p className="text-xs text-[var(--muted)]">
                       {formatDate(c.createdAt)}
                     </p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm">{c.body}</p>
+                    <FormattedDescription text={c.body} className="mt-1" />
                     <button
                       type="button"
                       className="mt-2 text-xs font-medium text-[var(--accent)]"
@@ -352,9 +353,7 @@ export function CommunityPostDetail() {
                               <p className="text-xs text-[var(--muted)]">
                                 {formatDate(r.createdAt)}
                               </p>
-                              <p className="mt-1 whitespace-pre-wrap text-sm">
-                                {r.body}
-                              </p>
+                              <FormattedDescription text={r.body} className="mt-1" />
                             </div>
                           </li>
                         ))}

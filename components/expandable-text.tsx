@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
+import { FormattedDescription } from "@/components/formatted-description";
 
 type Props = {
   text: string;
@@ -14,6 +15,7 @@ type Props = {
 
 /**
  * Truncates long community announcement text with "Lire tout" / "Réduire".
+ * Paragraphs wrap, align, and URLs/emails become clickable.
  */
 export function ExpandableText({
   text,
@@ -33,13 +35,13 @@ export function ExpandableText({
 
   return (
     <div className={className}>
-      <p
-        className={`whitespace-pre-wrap text-sm leading-relaxed break-words ${
-          !open && needsToggle ? "line-clamp-5" : ""
-        }`}
+      <div
+        className={
+          !open && needsToggle ? "line-clamp-5 overflow-hidden" : undefined
+        }
       >
-        {plain}
-      </p>
+        <FormattedDescription text={plain} />
+      </div>
       {needsToggle && (
         <button
           type="button"

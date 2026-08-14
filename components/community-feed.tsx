@@ -309,7 +309,7 @@ export function CommunityFeed() {
                 rows={4}
                 maxLength={4000}
                 placeholder={t("community_body_placeholder")}
-                className="w-full resize-y rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                className="w-full resize-y whitespace-pre-wrap break-words rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[var(--ring)]"
               />
               <div className="flex flex-wrap items-center gap-3">
                 <label className="cursor-pointer text-sm font-medium text-[var(--accent)]">

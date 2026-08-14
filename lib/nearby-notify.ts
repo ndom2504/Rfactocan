@@ -1,5 +1,4 @@
 import { notifyUser } from "@/lib/notifications";
-import { sendFcmToUsers } from "@/lib/fcm";
 import { prisma } from "@/lib/prisma";
 
 const NEARBY_RADIUS_KM = 50;
@@ -168,16 +167,10 @@ async function notifyRecipients(input: {
         title: input.title,
         body: input.body,
         href: input.href,
+        data: input.data,
       })
     )
   );
-
-  await sendFcmToUsers({
-    userIds: ids,
-    title: input.title,
-    body: input.body,
-    data: input.data,
-  });
 
   return ids.length;
 }

@@ -52,8 +52,6 @@ export async function POST(request: Request, ctx: Ctx) {
             stripeConnectAccountId: true,
             stripeConnectChargesEnabled: true,
             stripeConnectPayoutsEnabled: true,
-            payoutProvider: true,
-            payoutIdentifier: true,
           },
         },
         client: {
@@ -68,6 +66,24 @@ export async function POST(request: Request, ctx: Ctx) {
 
     const isClient = payment.clientId === session.id;
     const isProvider = payment.providerId === session.id;
+
+    let payoutProvider: string | null = null;
+    let payoutIdentifier: string | null = null;
+    try {
+      const payout = await prisma.user.findUnique({
+        where: { id: payment.providerId },
+        select: { payoutProvider: true, payoutIdentifier: true },
+      });
+      payoutProvider = payout?.payoutProvider ?? null;
+      payoutIdentifier = payout?.payoutIdentifier ?? null;
+    } catch (e) {
+      console.error("[service-payments/pay] payout lookup", e);
+    }
+    const providerWithPayout = {
+      ...payment.provider,
+      payoutProvider,
+      payoutIdentifier,
+    };
 
     if (!isClient && !isProvider && session.role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
@@ -115,7 +131,7 @@ export async function POST(request: Request, ctx: Ctx) {
           { status: 400 }
         );
       }
-      if (!providerCanReceiveCard(payment.provider)) {
+      if (!providerCanReceiveCard(providerWithPayout)) {
         return NextResponse.json(
           {
             error:
@@ -129,7 +145,7 @@ export async function POST(request: Request, ctx: Ctx) {
         const checkout = await createServiceCardCheckout({
           payment,
           clientEmail: payment.client.email,
-          provider: payment.provider,
+          provider: providerWithPayout,
         });
         return NextResponse.json(checkout);
       } catch (e) {
@@ -155,7 +171,7 @@ export async function POST(request: Request, ctx: Ctx) {
       const method = body.action === "pay_interac" ? "INTERAC" : "MOBILE";
       const receiverHint = resolveServiceReceiverHint(
         body.receiverHint ?? payment.receiverHint,
-        payment.provider
+        providerWithPayout
       );
       if (method === "INTERAC" && !receiverHint) {
         return NextResponse.json(

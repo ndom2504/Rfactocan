@@ -20,6 +20,7 @@ export function NotificationBell({ locale }: { locale: Locale }) {
   const [items, setItems] = useState<Item[]>([]);
   const [unread, setUnread] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [panelPos, setPanelPos] = useState<{ top: number; right: number }>({
     top: 72,
@@ -45,8 +46,10 @@ export function NotificationBell({ locale }: { locale: Locale }) {
     if (!open) return;
 
     function place() {
+      const isNarrow = window.innerWidth < 640;
+      setNarrow(isNarrow);
       const rect = buttonRef.current?.getBoundingClientRect();
-      if (!rect) return;
+      if (!rect || isNarrow) return;
       const right = Math.max(12, window.innerWidth - rect.right);
       const top = Math.min(rect.bottom + 10, window.innerHeight - 120);
       setPanelPos({ top, right });
@@ -82,7 +85,15 @@ export function NotificationBell({ locale }: { locale: Locale }) {
   const panel =
     open && mounted
       ? createPortal(
-          <div className="fixed inset-0 z-[200]" role="dialog" aria-modal="true">
+          <div
+            className={
+              narrow
+                ? "fixed inset-0 z-[200] flex items-center justify-center p-4"
+                : "fixed inset-0 z-[200]"
+            }
+            role="dialog"
+            aria-modal="true"
+          >
             <button
               type="button"
               className="absolute inset-0 bg-black/40"
@@ -90,8 +101,16 @@ export function NotificationBell({ locale }: { locale: Locale }) {
               onClick={close}
             />
             <div
-              className="absolute flex w-[min(100vw-1.5rem,24rem)] max-h-[min(70vh,28rem)] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
-              style={{ top: panelPos.top, right: panelPos.right }}
+              className={
+                narrow
+                  ? "relative z-10 flex w-[min(100%,24rem)] max-h-[min(80dvh,32rem)] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
+                  : "absolute flex w-[min(100vw-1.5rem,24rem)] max-h-[min(70vh,28rem)] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
+              }
+              style={
+                narrow
+                  ? undefined
+                  : { top: panelPos.top, right: panelPos.right }
+              }
             >
               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
                 <p className="text-base font-semibold">
