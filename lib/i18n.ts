@@ -438,6 +438,18 @@ const dict = {
     shops_subtitle:
       "Achetez auprès de fournisseurs du réseau Rfacto — ou créez votre boutique virtuelle.",
     shops_browse: "Parcourir les boutiques",
+    my_projects_browse: "Parcourir mes projets",
+    my_projects_title: "Mes projets",
+    my_projects_subtitle:
+      "Retrouvez vos services et boutiques publiés — gérez ou modifiez-les ici.",
+    my_projects_services: "Mes services",
+    my_projects_shops: "Mes boutiques",
+    my_projects_edit: "Modifier",
+    my_projects_status_open: "Publié",
+    my_projects_status_closed: "Retiré",
+    my_projects_empty_title: "Aucun projet pour l’instant",
+    my_projects_empty_hint:
+      "Publiez un service ou créez une boutique pour les retrouver ici.",
     shops_my: "Mes boutiques",
     shops_orders: "Mes commandes boutique",
     shops_seller_orders: "Commandes reçues",
@@ -1921,6 +1933,18 @@ const dict = {
     shops_subtitle:
       "Buy from suppliers in the Rfacto network — or create your virtual shop.",
     shops_browse: "Browse shops",
+    my_projects_browse: "Browse my projects",
+    my_projects_title: "My projects",
+    my_projects_subtitle:
+      "Find your published services and shops — manage or edit them here.",
+    my_projects_services: "My services",
+    my_projects_shops: "My shops",
+    my_projects_edit: "Edit",
+    my_projects_status_open: "Published",
+    my_projects_status_closed: "Removed",
+    my_projects_empty_title: "No projects yet",
+    my_projects_empty_hint:
+      "Publish a service or create a shop to find them here.",
     shops_my: "My shops",
     shops_orders: "My shop orders",
     shops_seller_orders: "Orders received",

@@ -65,10 +65,23 @@ export async function GET(request: Request) {
     });
   }
 
+  if (mine) {
+    if (!session) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+    const mineListings = await prisma.serviceListing.findMany({
+      where: { userId: session.id },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+    });
+    return NextResponse.json({
+      listings: mineListings.map(serialize),
+    });
+  }
+
   const listings = await prisma.serviceListing.findMany({
     where: {
       status: "OPEN",
-      ...(mine && session ? { userId: session.id } : {}),
       ...(category ? { category } : {}),
       ...(serviceType ? { serviceType } : {}),
       ...(country ? { country } : {}),

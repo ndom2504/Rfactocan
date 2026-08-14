@@ -106,12 +106,12 @@ export default async function DashboardPage() {
             {t(locale, "publish_shop_cta")}
           </Button>
         </Link>
-        <Link href="/shops" className="w-full">
+        <Link href="/projects" className="w-full">
           <Button
             className="h-12 w-full text-base"
             variant="outline"
           >
-            {t(locale, "shops_browse")}
+            {t(locale, "my_projects_browse")}
           </Button>
         </Link>
         <Link href="/requests/new" className="w-full">
