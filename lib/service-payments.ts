@@ -103,11 +103,6 @@ export async function createServiceCardCheckout(input: {
   if (!isStripeConfigured()) {
     throw new Error("Stripe n'est pas configuré");
   }
-  if (!providerCanReceiveCard(input.provider) || !input.provider.stripeConnectAccountId) {
-    throw new Error(
-      "Le prestataire n'a pas activé les paiements carte (KYC + compte bancaire Stripe)."
-    );
-  }
   if (input.payment.amountCents <= 0) {
     throw new Error("Montant invalide");
   }
@@ -118,10 +113,33 @@ export async function createServiceCardCheckout(input: {
   const stripeCurrency = toStripeCurrency(currencyCode);
   const stripe = getStripe();
   const appUrl = getAppUrl();
+  const connectReady =
+    providerCanReceiveCard(input.provider) &&
+    Boolean(input.provider.stripeConnectAccountId);
+
+  const paymentIntentData: {
+    metadata: Record<string, string>;
+    application_fee_amount?: number;
+    transfer_data?: { destination: string };
+  } = {
+    metadata: {
+      type: "service_payment",
+      servicePaymentId: input.payment.id,
+      providerId: input.payment.providerId,
+      clientId: input.payment.clientId,
+      payoutMode: connectReady ? "connect" : "platform_hold",
+    },
+  };
+  if (connectReady && input.provider.stripeConnectAccountId) {
+    paymentIntentData.application_fee_amount = input.payment.platformFeeCents;
+    paymentIntentData.transfer_data = {
+      destination: input.provider.stripeConnectAccountId,
+    };
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    customer_email: input.clientEmail,
+    customer_email: input.clientEmail || undefined,
     line_items: [
       {
         quantity: 1,
@@ -138,18 +156,7 @@ export async function createServiceCardCheckout(input: {
         },
       },
     ],
-    payment_intent_data: {
-      application_fee_amount: input.payment.platformFeeCents,
-      transfer_data: {
-        destination: input.provider.stripeConnectAccountId,
-      },
-      metadata: {
-        type: "service_payment",
-        servicePaymentId: input.payment.id,
-        providerId: input.payment.providerId,
-        clientId: input.payment.clientId,
-      },
-    },
+    payment_intent_data: paymentIntentData,
     metadata: {
       type: "service_payment",
       servicePaymentId: input.payment.id,
@@ -173,5 +180,5 @@ export async function createServiceCardCheckout(input: {
     throw new Error("Stripe n'a pas renvoyé d'URL de paiement.");
   }
 
-  return { checkoutUrl: session.url, sessionId: session.id };
+  return { checkoutUrl: session.url, url: session.url, sessionId: session.id };
 }

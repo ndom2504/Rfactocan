@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isStripeConfigured } from "@/lib/stripe";
 import {
   isInteracPreferredCurrency,
   providerHasInteracConfigured,
@@ -74,9 +75,7 @@ function paymentPayload(
     interacPreferred,
     interacReceiver,
     providerInteracConfigured: providerHasInteracConfigured(payment.provider),
-    providerCardEnabled:
-      payment.provider.stripeConnectChargesEnabled &&
-      payment.provider.stripeConnectPayoutsEnabled,
+    providerCardEnabled: isStripeConfigured(),
   };
 }
 

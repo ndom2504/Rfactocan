@@ -5,7 +5,6 @@ import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
   createServiceCardCheckout,
-  providerCanReceiveCard,
 } from "@/lib/service-payments";
 import { resolveServiceReceiverHint } from "@/lib/service-interac";
 
@@ -128,16 +127,6 @@ export async function POST(request: Request, ctx: Ctx) {
       if (payment.status === "PAID") {
         return NextResponse.json(
           { error: "Déjà payé." },
-          { status: 400 }
-        );
-      }
-      if (!providerCanReceiveCard(providerWithPayout)) {
-        return NextResponse.json(
-          {
-            error:
-              "Le prestataire n'accepte pas encore la carte (KYC + compte bancaire Stripe requis).",
-            code: "PROVIDER_CARD_UNAVAILABLE",
-          },
           { status: 400 }
         );
       }

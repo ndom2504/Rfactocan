@@ -58,11 +58,7 @@ export default function ServicePaymentPage() {
   const { t } = useI18n();
   const [payment, setPayment] = useState<Payment | null>(null);
   const [role, setRole] = useState<"client" | "provider" | "admin">("client");
-  const [interacPreferred, setInteracPreferred] = useState(false);
   const [interacReceiver, setInteracReceiver] = useState<string | null>(null);
-  const [providerInteracConfigured, setProviderInteracConfigured] =
-    useState(false);
-  const [providerCardEnabled, setProviderCardEnabled] = useState(false);
   const [showOtherMethods, setShowOtherMethods] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -77,10 +73,7 @@ export default function ServicePaymentPage() {
     }
     setPayment(data.payment);
     setRole(data.role);
-    setInteracPreferred(Boolean(data.interacPreferred));
     setInteracReceiver(data.interacReceiver ?? null);
-    setProviderInteracConfigured(Boolean(data.providerInteracConfigured));
-    setProviderCardEnabled(Boolean(data.providerCardEnabled));
     setError("");
   }
 
@@ -107,8 +100,8 @@ export default function ServicePaymentPage() {
       setError(data.error || "Erreur");
       return;
     }
-    if (data.checkoutUrl) {
-      window.location.href = data.checkoutUrl;
+    if (data.checkoutUrl || data.url) {
+      window.location.href = data.checkoutUrl || data.url;
       return;
     }
     if (data.payment) {
@@ -140,9 +133,6 @@ export default function ServicePaymentPage() {
 
   const receiver =
     payment.receiverHint?.trim() || interacReceiver || null;
-  const interacFlow =
-    interacPreferred &&
-    (payment.payMethod === "INTERAC" || payment.payMethod == null);
   const awaitingInteracSend =
     payment.payMethod === "INTERAC" && payment.status === "AWAITING_PAYMENT";
   const awaitingInteracConfirm =
@@ -166,9 +156,7 @@ export default function ServicePaymentPage() {
 
       <Card className="space-y-3">
         <CardTitle>{t("svc_pay_title")}</CardTitle>
-        <CardDescription>
-          {interacPreferred ? t("svc_pay_hint_interac") : t("svc_pay_hint")}
-        </CardDescription>
+        <CardDescription>{t("svc_pay_hint")}</CardDescription>
 
         <div className="flex items-center gap-3">
           <UserAvatar
@@ -213,182 +201,114 @@ export default function ServicePaymentPage() {
         {error && <p className="text-sm text-red-700">{error}</p>}
         {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
 
-        {isProvider && !providerInteracConfigured && interacPreferred && (
-          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-            <p>{t("svc_pay_provider_setup_interac")}</p>
+        {isProvider &&
+          !payment.provider.stripeConnectChargesEnabled && (
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm text-[var(--muted)]">
+            <p>{t("svc_pay_provider_setup_stripe")}</p>
             <Link href="/profile" className="mt-2 inline-block text-[var(--accent)] underline">
               {t("nav_profile")}
             </Link>
           </div>
         )}
 
-        {canPay && interacFlow && (
+        {canPay &&
+          payment.payMethod !== "INTERAC" &&
+          payment.payMethod !== "MOBILE" && (
           <div className="space-y-3 border-t border-[var(--border)] pt-4">
-            {!payment.payMethod && (
-              <>
-                {receiver ? (
-                  <Button
-                    type="button"
-                    disabled={busy}
-                    className="w-full"
-                    onClick={() =>
-                      void act("pay_interac", {
-                        payProvider: "interac",
-                        receiverHint: receiver,
-                      })
-                    }
-                  >
-                    {t("svc_pay_interac_primary")}
-                  </Button>
-                ) : (
-                  <p className="rounded-lg bg-[var(--surface-2)] p-3 text-sm text-[var(--muted)]">
-                    {t("svc_pay_interac_missing_receiver")}
-                  </p>
-                )}
-
-                {(providerCardEnabled || !interacPreferred) && (
-                  <button
-                    type="button"
-                    className="text-xs text-[var(--muted)] underline"
-                    onClick={() => setShowOtherMethods((v) => !v)}
-                  >
-                    {t("svc_pay_other_methods")}
-                  </button>
-                )}
-              </>
-            )}
-
-            {awaitingInteracSend && receiver && (
-              <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 p-4">
-                <p className="text-sm font-medium">{t("svc_pay_interac_steps_title")}</p>
-                <ol className="list-decimal space-y-2 pl-5 text-sm text-[var(--muted)]">
-                  <li>{t("svc_pay_interac_step1")}</li>
-                  <li>
-                    {t("svc_pay_interac_step2")}{" "}
-                    <strong className="text-[var(--foreground)]">{receiver}</strong>
-                  </li>
-                  <li>
-                    {t("svc_pay_interac_step3")}{" "}
-                    <strong className="text-[var(--foreground)]">{amountLabel}</strong>
-                  </li>
-                  <li>{t("svc_pay_interac_step4")}</li>
-                </ol>
-                <Button
-                  type="button"
-                  disabled={busy}
-                  className="w-full"
-                  onClick={() => void act("client_mark_paid")}
-                >
-                  {t("svc_pay_i_paid")}
-                </Button>
-              </div>
-            )}
-
-            {(showOtherMethods || !interacPreferred) && !payment.payMethod && (
+            <p className="text-sm text-[var(--muted)]">
+              {t("svc_pay_checkout_hint")}
+            </p>
+            <Button
+              type="button"
+              disabled={busy}
+              className="w-full"
+              onClick={() => void act("pay_card")}
+            >
+              {t("svc_pay_card")}
+            </Button>
+            <button
+              type="button"
+              className="text-xs text-[var(--muted)] underline"
+              onClick={() => setShowOtherMethods((v) => !v)}
+            >
+              {t("svc_pay_other_methods")}
+            </button>
+            {showOtherMethods && (
               <div className="space-y-2">
-                {providerCardEnabled && (
-                  <Button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void act("pay_card")}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    {t("svc_pay_card")}
-                  </Button>
-                )}
-                {!interacPreferred && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={busy}
-                      className="w-full"
-                      onClick={() =>
-                        void act("pay_interac", {
-                          payProvider: "interac",
-                          receiverHint: receiver,
-                        })
-                      }
-                    >
-                      {t("svc_pay_interac")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={busy}
-                      className="w-full"
-                      onClick={() =>
-                        void act("pay_mobile", { payProvider: "mobile_money" })
-                      }
-                    >
-                      {t("svc_pay_mobile")}
-                    </Button>
-                  </>
-                )}
-              </div>
-            )}
-
-            {awaitingInteracConfirm && (
-              <p className="text-sm text-[var(--muted)]">
-                {t("svc_pay_interac_waiting_provider")}
-              </p>
-            )}
-          </div>
-        )}
-
-        {canPay && !interacFlow && (
-          <div className="space-y-3 border-t border-[var(--border)] pt-4">
-            <p className="text-sm font-medium">{t("svc_pay_choose_method")}</p>
-            {providerCardEnabled && (
-              <Button
-                type="button"
-                disabled={busy}
-                onClick={() => void act("pay_card")}
-                className="w-full"
-              >
-                {t("svc_pay_card")}
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              className="w-full"
-              onClick={() =>
-                void act("pay_interac", {
-                  payProvider: "interac",
-                  receiverHint: receiver,
-                })
-              }
-            >
-              {t("svc_pay_interac")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              className="w-full"
-              onClick={() =>
-                void act("pay_mobile", { payProvider: "mobile_money" })
-              }
-            >
-              {t("svc_pay_mobile")}
-            </Button>
-            {(payment.payMethod === "INTERAC" ||
-              payment.payMethod === "MOBILE") &&
-              payment.status === "AWAITING_PAYMENT" && (
                 <Button
                   type="button"
+                  variant="outline"
                   disabled={busy}
                   className="w-full"
-                  onClick={() => void act("client_mark_paid")}
+                  onClick={() =>
+                    void act("pay_interac", {
+                      payProvider: "interac",
+                      receiverHint: receiver,
+                    })
+                  }
                 >
-                  {t("svc_pay_i_paid")}
+                  {t("svc_pay_interac")}
                 </Button>
-              )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  className="w-full"
+                  onClick={() =>
+                    void act("pay_mobile", { payProvider: "mobile_money" })
+                  }
+                >
+                  {t("svc_pay_mobile")}
+                </Button>
+              </div>
+            )}
           </div>
         )}
+
+        {canPay && awaitingInteracSend && receiver && (
+          <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 p-4">
+            <p className="text-sm font-medium">{t("svc_pay_interac_steps_title")}</p>
+            <ol className="list-decimal space-y-2 pl-5 text-sm text-[var(--muted)]">
+              <li>{t("svc_pay_interac_step1")}</li>
+              <li>
+                {t("svc_pay_interac_step2")}{" "}
+                <strong className="text-[var(--foreground)]">{receiver}</strong>
+              </li>
+              <li>
+                {t("svc_pay_interac_step3")}{" "}
+                <strong className="text-[var(--foreground)]">{amountLabel}</strong>
+              </li>
+              <li>{t("svc_pay_interac_step4")}</li>
+            </ol>
+            <Button
+              type="button"
+              disabled={busy}
+              className="w-full"
+              onClick={() => void act("client_mark_paid")}
+            >
+              {t("svc_pay_i_paid")}
+            </Button>
+          </div>
+        )}
+
+        {canPay && awaitingInteracConfirm && (
+          <p className="text-sm text-[var(--muted)]">
+            {t("svc_pay_interac_waiting_provider")}
+          </p>
+        )}
+
+        {canPay &&
+          payment.payMethod === "MOBILE" &&
+          payment.status === "AWAITING_PAYMENT" && (
+            <Button
+              type="button"
+              disabled={busy}
+              className="w-full"
+              onClick={() => void act("client_mark_paid")}
+            >
+              {t("svc_pay_i_paid")}
+            </Button>
+          )}
 
         {isProvider && payment.status === "AWAITING_CONFIRMATION" && (
           <Button

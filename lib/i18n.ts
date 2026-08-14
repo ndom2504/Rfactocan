@@ -590,22 +590,24 @@ const dict = {
     no_jobs_found: "Aucun emploi trouvé pour ces critères.",
     svc_pay_title: "Paiement service",
     svc_pay_hint:
-      "Le prestataire a spécifié le service et le prix. Payez selon votre mode dans Profil (carte, Interac ou mobile).",
+      "Le prestataire a indiqué le service et le prix. Payez en un clic : vous serez redirigé vers Stripe Checkout.",
     svc_pay_hint_interac:
-      "Au Canada, le paiement par Interac e-Transfer est le mode le plus simple — sans carte ni Stripe.",
+      "Paiement par carte via Stripe Checkout. Interac reste disponible en option, le temps de l’API Interac.",
     svc_pay_request: "Demander un paiement",
     svc_pay_request_hint:
-      "Indiquez clairement le service et le montant. Au Canada, vos clients paieront surtout par Interac (configurez votre e-mail dans Profil).",
+      "Indiquez le service et le montant. Le client paie sur Stripe Checkout (carte). Interac reste optionnel.",
     svc_pay_service_name: "Service (obligatoire)",
     svc_pay_amount: "Montant (obligatoire)",
     svc_pay_desc_placeholder: "Détail de la prestation…",
-    svc_pay_receiver_hint: "Coordonnées pour Interac / Mobile (optionnel)",
+    svc_pay_receiver_hint: "Coordonnées Interac / Mobile (optionnel)",
     svc_pay_receiver_placeholder: "email@… ou +1…",
     svc_pay_send_request: "Envoyer la demande",
     svc_pay_open: "Ouvrir le paiement",
     svc_pay_choose_method: "Choisir le mode de paiement",
     svc_pay_prefs_hint: "Préférence enregistrée dans Profil",
-    svc_pay_card: "Payer par carte bancaire",
+    svc_pay_card: "Payer maintenant avec Stripe",
+    svc_pay_checkout_hint:
+      "Rfacto envoie uniquement le montant et le titre. Le paiement se fait sur la page sécurisée Stripe.",
     svc_pay_interac: "Payer par Interac",
     svc_pay_interac_primary: "Payer par Interac e-Transfer",
     svc_pay_interac_steps_title: "Comment payer par Interac",
@@ -618,7 +620,9 @@ const dict = {
     svc_pay_interac_waiting_provider:
       "Paiement signalé — en attente de confirmation du prestataire.",
     svc_pay_provider_setup_interac:
-      "Pour recevoir par Interac, ajoutez votre e-mail Interac dans Profil → Portefeuille (Mobile Money → Interac). Aucun Stripe requis.",
+      "Option Interac : ajoutez votre e-mail dans Profil → Portefeuille. Le client peut déjà payer par Stripe.",
+    svc_pay_provider_setup_stripe:
+      "Le client paie via Stripe Checkout. Pour recevoir le virement automatiquement, activez Stripe dans Profil.",
     svc_pay_other_methods: "Autres modes de paiement",
     svc_pay_mobile: "Payer par mobile money",
     svc_pay_i_paid: "J’ai effectué le paiement",
@@ -2106,12 +2110,12 @@ const dict = {
     no_jobs_found: "No jobs found for these filters.",
     svc_pay_title: "Service payment",
     svc_pay_hint:
-      "The provider specified the service and price. Pay using your Profile method (card, Interac or mobile).",
+      "The provider set the service and price. Pay in one tap: you will be redirected to Stripe Checkout.",
     svc_pay_hint_interac:
-      "In Canada, Interac e-Transfer is the simplest way to pay — no card or Stripe required.",
+      "Pay by card via Stripe Checkout. Interac remains available as an extra option until the Interac API is ready.",
     svc_pay_request: "Request payment",
     svc_pay_request_hint:
-      "State the service and amount clearly. In Canada, clients usually pay by Interac (set your email in Profile).",
+      "State the service and amount. The client pays on Stripe Checkout. Interac is optional.",
     svc_pay_service_name: "Service (required)",
     svc_pay_amount: "Amount (required)",
     svc_pay_desc_placeholder: "Service details…",
@@ -2121,7 +2125,9 @@ const dict = {
     svc_pay_open: "Open payment",
     svc_pay_choose_method: "Choose payment method",
     svc_pay_prefs_hint: "Preference saved in Profile",
-    svc_pay_card: "Pay by card",
+    svc_pay_card: "Pay now with Stripe",
+    svc_pay_checkout_hint:
+      "Rfacto only sends the amount and title. Payment happens on Stripe’s secure page.",
     svc_pay_interac: "Pay with Interac",
     svc_pay_interac_primary: "Pay with Interac e-Transfer",
     svc_pay_interac_steps_title: "How to pay with Interac",
@@ -2134,7 +2140,9 @@ const dict = {
     svc_pay_interac_waiting_provider:
       "Payment reported — waiting for provider confirmation.",
     svc_pay_provider_setup_interac:
-      "To receive via Interac, add your Interac email in Profile → Wallet (Mobile Money → Interac). No Stripe required.",
+      "Optional Interac: add your email in Profile → Wallet. Clients can already pay with Stripe.",
+    svc_pay_provider_setup_stripe:
+      "The client pays via Stripe Checkout. To receive the transfer automatically, enable Stripe in Profile.",
     svc_pay_other_methods: "Other payment methods",
     svc_pay_mobile: "Pay with mobile money",
     svc_pay_i_paid: "I have paid",
