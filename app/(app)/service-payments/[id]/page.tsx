@@ -35,6 +35,13 @@ type Payment = {
   listing?: { id: string; title: string } | null;
 };
 
+type PayoutInfo = {
+  kind: "stripe_connect" | "platform_hold" | "interac" | "mobile";
+  destination: string | null;
+  netCents: number;
+  feeCents: number;
+};
+
 function statusLabel(status: string, t: ReturnType<typeof useI18n>["t"]) {
   switch (status) {
     case "AWAITING_PAYMENT":
@@ -63,6 +70,7 @@ export default function ServicePaymentPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [payout, setPayout] = useState<PayoutInfo | null>(null);
 
   async function load(): Promise<Payment | null> {
     const res = await fetch(`/api/service-payments/${id}`);
@@ -74,6 +82,7 @@ export default function ServicePaymentPage() {
     setPayment(data.payment);
     setRole(data.role);
     setInteracReceiver(data.interacReceiver ?? null);
+    setPayout(data.payout ?? null);
     setError("");
     return data.payment as Payment;
   }
@@ -86,7 +95,11 @@ export default function ServicePaymentPage() {
       const pay = searchParams.get("payment");
       if (pay === "success") setMessage(t("svc_pay_success_return"));
       if (pay === "cancel") setError(t("svc_pay_cancel_return"));
-      if (pay !== "success" || first?.status === "PAID") return;
+      const shouldPoll =
+        pay === "success"
+          ? first?.status !== "PAID"
+          : first?.status === "AWAITING_PAYMENT" && first.payMethod === "CARD";
+      if (!shouldPoll) return;
       for (let i = 0; i < 8; i++) {
         await new Promise((r) => setTimeout(r, 1500));
         if (cancelled) return;
@@ -225,11 +238,49 @@ export default function ServicePaymentPage() {
           </p>
         )}
 
+        {payout && (
+          <div className="space-y-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/70 p-3">
+            <p className="text-sm font-medium">{t("svc_pay_deposit_title")}</p>
+            <p className="text-sm text-[var(--muted)]">
+              {payout.kind === "stripe_connect"
+                ? t("svc_pay_deposit_stripe")
+                : payout.kind === "platform_hold"
+                  ? t("svc_pay_deposit_hold")
+                  : payout.kind === "interac"
+                    ? t("svc_pay_deposit_interac")
+                    : t("svc_pay_deposit_mobile")}
+            </p>
+            {payout.destination && (
+              <p className="text-sm font-semibold break-all">
+                {payout.destination}
+              </p>
+            )}
+            <p className="text-sm">
+              {t("svc_pay_deposit_net")}:{" "}
+              <strong>
+                {formatMoneyFromCents(
+                  payout.netCents,
+                  payment.currency.toUpperCase()
+                )}
+              </strong>
+            </p>
+            {payout.feeCents > 0 && (
+              <p className="text-xs text-[var(--muted)]">
+                {t("svc_pay_deposit_fee")}:{" "}
+                {formatMoneyFromCents(
+                  payout.feeCents,
+                  payment.currency.toUpperCase()
+                )}
+              </p>
+            )}
+          </div>
+        )}
+
         {error && <p className="text-sm text-red-700">{error}</p>}
         {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
 
         {isProvider &&
-          !payment.provider.stripeConnectChargesEnabled && (
+          payout?.kind === "platform_hold" && (
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm text-[var(--muted)]">
             <p>{t("svc_pay_provider_setup_stripe")}</p>
             <Link href="/profile" className="mt-2 inline-block text-[var(--accent)] underline">

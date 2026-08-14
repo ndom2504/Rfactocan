@@ -15,6 +15,7 @@ import {
   majorToCents,
   servicePaymentDeadlineFrom,
   splitServiceAmount,
+  syncPendingServicePaymentsFromStripe,
 } from "@/lib/service-payments";
 import { resolveServiceReceiverHint } from "@/lib/service-interac";
 import { formatMoneyFromCents } from "@/lib/currency";
@@ -277,9 +278,10 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" },
       take: 40,
     });
+    const syncedRows = await syncPendingServicePaymentsFromStripe(rows);
 
     const userIds = [
-      ...new Set(rows.flatMap((r) => [r.providerId, r.clientId])),
+      ...new Set(syncedRows.flatMap((r) => [r.providerId, r.clientId])),
     ];
     let people: Record<
       string,
@@ -297,7 +299,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const payments = rows.map((r) => ({
+    const payments = syncedRows.map((r) => ({
       ...r,
       provider: people[r.providerId] ?? {
         id: r.providerId,

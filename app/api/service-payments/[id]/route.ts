@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
-import { syncServicePaymentFromStripe } from "@/lib/service-payments";
+import {
+  providerCanReceiveCard,
+  resolveServicePayoutInfo,
+  syncServicePaymentFromStripe,
+} from "@/lib/service-payments";
 import {
   isInteracPreferredCurrency,
   providerHasInteracConfigured,
@@ -16,22 +20,29 @@ const providerSelect = {
   displayName: true,
   avatarUrl: true,
   kycStatus: true,
+  stripeConnectAccountId: true,
   stripeConnectChargesEnabled: true,
   stripeConnectPayoutsEnabled: true,
 } as const;
 
-async function withProviderPayout<T extends { providerId: string; provider: object }>(
-  payment: T
-) {
+async function withProviderPayout<
+  T extends { providerId: string; provider: object },
+>(payment: T) {
   let payoutProvider: string | null = null;
   let payoutIdentifier: string | null = null;
+  let payoutChannel: string | null = null;
   try {
     const row = await prisma.user.findUnique({
       where: { id: payment.providerId },
-      select: { payoutProvider: true, payoutIdentifier: true },
+      select: {
+        payoutProvider: true,
+        payoutIdentifier: true,
+        payoutChannel: true,
+      },
     });
     payoutProvider = row?.payoutProvider ?? null;
     payoutIdentifier = row?.payoutIdentifier ?? null;
+    payoutChannel = row?.payoutChannel ?? null;
   } catch (e) {
     console.error("[service-payments] payout lookup", e);
   }
@@ -41,19 +52,27 @@ async function withProviderPayout<T extends { providerId: string; provider: obje
       ...payment.provider,
       payoutProvider,
       payoutIdentifier,
+      payoutChannel,
     },
   };
 }
 
 function paymentPayload(
   payment: {
-    currency: string;
+    payMethod: string | null;
     receiverHint: string | null;
+    amountCents: number;
+    currency: string;
+    platformFeeCents: number;
+    providerPayoutCents: number;
     provider: {
+      kycStatus: string;
+      stripeConnectAccountId: string | null;
       stripeConnectChargesEnabled: boolean;
       stripeConnectPayoutsEnabled: boolean;
       payoutProvider: string | null;
       payoutIdentifier: string | null;
+      payoutChannel: string | null;
     };
   },
   role: string
@@ -63,9 +82,26 @@ function paymentPayload(
     payment.receiverHint?.trim() ||
     providerInteracEmail(payment.provider) ||
     null;
+  const mobileHint =
+    payment.provider.payoutChannel === "mobile"
+      ? payment.provider.payoutIdentifier
+      : null;
+  const payout = resolveServicePayoutInfo({
+    payMethod: payment.payMethod,
+    receiverHint: payment.receiverHint,
+    amountCents: payment.amountCents,
+    platformFeeCents: payment.platformFeeCents,
+    providerPayoutCents: payment.providerPayoutCents,
+    connectReady: providerCanReceiveCard(payment.provider),
+    interacEmail: interacReceiver,
+    mobileHint,
+  });
   const providerPublic = { ...payment.provider };
   delete (providerPublic as { payoutIdentifier?: string | null }).payoutIdentifier;
   delete (providerPublic as { payoutProvider?: string | null }).payoutProvider;
+  delete (providerPublic as { payoutChannel?: string | null }).payoutChannel;
+  delete (providerPublic as { stripeConnectAccountId?: string | null })
+    .stripeConnectAccountId;
 
   return {
     payment: {
@@ -77,6 +113,7 @@ function paymentPayload(
     interacReceiver,
     providerInteracConfigured: providerHasInteracConfigured(payment.provider),
     providerCardEnabled: isStripeConfigured(),
+    payout,
   };
 }
 

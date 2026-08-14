@@ -650,6 +650,15 @@ const dict = {
     svc_pay_in_chat: "Demandes de paiement",
     svc_pay_you_pay: "Vous devez payer",
     svc_pay_you_receive: "Vous recevez",
+    svc_pay_deposit_title: "Où va l’argent",
+    svc_pay_deposit_stripe:
+      "Compte Stripe du prestataire, puis virement vers sa banque liée à Stripe.",
+    svc_pay_deposit_hold:
+      "Encaissé par Rfacto. Le prestataire doit activer Stripe dans Profil pour recevoir le virement sur son compte.",
+    svc_pay_deposit_interac: "Interac e-Transfer à déposer sur :",
+    svc_pay_deposit_mobile: "Mobile money à envoyer à :",
+    svc_pay_deposit_net: "Montant net prestataire",
+    svc_pay_deposit_fee: "Frais Rfacto",
     search_mode_livreurs: "Chercher des livreurs",
     search_mode_commandes: "Chercher des commandes",
     search_services: "Trouver un service",
@@ -2171,6 +2180,15 @@ const dict = {
     svc_pay_in_chat: "Payment requests",
     svc_pay_you_pay: "You pay",
     svc_pay_you_receive: "You receive",
+    svc_pay_deposit_title: "Where the money goes",
+    svc_pay_deposit_stripe:
+      "The provider’s Stripe account, then a payout to their Stripe-linked bank.",
+    svc_pay_deposit_hold:
+      "Collected by Rfacto. The provider must enable Stripe in Profile to receive the payout to their bank.",
+    svc_pay_deposit_interac: "Interac e-Transfer to deposit at:",
+    svc_pay_deposit_mobile: "Mobile money to send to:",
+    svc_pay_deposit_net: "Provider net amount",
+    svc_pay_deposit_fee: "Rfacto fee",
     search_shops: "Find a shop",
     search_shops_hint:
       "Search by name, product, category, city or seller.",

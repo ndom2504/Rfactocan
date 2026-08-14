@@ -92,7 +92,75 @@ export async function markServicePaymentPaid(
     console.error("Herald commission service paid", paymentId, err);
   }
 
+  try {
+    const { notifyUser } = await import("@/lib/notifications");
+    const { formatMoneyFromCents } = await import("@/lib/currency");
+    const amount = formatMoneyFromCents(
+      updated.amountCents,
+      updated.currency.toUpperCase()
+    );
+    await notifyUser({
+      userId: existing.providerId,
+      type: "SERVICE_PAYMENT",
+      title: "Paiement reçu",
+      body: `« ${existing.title} » · ${amount}. Ouvrez la demande pour voir où les fonds sont déposés.`,
+      href: `/service-payments/${paymentId}`,
+    });
+  } catch (err) {
+    console.error("notify provider service paid", paymentId, err);
+  }
+
   return updated;
+}
+
+export type ServicePayoutKind =
+  | "stripe_connect"
+  | "platform_hold"
+  | "interac"
+  | "mobile";
+
+export type ServicePayoutInfo = {
+  kind: ServicePayoutKind;
+  destination: string | null;
+  netCents: number;
+  feeCents: number;
+};
+
+export function resolveServicePayoutInfo(input: {
+  payMethod?: string | null;
+  receiverHint?: string | null;
+  amountCents: number;
+  platformFeeCents: number;
+  providerPayoutCents: number;
+  connectReady: boolean;
+  interacEmail?: string | null;
+  mobileHint?: string | null;
+}): ServicePayoutInfo {
+  const method = input.payMethod ?? null;
+  if (method === "INTERAC") {
+    return {
+      kind: "interac",
+      destination:
+        input.receiverHint?.trim() || input.interacEmail?.trim() || null,
+      netCents: input.amountCents,
+      feeCents: 0,
+    };
+  }
+  if (method === "MOBILE") {
+    return {
+      kind: "mobile",
+      destination:
+        input.receiverHint?.trim() || input.mobileHint?.trim() || null,
+      netCents: input.amountCents,
+      feeCents: 0,
+    };
+  }
+  return {
+    kind: input.connectReady ? "stripe_connect" : "platform_hold",
+    destination: null,
+    netCents: input.providerPayoutCents,
+    feeCents: input.platformFeeCents,
+  };
 }
 
 /** If Checkout already succeeded, mark PAID even when the webhook is delayed. */
@@ -133,6 +201,27 @@ export async function syncServicePaymentFromStripe(
     console.error("[service-payments] stripe sync", payment.id, err);
     return payment;
   }
+}
+
+export async function syncPendingServicePaymentsFromStripe<
+  T extends Pick<
+    ServicePaymentRequest,
+    "id" | "status" | "stripeCheckoutSessionId"
+  >,
+>(payments: T[]): Promise<T[]> {
+  const pending = payments.filter(
+    (p) => p.status === "AWAITING_PAYMENT" && p.stripeCheckoutSessionId
+  );
+  if (pending.length === 0) return payments;
+  const updates = await Promise.all(
+    pending.slice(0, 12).map((p) => syncServicePaymentFromStripe(p))
+  );
+  const byId = new Map(updates.map((u) => [u.id, u]));
+  return payments.map((p) => {
+    const next = byId.get(p.id);
+    if (!next || next.status === p.status) return p;
+    return { ...p, status: next.status };
+  });
 }
 
 export async function createServiceCardCheckout(input: {
