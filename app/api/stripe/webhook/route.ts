@@ -259,6 +259,7 @@ export async function POST(request: Request) {
         await handlePaymentIntent(pi, "FAILED");
         break;
       }
+      case "checkout.session.async_payment_succeeded":
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const piId =

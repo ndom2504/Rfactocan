@@ -5,6 +5,7 @@ import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
   createServiceCardCheckout,
+  syncServicePaymentFromStripe,
 } from "@/lib/service-payments";
 import { resolveServiceReceiverHint } from "@/lib/service-interac";
 
@@ -122,6 +123,13 @@ export async function POST(request: Request, ctx: Ctx) {
         return NextResponse.json(
           { error: "Seul le client peut payer." },
           { status: 403 }
+        );
+      }
+      const synced = await syncServicePaymentFromStripe(payment);
+      if (synced.status === "PAID") {
+        return NextResponse.json(
+          { error: "Déjà payé.", payment: synced },
+          { status: 400 }
         );
       }
       if (payment.status === "PAID") {

@@ -64,24 +64,40 @@ export default function ServicePaymentPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function load() {
+  async function load(): Promise<Payment | null> {
     const res = await fetch(`/api/service-payments/${id}`);
     const data = await res.json();
     if (!res.ok) {
       setError(data.error || "Erreur");
-      return;
+      return null;
     }
     setPayment(data.payment);
     setRole(data.role);
     setInteracReceiver(data.interacReceiver ?? null);
     setError("");
+    return data.payment as Payment;
   }
 
   useEffect(() => {
-    void load();
-    const pay = searchParams.get("payment");
-    if (pay === "success") setMessage(t("svc_pay_success_return"));
-    if (pay === "cancel") setError(t("svc_pay_cancel_return"));
+    let cancelled = false;
+    async function run() {
+      const first = await load();
+      if (cancelled) return;
+      const pay = searchParams.get("payment");
+      if (pay === "success") setMessage(t("svc_pay_success_return"));
+      if (pay === "cancel") setError(t("svc_pay_cancel_return"));
+      if (pay !== "success" || first?.status === "PAID") return;
+      for (let i = 0; i < 8; i++) {
+        await new Promise((r) => setTimeout(r, 1500));
+        if (cancelled) return;
+        const next = await load();
+        if (next?.status === "PAID") return;
+      }
+    }
+    void run();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -126,8 +142,17 @@ export default function ServicePaymentPage() {
   );
   const isClient = role === "client";
   const isProvider = role === "provider";
+  const stripeReturnSuccess = searchParams.get("payment") === "success";
+  const awaitingStripeConfirm =
+    stripeReturnSuccess &&
+    payment.status !== "PAID" &&
+    payment.status !== "CANCELLED" &&
+    payment.status !== "EXPIRED";
+  const displayStatus = awaitingStripeConfirm ? "PAID" : payment.status;
   const canPay =
     isClient &&
+    !awaitingStripeConfirm &&
+    payment.status !== "PAID" &&
     (payment.status === "AWAITING_PAYMENT" ||
       payment.status === "AWAITING_CONFIRMATION");
 
@@ -189,7 +214,9 @@ export default function ServicePaymentPage() {
           </p>
         )}
         <p className="text-xs text-[var(--muted)]">
-          {statusLabel(payment.status, t)}
+          {awaitingStripeConfirm
+            ? t("svc_pay_confirming")
+            : statusLabel(displayStatus, t)}
         </p>
         {payment.payMethod && (
           <p className="text-xs text-[var(--muted)]">
@@ -322,6 +349,7 @@ export default function ServicePaymentPage() {
         )}
 
         {(isClient || isProvider) &&
+          !awaitingStripeConfirm &&
           payment.status !== "PAID" &&
           payment.status !== "CANCELLED" && (
             <Button
@@ -334,9 +362,11 @@ export default function ServicePaymentPage() {
             </Button>
           )}
 
-        {payment.status === "PAID" && (
+        {(payment.status === "PAID" || awaitingStripeConfirm) && (
           <p className="text-sm font-medium text-[var(--accent)]">
-            {t("svc_pay_paid")}
+            {payment.status === "PAID"
+              ? t("svc_pay_paid")
+              : t("svc_pay_confirming")}
           </p>
         )}
       </Card>

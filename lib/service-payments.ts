@@ -95,6 +95,46 @@ export async function markServicePaymentPaid(
   return updated;
 }
 
+/** If Checkout already succeeded, mark PAID even when the webhook is delayed. */
+export async function syncServicePaymentFromStripe(
+  payment: Pick<
+    ServicePaymentRequest,
+    "id" | "status" | "stripeCheckoutSessionId"
+  >
+) {
+  if (
+    payment.status === "PAID" ||
+    payment.status === "CANCELLED" ||
+    payment.status === "EXPIRED"
+  ) {
+    return payment;
+  }
+  if (!payment.stripeCheckoutSessionId || !isStripeConfigured()) {
+    return payment;
+  }
+  try {
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(
+      payment.stripeCheckoutSessionId
+    );
+    if (session.payment_status !== "paid") {
+      return payment;
+    }
+    const piId =
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : session.payment_intent?.id;
+    const updated = await markServicePaymentPaid(payment.id, {
+      sessionId: session.id,
+      paymentIntentId: piId ?? undefined,
+    });
+    return updated ?? payment;
+  } catch (err) {
+    console.error("[service-payments] stripe sync", payment.id, err);
+    return payment;
+  }
+}
+
 export async function createServiceCardCheckout(input: {
   payment: ServicePaymentRequest;
   clientEmail: string;

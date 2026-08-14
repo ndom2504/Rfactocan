@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
+import { syncServicePaymentFromStripe } from "@/lib/service-payments";
 import {
   isInteracPreferredCurrency,
   providerHasInteracConfigured,
@@ -123,6 +124,27 @@ export async function GET(_request: Request, ctx: Ctx) {
     session.role !== "ADMIN"
   ) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
+
+  const synced = await syncServicePaymentFromStripe(payment);
+  if (synced.status !== payment.status) {
+    Object.assign(payment, {
+      status: synced.status,
+      paidAt: "paidAt" in synced ? synced.paidAt : payment.paidAt,
+      payMethod: "payMethod" in synced ? synced.payMethod : payment.payMethod,
+      stripePaymentIntentId:
+        "stripePaymentIntentId" in synced
+          ? synced.stripePaymentIntentId
+          : payment.stripePaymentIntentId,
+      stripeCheckoutSessionId:
+        "stripeCheckoutSessionId" in synced
+          ? synced.stripeCheckoutSessionId
+          : payment.stripeCheckoutSessionId,
+      providerConfirmedAt:
+        "providerConfirmedAt" in synced
+          ? synced.providerConfirmedAt
+          : payment.providerConfirmedAt,
+    });
   }
 
   const expired =
