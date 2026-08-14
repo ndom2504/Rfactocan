@@ -5,7 +5,6 @@ import {
   isInteracPreferredCurrency,
   providerHasInteracConfigured,
   providerInteracEmail,
-  type PayoutFields,
 } from "@/lib/service-interac";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -21,23 +20,26 @@ const providerSelect = {
 
 async function withProviderPayout<T extends { providerId: string; provider: object }>(
   payment: T
-): Promise<T & { provider: T["provider"] & PayoutFields }> {
-  let payout: PayoutFields = {
-    payoutProvider: null,
-    payoutIdentifier: null,
-  };
+) {
+  let payoutProvider: string | null = null;
+  let payoutIdentifier: string | null = null;
   try {
     const row = await prisma.user.findUnique({
       where: { id: payment.providerId },
       select: { payoutProvider: true, payoutIdentifier: true },
     });
-    if (row) payout = row;
+    payoutProvider = row?.payoutProvider ?? null;
+    payoutIdentifier = row?.payoutIdentifier ?? null;
   } catch (e) {
     console.error("[service-payments] payout lookup", e);
   }
   return {
     ...payment,
-    provider: { ...payment.provider, ...payout },
+    provider: {
+      ...payment.provider,
+      payoutProvider,
+      payoutIdentifier,
+    },
   };
 }
 
@@ -50,9 +52,7 @@ function paymentPayload(
       stripeConnectPayoutsEnabled: boolean;
       payoutProvider: string | null;
       payoutIdentifier: string | null;
-      [key: string]: unknown;
     };
-    [key: string]: unknown;
   },
   role: string
 ) {
@@ -61,9 +61,9 @@ function paymentPayload(
     payment.receiverHint?.trim() ||
     providerInteracEmail(payment.provider) ||
     null;
-  const providerPublic = (({ payoutIdentifier, payoutProvider, ...rest }) => rest)(
-    payment.provider
-  );
+  const providerPublic = { ...payment.provider };
+  delete (providerPublic as { payoutIdentifier?: string | null }).payoutIdentifier;
+  delete (providerPublic as { payoutProvider?: string | null }).payoutProvider;
 
   return {
     payment: {
