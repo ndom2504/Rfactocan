@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
+import { travelerCanReceivePayments } from "@/lib/connect";
 import {
-  providerCanReceiveCard,
   resolveServicePayoutInfo,
   syncServicePaymentFromStripe,
 } from "@/lib/service-payments";
@@ -93,7 +93,7 @@ function paymentPayload(
     amountCents: payment.amountCents,
     platformFeeCents: payment.platformFeeCents,
     providerPayoutCents: payment.providerPayoutCents,
-    connectReady: providerCanReceiveCard(payment.provider),
+    connectReady: travelerCanReceivePayments(payment.provider),
     interacEmail: interacReceiver,
     mobileHint,
   });
