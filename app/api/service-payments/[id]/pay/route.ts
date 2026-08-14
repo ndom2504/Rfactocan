@@ -7,6 +7,7 @@ import {
   createServiceCardCheckout,
   providerCanReceiveCard,
 } from "@/lib/service-payments";
+import { resolveServiceReceiverHint } from "@/lib/service-interac";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -51,6 +52,8 @@ export async function POST(request: Request, ctx: Ctx) {
             stripeConnectAccountId: true,
             stripeConnectChargesEnabled: true,
             stripeConnectPayoutsEnabled: true,
+            payoutProvider: true,
+            payoutIdentifier: true,
           },
         },
         client: {
@@ -150,6 +153,20 @@ export async function POST(request: Request, ctx: Ctx) {
         );
       }
       const method = body.action === "pay_interac" ? "INTERAC" : "MOBILE";
+      const receiverHint = resolveServiceReceiverHint(
+        body.receiverHint ?? payment.receiverHint,
+        payment.provider
+      );
+      if (method === "INTERAC" && !receiverHint) {
+        return NextResponse.json(
+          {
+            error:
+              "Le prestataire n'a pas encore configuré son e-mail Interac dans Profil → Portefeuille.",
+            code: "PROVIDER_INTERAC_MISSING",
+          },
+          { status: 400 }
+        );
+      }
       const updated = await prisma.servicePaymentRequest.update({
         where: { id },
         data: {
@@ -157,9 +174,7 @@ export async function POST(request: Request, ctx: Ctx) {
           payProvider:
             body.payProvider?.trim() ||
             (method === "INTERAC" ? "interac" : "mobile_money"),
-          ...(body.receiverHint?.trim()
-            ? { receiverHint: body.receiverHint.trim() }
-            : {}),
+          ...(receiverHint ? { receiverHint } : {}),
           status: "AWAITING_PAYMENT",
         },
       });

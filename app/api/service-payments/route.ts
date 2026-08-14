@@ -9,6 +9,7 @@ import {
   servicePaymentDeadlineFrom,
   splitServiceAmount,
 } from "@/lib/service-payments";
+import { resolveServiceReceiverHint } from "@/lib/service-interac";
 import { formatMoneyFromCents } from "@/lib/currency";
 import { normalizeCurrency } from "@/lib/currency";
 
@@ -92,6 +93,19 @@ export async function POST(request: Request) {
     const { platformFeeCents, providerPayoutCents } =
       splitServiceAmount(amountCents);
 
+    const providerProfile = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: {
+        payoutChannel: true,
+        payoutProvider: true,
+        payoutIdentifier: true,
+      },
+    });
+
+    const receiverHint = providerProfile
+      ? resolveServiceReceiverHint(body.receiverHint, providerProfile)
+      : body.receiverHint?.trim() || null;
+
     const payment = await prisma.servicePaymentRequest.create({
       data: {
         providerId: session.id,
@@ -105,7 +119,7 @@ export async function POST(request: Request) {
         platformFeeCents,
         providerPayoutCents,
         status: "AWAITING_PAYMENT",
-        receiverHint: body.receiverHint?.trim() || null,
+        receiverHint,
         expiresAt: servicePaymentDeadlineFrom(48),
       },
     });

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CountryCodeSelect } from "@/components/country-select";
 import { useI18n } from "@/components/locale-provider";
+import { uploadServicePhoto } from "@/lib/service-upload-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -173,13 +174,14 @@ export default function EditServicePage() {
   async function onUpload(file: File) {
     setUploading(true);
     setError("");
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    setUploading(false);
-    if (res.ok) setPhotos((p) => [...p, data.url].slice(0, 5));
-    else setError(data.error ?? "Upload échoué");
+    try {
+      const url = await uploadServicePhoto(file);
+      setPhotos((p) => [...p, url].slice(0, 5));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload échoué");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {

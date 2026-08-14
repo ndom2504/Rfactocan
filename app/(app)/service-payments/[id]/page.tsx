@@ -2,17 +2,12 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatMoneyFromCents } from "@/lib/currency";
-import {
-  loadUserIntent,
-  payoutProviderLabelKey,
-  type PayoutProvider,
-} from "@/lib/user-intent";
 
 type Payment = {
   id: string;
@@ -34,6 +29,7 @@ type Payment = {
     displayName: string;
     avatarUrl?: string | null;
     stripeConnectChargesEnabled?: boolean;
+    stripeConnectPayoutsEnabled?: boolean;
   };
   client: { id: string; displayName: string; avatarUrl?: string | null };
   listing?: { id: string; title: string } | null;
@@ -62,10 +58,15 @@ export default function ServicePaymentPage() {
   const { t } = useI18n();
   const [payment, setPayment] = useState<Payment | null>(null);
   const [role, setRole] = useState<"client" | "provider" | "admin">("client");
+  const [interacPreferred, setInteracPreferred] = useState(false);
+  const [interacReceiver, setInteracReceiver] = useState<string | null>(null);
+  const [providerInteracConfigured, setProviderInteracConfigured] =
+    useState(false);
+  const [providerCardEnabled, setProviderCardEnabled] = useState(false);
+  const [showOtherMethods, setShowOtherMethods] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const prefs = useMemo(() => loadUserIntent(), []);
 
   async function load() {
     const res = await fetch(`/api/service-payments/${id}`);
@@ -76,6 +77,10 @@ export default function ServicePaymentPage() {
     }
     setPayment(data.payment);
     setRole(data.role);
+    setInteracPreferred(Boolean(data.interacPreferred));
+    setInteracReceiver(data.interacReceiver ?? null);
+    setProviderInteracConfigured(Boolean(data.providerInteracConfigured));
+    setProviderCardEnabled(Boolean(data.providerCardEnabled));
     setError("");
   }
 
@@ -106,8 +111,12 @@ export default function ServicePaymentPage() {
       window.location.href = data.checkoutUrl;
       return;
     }
-    if (data.payment) setPayment(data.payment);
-    else void load();
+    if (data.payment) {
+      setPayment((prev) =>
+        prev ? { ...prev, ...data.payment } : data.payment
+      );
+    }
+    await load();
     setMessage(t("svc_pay_action_ok"));
   }
 
@@ -129,11 +138,16 @@ export default function ServicePaymentPage() {
     (payment.status === "AWAITING_PAYMENT" ||
       payment.status === "AWAITING_CONFIRMATION");
 
-  const defaultChannel = prefs.payoutChannel;
-  const defaultProvider: PayoutProvider = prefs.payoutProvider;
-  const preferCard = defaultChannel === "bank";
-  const preferInterac = defaultProvider === "interac";
-  const preferMobile = defaultChannel === "mobile" && !preferInterac;
+  const receiver =
+    payment.receiverHint?.trim() || interacReceiver || null;
+  const interacFlow =
+    interacPreferred &&
+    (payment.payMethod === "INTERAC" || payment.payMethod == null);
+  const awaitingInteracSend =
+    payment.payMethod === "INTERAC" && payment.status === "AWAITING_PAYMENT";
+  const awaitingInteracConfirm =
+    payment.payMethod === "INTERAC" &&
+    payment.status === "AWAITING_CONFIRMATION";
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
@@ -146,7 +160,9 @@ export default function ServicePaymentPage() {
 
       <Card className="space-y-3">
         <CardTitle>{t("svc_pay_title")}</CardTitle>
-        <CardDescription>{t("svc_pay_hint")}</CardDescription>
+        <CardDescription>
+          {interacPreferred ? t("svc_pay_hint_interac") : t("svc_pay_hint")}
+        </CardDescription>
 
         <div className="flex items-center gap-3">
           <UserAvatar
@@ -187,50 +203,156 @@ export default function ServicePaymentPage() {
             {payment.payProvider ? ` (${payment.payProvider})` : ""}
           </p>
         )}
-        {payment.receiverHint && (
-          <p className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
-            {t("svc_pay_receiver")}: <strong>{payment.receiverHint}</strong>
-          </p>
-        )}
 
         {error && <p className="text-sm text-red-700">{error}</p>}
         {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
 
-        {canPay && (
+        {isProvider && !providerInteracConfigured && interacPreferred && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <p>{t("svc_pay_provider_setup_interac")}</p>
+            <Link href="/profile" className="mt-2 inline-block text-[var(--accent)] underline">
+              {t("nav_profile")}
+            </Link>
+          </div>
+        )}
+
+        {canPay && interacFlow && (
+          <div className="space-y-3 border-t border-[var(--border)] pt-4">
+            {!payment.payMethod && (
+              <>
+                {receiver ? (
+                  <Button
+                    type="button"
+                    disabled={busy}
+                    className="w-full"
+                    onClick={() =>
+                      void act("pay_interac", {
+                        payProvider: "interac",
+                        receiverHint: receiver,
+                      })
+                    }
+                  >
+                    {t("svc_pay_interac_primary")}
+                  </Button>
+                ) : (
+                  <p className="rounded-lg bg-[var(--surface-2)] p-3 text-sm text-[var(--muted)]">
+                    {t("svc_pay_interac_missing_receiver")}
+                  </p>
+                )}
+
+                {(providerCardEnabled || !interacPreferred) && (
+                  <button
+                    type="button"
+                    className="text-xs text-[var(--muted)] underline"
+                    onClick={() => setShowOtherMethods((v) => !v)}
+                  >
+                    {t("svc_pay_other_methods")}
+                  </button>
+                )}
+              </>
+            )}
+
+            {awaitingInteracSend && receiver && (
+              <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 p-4">
+                <p className="text-sm font-medium">{t("svc_pay_interac_steps_title")}</p>
+                <ol className="list-decimal space-y-2 pl-5 text-sm text-[var(--muted)]">
+                  <li>{t("svc_pay_interac_step1")}</li>
+                  <li>
+                    {t("svc_pay_interac_step2")}{" "}
+                    <strong className="text-[var(--foreground)]">{receiver}</strong>
+                  </li>
+                  <li>
+                    {t("svc_pay_interac_step3")}{" "}
+                    <strong className="text-[var(--foreground)]">{amountLabel}</strong>
+                  </li>
+                  <li>{t("svc_pay_interac_step4")}</li>
+                </ol>
+                <Button
+                  type="button"
+                  disabled={busy}
+                  className="w-full"
+                  onClick={() => void act("client_mark_paid")}
+                >
+                  {t("svc_pay_i_paid")}
+                </Button>
+              </div>
+            )}
+
+            {(showOtherMethods || !interacPreferred) && !payment.payMethod && (
+              <div className="space-y-2">
+                {providerCardEnabled && (
+                  <Button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void act("pay_card")}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    {t("svc_pay_card")}
+                  </Button>
+                )}
+                {!interacPreferred && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={busy}
+                      className="w-full"
+                      onClick={() =>
+                        void act("pay_interac", {
+                          payProvider: "interac",
+                          receiverHint: receiver,
+                        })
+                      }
+                    >
+                      {t("svc_pay_interac")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={busy}
+                      className="w-full"
+                      onClick={() =>
+                        void act("pay_mobile", { payProvider: "mobile_money" })
+                      }
+                    >
+                      {t("svc_pay_mobile")}
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {awaitingInteracConfirm && (
+              <p className="text-sm text-[var(--muted)]">
+                {t("svc_pay_interac_waiting_provider")}
+              </p>
+            )}
+          </div>
+        )}
+
+        {canPay && !interacFlow && (
           <div className="space-y-3 border-t border-[var(--border)] pt-4">
             <p className="text-sm font-medium">{t("svc_pay_choose_method")}</p>
-            <p className="text-xs text-[var(--muted)]">
-              {t("svc_pay_prefs_hint")} (
-              {preferCard
-                ? t("payout_bank")
-                : preferInterac
-                  ? t("payout_interac")
-                  : t(payoutProviderLabelKey(defaultProvider))}
-              )
-            </p>
-
-            {(preferCard ||
-              payment.provider.stripeConnectChargesEnabled !== false) && (
+            {providerCardEnabled && (
               <Button
                 type="button"
                 disabled={busy}
                 onClick={() => void act("pay_card")}
                 className="w-full"
-                variant={preferCard ? "default" : "outline"}
               >
                 {t("svc_pay_card")}
               </Button>
             )}
-
             <Button
               type="button"
-              variant={preferInterac ? "default" : "outline"}
+              variant="outline"
               disabled={busy}
               className="w-full"
               onClick={() =>
                 void act("pay_interac", {
                   payProvider: "interac",
-                  receiverHint: payment.receiverHint ?? null,
+                  receiverHint: receiver,
                 })
               }
             >
@@ -238,19 +360,15 @@ export default function ServicePaymentPage() {
             </Button>
             <Button
               type="button"
-              variant={preferMobile ? "default" : "outline"}
+              variant="outline"
               disabled={busy}
               className="w-full"
               onClick={() =>
-                void act("pay_mobile", {
-                  payProvider: defaultProvider,
-                  receiverHint: payment.receiverHint ?? null,
-                })
+                void act("pay_mobile", { payProvider: "mobile_money" })
               }
             >
               {t("svc_pay_mobile")}
             </Button>
-
             {(payment.payMethod === "INTERAC" ||
               payment.payMethod === "MOBILE") &&
               payment.status === "AWAITING_PAYMENT" && (
@@ -266,17 +384,16 @@ export default function ServicePaymentPage() {
           </div>
         )}
 
-        {isProvider &&
-          payment.status === "AWAITING_CONFIRMATION" && (
-            <Button
-              type="button"
-              disabled={busy}
-              onClick={() => void act("provider_confirm")}
-              className="w-full"
-            >
-              {t("svc_pay_confirm_received")}
-            </Button>
-          )}
+        {isProvider && payment.status === "AWAITING_CONFIRMATION" && (
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => void act("provider_confirm")}
+            className="w-full"
+          >
+            {t("svc_pay_confirm_received")}
+          </Button>
+        )}
 
         {(isClient || isProvider) &&
           payment.status !== "PAID" &&

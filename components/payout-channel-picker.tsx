@@ -142,9 +142,19 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
               d.payoutChannel === "bank" || d.payoutChannel === "mobile"
                 ? d.payoutChannel
                 : local.payoutChannel;
-            setChannel(ch);
+            const isCanada = resolvedCode === "CA";
+            const noSavedPayout =
+              !d.payoutIdentifier?.trim() &&
+              !d.payoutProvider &&
+              !d.payoutChannel;
+            setChannel(
+              isCanada && noSavedPayout ? "mobile" : ch
+            );
             setProvider(
-              (d.payoutProvider as PayoutProvider) || local.payoutProvider
+              (isCanada && noSavedPayout
+                ? "interac"
+                : (d.payoutProvider as PayoutProvider)) ||
+                local.payoutProvider
             );
             setIdentifier(d.payoutIdentifier || local.payoutIdentifier || "");
             setBankName(d.payoutBankName || "");
@@ -159,8 +169,18 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
         /* offline → local */
       }
       if (!cancelled) {
-        setChannel(local.payoutChannel);
-        setProvider(local.payoutProvider);
+        const isCanada = resolvedCode === "CA";
+        const useCanadaInteracDefaults =
+          isCanada &&
+          !local.payoutIdentifier &&
+          local.payoutProvider === "mobile_money" &&
+          local.payoutChannel === "bank";
+        setChannel(
+          useCanadaInteracDefaults ? "mobile" : local.payoutChannel
+        );
+        setProvider(
+          useCanadaInteracDefaults ? "interac" : local.payoutProvider
+        );
         setIdentifier(local.payoutIdentifier);
         setReady(true);
       }
@@ -168,7 +188,7 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [resolvedCode]);
 
   useEffect(() => {
     if (!ready) return;

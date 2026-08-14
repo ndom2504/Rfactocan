@@ -104,7 +104,7 @@ const dict = {
     services_formation_topic_add: "Ajouter",
     services_photos: "Photos de l’offre (max 5)",
     services_photos_hint:
-      "La première photo sert d’affiche (logo ou image du service). jpeg, png, webp, gif.",
+      "La première photo sert d’affiche (logo ou image du service). jpeg, png, webp, gif — max 100 Mo.",
     services_website: "Site web du service",
     services_website_hint: "Optionnel — ex. https://monsite.com",
     services_website_open: "Voir le site",
@@ -374,17 +374,17 @@ const dict = {
     view_product: "Voir le produit",
     payout_channel: "Canal de retrait (portefeuille)",
     payout_channel_hint:
-      "Afrique / petite clientèle : Mobile Money. Gros volumes : compte bancaire (ou Stripe Connect au Canada). Ce canal reçoit vos commissions Héraut et gains.",
+      "Afrique / petite clientèle : Mobile Money. Canada : Interac e-Transfer pour les services (sans Stripe). Gros volumes carte : Stripe Connect.",
     payout_bank: "Compte bancaire",
     payout_mobile: "Mobile Money",
     wallet_title: "Portefeuille Rfacto",
     wallet_lead:
-      "Liez un numéro Mobile Money ou un compte bancaire pour retirer vos gains. Le solde reste dans l’app jusqu’à votre demande de retrait.",
+      "Liez Interac (Canada) ou Mobile Money (Afrique) pour recevoir vos paiements services et retirer vos gains Héraut. Stripe Connect reste optionnel pour la carte bancaire.",
     wallet_save_link: "Enregistrer mon compte de retrait",
     wallet_linked_ok: "Compte de retrait lié au portefeuille.",
     wallet_save_error: "Impossible d’enregistrer le canal de retrait.",
     wallet_bank_manual_hint:
-      "Compte bancaire local (virement) — utile en Afrique. Au Canada, activez aussi Stripe Connect ci-dessus pour le virement automatique.",
+      "Compte bancaire local (virement) — utile en Afrique. Au Canada, préférez Interac ci-dessus ; Stripe Connect ci-dessous sert surtout aux paiements carte.",
     wallet_bank_holder: "Titulaire du compte",
     wallet_bank_holder_ph: "Nom complet tel qu’en banque",
     wallet_bank_name: "Banque",
@@ -568,9 +568,11 @@ const dict = {
     svc_pay_title: "Paiement service",
     svc_pay_hint:
       "Le prestataire a spécifié le service et le prix. Payez selon votre mode dans Profil (carte, Interac ou mobile).",
+    svc_pay_hint_interac:
+      "Au Canada, le paiement par Interac e-Transfer est le mode le plus simple — sans carte ni Stripe.",
     svc_pay_request: "Demander un paiement",
     svc_pay_request_hint:
-      "Indiquez clairement le service et le montant. Le client paie selon ses paramètres (carte / Interac / mobile).",
+      "Indiquez clairement le service et le montant. Au Canada, vos clients paieront surtout par Interac (configurez votre e-mail dans Profil).",
     svc_pay_service_name: "Service (obligatoire)",
     svc_pay_amount: "Montant (obligatoire)",
     svc_pay_desc_placeholder: "Détail de la prestation…",
@@ -582,6 +584,19 @@ const dict = {
     svc_pay_prefs_hint: "Préférence enregistrée dans Profil",
     svc_pay_card: "Payer par carte bancaire",
     svc_pay_interac: "Payer par Interac",
+    svc_pay_interac_primary: "Payer par Interac e-Transfer",
+    svc_pay_interac_steps_title: "Comment payer par Interac",
+    svc_pay_interac_step1: "Ouvrez votre banque ou l’app Interac e-Transfer.",
+    svc_pay_interac_step2: "Envoyez le montant à :",
+    svc_pay_interac_step3: "Montant exact :",
+    svc_pay_interac_step4: "Revenez ici et cliquez « J’ai effectué le paiement ».",
+    svc_pay_interac_missing_receiver:
+      "Le prestataire doit configurer son e-mail Interac dans Profil → Portefeuille avant le paiement.",
+    svc_pay_interac_waiting_provider:
+      "Paiement signalé — en attente de confirmation du prestataire.",
+    svc_pay_provider_setup_interac:
+      "Pour recevoir par Interac, ajoutez votre e-mail Interac dans Profil → Portefeuille (Mobile Money → Interac). Aucun Stripe requis.",
+    svc_pay_other_methods: "Autres modes de paiement",
     svc_pay_mobile: "Payer par mobile money",
     svc_pay_i_paid: "J’ai effectué le paiement",
     svc_pay_confirm_received: "Confirmer la réception",
@@ -1388,9 +1403,9 @@ const dict = {
     trust_payments: "Confiance & paiements",
     trust_hint: "Obligatoire pour accepter des colis en tant que livreur.",
     verify_identity: "Vérifier mon identité",
-    receive_earnings: "Configurer le compte bancaire (Stripe)",
+    receive_earnings: "Carte bancaire (Stripe Connect — optionnel)",
     receive_earnings_hint:
-      "Ouverture d'un compte Stripe Express pour recevoir vos gains après chaque livraison.",
+      "Uniquement pour les paiements par carte. Les services au Canada se règlent par Interac via Portefeuille — sans Stripe.",
     bank_ready:
       "Compte bancaire prêt : vous pouvez accepter des colis et recevoir vos gains après livraison.",
     payments_label: "Paiements",
@@ -1578,7 +1593,7 @@ const dict = {
     services_formation_topic_add: "Add",
     services_photos: "Offer photos (max 5)",
     services_photos_hint:
-      "The first photo is the cover (logo or service image). jpeg, png, webp, gif.",
+      "The first photo is the cover (logo or service image). jpeg, png, webp, gif — max 100 MB.",
     services_website: "Service website",
     services_website_hint: "Optional — e.g. https://mysite.com",
     services_website_open: "Visit website",
@@ -1843,17 +1858,17 @@ const dict = {
     view_product: "View product",
     payout_channel: "Withdrawal channel (wallet)",
     payout_channel_hint:
-      "Africa / smaller volume: Mobile Money. Larger volume: bank account (or Stripe Connect in Canada). This channel receives Herald commissions and earnings.",
+      "Africa / smaller volume: Mobile Money. Canada: Interac e-Transfer for services (no Stripe). Card at scale: Stripe Connect.",
     payout_bank: "Bank account",
     payout_mobile: "Mobile Money",
     wallet_title: "Rfacto wallet",
     wallet_lead:
-      "Link a Mobile Money number or bank account to withdraw your earnings. Balances stay in the app until you request a withdrawal.",
+      "Link Interac (Canada) or Mobile Money (Africa) to receive service payments and withdraw Herald earnings. Stripe Connect is optional for card payments.",
     wallet_save_link: "Save my payout account",
     wallet_linked_ok: "Payout account linked to your wallet.",
     wallet_save_error: "Could not save payout channel.",
     wallet_bank_manual_hint:
-      "Local bank details (wire) — useful in Africa. In Canada also enable Stripe Connect above for automatic payouts.",
+      "Local bank details (wire) — useful in Africa. In Canada, prefer Interac above; Stripe Connect below is mainly for card payments.",
     wallet_bank_holder: "Account holder",
     wallet_bank_holder_ph: "Full name as on the bank account",
     wallet_bank_name: "Bank",
@@ -2036,9 +2051,11 @@ const dict = {
     svc_pay_title: "Service payment",
     svc_pay_hint:
       "The provider specified the service and price. Pay using your Profile method (card, Interac or mobile).",
+    svc_pay_hint_interac:
+      "In Canada, Interac e-Transfer is the simplest way to pay — no card or Stripe required.",
     svc_pay_request: "Request payment",
     svc_pay_request_hint:
-      "State the service and amount clearly. The client pays using their Profile settings (card / Interac / mobile).",
+      "State the service and amount clearly. In Canada, clients usually pay by Interac (set your email in Profile).",
     svc_pay_service_name: "Service (required)",
     svc_pay_amount: "Amount (required)",
     svc_pay_desc_placeholder: "Service details…",
@@ -2050,6 +2067,19 @@ const dict = {
     svc_pay_prefs_hint: "Preference saved in Profile",
     svc_pay_card: "Pay by card",
     svc_pay_interac: "Pay with Interac",
+    svc_pay_interac_primary: "Pay with Interac e-Transfer",
+    svc_pay_interac_steps_title: "How to pay with Interac",
+    svc_pay_interac_step1: "Open your bank app or Interac e-Transfer.",
+    svc_pay_interac_step2: "Send the amount to:",
+    svc_pay_interac_step3: "Exact amount:",
+    svc_pay_interac_step4: "Return here and tap “I have paid”.",
+    svc_pay_interac_missing_receiver:
+      "The provider must set their Interac email in Profile → Wallet before payment.",
+    svc_pay_interac_waiting_provider:
+      "Payment reported — waiting for provider confirmation.",
+    svc_pay_provider_setup_interac:
+      "To receive via Interac, add your Interac email in Profile → Wallet (Mobile Money → Interac). No Stripe required.",
+    svc_pay_other_methods: "Other payment methods",
     svc_pay_mobile: "Pay with mobile money",
     svc_pay_i_paid: "I have paid",
     svc_pay_confirm_received: "Confirm receipt",
@@ -2845,9 +2875,9 @@ const dict = {
     trust_payments: "Trust & payouts",
     trust_hint: "Required to accept parcels as a carrier.",
     verify_identity: "Verify my identity",
-    receive_earnings: "Set up bank account (Stripe)",
+    receive_earnings: "Card payments (Stripe Connect — optional)",
     receive_earnings_hint:
-      "Open a Stripe Express account to receive earnings after each delivery.",
+      "For card payments only. Service payments in Canada use Interac via Wallet — no Stripe required.",
     bank_ready:
       "Bank account ready: you can accept parcels and receive earnings after delivery.",
     payments_label: "Payouts",
