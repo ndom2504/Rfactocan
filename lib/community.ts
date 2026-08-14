@@ -57,6 +57,29 @@ export function parseAttachmentsJson(raw: string | null | undefined): CommunityA
   }
 }
 
+export function guessImageContentType(url: string) {
+  const hay = url.toLowerCase();
+  if (hay.includes(".png")) return "image/png";
+  if (hay.includes(".webp")) return "image/webp";
+  if (hay.includes(".gif")) return "image/png";
+  return "image/jpeg";
+}
+
+/** Reuse an existing cover/photo URL as a community attachment. */
+export function attachmentFromImageUrl(
+  url: string | null | undefined,
+  name: string
+): CommunityAttachment | null {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+  return {
+    url: trimmed.slice(0, 800),
+    name: (name || "cover").slice(0, 180),
+    contentType: guessImageContentType(trimmed),
+    size: 0,
+  };
+}
+
 export function isImageAttachment(contentType: string) {
   return contentType.startsWith("image/");
 }

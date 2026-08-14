@@ -171,3 +171,41 @@ export async function PATCH(request: Request, context: Ctx) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+export async function DELETE(_request: Request, context: Ctx) {
+  const session = await getSessionUser();
+  if (!session) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  const shop = await prisma.shop.findUnique({
+    where: { id },
+    include: {
+      _count: {
+        select: {
+          orders: { where: { status: { in: ["PAID", "FULFILLED"] } } },
+        },
+      },
+    },
+  });
+
+  if (!shop || (shop.userId !== session.id && session.role !== "ADMIN")) {
+    return NextResponse.json({ error: "Interdit" }, { status: 403 });
+  }
+
+  if (shop._count.orders > 0) {
+    await prisma.shop.update({
+      where: { id },
+      data: { status: "CLOSED" },
+    });
+    return NextResponse.json({
+      ok: true,
+      closed: true,
+      error: undefined,
+    });
+  }
+
+  await prisma.shop.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

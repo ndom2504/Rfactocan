@@ -228,9 +228,8 @@ export async function DELETE(_request: Request, ctx: Ctx) {
   if (listing.userId !== session.id && session.role !== "ADMIN") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
-  await prisma.serviceListing.update({
+  await prisma.serviceListing.delete({
     where: { id },
-    data: { status: "CLOSED" },
   });
   return NextResponse.json({ ok: true });
 }

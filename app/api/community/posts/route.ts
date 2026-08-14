@@ -4,6 +4,7 @@ import type { CommunityPostKind } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth";
 import {
   COMMUNITY_POST_KINDS,
+  attachmentFromImageUrl,
   isAllowedCommunityContentType,
   parseAttachmentsJson,
   type CommunityAttachment,
@@ -271,12 +272,22 @@ export async function GET(request: Request) {
 
     for (const s of services) {
       const author = s.user;
+      let cover: string | null = null;
+      try {
+        const photos = JSON.parse(s.photosJson || "[]") as unknown;
+        if (Array.isArray(photos) && typeof photos[0] === "string") {
+          cover = photos[0];
+        }
+      } catch {
+        /* ignore */
+      }
+      const attachment = attachmentFromImageUrl(cover, s.title);
       feed.push({
         id: `svc:${s.id}`,
         kind: "BUSINESS",
         title: s.title,
         body: s.description,
-        attachments: [],
+        attachments: attachment ? [attachment] : [],
         createdAt: s.createdAt,
         href: `/services/listing/${s.id}`,
         source: "service",
@@ -305,16 +316,13 @@ export async function GET(request: Request) {
         kind: "BUSINESS",
         title: shop.name,
         body: shop.description?.trim() || shop.name,
-        attachments: shop.logoUrl
-          ? [
-              {
-                url: shop.logoUrl,
-                name: shop.name,
-                contentType: "image/jpeg",
-                size: 0,
-              },
-            ]
-          : [],
+        attachments: (() => {
+          const cover = attachmentFromImageUrl(
+            shop.coverUrl || shop.logoUrl,
+            shop.name
+          );
+          return cover ? [cover] : [];
+        })(),
         createdAt: shop.createdAt,
         href: `/shops/${shop.id}`,
         source: "shop",

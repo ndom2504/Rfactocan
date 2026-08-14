@@ -450,6 +450,17 @@ const dict = {
     my_projects_empty_title: "Aucun projet pour l’instant",
     my_projects_empty_hint:
       "Publiez un service ou créez une boutique pour les retrouver ici.",
+    my_projects_share_community: "Partager dans la communauté",
+    my_projects_share_ok: "Partagé",
+    my_projects_share_error: "Partage impossible",
+    my_projects_share_service_lead: "Nouveau service Rfacto :",
+    my_projects_share_shop_lead: "Nouvelle boutique Rfacto :",
+    my_projects_share_see: "Voir :",
+    my_projects_delete: "Supprimer",
+    my_projects_delete_service_confirm:
+      "Supprimer ce service ? Il disparaîtra de vos projets et ne sera plus visible.",
+    my_projects_delete_shop_confirm:
+      "Supprimer cette boutique ? Les commandes déjà payées empêchent l’effacement définitif : la boutique sera alors fermée.",
     shops_my: "Mes boutiques",
     shops_orders: "Mes commandes boutique",
     shops_seller_orders: "Commandes reçues",
@@ -1945,6 +1956,17 @@ const dict = {
     my_projects_empty_title: "No projects yet",
     my_projects_empty_hint:
       "Publish a service or create a shop to find them here.",
+    my_projects_share_community: "Share to community",
+    my_projects_share_ok: "Shared",
+    my_projects_share_error: "Could not share",
+    my_projects_share_service_lead: "New Rfacto service:",
+    my_projects_share_shop_lead: "New Rfacto shop:",
+    my_projects_share_see: "See:",
+    my_projects_delete: "Delete",
+    my_projects_delete_service_confirm:
+      "Delete this service? It will leave your projects and no longer be visible.",
+    my_projects_delete_shop_confirm:
+      "Delete this shop? Paid orders prevent permanent deletion — the shop will be closed instead.",
     shops_my: "My shops",
     shops_orders: "My shop orders",
     shops_seller_orders: "Orders received",
