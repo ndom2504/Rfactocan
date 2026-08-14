@@ -5,6 +5,7 @@ import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
   createServiceCardCheckout,
+  isServicePaymentTerminal,
   syncServicePaymentFromStripe,
 } from "@/lib/service-payments";
 import { resolveServiceReceiverHint } from "@/lib/service-interac";
@@ -126,15 +127,18 @@ export async function POST(request: Request, ctx: Ctx) {
         );
       }
       const synced = await syncServicePaymentFromStripe(payment);
-      if (synced.status === "PAID") {
-        return NextResponse.json(
-          { error: "Déjà payé.", payment: synced },
-          { status: 400 }
-        );
+      if (synced.status === "PAID" || payment.status === "PAID") {
+        return NextResponse.json({
+          payment: synced.status === "PAID" ? synced : payment,
+          alreadyPaid: true,
+        });
       }
-      if (payment.status === "PAID") {
+      if (
+        isServicePaymentTerminal(synced.status) ||
+        isServicePaymentTerminal(payment.status)
+      ) {
         return NextResponse.json(
-          { error: "Déjà payé." },
+          { error: "Cette demande n'est plus payable." },
           { status: 400 }
         );
       }
@@ -148,6 +152,9 @@ export async function POST(request: Request, ctx: Ctx) {
       } catch (e) {
         const message =
           e instanceof Error ? e.message : "Paiement carte impossible.";
+        if (/déjà payé/i.test(message)) {
+          return NextResponse.json({ alreadyPaid: true });
+        }
         return NextResponse.json({ error: message }, { status: 400 });
       }
     }

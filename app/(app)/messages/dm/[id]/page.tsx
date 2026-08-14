@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkedText } from "@/components/linked-text";
 import { cn, formatDate } from "@/lib/utils";
-import { loadUserIntent } from "@/lib/user-intent";
 import { formatMoneyFromCents } from "@/lib/currency";
 
 type Peer = {
@@ -84,7 +83,6 @@ export default function DirectMessageChatPage() {
   const [payTitle, setPayTitle] = useState("");
   const [payDescription, setPayDescription] = useState("");
   const [payAmount, setPayAmount] = useState("");
-  const [payReceiver, setPayReceiver] = useState("");
   const [payBusy, setPayBusy] = useState(false);
   const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -131,9 +129,10 @@ export default function DirectMessageChatPage() {
 
   useEffect(() => {
     void load();
-    const prefs = loadUserIntent();
-    if (prefs.payoutIdentifier) setPayReceiver(prefs.payoutIdentifier);
-    const timer = setInterval(() => void loadMessages(), 5000);
+    const timer = setInterval(() => {
+      void loadMessages();
+      void loadInvoices();
+    }, 5000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -252,7 +251,6 @@ export default function DirectMessageChatPage() {
         title: payTitle.trim(),
         description: payDescription.trim(),
         amount,
-        receiverHint: payReceiver.trim() || undefined,
       }),
     });
     const data = await res.json();
@@ -316,7 +314,6 @@ export default function DirectMessageChatPage() {
           className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
         >
           <p className="text-sm font-medium">{t("svc_pay_request")}</p>
-          <p className="text-xs text-[var(--muted)]">{t("svc_pay_request_hint")}</p>
           <div className="space-y-1.5">
             <Label htmlFor="pay-title">{t("svc_pay_service_name")}</Label>
             <Input
@@ -351,15 +348,6 @@ export default function DirectMessageChatPage() {
               placeholder={t("svc_pay_desc_placeholder")}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pay-receiver">{t("svc_pay_receiver_hint")}</Label>
-            <Input
-              id="pay-receiver"
-              value={payReceiver}
-              onChange={(e) => setPayReceiver(e.target.value)}
-              placeholder={t("svc_pay_receiver_placeholder")}
-            />
-          </div>
           <Button type="submit" disabled={payBusy}>
             {payBusy ? t("loading") : t("svc_pay_send_request")}
           </Button>
@@ -374,9 +362,14 @@ export default function DirectMessageChatPage() {
           <p className="text-sm font-medium">{t("svc_pay_in_chat")}</p>
           {invoices.map((p) => {
             const iPay = p.clientId === meId;
+            const open =
+              p.status === "AWAITING_PAYMENT" ||
+              p.status === "AWAITING_CONFIRMATION";
             const statusKey =
               p.status === "AWAITING_PAYMENT"
-                ? "svc_pay_status_AWAITING_PAYMENT"
+                ? iPay
+                  ? "svc_pay_pending_to_pay"
+                  : "svc_pay_status_waiting"
                 : p.status === "AWAITING_CONFIRMATION"
                   ? "svc_pay_status_AWAITING_CONFIRMATION"
                   : p.status === "PAID"
@@ -394,18 +387,26 @@ export default function DirectMessageChatPage() {
                 <div className="min-w-0 text-sm">
                   <p className="font-medium">{p.title}</p>
                   <p className="text-xs text-[var(--muted)]">
-                    {iPay ? t("svc_pay_you_pay") : t("svc_pay_you_receive")}
-                    {" · "}
                     {formatMoneyFromCents(p.amountCents, p.currency)}
                     {statusKey ? ` · ${t(statusKey)}` : ""}
                   </p>
                 </div>
-                <Link
-                  href={`/service-payments/${p.id}`}
-                  className="text-xs font-semibold text-[var(--accent)] underline"
-                >
-                  {t("svc_pay_open")}
-                </Link>
+                {open ? (
+                  <Link
+                    href={`/service-payments/${p.id}`}
+                    className="text-xs font-semibold text-[var(--accent)] underline"
+                  >
+                    {iPay ? t("svc_pay_pay") : t("svc_pay_open")}
+                  </Link>
+                ) : (
+                  <span className="text-xs font-medium text-[var(--muted)]">
+                    {p.status === "PAID"
+                      ? t("svc_pay_status_PAID")
+                      : statusKey
+                        ? t(statusKey)
+                        : ""}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -425,9 +426,18 @@ export default function DirectMessageChatPage() {
             /demande de paiement|payment request/i.test(m.body)
               ? m.contextId
               : null);
-          const paymentLink = paymentId
-            ? `/service-payments/${paymentId}`
-            : null;
+          const invoice = paymentId
+            ? invoices.find((p) => p.id === paymentId)
+            : undefined;
+          const paymentOpen =
+            !invoice ||
+            invoice.status === "AWAITING_PAYMENT" ||
+            invoice.status === "AWAITING_CONFIRMATION";
+          const iPay = invoice ? invoice.clientId === meId : false;
+          const bodyWithoutPayLink = m.body
+            .replace(/https?:\/\/\S*\/service-payments\/[a-zA-Z0-9_-]+/gi, "")
+            .replace(/\/service-payments\/[a-zA-Z0-9_-]+/gi, "")
+            .trim();
           return (
             <div
               key={m.id}
@@ -468,10 +478,10 @@ export default function DirectMessageChatPage() {
                   </a>
                 </div>
               )}
-              {m.body && !isAttachmentOnlyBody(m.body) && (
+              {m.body && !isAttachmentOnlyBody(m.body) && bodyWithoutPayLink && (
                 <p className="whitespace-pre-wrap break-words">
                   <LinkedText
-                    text={m.body}
+                    text={bodyWithoutPayLink}
                     linkClassName={
                       mine
                         ? "break-all font-medium text-white underline underline-offset-2"
@@ -480,15 +490,28 @@ export default function DirectMessageChatPage() {
                   />
                 </p>
               )}
-              {paymentLink && (
+              {paymentId && paymentOpen && (
                 <Link
-                  href={paymentLink}
+                  href={`/service-payments/${paymentId}`}
                   className={`mt-2 inline-block text-xs font-semibold underline ${
                     mine ? "text-white" : "text-[var(--accent)]"
                   }`}
                 >
-                  {t("svc_pay_open")}
+                  {iPay ? t("svc_pay_pay") : t("svc_pay_open")}
                 </Link>
+              )}
+              {paymentId && !paymentOpen && (
+                <p
+                  className={`mt-2 text-xs font-semibold ${
+                    mine ? "text-white/90" : "text-[var(--muted)]"
+                  }`}
+                >
+                  {invoice?.status === "PAID"
+                    ? t("svc_pay_status_PAID")
+                    : invoice?.status === "CANCELLED"
+                      ? t("svc_pay_status_CANCELLED")
+                      : t("svc_pay_status_EXPIRED")}
+                </p>
               )}
               <p
                 className={`mt-1 text-[10px] ${

@@ -20,10 +20,10 @@ type PaymentRow = {
   client?: { displayName?: string };
 };
 
-function statusKey(status: string) {
+function statusKey(status: string, iPay: boolean) {
   switch (status) {
     case "AWAITING_PAYMENT":
-      return "svc_pay_status_AWAITING_PAYMENT" as const;
+      return iPay ? "svc_pay_pending_to_pay" as const : "svc_pay_status_waiting" as const;
     case "AWAITING_CONFIRMATION":
       return "svc_pay_status_AWAITING_CONFIRMATION" as const;
     case "PAID":
@@ -73,8 +73,10 @@ export default function ServicePaymentsInboxPage() {
       }
     }
     void load();
+    const timer = setInterval(() => void load(), 5000);
     return () => {
       cancelled = true;
+      clearInterval(timer);
     };
   }, [t]);
 
@@ -98,24 +100,32 @@ export default function ServicePaymentsInboxPage() {
           const other = iPay
             ? p.provider?.displayName
             : p.client?.displayName;
-          const status = statusKey(p.status);
+          const status = statusKey(p.status, iPay);
+          const open =
+            p.status === "AWAITING_PAYMENT" ||
+            p.status === "AWAITING_CONFIRMATION";
           return (
             <Card key={p.id}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <CardTitle className="text-base">{p.title}</CardTitle>
                   <CardDescription>
-                    {iPay ? t("svc_pay_you_pay") : t("svc_pay_you_receive")}
-                    {` · ${other || "—"} · ${formatMoneyFromCents(p.amountCents, p.currency)}`}
+                    {`${other || "—"} · ${formatMoneyFromCents(p.amountCents, p.currency)}`}
                     {status ? ` · ${t(status)}` : ""}
                     {p.createdAt ? ` · ${formatDate(p.createdAt)}` : ""}
                   </CardDescription>
                 </div>
-                <Link href={`/service-payments/${p.id}`}>
-                  <Button variant="outline" size="sm">
-                    {t("svc_pay_open")}
-                  </Button>
-                </Link>
+                {open ? (
+                  <Link href={`/service-payments/${p.id}`}>
+                    <Button variant="outline" size="sm">
+                      {iPay ? t("svc_pay_pay") : t("svc_pay_open")}
+                    </Button>
+                  </Link>
+                ) : (
+                  <span className="text-sm font-medium text-[var(--muted)]">
+                    {status ? t(status) : ""}
+                  </span>
+                )}
               </div>
             </Card>
           );

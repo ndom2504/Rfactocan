@@ -13,8 +13,8 @@ import { prisma } from "@/lib/prisma";
 import { getAppUrl } from "@/lib/app-url";
 import {
   majorToCents,
+  quoteServiceFromTariff,
   servicePaymentDeadlineFrom,
-  splitServiceAmount,
   syncPendingServicePaymentsFromStripe,
 } from "@/lib/service-payments";
 import { resolveServiceReceiverHint } from "@/lib/service-interac";
@@ -119,15 +119,15 @@ export async function POST(request: Request) {
 
     const currency =
       normalizeCurrency(body.currency ?? listing?.currency ?? "CAD") ?? "CAD";
-    const amountCents = majorToCents(body.amount);
-    if (amountCents < 100) {
+    const tariffCents = majorToCents(body.amount);
+    if (tariffCents < 100) {
       return NextResponse.json(
         { error: "Montant minimum : 1,00 dans la devise choisie." },
         { status: 400 }
       );
     }
-    const { platformFeeCents, providerPayoutCents } =
-      splitServiceAmount(amountCents);
+    const { amountCents, platformFeeCents, providerPayoutCents } =
+      quoteServiceFromTariff(tariffCents);
 
     let receiverHint = body.receiverHint?.trim() || null;
     try {

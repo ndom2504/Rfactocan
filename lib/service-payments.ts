@@ -15,11 +15,39 @@ export function platformFeeBps() {
   return Number.isFinite(parsed) ? Math.floor(parsed) : 1000;
 }
 
+/** Stripe card fee baked into the client total (default 3.3%). */
+export function stripeFeeBps() {
+  const raw = process.env.STRIPE_FEE_BPS;
+  const parsed = raw ? Number(raw) : 330;
+  return Number.isFinite(parsed) ? Math.floor(parsed) : 330;
+}
+
+/** Provider sets a tariff; client pays tariff + Rfacto 10% + Stripe 3.3%. */
+export function quoteServiceFromTariff(tariffCents: number) {
+  const platformFeeCents = Math.floor((tariffCents * platformFeeBps()) / 10000);
+  const stripeFeeCents = Math.floor((tariffCents * stripeFeeBps()) / 10000);
+  return {
+    providerPayoutCents: tariffCents,
+    platformFeeCents,
+    stripeFeeCents,
+    amountCents: tariffCents + platformFeeCents + stripeFeeCents,
+  };
+}
+
 export function splitServiceAmount(amountCents: number) {
-  const feeBps = platformFeeBps();
-  const platformFeeCents = Math.floor((amountCents * feeBps) / 10000);
-  const providerPayoutCents = amountCents - platformFeeCents;
-  return { platformFeeCents, providerPayoutCents, feeBps };
+  return quoteServiceFromTariff(amountCents);
+}
+
+export function isServicePaymentOpen(status: string) {
+  return (
+    status === "AWAITING_PAYMENT" || status === "AWAITING_CONFIRMATION"
+  );
+}
+
+export function isServicePaymentTerminal(status: string) {
+  return (
+    status === "PAID" || status === "CANCELLED" || status === "EXPIRED"
+  );
 }
 
 export function servicePaymentDeadlineFrom(hours = 48) {
@@ -103,7 +131,7 @@ export async function markServicePaymentPaid(
       userId: existing.providerId,
       type: "SERVICE_PAYMENT",
       title: "Paiement reçu",
-      body: `« ${existing.title} » · ${amount}. Ouvrez la demande pour voir où les fonds sont déposés.`,
+      body: `« ${existing.title} » · ${amount}`,
       href: `/service-payments/${paymentId}`,
     });
   } catch (err) {
@@ -235,6 +263,9 @@ export async function createServiceCardCheckout(input: {
   if (input.payment.amountCents <= 0) {
     throw new Error("Montant invalide");
   }
+  if (isServicePaymentTerminal(input.payment.status)) {
+    throw new Error("Cette demande n'est plus payable.");
+  }
 
   const currencyCode =
     (normalizeCurrency(input.payment.currency.toUpperCase()) as MoneyCurrency | null) ??
@@ -242,9 +273,41 @@ export async function createServiceCardCheckout(input: {
   const stripeCurrency = toStripeCurrency(currencyCode);
   const stripe = getStripe();
   const appUrl = getAppUrl();
+
+  if (input.payment.stripeCheckoutSessionId) {
+    try {
+      const existing = await stripe.checkout.sessions.retrieve(
+        input.payment.stripeCheckoutSessionId
+      );
+      if (existing.payment_status === "paid") {
+        await markServicePaymentPaid(input.payment.id, {
+          sessionId: existing.id,
+          paymentIntentId:
+            typeof existing.payment_intent === "string"
+              ? existing.payment_intent
+              : existing.payment_intent?.id ?? undefined,
+        });
+        throw new Error("Déjà payé.");
+      }
+      if (existing.status === "open" && existing.url) {
+        return {
+          checkoutUrl: existing.url,
+          url: existing.url,
+          sessionId: existing.id,
+        };
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === "Déjà payé.") throw err;
+    }
+  }
+
   const connectReady =
     providerCanReceiveCard(input.provider) &&
     Boolean(input.provider.stripeConnectAccountId);
+  const applicationFeeCents = Math.max(
+    0,
+    input.payment.amountCents - input.payment.providerPayoutCents
+  );
 
   const paymentIntentData: {
     metadata: Record<string, string>;
@@ -260,7 +323,7 @@ export async function createServiceCardCheckout(input: {
     },
   };
   if (connectReady && input.provider.stripeConnectAccountId) {
-    paymentIntentData.application_fee_amount = input.payment.platformFeeCents;
+    paymentIntentData.application_fee_amount = applicationFeeCents;
     paymentIntentData.transfer_data = {
       destination: input.provider.stripeConnectAccountId,
     };
