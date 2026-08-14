@@ -1435,8 +1435,6 @@ const dict = {
       "Je respecte les lois douanières des pays de départ, transit et arrivée.",
     kyc_connect_hint:
       "Identité Rfacto et compte bancaire Stripe sont deux étapes séparées. Configurez-les dans Profil.",
-    trust_hint:
-      "Identité (badge / colis) et compte bancaire Stripe (virements carte) sont indépendants.",
     identity_section_title: "1. Identité Rfacto",
     identity_section_hint:
       "Pour le badge vérifié et les colis. Si vous n’avez pas de passeport ou de permis canadien, envoyez une carte d’assurance.",
