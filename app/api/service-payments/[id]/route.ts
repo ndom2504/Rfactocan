@@ -66,6 +66,7 @@ function paymentPayload(
     platformFeeCents: number;
     providerPayoutCents: number;
     provider: {
+      id: string;
       kycStatus: string;
       stripeConnectAccountId: string | null;
       stripeConnectChargesEnabled: boolean;
