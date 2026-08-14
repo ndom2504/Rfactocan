@@ -359,7 +359,7 @@ export async function GET(request: Request) {
     createdAt: Date;
     buyer: { displayName: string };
     shop: { name: string };
-    product: { name: string };
+    product: { title: string };
   }> = [];
   try {
     const [shopAgg, shopRows] = await Promise.all([
@@ -380,7 +380,7 @@ export async function GET(request: Request) {
           createdAt: true,
           buyer: { select: { displayName: true } },
           shop: { select: { name: true } },
-          product: { select: { name: true } },
+          product: { select: { title: true } },
         },
       }),
     ]);
@@ -425,7 +425,7 @@ export async function GET(request: Request) {
       platformFeeCents: p.platformFeeCents,
       currency: p.currency,
       createdAt: p.createdAt,
-      title: p.product.name,
+      title: p.product.title,
       payerName: p.buyer.displayName,
       payeeName: p.shop.name,
     })),
