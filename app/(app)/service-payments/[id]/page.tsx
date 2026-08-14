@@ -157,6 +157,12 @@ export default function ServicePaymentPage() {
       >
         ← {t("messages_title")}
       </Link>
+      <Link
+        href="/service-payments"
+        className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+      >
+        ← {t("svc_pay_inbox")}
+      </Link>
 
       <Card className="space-y-3">
         <CardTitle>{t("svc_pay_title")}</CardTitle>

@@ -67,11 +67,12 @@ export async function GET(_request: Request, { params }: Params) {
     data: { readAt: new Date() },
   });
 
-  const messages = await prisma.directMessage.findMany({
+  const recent = await prisma.directMessage.findMany({
     where: { threadId: id },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
     take: 200,
   });
+  const messages = recent.reverse();
 
   const peerId = otherUserId(thread, session.id);
   const peer = await prisma.user.findUnique({

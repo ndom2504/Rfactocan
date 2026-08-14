@@ -122,6 +122,12 @@ export default async function MessagesPage() {
           {t(locale, "messages_title")}
         </h1>
         <p className="text-[var(--muted)]">{t(locale, "messages_subtitle")}</p>
+        <Link
+          href="/service-payments"
+          className="mt-2 inline-block text-sm font-medium text-[var(--accent)] underline underline-offset-2"
+        >
+          {t(locale, "svc_pay_inbox")}
+        </Link>
       </div>
       <div className="space-y-3">
         {rows.map((row) => (

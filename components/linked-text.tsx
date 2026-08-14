@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { splitLinkify } from "@/lib/linkify";
 
-const linkClass =
+const defaultLinkClass =
   "break-all font-medium text-[var(--accent)] underline underline-offset-2 hover:opacity-80";
 
 type Props = {
   text: string;
+  linkClassName?: string;
 };
 
-export function LinkedText({ text }: Props) {
+export function LinkedText({ text, linkClassName }: Props) {
   const parts = splitLinkify(text);
+  const linkClass = linkClassName ?? defaultLinkClass;
   return (
     <>
       {parts.map((part, i) => {

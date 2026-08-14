@@ -635,6 +635,16 @@ const dict = {
     svc_pay_status_CANCELLED: "Annulé",
     svc_pay_status_EXPIRED: "Expiré",
     svc_pay_action_ok: "Action enregistrée.",
+    svc_pay_inbox: "Paiements services",
+    svc_pay_inbox_hint:
+      "Factures envoyées et reçues. Ouvrez une demande pour payer (Interac au Canada).",
+    svc_pay_sent_ok:
+      "Demande envoyée. Le client la voit dans cette conversation et dans Paiements services.",
+    svc_pay_pending_to_pay: "À payer",
+    svc_pay_empty: "Aucune demande de paiement.",
+    svc_pay_in_chat: "Demandes de paiement",
+    svc_pay_you_pay: "Vous devez payer",
+    svc_pay_you_receive: "Vous recevez",
     search_mode_livreurs: "Chercher des livreurs",
     search_mode_commandes: "Chercher des commandes",
     search_services: "Trouver un service",
@@ -2141,6 +2151,16 @@ const dict = {
     svc_pay_status_CANCELLED: "Cancelled",
     svc_pay_status_EXPIRED: "Expired",
     svc_pay_action_ok: "Action saved.",
+    svc_pay_inbox: "Service payments",
+    svc_pay_inbox_hint:
+      "Invoices sent and received. Open a request to pay (Interac in Canada).",
+    svc_pay_sent_ok:
+      "Request sent. The client will see it in this chat and under Service payments.",
+    svc_pay_pending_to_pay: "To pay",
+    svc_pay_empty: "No payment requests.",
+    svc_pay_in_chat: "Payment requests",
+    svc_pay_you_pay: "You pay",
+    svc_pay_you_receive: "You receive",
     search_shops: "Find a shop",
     search_shops_hint:
       "Search by name, product, category, city or seller.",

@@ -28,6 +28,8 @@ export async function notifyUser(input: {
         href: input.href ?? "",
         ...(input.data ?? {}),
       },
+    }).catch((error) => {
+      console.error("[notification] fcm", error);
     });
     return row;
   } catch (error) {

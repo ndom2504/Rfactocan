@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { assertBothVerified, assertThreadParticipant } from "@/lib/dm";
+import {
+  assertBothVerified,
+  assertThreadParticipant,
+  getOrCreateDirectThread,
+  otherUserId,
+} from "@/lib/dm";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
+import { getAppUrl } from "@/lib/app-url";
 import {
   majorToCents,
   servicePaymentDeadlineFrom,
@@ -48,8 +54,23 @@ export async function POST(request: Request) {
       );
     }
 
-    if (body.threadId) {
-      const thread = await assertThreadParticipant(body.threadId, session.id);
+    let listing = null as Awaited<
+      ReturnType<typeof prisma.serviceListing.findUnique>
+    >;
+    if (body.listingId) {
+      listing = await prisma.serviceListing.findUnique({
+        where: { id: body.listingId },
+      });
+      // Ignore stale / foreign listing ids (e.g. lastContextId is a payment id).
+      if (!listing || listing.userId !== session.id) {
+        listing = null;
+      }
+    }
+
+    let threadId =
+      typeof body.threadId === "string" ? body.threadId.trim() : "";
+    if (threadId) {
+      const thread = await assertThreadParticipant(threadId, session.id);
       if (!thread) {
         return NextResponse.json(
           { error: "Conversation introuvable." },
@@ -64,19 +85,14 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
-    }
-
-    let listing = null as Awaited<
-      ReturnType<typeof prisma.serviceListing.findUnique>
-    >;
-    if (body.listingId) {
-      listing = await prisma.serviceListing.findUnique({
-        where: { id: body.listingId },
+    } else {
+      const thread = await getOrCreateDirectThread({
+        meId: session.id,
+        peerId: body.clientId,
+        contextType: "SERVICE",
+        contextId: listing?.id ?? null,
       });
-      // Ignore stale / foreign listing ids (e.g. lastContextId is a payment id).
-      if (!listing || listing.userId !== session.id) {
-        listing = null;
-      }
+      threadId = thread.id;
     }
 
     const currency =
@@ -116,7 +132,7 @@ export async function POST(request: Request) {
         providerId: session.id,
         clientId: body.clientId,
         listingId: listing?.id ?? null,
-        threadId: body.threadId ?? null,
+        threadId,
         title: body.title.trim(),
         description: (body.description || "").trim(),
         amountCents,
@@ -130,12 +146,14 @@ export async function POST(request: Request) {
     });
 
     const amountLabel = formatMoneyFromCents(amountCents, currency);
-    const systemBody = `Demande de paiement : ${payment.title} · ${amountLabel}\nPayer : /service-payments/${payment.id}`;
+    const payPath = `/service-payments/${payment.id}`;
+    const payUrl = `${getAppUrl()}${payPath}`;
+    const systemBody = `Demande de paiement : ${payment.title} · ${amountLabel}\n${payUrl}`;
 
-    if (body.threadId) {
+    try {
       await prisma.directMessage.create({
         data: {
-          threadId: body.threadId,
+          threadId,
           senderId: session.id,
           body: systemBody,
           contextType: "SERVICE",
@@ -143,18 +161,28 @@ export async function POST(request: Request) {
         },
       });
       await prisma.directThread.update({
-        where: { id: body.threadId },
-        data: { lastMessageAt: new Date() },
+        where: { id: threadId },
+        data: {
+          lastMessageAt: new Date(),
+          lastContextType: "SERVICE",
+          lastContextId: payment.id,
+        },
       });
+    } catch (e) {
+      console.error("[service-payments] dm insert", e);
     }
 
-    await notifyUser({
-      userId: body.clientId,
-      type: "SERVICE_PAYMENT",
-      title: "Demande de paiement service",
-      body: `${session.displayName} · ${payment.title} · ${amountLabel}`,
-      href: `/service-payments/${payment.id}`,
-    });
+    try {
+      await notifyUser({
+        userId: body.clientId,
+        type: "SERVICE_PAYMENT",
+        title: "Demande de paiement service",
+        body: `${session.displayName} · ${payment.title} · ${amountLabel}`,
+        href: payPath,
+      });
+    } catch (e) {
+      console.error("[service-payments] notify", e);
+    }
 
     return NextResponse.json({ payment }, { status: 201 });
   } catch (error) {
@@ -177,34 +205,62 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const threadId = searchParams.get("threadId");
+  const threadId = searchParams.get("threadId")?.trim() || "";
   const role = searchParams.get("role"); // client | provider | all
 
-  const payments = await prisma.servicePaymentRequest.findMany({
-    where: {
-      ...(threadId ? { threadId } : {}),
-      ...(role === "client"
-        ? { clientId: session.id }
-        : role === "provider"
-          ? { providerId: session.id }
-          : {
-              OR: [{ clientId: session.id }, { providerId: session.id }],
-            }),
-    },
-    orderBy: { createdAt: "desc" },
-    take: 40,
-    include: {
-      provider: {
-        select: { id: true, displayName: true, avatarUrl: true },
-      },
-      client: {
-        select: { id: true, displayName: true, avatarUrl: true },
-      },
-      listing: {
-        select: { id: true, title: true, category: true },
-      },
-    },
-  });
+  let threadPeerId: string | null = null;
+  if (threadId) {
+    const thread = await assertThreadParticipant(threadId, session.id);
+    if (!thread) {
+      return NextResponse.json(
+        { error: "Conversation introuvable." },
+        { status: 404 }
+      );
+    }
+    threadPeerId = otherUserId(thread, session.id);
+  }
 
-  return NextResponse.json({ payments });
+  try {
+    const payments = await prisma.servicePaymentRequest.findMany({
+      where: {
+        ...(threadId
+          ? {
+              OR: [
+                { threadId },
+                {
+                  OR: [
+                    { providerId: session.id, clientId: threadPeerId! },
+                    { providerId: threadPeerId!, clientId: session.id },
+                  ],
+                },
+              ],
+            }
+          : role === "client"
+            ? { clientId: session.id }
+            : role === "provider"
+              ? { providerId: session.id }
+              : {
+                  OR: [{ clientId: session.id }, { providerId: session.id }],
+                }),
+      },
+      orderBy: { createdAt: "desc" },
+      take: 40,
+      include: {
+        provider: {
+          select: { id: true, displayName: true, avatarUrl: true },
+        },
+        client: {
+          select: { id: true, displayName: true, avatarUrl: true },
+        },
+        listing: {
+          select: { id: true, title: true, category: true },
+        },
+      },
+    });
+
+    return NextResponse.json({ payments });
+  } catch (e) {
+    console.error("[service-payments] list", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

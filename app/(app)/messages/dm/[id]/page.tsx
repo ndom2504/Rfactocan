@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
+import { LinkedText } from "@/components/linked-text";
 import { cn, formatDate } from "@/lib/utils";
 import { loadUserIntent } from "@/lib/user-intent";
+import { formatMoneyFromCents } from "@/lib/currency";
 
 type Peer = {
   id: string;
@@ -35,6 +37,16 @@ type Thread = {
   lastContextId?: string | null;
 };
 
+type ThreadPayment = {
+  id: string;
+  title: string;
+  amountCents: number;
+  currency: string;
+  status: string;
+  clientId: string;
+  providerId: string;
+};
+
 function isImageUrl(url: string) {
   if (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(url)) return true;
   if (url.includes("/api/media")) return true;
@@ -51,11 +63,14 @@ function isAttachmentOnlyBody(body: string) {
 }
 
 export default function DirectMessageChatPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string | string[] }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { t } = useI18n();
   const [meId, setMeId] = useState("");
   const [peer, setPeer] = useState<Peer | null>(null);
   const [thread, setThread] = useState<Thread | null>(null);
+  const [invoices, setInvoices] = useState<ThreadPayment[]>([]);
+  const [payOk, setPayOk] = useState("");
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -75,9 +90,11 @@ export default function DirectMessageChatPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
-    const [meRes, msgRes] = await Promise.all([
+    if (!id) return;
+    const [meRes, msgRes, payRes] = await Promise.all([
       fetch("/api/auth/me"),
       fetch(`/api/dm/${id}/messages`),
+      fetch(`/api/service-payments?threadId=${encodeURIComponent(id)}`),
     ]);
     const meData = await meRes.json();
     const msgData = await msgRes.json();
@@ -89,6 +106,10 @@ export default function DirectMessageChatPage() {
       setError("");
     } else {
       setError(msgData.error || "Erreur");
+    }
+    if (payRes.ok) {
+      const payData = await payRes.json();
+      setInvoices(payData.payments ?? []);
     }
     setLoading(false);
   }
@@ -227,6 +248,7 @@ export default function DirectMessageChatPage() {
     }
     setShowPayForm(false);
     setPayDescription("");
+    setPayOk(t("svc_pay_sent_ok"));
     void load();
   }
 
@@ -329,7 +351,51 @@ export default function DirectMessageChatPage() {
         </form>
       )}
 
+      {payOk && <p className="text-sm text-emerald-700">{payOk}</p>}
       {error && <p className="text-sm text-red-700">{error}</p>}
+
+      {invoices.length > 0 && (
+        <div className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="text-sm font-medium">{t("svc_pay_in_chat")}</p>
+          {invoices.map((p) => {
+            const iPay = p.clientId === meId;
+            const statusKey =
+              p.status === "AWAITING_PAYMENT"
+                ? "svc_pay_status_AWAITING_PAYMENT"
+                : p.status === "AWAITING_CONFIRMATION"
+                  ? "svc_pay_status_AWAITING_CONFIRMATION"
+                  : p.status === "PAID"
+                    ? "svc_pay_status_PAID"
+                    : p.status === "CANCELLED"
+                      ? "svc_pay_status_CANCELLED"
+                      : p.status === "EXPIRED"
+                        ? "svc_pay_status_EXPIRED"
+                        : null;
+            return (
+              <div
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+              >
+                <div className="min-w-0 text-sm">
+                  <p className="font-medium">{p.title}</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {iPay ? t("svc_pay_you_pay") : t("svc_pay_you_receive")}
+                    {" · "}
+                    {formatMoneyFromCents(p.amountCents, p.currency)}
+                    {statusKey ? ` · ${t(statusKey)}` : ""}
+                  </p>
+                </div>
+                <Link
+                  href={`/service-payments/${p.id}`}
+                  className="text-xs font-semibold text-[var(--accent)] underline"
+                >
+                  {t("svc_pay_open")}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex min-h-[50vh] flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
         {messages.length === 0 && (
@@ -337,12 +403,16 @@ export default function DirectMessageChatPage() {
         )}
         {messages.map((m) => {
           const mine = m.senderId === meId;
-          const paymentLink =
-            m.contextType === "SERVICE" &&
+          const paymentId =
+            m.body.match(/\/service-payments\/([a-zA-Z0-9_-]+)/)?.[1] ??
+            (m.contextType === "SERVICE" &&
             m.contextId &&
-            m.body.includes("/service-payments/")
-              ? `/service-payments/${m.contextId}`
-              : null;
+            /demande de paiement|payment request/i.test(m.body)
+              ? m.contextId
+              : null);
+          const paymentLink = paymentId
+            ? `/service-payments/${paymentId}`
+            : null;
           return (
             <div
               key={m.id}
@@ -384,7 +454,16 @@ export default function DirectMessageChatPage() {
                 </div>
               )}
               {m.body && !isAttachmentOnlyBody(m.body) && (
-                <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                <p className="whitespace-pre-wrap break-words">
+                  <LinkedText
+                    text={m.body}
+                    linkClassName={
+                      mine
+                        ? "break-all font-medium text-white underline underline-offset-2"
+                        : undefined
+                    }
+                  />
+                </p>
               )}
               {paymentLink && (
                 <Link

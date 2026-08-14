@@ -9,7 +9,7 @@ export type LinkifyPart =
   | { type: "internal"; value: string; href: string };
 
 const TOKEN_RE =
-  /((?:https?:\/\/|www\.)[^\s<]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(\/(?:services|shops|community|trips|requests|bookings|meet|projects|profile|dashboard)[^\s<]*)/gi;
+  /((?:https?:\/\/|www\.)[^\s<]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(\/(?:services|shops|community|trips|requests|bookings|meet|projects|profile|dashboard|service-payments|messages)[^\s<]*)/gi;
 
 const TRAILING_PUNCT_RE = /[.,;:!?)}\]'"»]+$/;
 
