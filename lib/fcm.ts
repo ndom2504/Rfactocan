@@ -83,14 +83,19 @@ export async function sendFcmToUsers(input: {
           title: input.title,
           body: input.body,
         },
-        data: input.data,
+        data: {
+          title: input.title,
+          body: input.body,
+          ...(input.data ?? {}),
+        },
         android: {
           priority: "high",
           notification: {
             channelId: androidChannelId,
             icon: "ic_stat_rfacto",
             color: "#28541D",
-            sound: "rfacto_notify",
+            sound: "default",
+            defaultSound: true,
             priority: "high",
             defaultVibrateTimings: true,
             notificationCount: 1,
