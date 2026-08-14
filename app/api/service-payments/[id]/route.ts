@@ -40,8 +40,9 @@ function paymentPayload(
     payment.receiverHint?.trim() ||
     providerInteracEmail(payment.provider) ||
     null;
-  const { payoutIdentifier: _pi, payoutProvider: _pp, ...providerPublic } =
-    payment.provider;
+  const providerPublic = (({ payoutIdentifier, payoutProvider, ...rest }) => rest)(
+    payment.provider
+  );
 
   return {
     payment: {

@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { CountryCodeSelect } from "@/components/country-select";
 import { useI18n } from "@/components/locale-provider";
 import { PromoImagesDialog } from "@/components/promo-images-dialog";
+import { Button } from "@/components/ui/button";
 import { uploadServicePhoto } from "@/lib/service-upload-client";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
