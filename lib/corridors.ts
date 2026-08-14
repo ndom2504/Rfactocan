@@ -168,7 +168,12 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   REQUIRES_PAYMENT: "Paiement requis",
   AUTHORIZED: "Fonds bloqués",
   CAPTURED: "Payé / transféré",
+  PAID: "Payé",
+  AWAITING_PAYMENT: "En attente",
+  AWAITING_CONFIRMATION: "À confirmer",
+  FULFILLED: "Livré",
   CANCELLED: "Annulé",
+  EXPIRED: "Expiré",
   REFUNDED: "Remboursé",
   FAILED: "Échoué",
 };

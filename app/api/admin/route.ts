@@ -298,6 +298,144 @@ export async function GET(request: Request) {
     },
   });
 
+  let servicePaidCount = 0;
+  let serviceFeeCents = 0;
+  let serviceVolumeCents = 0;
+  let recentServices: Array<{
+    id: string;
+    title: string;
+    status: string;
+    amountCents: number;
+    platformFeeCents: number;
+    currency: string;
+    paidAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    client: { displayName: string };
+    provider: { displayName: string };
+  }> = [];
+  try {
+    const [svcAgg, svcRows] = await Promise.all([
+      prisma.servicePaymentRequest.aggregate({
+        where: { status: "PAID" },
+        _sum: { platformFeeCents: true, amountCents: true },
+        _count: true,
+      }),
+      prisma.servicePaymentRequest.findMany({
+        orderBy: { updatedAt: "desc" },
+        take: 30,
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          amountCents: true,
+          platformFeeCents: true,
+          currency: true,
+          paidAt: true,
+          createdAt: true,
+          updatedAt: true,
+          client: { select: { displayName: true } },
+          provider: { select: { displayName: true } },
+        },
+      }),
+    ]);
+    servicePaidCount = svcAgg._count;
+    serviceFeeCents = svcAgg._sum.platformFeeCents ?? 0;
+    serviceVolumeCents = svcAgg._sum.amountCents ?? 0;
+    recentServices = svcRows;
+  } catch (e) {
+    console.error("[admin] service payments KPI", e);
+  }
+
+  let shopPaidCount = 0;
+  let shopFeeCents = 0;
+  let shopVolumeCents = 0;
+  let recentShops: Array<{
+    id: string;
+    status: string;
+    amountCents: number;
+    platformFeeCents: number;
+    currency: string;
+    createdAt: Date;
+    buyer: { displayName: string };
+    shop: { name: string };
+    product: { name: string };
+  }> = [];
+  try {
+    const [shopAgg, shopRows] = await Promise.all([
+      prisma.shopOrder.aggregate({
+        where: { status: { in: ["PAID", "FULFILLED"] } },
+        _sum: { platformFeeCents: true, amountCents: true },
+        _count: true,
+      }),
+      prisma.shopOrder.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          status: true,
+          amountCents: true,
+          platformFeeCents: true,
+          currency: true,
+          createdAt: true,
+          buyer: { select: { displayName: true } },
+          shop: { select: { name: true } },
+          product: { select: { name: true } },
+        },
+      }),
+    ]);
+    shopPaidCount = shopAgg._count;
+    shopFeeCents = shopAgg._sum.platformFeeCents ?? 0;
+    shopVolumeCents = shopAgg._sum.amountCents ?? 0;
+    recentShops = shopRows;
+  } catch (e) {
+    console.error("[admin] shop orders KPI", e);
+  }
+
+  const activityPayments = [
+    ...recentPayments.map((p) => ({
+      id: p.id,
+      kind: "booking" as const,
+      status: p.status,
+      amountCents: p.amountCadCents,
+      platformFeeCents: p.platformFeeCents,
+      currency: p.currency,
+      createdAt: p.createdAt,
+      title: `${p.booking.trip.fromCity} → ${p.booking.trip.toCity}`,
+      payerName: p.booking.sender.displayName,
+      payeeName: p.booking.trip.user.displayName,
+    })),
+    ...recentServices.map((p) => ({
+      id: p.id,
+      kind: "service" as const,
+      status: p.status,
+      amountCents: p.amountCents,
+      platformFeeCents: p.platformFeeCents,
+      currency: p.currency,
+      createdAt: p.paidAt ?? p.updatedAt ?? p.createdAt,
+      title: p.title,
+      payerName: p.client.displayName,
+      payeeName: p.provider.displayName,
+    })),
+    ...recentShops.map((p) => ({
+      id: p.id,
+      kind: "shop" as const,
+      status: p.status,
+      amountCents: p.amountCents,
+      platformFeeCents: p.platformFeeCents,
+      currency: p.currency,
+      createdAt: p.createdAt,
+      title: p.product.name,
+      payerName: p.buyer.displayName,
+      payeeName: p.shop.name,
+    })),
+  ]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, 40);
+
   const pendingOffers = await prisma.booking.findMany({
     where: { status: { in: ["PROPOSED", "AWAITING_PAYMENT"] } },
     orderBy: { updatedAt: "desc" },
@@ -346,10 +484,20 @@ export async function GET(request: Request) {
       openReports: reports,
       openDisputes: openDisputesCount,
       bookingsByStatus: bookings,
-      paymentsCaptured,
+      paymentsCaptured:
+        paymentsCaptured + servicePaidCount + shopPaidCount,
       kycVerified,
-      platformFeesCadCents: feeAgg._sum.platformFeeCents ?? 0,
-      volumeCadCents: feeAgg._sum.amountCadCents ?? 0,
+      platformFeesCadCents:
+        (feeAgg._sum.platformFeeCents ?? 0) + serviceFeeCents + shopFeeCents,
+      volumeCadCents:
+        (feeAgg._sum.amountCadCents ?? 0) +
+        serviceVolumeCents +
+        shopVolumeCents,
+      bookingsCaptured: paymentsCaptured,
+      servicePaymentsPaid: servicePaidCount,
+      serviceFeesCadCents: serviceFeeCents,
+      serviceVolumeCadCents: serviceVolumeCents,
+      shopFeesCadCents: shopFeeCents,
       pendingOffers: pendingOffers.length,
       services: servicesTotal,
       servicesOpen,
@@ -378,7 +526,7 @@ export async function GET(request: Request) {
       from: fromDate ? fromRaw : null,
       to: toDate ? toRaw : null,
     },
-    payments: recentPayments,
+    payments: activityPayments,
     pendingOffers,
   });
 }

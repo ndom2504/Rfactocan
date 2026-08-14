@@ -25,6 +25,11 @@ type AdminData = {
     kycVerified: number;
     platformFeesCadCents: number;
     volumeCadCents: number;
+    bookingsCaptured?: number;
+    servicePaymentsPaid?: number;
+    serviceFeesCadCents?: number;
+    serviceVolumeCadCents?: number;
+    shopFeesCadCents?: number;
     services?: number;
     servicesOpen?: number;
     servicesClosed?: number;
@@ -141,13 +146,17 @@ type AdminData = {
   }>;
   payments: Array<{
     id: string;
+    kind?: "booking" | "service" | "shop";
     status: string;
-    amountCadCents: number;
+    amountCents?: number;
+    amountCadCents?: number;
     platformFeeCents: number;
-    travelerPayoutCents: number;
     currency?: string;
     createdAt: string;
-    booking: {
+    title?: string;
+    payerName?: string;
+    payeeName?: string;
+    booking?: {
       id: string;
       status: string;
       paymentExpiresAt?: string | null;
@@ -573,8 +582,17 @@ export default function AdminPage() {
           ["Utilisateurs", data.stats.users],
           ["KYC vérifiés", data.stats.kycVerified],
           ["Paiements capturés", data.stats.paymentsCaptured],
-          ["Frais plateforme", formatCents(data.stats.platformFeesCadCents)],
+          ["Frais plateforme (gains Rfacto)", formatCents(data.stats.platformFeesCadCents)],
           ["Volume", formatCents(data.stats.volumeCadCents)],
+          ["Paiements services", data.stats.servicePaymentsPaid ?? 0],
+          [
+            "Frais services (Rfacto)",
+            formatCents(data.stats.serviceFeesCadCents ?? 0),
+          ],
+          [
+            "Volume services",
+            formatCents(data.stats.serviceVolumeCadCents ?? 0),
+          ],
           ["Livrés", data.stats.delivered],
           ["Voyages", data.stats.trips],
           ["Demandes colis", data.stats.requests],
@@ -692,27 +710,47 @@ export default function AdminPage() {
         {data.payments.length === 0 && (
           <p className="text-sm text-[var(--muted)]">Aucun paiement.</p>
         )}
-        {data.payments.map((p) => (
-          <Card key={p.id}>
+        {data.payments.map((p) => {
+          const kind =
+            p.kind ??
+            (p.booking ? "booking" : "service");
+          const amount = p.amountCents ?? p.amountCadCents ?? 0;
+          const title =
+            p.title ||
+            (p.booking
+              ? `${p.booking.trip.fromCity} → ${p.booking.trip.toCity}`
+              : p.id);
+          const payer =
+            p.payerName || p.booking?.sender.displayName || "—";
+          const payee =
+            p.payeeName || p.booking?.trip.user.displayName || "—";
+          const kindLabel =
+            kind === "service"
+              ? "Service"
+              : kind === "shop"
+                ? "Boutique"
+                : "Colis";
+          return (
+          <Card key={`${kind}-${p.id}`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <CardTitle className="text-base">
-                  {p.booking.trip.fromCity} → {p.booking.trip.toCity}
-                </CardTitle>
+                <CardTitle className="text-base">{title}</CardTitle>
                 <CardDescription>
-                  {p.booking.sender.displayName} →{" "}
-                  {p.booking.trip.user.displayName} ·{" "}
-                  {formatCents(p.amountCadCents, p.currency)} · frais{" "}
-                  {formatCents(p.platformFeeCents, p.currency)}
+                  {payer} → {payee} · {formatCents(amount, p.currency)} ·
+                  frais {formatCents(p.platformFeeCents, p.currency)}
                 </CardDescription>
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge>{kindLabel}</Badge>
                   <Badge>
                     {PAYMENT_STATUS_LABELS[p.status] ?? p.status}
                   </Badge>
-                  <Badge>
-                    Booking:{" "}
-                    {BOOKING_STATUS_LABELS[p.booking.status] ?? p.booking.status}
-                  </Badge>
+                  {p.booking ? (
+                    <Badge>
+                      Booking:{" "}
+                      {BOOKING_STATUS_LABELS[p.booking.status] ??
+                        p.booking.status}
+                    </Badge>
+                  ) : null}
                 </div>
               </div>
               <span className="text-xs text-[var(--muted)]">
@@ -720,7 +758,8 @@ export default function AdminPage() {
               </span>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </section>
 
       <section className="space-y-3">
