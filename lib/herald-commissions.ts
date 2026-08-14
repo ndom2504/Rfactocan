@@ -146,7 +146,9 @@ export async function accrueForServicePayment(paymentId: string) {
   const sp = await prisma.servicePaymentRequest.findUnique({
     where: { id: paymentId },
   });
-  if (!sp || sp.status !== "PAID") return { created: 0 };
+  if (!sp || !["PAID", "DELIVERED", "FULFILLED"].includes(sp.status)) {
+    return { created: 0 };
+  }
   return accrueHeraldCommissions({
     sourceType: "SERVICE",
     sourceId: paymentId,

@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatMoneyFromCents } from "@/lib/currency";
+import { formatDate } from "@/lib/utils";
+import {
+  isServiceOrderSettled,
+  isServicePaymentOpen,
+  servicePaymentStatusI18nKey,
+} from "@/lib/service-payment-status";
 
 type Payment = {
   id: string;
@@ -19,6 +25,13 @@ type Payment = {
   payMethod?: string | null;
   receiverHint?: string | null;
   threadId?: string | null;
+  processingDays?: number;
+  escrowUntilConfirm?: boolean;
+  processingDueAt?: string | null;
+  deliveredAt?: string | null;
+  clientConfirmedAt?: string | null;
+  stripeTransferId?: string | null;
+  releasedAt?: string | null;
   provider: {
     id: string;
     displayName: string;
@@ -27,35 +40,11 @@ type Payment = {
   client: { id: string; displayName: string; avatarUrl?: string | null };
 };
 
-function isOpen(status: string) {
-  return status === "AWAITING_PAYMENT" || status === "AWAITING_CONFIRMATION";
-}
-
-function isTerminal(status: string) {
-  return status === "PAID" || status === "CANCELLED" || status === "EXPIRED";
-}
-
-function statusLabel(
-  status: string,
-  role: string,
+function processingLabel(
+  days: number,
   t: ReturnType<typeof useI18n>["t"]
 ) {
-  switch (status) {
-    case "AWAITING_PAYMENT":
-      return role === "client"
-        ? t("svc_pay_pending_to_pay")
-        : t("svc_pay_status_waiting");
-    case "AWAITING_CONFIRMATION":
-      return t("svc_pay_status_AWAITING_CONFIRMATION");
-    case "PAID":
-      return t("svc_pay_status_PAID");
-    case "CANCELLED":
-      return t("svc_pay_status_CANCELLED");
-    case "EXPIRED":
-      return t("svc_pay_status_EXPIRED");
-    default:
-      return status;
-  }
+  return `${days} ${days <= 1 ? t("svc_pay_day") : t("svc_pay_days")}`;
 }
 
 export default function ServicePaymentPage() {
@@ -88,7 +77,7 @@ export default function ServicePaymentPage() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     async function tick() {
       const next = await load();
-      if (cancelled || !next || isTerminal(next.status)) return;
+      if (cancelled || !next || isServiceOrderSettled(next.status, next.escrowUntilConfirm)) return;
       timer = setTimeout(tick, 3000);
     }
     void tick();
@@ -140,7 +129,15 @@ export default function ServicePaymentPage() {
   const isProvider = role === "provider";
   const returnedOk = searchParams.get("payment") === "success";
   const displayStatus =
-    returnedOk && !isTerminal(payment.status) ? "PAID" : payment.status;
+    returnedOk && isServicePaymentOpen(payment.status)
+      ? "PAID"
+      : payment.status;
+  const escrow = Boolean(payment.escrowUntilConfirm);
+  const statusKey = servicePaymentStatusI18nKey(displayStatus, {
+    isClient,
+    escrowUntilConfirm: escrow,
+  });
+  const processingDays = payment.processingDays || 3;
   const payable =
     isClient &&
     payment.status === "AWAITING_PAYMENT" &&
@@ -152,6 +149,12 @@ export default function ServicePaymentPage() {
   const awaitingInteracConfirm =
     payment.payMethod === "INTERAC" &&
     payment.status === "AWAITING_CONFIRMATION";
+  const showEscrow =
+    escrow &&
+    (payment.status === "PAID" ||
+      payment.status === "DELIVERED" ||
+      payment.status === "FULFILLED" ||
+      payment.status === "AWAITING_PAYMENT");
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
@@ -192,8 +195,22 @@ export default function ServicePaymentPage() {
           </p>
         ) : null}
         <p className="text-sm font-medium">
-          {statusLabel(displayStatus, role, t)}
+          {statusKey ? t(statusKey) : displayStatus}
         </p>
+        <p className="text-sm text-[var(--muted)]">
+          {t("svc_pay_processing_days")} :{" "}
+          {processingLabel(processingDays, t)}
+          {payment.processingDueAt
+            ? ` · ${t("svc_pay_due")} ${formatDate(payment.processingDueAt)}`
+            : ""}
+        </p>
+        {showEscrow && payment.payMethod !== "INTERAC" && payment.payMethod !== "MOBILE" ? (
+          <p className="text-sm text-[var(--muted)]">
+            {isClient
+              ? t("svc_pay_escrow_hint_client")
+              : t("svc_pay_escrow_hint_provider")}
+          </p>
+        ) : null}
 
         {error && <p className="text-sm text-red-700">{error}</p>}
 
@@ -294,7 +311,52 @@ export default function ServicePaymentPage() {
           </Button>
         )}
 
-        {isOpen(payment.status) && !returnedOk && (
+        {isProvider && payment.status === "PAID" && escrow && (
+          <div className="space-y-2 border-t border-[var(--border)] pt-4">
+            <p className="text-sm text-[var(--muted)]">
+              {t("svc_pay_waiting_delivery")}
+            </p>
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void act("mark_delivered")}
+              className="w-full"
+            >
+              {t("svc_pay_mark_delivered")}
+            </Button>
+          </div>
+        )}
+
+        {isClient && payment.status === "PAID" && escrow && (
+          <p className="text-sm text-[var(--muted)]">
+            {t("svc_pay_waiting_delivery")}
+          </p>
+        )}
+
+        {isProvider && payment.status === "DELIVERED" && (
+          <p className="text-sm text-[var(--muted)]">
+            {t("svc_pay_waiting_confirm")}
+          </p>
+        )}
+
+        {isClient && payment.status === "DELIVERED" && (
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => void act("confirm_delivery")}
+            className="w-full"
+          >
+            {t("svc_pay_confirm_delivery")}
+          </Button>
+        )}
+
+        {payment.status === "FULFILLED" && payment.stripeTransferId && (
+          <p className="text-sm font-medium text-[var(--accent)]">
+            {t("svc_pay_released")}
+          </p>
+        )}
+
+        {isServicePaymentOpen(payment.status) && !returnedOk && (
           <Button
             type="button"
             variant="outline"

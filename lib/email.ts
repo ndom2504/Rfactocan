@@ -366,6 +366,140 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;");
 }
 
+function invoiceRows(rows: { label: string; value: string }[]) {
+  return `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+      ${rows
+        .map(
+          (r) => `<tr>
+        <td style="padding:6px 0;color:#5f6f68;border-bottom:1px solid #e6ebe8;">${escapeHtml(r.label)}</td>
+        <td style="padding:6px 0;text-align:right;border-bottom:1px solid #e6ebe8;"><strong>${escapeHtml(r.value)}</strong></td>
+      </tr>`
+        )
+        .join("")}
+    </table>`;
+}
+
+export async function emailServicePaymentInvoice(input: {
+  clientEmail: string;
+  providerEmail: string;
+  clientName: string;
+  providerName: string;
+  title: string;
+  amountLabel: string;
+  tariffLabel: string;
+  platformFeeLabel: string;
+  stripeFeeLabel: string;
+  processingDays: number;
+  paymentId: string;
+  payMethod?: string | null;
+  escrow: boolean;
+}) {
+  const url = `${getAppUrl()}/service-payments/${input.paymentId}`;
+  const method =
+    input.payMethod === "INTERAC"
+      ? "Interac e-Transfer"
+      : input.payMethod === "MOBILE"
+        ? "Mobile money"
+        : "Carte (Stripe)";
+  const rows = [
+    { label: "Service", value: input.title },
+    { label: "Prestataire", value: input.providerName },
+    { label: "Client", value: input.clientName },
+    { label: "Mode", value: method },
+    { label: "Tarif prestataire", value: input.tariffLabel },
+    { label: "Frais Rfacto (10 %)", value: input.platformFeeLabel },
+    { label: "Frais de traitement carte", value: input.stripeFeeLabel },
+    { label: "Total payé", value: input.amountLabel },
+    {
+      label: "Délai de traitement",
+      value: `${input.processingDays} jour${input.processingDays > 1 ? "s" : ""}`,
+    },
+  ];
+  const table = invoiceRows(rows);
+  const escrowClient = input.escrow
+    ? "<p>Votre paiement est sécurisé (séquestre). Le prestataire est payé après votre confirmation de livraison.</p>"
+    : "";
+  const escrowProvider = input.escrow
+    ? "<p>Les fonds restent bloqués jusqu’à confirmation de livraison par le client.</p>"
+    : "";
+  const stripeNote =
+    input.payMethod === "CARD" || !input.payMethod
+      ? "<p style=\"font-size:13px;color:#5f6f68;\">Stripe vous envoie aussi le reçu / la facture officielle du paiement carte.</p>"
+      : "";
+
+  await Promise.all([
+    sendEmail({
+      to: input.clientEmail,
+      subject: `Facture Rfacto — ${input.title}`,
+      html: layout(
+        "Facture de paiement",
+        `<p>Bonjour ${escapeHtml(input.clientName)},</p>
+         <p>Votre paiement de <strong>${escapeHtml(input.amountLabel)}</strong> pour <strong>${escapeHtml(input.title)}</strong> est confirmé.</p>
+         ${table}
+         ${escrowClient}
+         ${stripeNote}
+         <p><a href="${url}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la commande</a></p>`
+      ),
+    }),
+    sendEmail({
+      to: input.providerEmail,
+      subject: `Paiement reçu (séquestre) — ${input.title}`,
+      html: layout(
+        "Paiement client reçu",
+        `<p>Bonjour ${escapeHtml(input.providerName)},</p>
+         <p><strong>${escapeHtml(input.clientName)}</strong> a payé <strong>${escapeHtml(input.amountLabel)}</strong> pour <strong>${escapeHtml(input.title)}</strong>.</p>
+         ${table}
+         ${escrowProvider}
+         <p>Votre tarif net : <strong>${escapeHtml(input.tariffLabel)}</strong>.</p>
+         <p><a href="${url}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Voir la commande</a></p>`
+      ),
+    }),
+  ]);
+}
+
+export async function emailServicePaymentReleased(input: {
+  clientEmail: string;
+  providerEmail: string;
+  clientName: string;
+  providerName: string;
+  title: string;
+  payoutLabel: string;
+  paymentId: string;
+  transferred: boolean;
+}) {
+  const url = `${getAppUrl()}/service-payments/${input.paymentId}`;
+  await Promise.all([
+    sendEmail({
+      to: input.clientEmail,
+      subject: `Livraison confirmée — ${input.title}`,
+      html: layout(
+        "Livraison confirmée",
+        `<p>Bonjour ${escapeHtml(input.clientName)},</p>
+         <p>Vous avez confirmé la livraison de <strong>${escapeHtml(input.title)}</strong>. Merci d’utiliser Rfacto.</p>
+         <p><a href="${url}" style="color:#28541D;">Voir la commande</a></p>`
+      ),
+    }),
+    sendEmail({
+      to: input.providerEmail,
+      subject: input.transferred
+        ? `Reversement envoyé — ${input.title}`
+        : `Livraison confirmée — ${input.title}`,
+      html: layout(
+        input.transferred ? "Fonds reversés" : "Commande clôturée",
+        `<p>Bonjour ${escapeHtml(input.providerName)},</p>
+         <p>Le client a confirmé la livraison de <strong>${escapeHtml(input.title)}</strong>.</p>
+         <p>${
+           input.transferred
+             ? `<strong>${escapeHtml(input.payoutLabel)}</strong> a été envoyé vers votre compte Stripe.`
+             : `Montant net : <strong>${escapeHtml(input.payoutLabel)}</strong>. Activez Stripe dans Profil si le virement n’est pas encore parti.`
+         }</p>
+         <p><a href="${url}" style="color:#28541D;">Voir la commande</a></p>`
+      ),
+    }),
+  ]);
+}
+
 /** Temporary bulk invite for Google Play closed testing. */
 export async function emailPlayStoreTestInvite(input: {
   email: string;

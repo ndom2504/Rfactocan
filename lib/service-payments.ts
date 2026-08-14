@@ -8,6 +8,24 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import type { ServicePaymentRequest, User } from "@prisma/client";
+import type Stripe from "stripe";
+import {
+  DEFAULT_PROCESSING_DAYS,
+  isServicePaymentTerminal,
+  processingDueAtFrom,
+} from "@/lib/service-payment-status";
+
+export {
+  DEFAULT_PROCESSING_DAYS,
+  SERVICE_PROCESSING_DAYS,
+  isServiceOrderSettled,
+  isServicePaymentOpen,
+  isServicePaymentTerminal,
+  normalizeProcessingDays,
+  processingDueAtFrom,
+  servicePaymentDeadlineFrom,
+  servicePaymentStatusI18nKey,
+} from "@/lib/service-payment-status";
 
 export function platformFeeBps() {
   const raw = process.env.PLATFORM_FEE_BPS;
@@ -36,22 +54,6 @@ export function quoteServiceFromTariff(tariffCents: number) {
 
 export function splitServiceAmount(amountCents: number) {
   return quoteServiceFromTariff(amountCents);
-}
-
-export function isServicePaymentOpen(status: string) {
-  return (
-    status === "AWAITING_PAYMENT" || status === "AWAITING_CONFIRMATION"
-  );
-}
-
-export function isServicePaymentTerminal(status: string) {
-  return (
-    status === "PAID" || status === "CANCELLED" || status === "EXPIRED"
-  );
-}
-
-export function servicePaymentDeadlineFrom(hours = 48) {
-  return new Date(Date.now() + hours * 60 * 60 * 1000);
 }
 
 export function majorToCents(amount: number) {
@@ -83,7 +85,11 @@ export async function markServicePaymentPaid(
     where: { id: paymentId },
   });
   if (!existing) return null;
-  if (existing.status === "PAID") {
+  if (
+    existing.status === "PAID" ||
+    existing.status === "DELIVERED" ||
+    existing.status === "FULFILLED"
+  ) {
     try {
       const { accrueForServicePayment } = await import(
         "@/lib/herald-commissions"
@@ -95,12 +101,16 @@ export async function markServicePaymentPaid(
     return existing;
   }
 
+  const now = new Date();
+  const processingDays = existing.processingDays || DEFAULT_PROCESSING_DAYS;
   const updated = await prisma.servicePaymentRequest.update({
     where: { id: paymentId },
     data: {
       status: "PAID",
-      paidAt: new Date(),
+      paidAt: now,
       payMethod: existing.payMethod ?? "CARD",
+      processingDueAt:
+        existing.processingDueAt ?? processingDueAtFrom(now, processingDays),
       ...(opts?.paymentIntentId
         ? { stripePaymentIntentId: opts.paymentIntentId }
         : {}),
@@ -130,12 +140,66 @@ export async function markServicePaymentPaid(
     await notifyUser({
       userId: existing.providerId,
       type: "SERVICE_PAYMENT",
-      title: "Paiement reçu",
-      body: `« ${existing.title} » · ${amount}`,
+      title: existing.escrowUntilConfirm
+        ? "Paiement reçu — fonds bloqués"
+        : "Paiement reçu",
+      body: existing.escrowUntilConfirm
+        ? `« ${existing.title} » · ${amount}. Le reversement aura lieu après confirmation de livraison.`
+        : `« ${existing.title} » · ${amount}`,
+      href: `/service-payments/${paymentId}`,
+    });
+    await notifyUser({
+      userId: existing.clientId,
+      type: "SERVICE_PAYMENT",
+      title: "Paiement confirmé",
+      body: existing.escrowUntilConfirm
+        ? `« ${existing.title} » · ${amount}. Fonds sécurisés jusqu’à confirmation de livraison.`
+        : `« ${existing.title} » · ${amount}`,
       href: `/service-payments/${paymentId}`,
     });
   } catch (err) {
-    console.error("notify provider service paid", paymentId, err);
+    console.error("notify service paid", paymentId, err);
+  }
+
+  try {
+    const people = await prisma.user.findMany({
+      where: { id: { in: [existing.clientId, existing.providerId] } },
+      select: { id: true, email: true, displayName: true },
+    });
+    const client = people.find((u) => u.id === existing.clientId);
+    const provider = people.find((u) => u.id === existing.providerId);
+    if (client?.email && provider?.email) {
+      const { formatMoneyFromCents } = await import("@/lib/currency");
+      const { emailServicePaymentInvoice } = await import("@/lib/email");
+      const currency = updated.currency.toUpperCase();
+      const stripeFeeCents = Math.max(
+        0,
+        updated.amountCents - updated.providerPayoutCents - updated.platformFeeCents
+      );
+      await emailServicePaymentInvoice({
+        clientEmail: client.email,
+        providerEmail: provider.email,
+        clientName: client.displayName,
+        providerName: provider.displayName,
+        title: existing.title,
+        amountLabel: formatMoneyFromCents(updated.amountCents, currency),
+        tariffLabel: formatMoneyFromCents(updated.providerPayoutCents, currency),
+        platformFeeLabel: formatMoneyFromCents(
+          updated.platformFeeCents,
+          currency
+        ),
+        stripeFeeLabel:
+          updated.payMethod === "CARD" || !updated.payMethod
+            ? formatMoneyFromCents(stripeFeeCents, currency)
+            : "—",
+        processingDays: updated.processingDays || DEFAULT_PROCESSING_DAYS,
+        paymentId,
+        payMethod: updated.payMethod,
+        escrow: updated.escrowUntilConfirm,
+      });
+    }
+  } catch (err) {
+    console.error("email service invoice", paymentId, err);
   }
 
   return updated;
@@ -200,6 +264,8 @@ export async function syncServicePaymentFromStripe(
 ) {
   if (
     payment.status === "PAID" ||
+    payment.status === "DELIVERED" ||
+    payment.status === "FULFILLED" ||
     payment.status === "CANCELLED" ||
     payment.status === "EXPIRED"
   ) {
@@ -250,6 +316,24 @@ export async function syncPendingServicePaymentsFromStripe<
     if (!next || next.status === p.status) return p;
     return { ...p, status: next.status };
   });
+}
+
+async function ensureStripeCustomer(userId: string, email: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { stripeCustomerId: true },
+  });
+  if (user?.stripeCustomerId) return user.stripeCustomerId;
+  const stripe = getStripe();
+  const customer = await stripe.customers.create({
+    email,
+    metadata: { userId },
+  });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { stripeCustomerId: customer.id },
+  });
+  return customer.id;
 }
 
 export async function createServiceCardCheckout(input: {
@@ -304,50 +388,99 @@ export async function createServiceCardCheckout(input: {
   const connectReady =
     providerCanReceiveCard(input.provider) &&
     Boolean(input.provider.stripeConnectAccountId);
-  const applicationFeeCents = Math.max(
-    0,
-    input.payment.amountCents - input.payment.providerPayoutCents
-  );
 
   const paymentIntentData: {
     metadata: Record<string, string>;
-    application_fee_amount?: number;
-    transfer_data?: { destination: string };
+    receipt_email?: string;
   } = {
     metadata: {
       type: "service_payment",
       servicePaymentId: input.payment.id,
       providerId: input.payment.providerId,
       clientId: input.payment.clientId,
-      payoutMode: connectReady ? "connect" : "platform_hold",
+      payoutMode: connectReady ? "escrow_then_transfer" : "platform_hold",
     },
   };
-  if (connectReady && input.provider.stripeConnectAccountId) {
-    paymentIntentData.application_fee_amount = applicationFeeCents;
-    paymentIntentData.transfer_data = {
-      destination: input.provider.stripeConnectAccountId,
-    };
+
+  let customerId: string | undefined;
+  if (input.clientEmail) {
+    try {
+      customerId = await ensureStripeCustomer(
+        input.payment.clientId,
+        input.clientEmail
+      );
+    } catch (err) {
+      console.error("[service-payments] stripe customer", err);
+    }
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: input.clientEmail || undefined,
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: stripeCurrency,
-          unit_amount: input.payment.amountCents,
-          product_data: {
-            name: input.payment.title.slice(0, 120),
-            description: (input.payment.description || "Service Rfacto").slice(
-              0,
-              500
-            ),
+  const tariffCents = input.payment.providerPayoutCents;
+  const platformFeeCents = input.payment.platformFeeCents;
+  const stripeFeeCents = Math.max(
+    0,
+    input.payment.amountCents - tariffCents - platformFeeCents
+  );
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+    tariffCents > 0
+      ? [
+          {
+            quantity: 1,
+            price_data: {
+              currency: stripeCurrency,
+              unit_amount: tariffCents,
+              product_data: {
+                name: input.payment.title.slice(0, 120),
+                description: (
+                  input.payment.description || "Prestation Rfacto"
+                ).slice(0, 500),
+              },
+            },
           },
-        },
+        ]
+      : [
+          {
+            quantity: 1,
+            price_data: {
+              currency: stripeCurrency,
+              unit_amount: input.payment.amountCents,
+              product_data: {
+                name: input.payment.title.slice(0, 120),
+                description: (
+                  input.payment.description || "Service Rfacto"
+                ).slice(0, 500),
+              },
+            },
+          },
+        ];
+  if (tariffCents > 0 && platformFeeCents > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency: stripeCurrency,
+        unit_amount: platformFeeCents,
+        product_data: { name: "Frais plateforme Rfacto (10 %)" },
       },
-    ],
+    });
+  }
+  if (tariffCents > 0 && stripeFeeCents > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency: stripeCurrency,
+        unit_amount: stripeFeeCents,
+        product_data: { name: "Frais de traitement carte" },
+      },
+    });
+  }
+
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    mode: "payment",
+    ...(customerId
+      ? { customer: customerId }
+      : input.clientEmail
+        ? { customer_email: input.clientEmail }
+        : {}),
+    line_items: lineItems,
     payment_intent_data: paymentIntentData,
     metadata: {
       type: "service_payment",
@@ -357,7 +490,37 @@ export async function createServiceCardCheckout(input: {
     },
     success_url: `${appUrl}/service-payments/${input.payment.id}?payment=success`,
     cancel_url: `${appUrl}/service-payments/${input.payment.id}?payment=cancel`,
-  });
+  };
+
+  if (customerId) {
+    sessionParams.invoice_creation = {
+      enabled: true,
+      invoice_data: {
+        description: `Rfacto — ${input.payment.title.slice(0, 80)}`,
+        footer:
+          "Fonds bloqués jusqu’à confirmation de livraison. RapidFacto / Rfacto — intermédiaire de paiement.",
+        metadata: {
+          type: "service_payment",
+          servicePaymentId: input.payment.id,
+        },
+      },
+    };
+  } else if (input.clientEmail) {
+    paymentIntentData.receipt_email = input.clientEmail;
+  }
+
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create(sessionParams);
+  } catch (err) {
+    console.error("[service-payments] checkout with invoice failed, retry", err);
+    delete sessionParams.invoice_creation;
+    if (input.clientEmail) {
+      paymentIntentData.receipt_email = input.clientEmail;
+      sessionParams.payment_intent_data = paymentIntentData;
+    }
+    session = await stripe.checkout.sessions.create(sessionParams);
+  }
 
   await prisma.servicePaymentRequest.update({
     where: { id: input.payment.id },
@@ -373,4 +536,138 @@ export async function createServiceCardCheckout(input: {
   }
 
   return { checkoutUrl: session.url, url: session.url, sessionId: session.id };
+}
+
+export async function markServiceDelivered(paymentId: string) {
+  const payment = await prisma.servicePaymentRequest.findUnique({
+    where: { id: paymentId },
+  });
+  if (!payment) throw new Error("Demande introuvable");
+  if (payment.status === "DELIVERED" || payment.status === "FULFILLED") {
+    return payment;
+  }
+  if (payment.status !== "PAID") {
+    throw new Error("Le service n'est pas encore payé.");
+  }
+  return prisma.servicePaymentRequest.update({
+    where: { id: paymentId },
+    data: {
+      status: "DELIVERED",
+      deliveredAt: payment.deliveredAt ?? new Date(),
+    },
+  });
+}
+
+/** Client confirms delivery → transfer provider payout (card escrow) and close. */
+export async function fulfillServicePayment(paymentId: string) {
+  const payment = await prisma.servicePaymentRequest.findUnique({
+    where: { id: paymentId },
+    include: {
+      provider: {
+        select: {
+          id: true,
+          stripeConnectAccountId: true,
+          stripeConnectChargesEnabled: true,
+          stripeConnectPayoutsEnabled: true,
+          kycStatus: true,
+        },
+      },
+    },
+  });
+  if (!payment) throw new Error("Demande introuvable");
+  if (payment.status === "FULFILLED") return payment;
+  if (payment.status !== "DELIVERED" && payment.status !== "PAID") {
+    throw new Error("Cette commande n'est pas encore livrable.");
+  }
+  if (payment.status === "PAID") {
+    throw new Error(
+      "Le prestataire doit d'abord marquer le service comme livré."
+    );
+  }
+
+  const now = new Date();
+  const connectReady =
+    providerCanReceiveCard(payment.provider) &&
+    Boolean(payment.provider.stripeConnectAccountId);
+  let transferId = payment.stripeTransferId;
+
+  const canTransfer =
+    payment.payMethod === "CARD" &&
+    payment.escrowUntilConfirm &&
+    !transferId &&
+    connectReady &&
+    isStripeConfigured() &&
+    payment.providerPayoutCents > 0;
+
+  if (canTransfer && payment.provider.stripeConnectAccountId) {
+    const stripe = getStripe();
+    let sourceTransaction: string | undefined;
+    if (payment.stripePaymentIntentId) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(
+          payment.stripePaymentIntentId
+        );
+        sourceTransaction =
+          typeof pi.latest_charge === "string"
+            ? pi.latest_charge
+            : pi.latest_charge?.id ?? undefined;
+      } catch (err) {
+        console.error("[service-payments] retrieve PI for transfer", paymentId, err);
+      }
+    }
+    const transfer = await stripe.transfers.create({
+      amount: payment.providerPayoutCents,
+      currency: payment.currency.toLowerCase(),
+      destination: payment.provider.stripeConnectAccountId,
+      transfer_group: payment.id,
+      ...(sourceTransaction ? { source_transaction: sourceTransaction } : {}),
+      metadata: {
+        type: "service_payment_release",
+        servicePaymentId: payment.id,
+        providerId: payment.providerId,
+        clientId: payment.clientId,
+      },
+    });
+    transferId = transfer.id;
+  }
+
+  const updated = await prisma.servicePaymentRequest.update({
+    where: { id: paymentId },
+    data: {
+      status: "FULFILLED",
+      clientConfirmedAt: payment.clientConfirmedAt ?? now,
+      releasedAt: now,
+      ...(transferId ? { stripeTransferId: transferId } : {}),
+    },
+  });
+
+  try {
+    const people = await prisma.user.findMany({
+      where: { id: { in: [payment.clientId, payment.providerId] } },
+      select: { id: true, email: true, displayName: true },
+    });
+    const client = people.find((u) => u.id === payment.clientId);
+    const provider = people.find((u) => u.id === payment.providerId);
+    if (client?.email && provider?.email) {
+      const { formatMoneyFromCents } = await import("@/lib/currency");
+      const { emailServicePaymentReleased } = await import("@/lib/email");
+      await emailServicePaymentReleased({
+        clientEmail: client.email,
+        providerEmail: provider.email,
+        clientName: client.displayName,
+        providerName: provider.displayName,
+        title: payment.title,
+        payoutLabel: formatMoneyFromCents(
+          payment.providerPayoutCents,
+          payment.currency.toUpperCase()
+        ),
+        paymentId,
+        transferred: Boolean(transferId),
+      });
+    }
+  } catch (err) {
+    console.error("email service released", paymentId, err);
+  }
+
+  return updated;
 }

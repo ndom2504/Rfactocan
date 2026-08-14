@@ -5,7 +5,10 @@ import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
   createServiceCardCheckout,
+  fulfillServicePayment,
   isServicePaymentTerminal,
+  markServiceDelivered,
+  markServicePaymentPaid,
   syncServicePaymentFromStripe,
 } from "@/lib/service-payments";
 import { resolveServiceReceiverHint } from "@/lib/service-interac";
@@ -19,6 +22,8 @@ const actionSchema = z.object({
     "pay_mobile",
     "client_mark_paid",
     "provider_confirm",
+    "mark_delivered",
+    "confirm_delivery",
     "cancel",
   ]),
   payProvider: z.string().max(40).optional().nullable(),
@@ -106,7 +111,11 @@ export async function POST(request: Request, ctx: Ctx) {
     }
 
     if (body.action === "cancel") {
-      if (payment.status === "PAID") {
+      if (
+        payment.status === "PAID" ||
+        payment.status === "DELIVERED" ||
+        payment.status === "FULFILLED"
+      ) {
         return NextResponse.json(
           { error: "Paiement déjà encaissé." },
           { status: 400 }
@@ -262,31 +271,59 @@ export async function POST(request: Request, ctx: Ctx) {
           { status: 400 }
         );
       }
-      const updated = await prisma.servicePaymentRequest.update({
-        where: { id },
-        data: {
-          status: "PAID",
-          paidAt: new Date(),
-          providerConfirmedAt: new Date(),
-          clientMarkedPaidAt: payment.clientMarkedPaidAt ?? new Date(),
-        },
-      });
-      try {
-        const { accrueForServicePayment } = await import(
-          "@/lib/herald-commissions"
-        );
-        await accrueForServicePayment(id);
-      } catch (err) {
-        console.error("Herald commission service confirm", id, err);
-      }
-      await notifyUser({
-        userId: payment.clientId,
-        type: "SERVICE_PAYMENT",
-        title: "Paiement confirmé",
-        body: `${payment.provider.displayName} a confirmé la réception pour « ${payment.title} ».`,
-        href: `/service-payments/${payment.id}`,
-      });
+      const updated = await markServicePaymentPaid(id);
       return NextResponse.json({ payment: updated });
+    }
+
+    if (body.action === "mark_delivered") {
+      if (!isProvider) {
+        return NextResponse.json(
+          { error: "Seul le prestataire peut marquer la livraison." },
+          { status: 403 }
+        );
+      }
+      try {
+        const updated = await markServiceDelivered(id);
+        await notifyUser({
+          userId: payment.clientId,
+          type: "SERVICE_PAYMENT",
+          title: "Service livré",
+          body: `${payment.provider.displayName} a marqué « ${payment.title} » comme livré. Confirmez pour débloquer le reversement.`,
+          href: `/service-payments/${payment.id}`,
+        });
+        return NextResponse.json({ payment: updated });
+      } catch (e) {
+        const message =
+          e instanceof Error ? e.message : "Impossible de marquer comme livré.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
+    if (body.action === "confirm_delivery") {
+      if (!isClient) {
+        return NextResponse.json(
+          { error: "Seul le client peut confirmer la livraison." },
+          { status: 403 }
+        );
+      }
+      try {
+        const updated = await fulfillServicePayment(id);
+        await notifyUser({
+          userId: payment.providerId,
+          type: "SERVICE_PAYMENT",
+          title: "Livraison confirmée",
+          body:
+            updated.stripeTransferId
+              ? `« ${payment.title} » confirmé. Le reversement a été envoyé.`
+              : `« ${payment.title} » confirmé. Commande clôturée.`,
+          href: `/service-payments/${payment.id}`,
+        });
+        return NextResponse.json({ payment: updated });
+      } catch (e) {
+        const message =
+          e instanceof Error ? e.message : "Confirmation impossible.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
     }
 
     return NextResponse.json({ error: "Action inconnue" }, { status: 400 });

@@ -7,6 +7,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { formatMoneyFromCents } from "@/lib/currency";
+import { servicePaymentStatusI18nKey } from "@/lib/service-payment-status";
 
 type PaymentRow = {
   id: string;
@@ -16,26 +17,10 @@ type PaymentRow = {
   status: string;
   clientId: string;
   createdAt: string;
+  escrowUntilConfirm?: boolean;
   provider?: { displayName?: string };
   client?: { displayName?: string };
 };
-
-function statusKey(status: string, iPay: boolean) {
-  switch (status) {
-    case "AWAITING_PAYMENT":
-      return iPay ? "svc_pay_pending_to_pay" as const : "svc_pay_status_waiting" as const;
-    case "AWAITING_CONFIRMATION":
-      return "svc_pay_status_AWAITING_CONFIRMATION" as const;
-    case "PAID":
-      return "svc_pay_status_PAID" as const;
-    case "CANCELLED":
-      return "svc_pay_status_CANCELLED" as const;
-    case "EXPIRED":
-      return "svc_pay_status_EXPIRED" as const;
-    default:
-      return null;
-  }
-}
 
 export default function ServicePaymentsInboxPage() {
   const { t } = useI18n();
@@ -100,10 +85,15 @@ export default function ServicePaymentsInboxPage() {
           const other = iPay
             ? p.provider?.displayName
             : p.client?.displayName;
-          const status = statusKey(p.status, iPay);
+          const status = servicePaymentStatusI18nKey(p.status, {
+            isClient: iPay,
+            escrowUntilConfirm: p.escrowUntilConfirm,
+          });
           const open =
             p.status === "AWAITING_PAYMENT" ||
             p.status === "AWAITING_CONFIRMATION";
+          const followUp =
+            p.status === "PAID" || p.status === "DELIVERED";
           return (
             <Card key={p.id}>
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -115,10 +105,14 @@ export default function ServicePaymentsInboxPage() {
                     {p.createdAt ? ` · ${formatDate(p.createdAt)}` : ""}
                   </CardDescription>
                 </div>
-                {open ? (
+                {open || followUp ? (
                   <Link href={`/service-payments/${p.id}`}>
                     <Button variant="outline" size="sm">
-                      {iPay ? t("svc_pay_pay") : t("svc_pay_open")}
+                      {open && iPay
+                        ? t("svc_pay_pay")
+                        : p.status === "DELIVERED" && iPay
+                          ? t("svc_pay_confirm_delivery")
+                          : t("svc_pay_open")}
                     </Button>
                   </Link>
                 ) : (

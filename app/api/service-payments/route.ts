@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { getAppUrl } from "@/lib/app-url";
 import {
   majorToCents,
+  normalizeProcessingDays,
   quoteServiceFromTariff,
   servicePaymentDeadlineFrom,
   syncPendingServicePaymentsFromStripe,
@@ -29,6 +30,7 @@ const createSchema = z.object({
   description: z.string().max(2000).optional().default(""),
   amount: z.coerce.number().positive().max(1_000_000),
   currency: z.string().min(3).max(3).optional(),
+  processingDays: z.coerce.number().int().min(1).max(30).optional(),
   receiverHint: z.string().max(120).optional().nullable(),
 });
 
@@ -161,6 +163,8 @@ export async function POST(request: Request) {
         currency: currency.toLowerCase(),
         platformFeeCents,
         providerPayoutCents,
+        processingDays: normalizeProcessingDays(body.processingDays),
+        escrowUntilConfirm: true,
         status: "AWAITING_PAYMENT",
         receiverHint,
         expiresAt: servicePaymentDeadlineFrom(48),

@@ -317,7 +317,7 @@ export async function GET(request: Request) {
   try {
     const [svcAgg, svcRows] = await Promise.all([
       prisma.servicePaymentRequest.aggregate({
-        where: { status: "PAID" },
+        where: { status: { in: ["PAID", "DELIVERED", "FULFILLED"] } },
         _sum: { platformFeeCents: true, amountCents: true },
         _count: true,
       }),

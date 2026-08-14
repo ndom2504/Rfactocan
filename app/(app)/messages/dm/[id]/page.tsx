@@ -12,6 +12,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { LinkedText } from "@/components/linked-text";
 import { cn, formatDate } from "@/lib/utils";
 import { formatMoneyFromCents } from "@/lib/currency";
+import {
+  SERVICE_PROCESSING_DAYS,
+  servicePaymentStatusI18nKey,
+} from "@/lib/service-payment-status";
+import { Select } from "@/components/ui/select";
 
 type Peer = {
   id: string;
@@ -44,6 +49,7 @@ type ThreadPayment = {
   status: string;
   clientId: string;
   providerId: string;
+  escrowUntilConfirm?: boolean;
 };
 
 function isImageUrl(url: string) {
@@ -83,6 +89,7 @@ export default function DirectMessageChatPage() {
   const [payTitle, setPayTitle] = useState("");
   const [payDescription, setPayDescription] = useState("");
   const [payAmount, setPayAmount] = useState("");
+  const [payProcessingDays, setPayProcessingDays] = useState("3");
   const [payBusy, setPayBusy] = useState(false);
   const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -251,6 +258,7 @@ export default function DirectMessageChatPage() {
         title: payTitle.trim(),
         description: payDescription.trim(),
         amount,
+        processingDays: Number(payProcessingDays),
       }),
     });
     const data = await res.json();
@@ -348,6 +356,23 @@ export default function DirectMessageChatPage() {
               placeholder={t("svc_pay_desc_placeholder")}
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-days">{t("svc_pay_processing_days")}</Label>
+            <Select
+              id="pay-days"
+              value={payProcessingDays}
+              onChange={(e) => setPayProcessingDays(e.target.value)}
+            >
+              {SERVICE_PROCESSING_DAYS.map((d) => (
+                <option key={d} value={d}>
+                  {d} {d <= 1 ? t("svc_pay_day") : t("svc_pay_days")}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-[var(--muted)]">
+              {t("svc_pay_processing_hint")}
+            </p>
+          </div>
           <Button type="submit" disabled={payBusy}>
             {payBusy ? t("loading") : t("svc_pay_send_request")}
           </Button>
@@ -365,20 +390,12 @@ export default function DirectMessageChatPage() {
             const open =
               p.status === "AWAITING_PAYMENT" ||
               p.status === "AWAITING_CONFIRMATION";
-            const statusKey =
-              p.status === "AWAITING_PAYMENT"
-                ? iPay
-                  ? "svc_pay_pending_to_pay"
-                  : "svc_pay_status_waiting"
-                : p.status === "AWAITING_CONFIRMATION"
-                  ? "svc_pay_status_AWAITING_CONFIRMATION"
-                  : p.status === "PAID"
-                    ? "svc_pay_status_PAID"
-                    : p.status === "CANCELLED"
-                      ? "svc_pay_status_CANCELLED"
-                      : p.status === "EXPIRED"
-                        ? "svc_pay_status_EXPIRED"
-                        : null;
+            const followUp =
+              p.status === "PAID" || p.status === "DELIVERED";
+            const statusKey = servicePaymentStatusI18nKey(p.status, {
+              isClient: iPay,
+              escrowUntilConfirm: p.escrowUntilConfirm,
+            });
             return (
               <div
                 key={p.id}
@@ -391,20 +408,20 @@ export default function DirectMessageChatPage() {
                     {statusKey ? ` · ${t(statusKey)}` : ""}
                   </p>
                 </div>
-                {open ? (
+                {open || followUp ? (
                   <Link
                     href={`/service-payments/${p.id}`}
                     className="text-xs font-semibold text-[var(--accent)] underline"
                   >
-                    {iPay ? t("svc_pay_pay") : t("svc_pay_open")}
+                    {open && iPay
+                      ? t("svc_pay_pay")
+                      : p.status === "DELIVERED" && iPay
+                        ? t("svc_pay_confirm_delivery")
+                        : t("svc_pay_open")}
                   </Link>
                 ) : (
                   <span className="text-xs font-medium text-[var(--muted)]">
-                    {p.status === "PAID"
-                      ? t("svc_pay_status_PAID")
-                      : statusKey
-                        ? t(statusKey)
-                        : ""}
+                    {statusKey ? t(statusKey) : ""}
                   </span>
                 )}
               </div>
@@ -432,7 +449,9 @@ export default function DirectMessageChatPage() {
           const paymentOpen =
             !invoice ||
             invoice.status === "AWAITING_PAYMENT" ||
-            invoice.status === "AWAITING_CONFIRMATION";
+            invoice.status === "AWAITING_CONFIRMATION" ||
+            invoice.status === "PAID" ||
+            invoice.status === "DELIVERED";
           const iPay = invoice ? invoice.clientId === meId : false;
           const bodyWithoutPayLink = m.body
             .replace(/https?:\/\/\S*\/service-payments\/[a-zA-Z0-9_-]+/gi, "")
@@ -497,7 +516,14 @@ export default function DirectMessageChatPage() {
                     mine ? "text-white" : "text-[var(--accent)]"
                   }`}
                 >
-                  {iPay ? t("svc_pay_pay") : t("svc_pay_open")}
+                  {invoice?.status === "DELIVERED" && iPay
+                    ? t("svc_pay_confirm_delivery")
+                    : invoice?.status === "PAID" ||
+                        invoice?.status === "DELIVERED"
+                      ? t("svc_pay_open")
+                      : iPay
+                        ? t("svc_pay_pay")
+                        : t("svc_pay_open")}
                 </Link>
               )}
               {paymentId && !paymentOpen && (
@@ -506,8 +532,8 @@ export default function DirectMessageChatPage() {
                     mine ? "text-white/90" : "text-[var(--muted)]"
                   }`}
                 >
-                  {invoice?.status === "PAID"
-                    ? t("svc_pay_status_PAID")
+                  {invoice?.status === "FULFILLED"
+                    ? t("svc_pay_status_FULFILLED")
                     : invoice?.status === "CANCELLED"
                       ? t("svc_pay_status_CANCELLED")
                       : t("svc_pay_status_EXPIRED")}

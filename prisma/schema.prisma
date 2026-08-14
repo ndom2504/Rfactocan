@@ -108,6 +108,8 @@ enum ServicePayStatus {
   AWAITING_PAYMENT
   AWAITING_CONFIRMATION
   PAID
+  DELIVERED
+  FULFILLED
   CANCELLED
   EXPIRED
 }
@@ -533,6 +535,15 @@ model ServicePaymentRequest {
   clientMarkedPaidAt      DateTime?
   providerConfirmedAt     DateTime?
   paidAt                  DateTime?
+  /// Announced fulfillment window after payment (calendar days)
+  processingDays          Int              @default(3)
+  /// New card invoices hold funds until the client confirms delivery
+  escrowUntilConfirm      Boolean          @default(false)
+  processingDueAt         DateTime?
+  deliveredAt             DateTime?
+  clientConfirmedAt       DateTime?
+  stripeTransferId        String?          @unique
+  releasedAt              DateTime?
   expiresAt               DateTime?
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
