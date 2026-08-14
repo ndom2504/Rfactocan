@@ -6,7 +6,7 @@ import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, normalizeCurrency, type MoneyCurrency } from "@/lib/currency";
 import { categoryLabel, serviceTypeLabel } from "@/lib/services-catalog";
 import { shopCategoryLabel } from "@/lib/shops-catalog";
 
@@ -158,7 +158,11 @@ export default function MyProjectsPage() {
                         </CardDescription>
                         {s.priceAmount != null && (
                           <p className="mt-1 text-sm font-medium text-[var(--accent)]">
-                            {formatMoney(s.priceAmount, s.currency || "CAD")}
+                            {formatMoney(
+                              s.priceAmount,
+                              (normalizeCurrency(s.currency) as MoneyCurrency) ??
+                                "CAD"
+                            )}
                           </p>
                         )}
                         <Badge className="mt-2">{serviceStatusLabel(s.status)}</Badge>
