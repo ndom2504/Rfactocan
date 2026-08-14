@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export function GoogleSignInButton({
@@ -7,7 +6,7 @@ export function GoogleSignInButton({
   label?: string;
 }) {
   return (
-    <Link href="/api/auth/google" className="block w-full">
+    <a href="/api/auth/google" className="block w-full">
       <Button type="button" variant="outline" className="w-full">
         <svg
           aria-hidden
@@ -34,6 +33,6 @@ export function GoogleSignInButton({
         </svg>
         {label}
       </Button>
-    </Link>
+    </a>
   );
 }

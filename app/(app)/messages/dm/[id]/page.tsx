@@ -90,12 +90,11 @@ export default function DirectMessageChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function load() {
+  async function loadMessages() {
     if (!id) return;
-    const [meRes, msgRes, payRes] = await Promise.all([
+    const [meRes, msgRes] = await Promise.all([
       fetch("/api/auth/me"),
       fetch(`/api/dm/${id}/messages`),
-      fetch(`/api/service-payments?threadId=${encodeURIComponent(id)}`),
     ]);
     const meData = await meRes.json();
     const msgData = await msgRes.json();
@@ -109,18 +108,32 @@ export default function DirectMessageChatPage() {
     } else {
       setError(msgData.error || "Erreur");
     }
-    if (payRes.ok) {
+    setLoading(false);
+  }
+
+  async function loadInvoices() {
+    if (!id) return;
+    try {
+      const payRes = await fetch(
+        `/api/service-payments?threadId=${encodeURIComponent(id)}`
+      );
+      if (!payRes.ok) return;
       const payData = await payRes.json();
       setInvoices(payData.payments ?? []);
+    } catch {
+      /* ignore — chat must keep working */
     }
-    setLoading(false);
+  }
+
+  async function load() {
+    await Promise.all([loadMessages(), loadInvoices()]);
   }
 
   useEffect(() => {
     void load();
     const prefs = loadUserIntent();
     if (prefs.payoutIdentifier) setPayReceiver(prefs.payoutIdentifier);
-    const timer = setInterval(() => void load(), 5000);
+    const timer = setInterval(() => void loadMessages(), 5000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);

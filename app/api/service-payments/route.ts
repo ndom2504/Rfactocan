@@ -213,7 +213,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    const msg = error instanceof Error ? error.message : String(error);
     console.error(error);
+    if (/does not exist|P2021|ServicePaymentRequest/i.test(msg)) {
+      return NextResponse.json(
+        {
+          error:
+            "Table des paiements services absente. Exécutez prisma/neon-service-payments.sql sur Neon.",
+        },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -241,47 +251,70 @@ export async function GET(request: Request) {
     threadPeerId = otherUserId(thread, session.id);
   }
 
+  const where = threadId
+    ? {
+        OR: [
+          { threadId },
+          {
+            AND: [{ providerId: session.id }, { clientId: threadPeerId! }],
+          },
+          {
+            AND: [{ providerId: threadPeerId! }, { clientId: session.id }],
+          },
+        ],
+      }
+    : role === "client"
+      ? { clientId: session.id }
+      : role === "provider"
+        ? { providerId: session.id }
+        : {
+            OR: [{ clientId: session.id }, { providerId: session.id }],
+          };
+
   try {
-    const payments = await prisma.servicePaymentRequest.findMany({
-      where: {
-        ...(threadId
-          ? {
-              OR: [
-                { threadId },
-                {
-                  OR: [
-                    { providerId: session.id, clientId: threadPeerId! },
-                    { providerId: threadPeerId!, clientId: session.id },
-                  ],
-                },
-              ],
-            }
-          : role === "client"
-            ? { clientId: session.id }
-            : role === "provider"
-              ? { providerId: session.id }
-              : {
-                  OR: [{ clientId: session.id }, { providerId: session.id }],
-                }),
-      },
+    const rows = await prisma.servicePaymentRequest.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       take: 40,
-      include: {
-        provider: {
-          select: { id: true, displayName: true, avatarUrl: true },
-        },
-        client: {
-          select: { id: true, displayName: true, avatarUrl: true },
-        },
-        listing: {
-          select: { id: true, title: true, category: true },
-        },
-      },
     });
+
+    const userIds = [
+      ...new Set(rows.flatMap((r) => [r.providerId, r.clientId])),
+    ];
+    let people: Record<
+      string,
+      { id: string; displayName: string; avatarUrl: string | null }
+    > = {};
+    if (userIds.length > 0) {
+      try {
+        const users = await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, displayName: true, avatarUrl: true },
+        });
+        people = Object.fromEntries(users.map((u) => [u.id, u]));
+      } catch (e) {
+        console.error("[service-payments] list users", e);
+      }
+    }
+
+    const payments = rows.map((r) => ({
+      ...r,
+      provider: people[r.providerId] ?? {
+        id: r.providerId,
+        displayName: "",
+        avatarUrl: null,
+      },
+      client: people[r.clientId] ?? {
+        id: r.clientId,
+        displayName: "",
+        avatarUrl: null,
+      },
+    }));
 
     return NextResponse.json({ payments });
   } catch (e) {
     console.error("[service-payments] list", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    // Table / enum missing in Neon → do not break chat or inbox.
+    return NextResponse.json({ payments: [] });
   }
 }
