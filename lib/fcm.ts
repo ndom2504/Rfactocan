@@ -64,6 +64,15 @@ export async function sendFcmToUsers(input: {
   const invalidTokenIds: string[] = [];
   let sent = 0;
   const chunkSize = 500;
+  const type = (input.data?.type ?? "").toUpperCase();
+  const isMessage =
+    type === "MESSAGE" ||
+    type === "DIRECT_MESSAGE" ||
+    type === "DM" ||
+    type.includes("MESSAGE");
+  const androidChannelId = isMessage
+    ? "rfacto_messages_v2"
+    : "rfacto_alerts_v2";
 
   for (let i = 0; i < tokens.length; i += chunkSize) {
     const chunk = tokens.slice(i, i + chunkSize);
@@ -78,11 +87,13 @@ export async function sendFcmToUsers(input: {
         android: {
           priority: "high",
           notification: {
-            channelId: "rfacto_jobs",
-            sound: "default",
+            channelId: androidChannelId,
+            icon: "ic_stat_rfacto",
+            color: "#28541D",
+            sound: "rfacto_notify",
             priority: "high",
-            defaultSound: true,
             defaultVibrateTimings: true,
+            notificationCount: 1,
           },
         },
       });
