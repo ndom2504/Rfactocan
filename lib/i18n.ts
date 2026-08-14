@@ -450,7 +450,7 @@ const dict = {
     my_projects_empty_title: "Aucun projet pour l’instant",
     my_projects_empty_hint:
       "Publiez un service ou créez une boutique pour les retrouver ici.",
-    my_projects_share_community: "Partager dans la communauté",
+    my_projects_share_community: "Partager",
     my_projects_share_ok: "Partagé",
     my_projects_share_error: "Partage impossible",
     my_projects_share_service_lead: "Nouveau service Rfacto :",
@@ -1956,7 +1956,7 @@ const dict = {
     my_projects_empty_title: "No projects yet",
     my_projects_empty_hint:
       "Publish a service or create a shop to find them here.",
-    my_projects_share_community: "Share to community",
+    my_projects_share_community: "Share",
     my_projects_share_ok: "Shared",
     my_projects_share_error: "Could not share",
     my_projects_share_service_lead: "New Rfacto service:",
