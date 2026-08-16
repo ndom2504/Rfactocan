@@ -49,23 +49,11 @@ export const metadata: Metadata = {
     siteName: "Rfacto",
     title: siteTitle,
     description: siteDescription,
-    images: [
-      {
-        // Cache-bust filename — WhatsApp/Facebook keep old OG previews for a long time.
-        url: "https://www.rfacto.com/og-communaute.jpg",
-        secureUrl: "https://www.rfacto.com/og-communaute.jpg",
-        type: "image/jpeg",
-        width: 1200,
-        height: 675,
-        alt: siteTitle,
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["https://www.rfacto.com/og-communaute.jpg"],
   },
 };
 

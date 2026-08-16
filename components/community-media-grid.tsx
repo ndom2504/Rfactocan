@@ -17,13 +17,15 @@ export function CommunityMediaGrid({
 }) {
   if (!attachments.length) return null;
 
-  const images = attachments.filter((a) => isImageAttachment(a.contentType));
+  const images = attachments.filter((a) =>
+    isImageAttachment(a.contentType, a.url || a.name)
+  );
   const videos = attachments.filter(
     (a) => isVideoAttachment(a.contentType, a.name || a.url)
   );
   const files = attachments.filter(
     (a) =>
-      !isImageAttachment(a.contentType) &&
+      !isImageAttachment(a.contentType, a.url || a.name) &&
       !isVideoAttachment(a.contentType, a.name || a.url)
   );
 

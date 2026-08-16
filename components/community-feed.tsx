@@ -596,11 +596,7 @@ export function CommunityFeed() {
                   {t("community_see")}
                 </Link>
                 <CommunityShareButton
-                  url={absoluteShareUrl(
-                    post.source === "post" || !post.source
-                      ? communitySharePath(post.id)
-                      : post.href || "/community"
-                  )}
+                  url={absoluteShareUrl(communitySharePath(post.id))}
                   title={post.title}
                   body={post.body}
                 />

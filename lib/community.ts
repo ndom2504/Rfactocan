@@ -80,8 +80,16 @@ export function attachmentFromImageUrl(
   };
 }
 
-export function isImageAttachment(contentType: string) {
-  return contentType.startsWith("image/");
+export function isImageAttachment(
+  contentType: string,
+  nameOrUrl?: string | null
+) {
+  const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  if (type.startsWith("image/")) return true;
+  if (type.startsWith("video/") || type === "application/pdf") return false;
+  // Mobile uploads often store application/octet-stream.
+  const hay = (nameOrUrl || "").toLowerCase();
+  return /\.(jpe?g|png|webp|gif)(\?|$)/i.test(hay);
 }
 
 export function isVideoAttachment(

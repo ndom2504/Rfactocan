@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { HomeHeroCarousel } from "@/components/home-hero-carousel";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
@@ -6,6 +7,27 @@ import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { getWhatsAppCommunityUrl } from "@/lib/whatsapp-community";
+
+const homeOg = "https://www.rfacto.com/og-communaute.jpg";
+
+export const metadata: Metadata = {
+  openGraph: {
+    images: [
+      {
+        url: homeOg,
+        secureUrl: homeOg,
+        type: "image/jpeg",
+        width: 1200,
+        height: 675,
+        alt: "Rfacto",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [homeOg],
+  },
+};
 
 export default async function HomePage() {
   const locale = await getRequestLocale();

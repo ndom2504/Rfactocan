@@ -3,36 +3,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   absoluteMediaUrl,
+  communityOgImageUrl,
   communitySharePath,
   firstImageAttachment,
   shareExcerpt,
 } from "@/lib/community-share";
 import { isImageAttachment, parseAttachmentsJson } from "@/lib/community";
-import { prisma } from "@/lib/prisma";
+import { resolveSharePost } from "@/lib/og-share-image";
 import { getAppUrl } from "@/lib/app-url";
 import { getSessionUser } from "@/lib/auth";
 import { FormattedDescription } from "@/components/formatted-description";
 
 type Params = { params: Promise<{ id: string }> };
 
-async function loadOpenPost(id: string) {
-  try {
-    return await prisma.communityPost.findFirst({
-      where: { id, status: "OPEN" },
-      include: {
-        author: {
-          select: { displayName: true, avatarUrl: true },
-        },
-      },
-    });
-  } catch {
-    return null;
-  }
-}
-
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
-  const post = await loadOpenPost(id);
+  const post = await resolveSharePost(id);
   if (!post) {
     return {
       title: "Publication Rfacto",
@@ -42,11 +28,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const title = post.title?.trim() || shareExcerpt(post.body, 80);
   const description = shareExcerpt(post.body, 180);
+  const url = `${getAppUrl()}${communitySharePath(post.id)}`;
+  const ogImageUrl = communityOgImageUrl(post.id, post.updatedAt.getTime());
   const image = firstImageAttachment(post.attachmentsJson);
-  const imageUrl = image ? absoluteMediaUrl(image.url) : undefined;
   const imageType =
     image?.contentType?.startsWith("image/") ? image.contentType : "image/jpeg";
-  const url = `${getAppUrl()}${communitySharePath(post.id)}`;
 
   return {
     title,
@@ -59,47 +45,38 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title,
       description,
       locale: "fr_FR",
-      images: imageUrl
-        ? [
-            {
-              url: imageUrl,
-              secureUrl: imageUrl,
-              type: imageType,
-              width: 1200,
-              height: 630,
-              alt: title,
-            },
-          ]
-        : [
-            {
-              url: "https://www.rfacto.com/og-communaute.jpg",
-              secureUrl: "https://www.rfacto.com/og-communaute.jpg",
-              type: "image/jpeg",
-              width: 1200,
-              height: 675,
-              alt: "Rfacto",
-            },
-          ],
+      images: [
+        {
+          url: ogImageUrl,
+          secureUrl: ogImageUrl,
+          type: imageType,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: imageUrl ? [imageUrl] : ["https://www.rfacto.com/og-communaute.jpg"],
+      images: [ogImageUrl],
     },
   };
 }
 
 export default async function CommunitySharePage({ params }: Params) {
   const { id } = await params;
-  const post = await loadOpenPost(id);
+  const post = await resolveSharePost(id);
   if (!post) notFound();
 
   const session = await getSessionUser();
   const attachments = parseAttachmentsJson(post.attachmentsJson);
-  const images = attachments.filter((a) => isImageAttachment(a.contentType));
+  const images = attachments.filter((a) =>
+    isImageAttachment(a.contentType, a.url || a.name)
+  );
   const title = post.title?.trim() || null;
-  const appHref = `/community/${post.id}`;
+  const appHref = post.href || `/community/${post.id}`;
 
   return (
     <article className="mx-auto max-w-2xl space-y-5 px-4 py-10">

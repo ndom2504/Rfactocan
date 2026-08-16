@@ -1,6 +1,45 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const SHARE_CRAWLER =
+  /facebookexternalhit|Facebot|Twitterbot|WhatsApp|Slackbot|LinkedInBot|TelegramBot|Discordbot|Pinterest|iMessageBot/i;
+
+function rewriteShareCrawler(request: NextRequest) {
+  const ua = request.headers.get("user-agent") || "";
+  if (!SHARE_CRAWLER.test(ua)) return null;
+
+  const path = request.nextUrl.pathname;
+  const community = /^\/community\/([^/]+)$/.exec(path);
+  if (community) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/share/community/${community[1]}`;
+    return NextResponse.rewrite(url);
+  }
+
+  const shop = /^\/shops\/([^/]+)$/.exec(path);
+  if (shop) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/share/community/${encodeURIComponent(`shop:${shop[1]}`)}`;
+    return NextResponse.rewrite(url);
+  }
+
+  const service = /^\/services\/listing\/([^/]+)$/.exec(path);
+  if (service) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/share/community/${encodeURIComponent(`svc:${service[1]}`)}`;
+    return NextResponse.rewrite(url);
+  }
+
+  const trip = /^\/trips\/([^/]+)$/.exec(path);
+  if (trip) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/share/community/${encodeURIComponent(`trip:${trip[1]}`)}`;
+    return NextResponse.rewrite(url);
+  }
+
+  return null;
+}
+
 function corsHeaders(request: NextRequest) {
   const configured = process.env.MOBILE_CORS_ORIGIN?.trim();
   const origin = request.headers.get("origin") ?? "";
@@ -21,6 +60,9 @@ function corsHeaders(request: NextRequest) {
 }
 
 export function middleware(request: NextRequest) {
+  const crawler = rewriteShareCrawler(request);
+  if (crawler) return crawler;
+
   if (!request.nextUrl.pathname.startsWith("/api")) {
     return NextResponse.next();
   }
@@ -39,5 +81,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/community/:id",
+    "/shops/:id",
+    "/services/listing/:id",
+    "/trips/:id",
+  ],
 };
