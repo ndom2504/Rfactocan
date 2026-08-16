@@ -79,26 +79,29 @@ export async function sendFcmToUsers(input: {
     try {
       const res = await messaging.sendEachForMulticast({
         tokens: chunk.map((t) => t.token),
-        notification: {
-          title: input.title,
-          body: input.body,
-        },
         data: {
           title: input.title,
           body: input.body,
+          channelId: androidChannelId,
           ...(input.data ?? {}),
         },
         android: {
           priority: "high",
-          notification: {
-            channelId: androidChannelId,
-            icon: "ic_stat_rfacto",
-            color: "#28541D",
-            sound: "default",
-            defaultSound: true,
-            priority: "high",
-            defaultVibrateTimings: true,
-            notificationCount: 1,
+          ttl: 86400000,
+        },
+        apns: {
+          headers: {
+            "apns-priority": "10",
+          },
+          payload: {
+            aps: {
+              alert: {
+                title: input.title,
+                body: input.body,
+              },
+              sound: "default",
+              badge: 1,
+            },
           },
         },
       });
