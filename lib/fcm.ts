@@ -70,9 +70,15 @@ export async function sendFcmToUsers(input: {
     type === "DIRECT_MESSAGE" ||
     type === "DM" ||
     type.includes("MESSAGE");
+  const isJob =
+    type === "NEARBY_REQUEST" ||
+    type === "NEARBY_SERVICE" ||
+    type.includes("NEARBY");
   const androidChannelId = isMessage
-    ? "rfacto_messages_v2"
-    : "rfacto_alerts_v2";
+    ? "rfacto_messages_v3"
+    : isJob
+      ? "rfacto_jobs_v3"
+      : "rfacto_alerts_v3";
 
   for (let i = 0; i < tokens.length; i += chunkSize) {
     const chunk = tokens.slice(i, i + chunkSize);
