@@ -133,6 +133,7 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
+    try {
     // JOB / MEET are feed-only; skip DB posts filter for those chips
     if (kind !== "JOB" && kind !== "MEET") {
       const posts = await prisma.communityPost.findMany({
@@ -170,6 +171,44 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     console.error("CommunityPost query failed (table missing on DB?):", error);
+    if (kind !== "JOB" && kind !== "MEET") {
+      try {
+        const posts = await prisma.communityPost.findMany({
+          where: {
+            status: "OPEN",
+            ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
+              ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
+              : {}),
+          },
+          omit: { sourceKey: true },
+          include: {
+            author: {
+              select: {
+                id: true,
+                displayName: true,
+                avatarUrl: true,
+                bio: true,
+                country: true,
+                kycStatus: true,
+                ratingAvg: true,
+                ratingCount: true,
+              },
+            },
+            _count: { select: { comments: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take,
+        });
+        for (const p of posts) {
+          feed.push({
+            ...serializePost(p),
+            isOwner: p.authorId === session.id || session.role === "ADMIN",
+          });
+        }
+      } catch (fallbackError) {
+        console.error("CommunityPost fallback query failed:", fallbackError);
+      }
+    }
   }
 
   // Same réseau pro items Android surfaced (services / boutiques / voyages / emplois / rencontre)
@@ -544,27 +583,38 @@ export async function GET(request: Request) {
     .filter((p): p is NonNullable<typeof p> => Boolean(p))
     .map((p) => communitySourceKey(p.source, p.sourceId));
   if (listingKeys.length > 0) {
-    const threads = await prisma.communityPost.findMany({
-      where: { sourceKey: { in: listingKeys }, status: "OPEN" },
-      select: {
-        sourceKey: true,
-        _count: { select: { comments: true } },
-      },
-    });
-    const countByKey = new Map(
-      threads.map((t) => [t.sourceKey, t._count.comments])
-    );
-    for (const item of slice) {
-      const parsed = parseCommunityFeedId(item.id);
-      if (!parsed) continue;
-      item.commentCount =
-        countByKey.get(communitySourceKey(parsed.source, parsed.sourceId)) ?? 0;
+    try {
+      const threads = await prisma.communityPost.findMany({
+        where: { sourceKey: { in: listingKeys }, status: "OPEN" },
+        select: {
+          sourceKey: true,
+          _count: { select: { comments: true } },
+        },
+      });
+      const countByKey = new Map(
+        threads.map((t) => [t.sourceKey, t._count.comments])
+      );
+      for (const item of slice) {
+        const parsed = parseCommunityFeedId(item.id);
+        if (!parsed) continue;
+        item.commentCount =
+          countByKey.get(communitySourceKey(parsed.source, parsed.sourceId)) ?? 0;
+      }
+    } catch (error) {
+      console.error("Community listing comment counts skipped:", error);
     }
   }
 
   return NextResponse.json({
     posts: slice,
   });
+  } catch (error) {
+    console.error("[community feed]", error);
+    return NextResponse.json(
+      { error: "Impossible de charger la communauté", posts: [] },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {

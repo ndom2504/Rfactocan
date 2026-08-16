@@ -99,7 +99,13 @@ export function CommunityFeed() {
     try {
       const qs = filter ? `?kind=${filter}` : "";
       const res = await fetch(`/api/community/posts${qs}`);
-      const data = await res.json();
+      const text = await res.text();
+      let data: { posts?: FeedPost[]; error?: string } = {};
+      try {
+        data = text ? (JSON.parse(text) as { posts?: FeedPost[]; error?: string }) : {};
+      } catch {
+        throw new Error("Impossible de charger la communauté");
+      }
       if (!res.ok) throw new Error(data.error || "Erreur");
       setPosts(data.posts ?? []);
     } catch (e) {
