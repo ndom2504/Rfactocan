@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
 import { CommunityPostActions } from "@/components/community-post-actions";
@@ -26,6 +27,7 @@ import {
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import type { DictKey } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils";
+import { isNativeCommunityPostId } from "@/lib/community-source";
 
 type FeedPost = {
   id: string;
@@ -63,6 +65,7 @@ const kindLabelKey: Record<string, DictKey> = {
 
 export function CommunityFeed() {
   const { t } = useI18n();
+  const router = useRouter();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"" | CommunityFeedFilterId>("");
@@ -74,6 +77,7 @@ export function CommunityFeed() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [commentingId, setCommentingId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -220,6 +224,31 @@ export function CommunityFeed() {
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
+    }
+  }
+
+  async function openComments(post: FeedPost) {
+    if (isNativeCommunityPostId(post.id) && (post.source === "post" || !post.source)) {
+      router.push(`/community/${post.id}#comments`);
+      return;
+    }
+    setCommentingId(post.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/community/posts/ensure-source", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedId: post.id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.post?.id) {
+        throw new Error(data.error || "Impossible d'ouvrir les commentaires");
+      }
+      router.push(`/community/${data.post.id}#comments`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setCommentingId(null);
     }
   }
 
@@ -515,12 +544,12 @@ export function CommunityFeed() {
                 </div>
               )}
 
-              {(post.source === "post" || !post.source) && (
-                <p className="mt-2 text-xs text-[var(--muted)]">
-                  {post.viewCount ?? 0} {t("community_views")} ·{" "}
-                  {post.commentCount ?? 0} {t("community_comments")}
-                </p>
-              )}
+              <p className="mt-2 text-xs text-[var(--muted)]">
+                {post.source === "post" || !post.source
+                  ? `${post.viewCount ?? 0} ${t("community_views")} · `
+                  : ""}
+                {post.commentCount ?? 0} {t("community_comments")}
+              </p>
               <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
                 <button
                   type="button"
@@ -542,16 +571,14 @@ export function CommunityFeed() {
                     ? t("community_connected")
                     : t("community_connect")}
                 </button>
-                <Link
-                  href={
-                    post.source === "post" || !post.source
-                      ? `/community/${post.id}#comments`
-                      : post.href || "/community"
-                  }
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+                <button
+                  type="button"
+                  disabled={commentingId === post.id}
+                  onClick={() => void openComments(post)}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-40"
                 >
                   {t("community_comment_action")}
-                </Link>
+                </button>
                 <Link
                   href={
                     post.source === "post" || !post.source

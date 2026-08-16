@@ -1084,6 +1084,8 @@ model CommunityPost {
   attachmentsJson String              @default("[]")
   status          CommunityPostStatus @default(OPEN)
   viewCount       Int                 @default(0)
+  /// Links a discussion thread to a feed listing (service:id, shop:id, …). Null = native post.
+  sourceKey       String?             @unique
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 

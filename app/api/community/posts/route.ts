@@ -12,6 +12,10 @@ import {
 import { loadAuthorConnections } from "@/lib/connections";
 import { scoreMeetMatch, toPublicMeetProfile } from "@/lib/meet";
 import { prisma } from "@/lib/prisma";
+import {
+  communitySourceKey,
+  parseCommunityFeedId,
+} from "@/lib/community-source";
 
 const kindSchema = z.enum(["BUSINESS", "OPPORTUNITY", "COMMUNITY"]);
 
@@ -134,6 +138,7 @@ export async function GET(request: Request) {
       const posts = await prisma.communityPost.findMany({
         where: {
           status: "OPEN",
+          sourceKey: null,
           ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
             ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
             : {}),
@@ -531,6 +536,29 @@ export async function GET(request: Request) {
     if (stats) {
       item.author.connectionCount = stats.connectionCount;
       item.author.connectedByMe = stats.connectedByMe;
+    }
+  }
+
+  const listingKeys = slice
+    .map((p) => parseCommunityFeedId(p.id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
+    .map((p) => communitySourceKey(p.source, p.sourceId));
+  if (listingKeys.length > 0) {
+    const threads = await prisma.communityPost.findMany({
+      where: { sourceKey: { in: listingKeys }, status: "OPEN" },
+      select: {
+        sourceKey: true,
+        _count: { select: { comments: true } },
+      },
+    });
+    const countByKey = new Map(
+      threads.map((t) => [t.sourceKey, t._count.comments])
+    );
+    for (const item of slice) {
+      const parsed = parseCommunityFeedId(item.id);
+      if (!parsed) continue;
+      item.commentCount =
+        countByKey.get(communitySourceKey(parsed.source, parsed.sourceId)) ?? 0;
     }
   }
 

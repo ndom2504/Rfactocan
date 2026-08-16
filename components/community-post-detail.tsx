@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ export function CommunityPostDetail() {
   const [body, setBody] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,6 +92,14 @@ export function CommunityPostDetail() {
   useEffect(() => {
     if (id) void load();
   }, [id, load]);
+
+  useEffect(() => {
+    if (loading || !post) return;
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#comments") return;
+    document.getElementById("comments")?.scrollIntoView({ behavior: "smooth" });
+    commentInputRef.current?.focus();
+  }, [loading, post]);
 
   async function toggleConnect() {
     if (!post || post.isOwner) return;
@@ -292,6 +301,7 @@ export function CommunityPostDetail() {
             </p>
           )}
           <textarea
+            ref={commentInputRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={3}
