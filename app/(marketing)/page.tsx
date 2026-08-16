@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
+import { getWhatsAppCommunityUrl } from "@/lib/whatsapp-community";
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
   const user = await getSessionUser();
   const startHref = user ? "/dashboard" : "/login";
+  const whatsappUrl = await getWhatsAppCommunityUrl();
 
   return (
     <main className="pb-4">
-      <HomeHeroCarousel startHref={startHref} />
+      <HomeHeroCarousel startHref={startHref} whatsappUrl={whatsappUrl} />
 
       <section className="mx-auto mt-10 max-w-5xl px-6">
         <div className="grid gap-4 sm:grid-cols-3">

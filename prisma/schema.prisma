@@ -1133,3 +1133,10 @@ model UserConnection {
   @@index([followingId])
   @@index([followerId])
 }
+
+/// Key/value platform settings (WhatsApp community invite, etc.)
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

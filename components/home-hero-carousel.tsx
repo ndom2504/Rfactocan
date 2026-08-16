@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
-import { getWhatsAppCommunityUrl } from "@/lib/whatsapp-community";
 import { RFACTO_SLIDES } from "@/lib/rfacto-slides";
 
 const SLIDE = {
@@ -14,11 +13,12 @@ const SLIDE = {
 
 type Props = {
   startHref: string;
+  whatsappUrl?: string | null;
 };
 
-export function HomeHeroCarousel({ startHref }: Props) {
+export function HomeHeroCarousel({ startHref, whatsappUrl = null }: Props) {
   const { t } = useI18n();
-  const whatsapp = getWhatsAppCommunityUrl();
+  const whatsapp = whatsappUrl;
 
   const image = (
     <Image

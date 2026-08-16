@@ -25,14 +25,14 @@ type Props = {
 
 /**
  * Icon-only link to the official WhatsApp community.
- * Renders nothing when NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL is unset.
+ * Renders nothing when no invite URL is configured (admin or env).
  */
-export function WhatsAppCommunityButton({
+export async function WhatsAppCommunityButton({
   label,
   placement = "fixed",
   className = "",
 }: Props) {
-  const href = getWhatsAppCommunityUrl();
+  const href = await getWhatsAppCommunityUrl();
   if (!href) return null;
 
   const base =

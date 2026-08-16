@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   BOOKING_STATUS_LABELS,
@@ -245,6 +246,9 @@ export default function AdminPage() {
   const [userToDraft, setUserToDraft] = useState("");
   const [exportingEmails, setExportingEmails] = useState(false);
   const [sendingPlayInvite, setSendingPlayInvite] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+  const [whatsappInfo, setWhatsappInfo] = useState<string | null>(null);
 
   async function load(opts?: {
     letter?: string;
@@ -277,9 +281,16 @@ export default function AdminPage() {
     if (res.ok) setCommunityPosts(json.posts ?? []);
   }
 
+  async function loadWhatsappUrl() {
+    const res = await fetch("/api/admin/whatsapp-community");
+    const json = await res.json().catch(() => ({}));
+    if (res.ok) setWhatsappUrl(typeof json.url === "string" ? json.url : "");
+  }
+
   useEffect(() => {
     void load();
     void loadCommunityPosts();
+    void loadWhatsappUrl();
     // initial load only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -507,6 +518,29 @@ export default function AdminPage() {
     }
   }
 
+  async function saveWhatsappCommunityUrl() {
+    setSavingWhatsapp(true);
+    setWhatsappInfo(null);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/whatsapp-community", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: whatsappUrl.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || "Enregistrement impossible");
+      }
+      setWhatsappUrl(typeof json.url === "string" ? json.url : "");
+      setWhatsappInfo("Lien communauté enregistré. Accueil, site et app l’utilisent tout de suite.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Enregistrement impossible");
+    } finally {
+      setSavingWhatsapp(false);
+    }
+  }
+
   async function resolveReport(reportId: string) {
     await fetch("/api/reports", {
       method: "PATCH",
@@ -576,6 +610,37 @@ export default function AdminPage() {
           </p>
         </div>
       </div>
+
+      <Card>
+        <CardTitle>Communauté WhatsApp</CardTitle>
+        <CardDescription>
+          Le lien d’invitation expire souvent. Collez le nouveau ici : il
+          s’affiche tout de suite sur l’accueil, le bouton vert du site et
+          l’app Android.
+        </CardDescription>
+        <form
+          className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void saveWhatsappCommunityUrl();
+          }}
+        >
+          <Input
+            type="url"
+            inputMode="url"
+            placeholder="https://chat.whatsapp.com/…"
+            value={whatsappUrl}
+            onChange={(e) => setWhatsappUrl(e.target.value)}
+            className="sm:flex-1"
+          />
+          <Button type="submit" disabled={savingWhatsapp}>
+            {savingWhatsapp ? "Enregistrement…" : "Enregistrer le lien"}
+          </Button>
+        </form>
+        {whatsappInfo && (
+          <p className="mt-2 text-xs text-[var(--accent)]">{whatsappInfo}</p>
+        )}
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
