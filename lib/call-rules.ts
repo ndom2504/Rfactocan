@@ -31,8 +31,15 @@ export type CallAction = (typeof CALL_ACTIONS)[number];
 /** RINGING older than this becomes MISSED (lazy + future cron). */
 export const RINGING_TIMEOUT_MS = 45_000;
 
+/**
+ * ACCEPTED with no LiveKit room: hang up so testers are not stuck
+ * "already on a call" before media exists.
+ */
+export const ACCEPTED_NO_MEDIA_TIMEOUT_MS = 60_000;
+
 export const DEFAULT_END_REASON = "USER_ENDED";
 export const MISSED_END_REASON = "TIMEOUT";
+export const STALE_NO_MEDIA_END_REASON = "STALE_NO_MEDIA";
 
 export type CallParty = {
   id: string;
@@ -85,6 +92,19 @@ export function isRingingTimedOut(
 ) {
   if (call.status !== "RINGING") return false;
   return now.getTime() - call.createdAt.getTime() >= RINGING_TIMEOUT_MS;
+}
+
+export function isAcceptedWithoutMediaTimedOut(
+  call: Pick<CallParty, "status" | "answeredAt"> & {
+    livekitRoom?: string | null;
+  },
+  now = new Date()
+) {
+  if (call.status !== "ACCEPTED") return false;
+  if (call.livekitRoom) return false;
+  const t0 = call.answeredAt;
+  if (!t0) return false;
+  return now.getTime() - t0.getTime() >= ACCEPTED_NO_MEDIA_TIMEOUT_MS;
 }
 
 /** Talk time when the call was answered and then ended. */

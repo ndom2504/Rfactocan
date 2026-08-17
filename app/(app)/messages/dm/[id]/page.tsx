@@ -201,6 +201,18 @@ export default function DirectMessageChatPage() {
     setOutgoingCall(null);
   }
 
+  async function hangUpOutgoing() {
+    if (!outgoingCall) return;
+    try {
+      if (outgoingCall.status === "ACCEPTED") {
+        await fetch(`/api/calls/${outgoingCall.id}/end`, { method: "POST" });
+      }
+    } catch {
+      /* ignore */
+    }
+    setOutgoingCall(null);
+  }
+
   useEffect(() => {
     if (!pendingFile) {
       setPreviewUrl(null);
@@ -401,7 +413,7 @@ export default function DirectMessageChatPage() {
               variant="outline"
               size="sm"
               className="mt-3"
-              onClick={() => setOutgoingCall(null)}
+              onClick={() => void hangUpOutgoing()}
             >
               {t("close")}
             </Button>

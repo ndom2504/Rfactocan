@@ -9,6 +9,7 @@ import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
   ACTIVE_CALL_STATUSES,
+  ACCEPTED_NO_MEDIA_TIMEOUT_MS,
   authorizeCallAction,
   callDirection,
   callDurationMs,
@@ -16,6 +17,7 @@ import {
   MISSED_END_REASON,
   RINGING_TIMEOUT_MS,
   sanitizeEndReason,
+  STALE_NO_MEDIA_END_REASON,
   type CallAction,
   type CallMediaTypeValue,
 } from "@/lib/call-rules";
@@ -76,6 +78,31 @@ export async function markMissedRingingCalls(now = new Date()) {
       endReason: MISSED_END_REASON,
     },
   });
+}
+
+function acceptedNoMediaCutoff(now = new Date()) {
+  return new Date(now.getTime() - ACCEPTED_NO_MEDIA_TIMEOUT_MS);
+}
+
+/** ACCEPTED with no LiveKit room must not block the next test call. */
+export async function markStaleAcceptedCalls(now = new Date()) {
+  return prisma.call.updateMany({
+    where: {
+      status: "ACCEPTED",
+      livekitRoom: null,
+      answeredAt: { lte: acceptedNoMediaCutoff(now) },
+    },
+    data: {
+      status: "ENDED",
+      endedAt: now,
+      endReason: STALE_NO_MEDIA_END_REASON,
+    },
+  });
+}
+
+export async function expireInactiveCalls(now = new Date()) {
+  await markMissedRingingCalls(now);
+  await markStaleAcceptedCalls(now);
 }
 
 async function persistMissedIfStale(call: Call, now = new Date()): Promise<Call> {
@@ -152,13 +179,29 @@ export async function createCall(input: {
   }
 
   const now = new Date();
-  await markMissedRingingCalls(now);
+  await expireInactiveCalls(now);
 
   const pairKey = `${thread.userLowId}:${thread.userHighId}`;
 
   try {
     const created = await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${pairKey}))`;
+
+      await tx.call.updateMany({
+        where: {
+          status: "ACCEPTED",
+          livekitRoom: null,
+          OR: [
+            { callerId: { in: [input.userId, calleeId] } },
+            { calleeId: { in: [input.userId, calleeId] } },
+          ],
+        },
+        data: {
+          status: "ENDED",
+          endedAt: now,
+          endReason: STALE_NO_MEDIA_END_REASON,
+        },
+      });
 
       const busy = await tx.call.findFirst({
         where: {
@@ -232,6 +275,7 @@ export async function getCallForUser(callId: string, userId: string) {
   }
 
   await persistMissedIfStale(existing);
+  await markStaleAcceptedCalls();
 
   const call = await prisma.call.findUnique({
     where: { id: existing.id },
@@ -249,7 +293,7 @@ export async function listCallsForUser(input: {
   status?: CallStatus | null;
   threadId?: string | null;
 }) {
-  await markMissedRingingCalls();
+  await expireInactiveCalls();
 
   if (input.threadId) {
     const thread = await assertThreadParticipant(input.threadId, input.userId);

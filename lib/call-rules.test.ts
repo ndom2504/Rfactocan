@@ -5,6 +5,7 @@ import {
   callDirection,
   callDurationMs,
   DEFAULT_END_REASON,
+  isAcceptedWithoutMediaTimedOut,
   isActiveCallStatus,
   isRingingTimedOut,
   RINGING_TIMEOUT_MS,
@@ -160,6 +161,31 @@ describe("double appel simultané", () => {
         [call({ id: "old", status: "ENDED", callerId: "a", calleeId: "b" })],
         "a",
         "b"
+      ),
+      false
+    );
+  });
+});
+
+describe("timeout ACCEPTED sans média", () => {
+  it("libère un ACCEPTED sans LiveKit après 60s", () => {
+    const now = new Date("2026-08-16T21:01:00.000Z");
+    const fresh = call({
+      id: "fresh",
+      status: "ACCEPTED",
+      answeredAt: new Date("2026-08-16T21:00:30.000Z"),
+    });
+    const stale = call({
+      id: "stale",
+      status: "ACCEPTED",
+      answeredAt: new Date("2026-08-16T21:00:00.000Z"),
+    });
+    assert.equal(isAcceptedWithoutMediaTimedOut(fresh, now), false);
+    assert.equal(isAcceptedWithoutMediaTimedOut(stale, now), true);
+    assert.equal(
+      isAcceptedWithoutMediaTimedOut(
+        { ...stale, livekitRoom: "room_1" },
+        now
       ),
       false
     );
