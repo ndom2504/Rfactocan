@@ -19,21 +19,34 @@ export function getLivekitConfig(): LivekitConfig | null {
   return { url, apiKey, apiSecret };
 }
 
-export function livekitAudioGrant(roomName: string) {
+export function livekitParticipantGrant(
+  roomName: string,
+  mediaType: "AUDIO" | "VIDEO" = "AUDIO"
+) {
+  const sources = [TrackSource.MICROPHONE];
+  if (mediaType === "VIDEO") {
+    sources.push(TrackSource.CAMERA);
+  }
   return {
     roomJoin: true as const,
     room: roomName,
     canPublish: true as const,
     canSubscribe: true as const,
     canPublishData: false as const,
-    canPublishSources: [TrackSource.MICROPHONE],
+    canPublishSources: sources,
   };
+}
+
+/** @deprecated use livekitParticipantGrant(room, "AUDIO") */
+export function livekitAudioGrant(roomName: string) {
+  return livekitParticipantGrant(roomName, "AUDIO");
 }
 
 export async function createLivekitParticipantToken(input: {
   identity: string;
   name?: string;
   roomName: string;
+  mediaType?: "AUDIO" | "VIDEO";
   config: LivekitConfig;
 }) {
   const at = new AccessToken(input.config.apiKey, input.config.apiSecret, {
@@ -41,6 +54,8 @@ export async function createLivekitParticipantToken(input: {
     name: input.name,
     ttl: "2h",
   });
-  at.addGrant(livekitAudioGrant(input.roomName));
+  at.addGrant(
+    livekitParticipantGrant(input.roomName, input.mediaType === "VIDEO" ? "VIDEO" : "AUDIO")
+  );
   return at.toJwt();
 }

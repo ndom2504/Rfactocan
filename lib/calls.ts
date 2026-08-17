@@ -496,6 +496,7 @@ export async function issueCallLivekitToken(callId: string, userId: string) {
     identity: userId,
     name: user?.displayName?.trim() || userId,
     roomName,
+    mediaType: call.mediaType === "VIDEO" ? "VIDEO" : "AUDIO",
     config,
   });
 
