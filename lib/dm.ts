@@ -33,6 +33,52 @@ export async function assertBothVerified(userA: string, userB: string) {
   return { ok: true as const, users };
 }
 
+/**
+ * Same DM gates used to open a thread: MEET = mutual ACCEPTED (no KYC);
+ * otherwise both must be VERIFIED and not SUSPENDED.
+ */
+export async function assertDirectContactAllowed(
+  meId: string,
+  peerId: string,
+  contextType?: string | null
+) {
+  if (contextType === "MEET") {
+    const mutual = await prisma.meetContact.findFirst({
+      where: {
+        status: "ACCEPTED",
+        OR: [
+          { fromUserId: meId, toUserId: peerId },
+          { fromUserId: peerId, toUserId: meId },
+        ],
+      },
+    });
+    if (!mutual) {
+      return {
+        ok: false as const,
+        error:
+          "Messagerie rencontre réservée aux contacts mutuels. Envoyez une demande depuis le profil.",
+        status: 403,
+        code: "MEET_REQUIRED",
+      };
+    }
+    const peerUser = await prisma.user.findUnique({
+      where: { id: peerId },
+      select: { status: true },
+    });
+    if (!peerUser || peerUser.status === "SUSPENDED") {
+      return {
+        ok: false as const,
+        error: "Utilisateur indisponible.",
+        status: 404,
+        code: "ACCOUNT_UNAVAILABLE",
+      };
+    }
+    return { ok: true as const };
+  }
+
+  return assertBothVerified(meId, peerId);
+}
+
 export async function getOrCreateDirectThread(input: {
   meId: string;
   peerId: string;

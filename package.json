@@ -14,6 +14,7 @@
     "db:set-admin": "tsx scripts/set-admin.ts",
     "db:set-ambassador": "tsx scripts/set-ambassador.ts",
     "postinstall": "prisma generate",
+    "test:calls": "tsx --test lib/call-rules.test.ts lib/fcm-channels.test.ts",
     "mobile": "npm --prefix mobile start",
     "mobile:android": "npm --prefix mobile run android",
     "mobile:prebuild": "npm --prefix mobile run prebuild"

@@ -1,3 +1,4 @@
+import { androidChannelIdForType, androidTtlMsForType } from "@/lib/fcm-channels";
 import { prisma } from "@/lib/prisma";
 
 let initialized = false;
@@ -64,21 +65,8 @@ export async function sendFcmToUsers(input: {
   const invalidTokenIds: string[] = [];
   let sent = 0;
   const chunkSize = 500;
-  const type = (input.data?.type ?? "").toUpperCase();
-  const isMessage =
-    type === "MESSAGE" ||
-    type === "DIRECT_MESSAGE" ||
-    type === "DM" ||
-    type.includes("MESSAGE");
-  const isJob =
-    type === "NEARBY_REQUEST" ||
-    type === "NEARBY_SERVICE" ||
-    type.includes("NEARBY");
-  const androidChannelId = isMessage
-    ? "rfacto_messages_v3"
-    : isJob
-      ? "rfacto_jobs_v3"
-      : "rfacto_alerts_v3";
+  const type = input.data?.type ?? "";
+  const androidChannelId = androidChannelIdForType(type);
 
   for (let i = 0; i < tokens.length; i += chunkSize) {
     const chunk = tokens.slice(i, i + chunkSize);
@@ -93,7 +81,7 @@ export async function sendFcmToUsers(input: {
         },
         android: {
           priority: "high",
-          ttl: 86400000,
+          ttl: androidTtlMsForType(type),
         },
         apns: {
           headers: {

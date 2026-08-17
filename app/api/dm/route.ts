@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import {
-  assertBothVerified,
+  assertDirectContactAllowed,
   getOrCreateDirectThread,
   otherUserId,
   type DmContextType,
@@ -97,46 +97,19 @@ export async function POST(request: Request) {
     const contextType = (body.contextType as DmContextType | undefined) ?? null;
     const contextId = body.contextId ?? null;
 
-    if (contextType === "MEET") {
-      const mutual = await prisma.meetContact.findFirst({
-        where: {
-          status: "ACCEPTED",
-          OR: [
-            { fromUserId: session.id, toUserId: body.toUserId },
-            { fromUserId: body.toUserId, toUserId: session.id },
-          ],
+    const allowed = await assertDirectContactAllowed(
+      session.id,
+      body.toUserId,
+      contextType
+    );
+    if (!allowed.ok) {
+      return NextResponse.json(
+        {
+          error: allowed.error,
+          code: "code" in allowed ? allowed.code : undefined,
         },
-      });
-      if (!mutual) {
-        return NextResponse.json(
-          {
-            error:
-              "Messagerie rencontre réservée aux contacts mutuels. Envoyez une demande depuis le profil.",
-          },
-          { status: 403 }
-        );
-      }
-      const peerUser = await prisma.user.findUnique({
-        where: { id: body.toUserId },
-        select: { status: true, displayName: true },
-      });
-      if (!peerUser || peerUser.status === "SUSPENDED") {
-        return NextResponse.json(
-          { error: "Utilisateur indisponible." },
-          { status: 404 }
-        );
-      }
-    } else {
-      const verified = await assertBothVerified(session.id, body.toUserId);
-      if (!verified.ok) {
-        return NextResponse.json(
-          {
-            error: verified.error,
-            code: "code" in verified ? verified.code : undefined,
-          },
-          { status: verified.status }
-        );
-      }
+        { status: allowed.status }
+      );
     }
 
     const thread = await getOrCreateDirectThread({

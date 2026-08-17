@@ -302,6 +302,8 @@ model User {
   /// IBAN / RIB si disponible
   payoutBankIban      String?
   walletWithdrawals   WalletWithdrawal[]
+  callsAsCaller       Call[]            @relation("CallCaller")
+  callsAsCallee       Call[]            @relation("CallCallee")
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -914,6 +916,21 @@ enum MeetContactStatus {
   CANCELLED
 }
 
+enum CallMediaType {
+  AUDIO
+  VIDEO
+}
+
+enum CallStatus {
+  RINGING
+  ACCEPTED
+  REJECTED
+  MISSED
+  CANCELED
+  ENDED
+  FAILED
+}
+
 /// Profil rencontre privée (1:1 User). Visible dans Annonces via matching.
 model MeetProfile {
   id           String     @id @default(cuid())
@@ -977,6 +994,7 @@ model DirectThread {
   userLow  User @relation("DirectThreadLow", fields: [userLowId], references: [id], onDelete: Cascade)
   userHigh User @relation("DirectThreadHigh", fields: [userHighId], references: [id], onDelete: Cascade)
   messages DirectMessage[]
+  calls    Call[]
 
   @@unique([userLowId, userHighId])
   @@index([lastMessageAt])
@@ -1001,6 +1019,35 @@ model DirectMessage {
 
   @@index([threadId, createdAt])
   @@index([threadId, readAt])
+}
+
+/// Appel 1-to-1 lié à un DirectThread (plan de contrôle). Pas de média ici.
+model Call {
+  id          String        @id @default(cuid())
+  threadId    String
+  callerId    String
+  calleeId    String
+  mediaType   CallMediaType
+  status      CallStatus    @default(RINGING)
+  /// Renseigné plus tard (LiveKit). Null à l'étape contrôle.
+  livekitRoom String?
+  startedAt   DateTime?
+  answeredAt  DateTime?
+  endedAt     DateTime?
+  endReason   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  thread DirectThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  caller User         @relation("CallCaller", fields: [callerId], references: [id], onDelete: Cascade)
+  callee User         @relation("CallCallee", fields: [calleeId], references: [id], onDelete: Cascade)
+
+  @@index([calleeId, status])
+  @@index([callerId, status])
+  @@index([threadId, createdAt])
+  @@index([callerId, createdAt])
+  @@index([calleeId, createdAt])
+  @@index([status, createdAt])
 }
 
 model Review {

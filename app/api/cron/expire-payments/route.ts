@@ -7,6 +7,10 @@ export const runtime = "nodejs";
  * Daily cron (Hobby plan): expire unpaid AWAITING_PAYMENT bookings past 24h.
  * Lazy expiry on GET booking / POST checkout still covers most cases.
  * Protect with Authorization: Bearer $CRON_SECRET (Vercel Cron).
+ *
+ * Future: same pattern for RINGING calls → MISSED (45s) at
+ * /api/cron/expire-calls calling markMissedRingingCalls() from lib/calls.ts.
+ * Lazy expiry on GET/POST /api/calls already covers the control plane.
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
