@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   BOOKING_STATUS_LABELS,
@@ -246,6 +247,16 @@ export default function AdminPage() {
   const [userToDraft, setUserToDraft] = useState("");
   const [exportingEmails, setExportingEmails] = useState(false);
   const [sendingPlayInvite, setSendingPlayInvite] = useState(false);
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastBody, setBroadcastBody] = useState("");
+  const [broadcastEmail, setBroadcastEmail] = useState(true);
+  const [broadcastInbox, setBroadcastInbox] = useState(true);
+  const [broadcastFile, setBroadcastFile] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
+  const [uploadingBroadcast, setUploadingBroadcast] = useState(false);
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const [savingWhatsapp, setSavingWhatsapp] = useState(false);
   const [whatsappInfo, setWhatsappInfo] = useState<string | null>(null);
@@ -518,6 +529,99 @@ export default function AdminPage() {
     }
   }
 
+  async function uploadBroadcastAttachment(file: File) {
+    setUploadingBroadcast(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/admin/broadcast/upload", {
+        method: "POST",
+        body: form,
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        url?: string;
+        name?: string;
+      };
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Upload impossible");
+      }
+      setBroadcastFile({ url: data.url, name: data.name || file.name });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload échoué");
+    } finally {
+      setUploadingBroadcast(false);
+    }
+  }
+
+  async function sendBroadcast() {
+    if (!broadcastSubject.trim() || !broadcastBody.trim()) {
+      setError("Objet et message sont requis.");
+      return;
+    }
+    if (!broadcastEmail && !broadcastInbox) {
+      setError("Cochez au moins l’e-mail ou la messagerie interne.");
+      return;
+    }
+    const channels = [
+      broadcastEmail ? "e-mail" : null,
+      broadcastInbox ? "messagerie interne" : null,
+    ]
+      .filter(Boolean)
+      .join(" et ");
+    const ok = window.confirm(
+      `Envoyer ce message à TOUS les comptes actifs (non suspendus) via ${channels} ?\n\n` +
+        `Objet : ${broadcastSubject.trim()}\n\n` +
+        "Utilisez {{name}} pour insérer le prénom / nom affiché de chaque membre.\n" +
+        "L’envoi peut prendre plusieurs minutes."
+    );
+    if (!ok) return;
+
+    setSendingBroadcast(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirm: true,
+          subject: broadcastSubject.trim(),
+          body: broadcastBody.trim(),
+          sendEmail: broadcastEmail,
+          sendInbox: broadcastInbox,
+          attachmentUrl: broadcastFile?.url ?? null,
+          attachmentName: broadcastFile?.name ?? null,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        total?: number;
+        emailSent?: number;
+        emailFailed?: number;
+        inboxSent?: number;
+        inboxFailed?: number;
+        errors?: string[];
+      };
+      if (!res.ok) {
+        throw new Error(data.error || "Envoi impossible");
+      }
+      const detail =
+        data.errors?.length
+          ? `\n\nExemples d'erreurs :\n${data.errors.join("\n")}`
+          : "";
+      window.alert(
+        `Message envoyé.\n\nMembres : ${data.total ?? 0}\n` +
+          `E-mails : ${data.emailSent ?? 0} ok / ${data.emailFailed ?? 0} échecs\n` +
+          `Messagerie : ${data.inboxSent ?? 0} ok / ${data.inboxFailed ?? 0} échecs${detail}`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Envoi du message échoué");
+    } finally {
+      setSendingBroadcast(false);
+    }
+  }
+
   async function saveWhatsappCommunityUrl() {
     setSavingWhatsapp(true);
     setWhatsappInfo(null);
@@ -640,6 +744,90 @@ export default function AdminPage() {
         {whatsappInfo && (
           <p className="mt-2 text-xs text-[var(--accent)]">{whatsappInfo}</p>
         )}
+      </Card>
+
+      <Card>
+        <CardTitle>Message à tous les membres</CardTitle>
+        <CardDescription>
+          Envoi personnalisé vers tous les comptes actifs : e-mail et/ou
+          messagerie interne Rfacto. Utilisez <code>{"{{name}}"}</code> pour
+          insérer le nom affiché de chaque membre.
+        </CardDescription>
+        <form
+          className="mt-4 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void sendBroadcast();
+          }}
+        >
+          <Input
+            placeholder="Objet (ex. Nouveautés Rfacto pour {{name}})"
+            value={broadcastSubject}
+            onChange={(e) => setBroadcastSubject(e.target.value)}
+            maxLength={180}
+            disabled={sendingBroadcast}
+          />
+          <Textarea
+            placeholder={"Bonjour {{name}},\n\nVotre message…"}
+            value={broadcastBody}
+            onChange={(e) => setBroadcastBody(e.target.value)}
+            maxLength={4000}
+            rows={8}
+            disabled={sendingBroadcast}
+          />
+          <div className="flex flex-wrap gap-4 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={broadcastEmail}
+                onChange={(e) => setBroadcastEmail(e.target.checked)}
+                disabled={sendingBroadcast}
+              />
+              E-mail
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={broadcastInbox}
+                onChange={(e) => setBroadcastInbox(e.target.checked)}
+                disabled={sendingBroadcast}
+              />
+              Messagerie interne
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+              disabled={sendingBroadcast || uploadingBroadcast}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void uploadBroadcastAttachment(file);
+              }}
+              className="max-w-xs"
+            />
+            {uploadingBroadcast && (
+              <span className="text-xs text-[var(--muted)]">Upload…</span>
+            )}
+            {broadcastFile && (
+              <span className="flex items-center gap-2 text-xs text-[var(--accent)]">
+                {broadcastFile.name}
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={sendingBroadcast}
+                  onClick={() => setBroadcastFile(null)}
+                >
+                  Retirer
+                </Button>
+              </span>
+            )}
+          </div>
+          <Button type="submit" disabled={sendingBroadcast || uploadingBroadcast}>
+            {sendingBroadcast ? "Envoi en cours…" : "Envoyer à tous"}
+          </Button>
+        </form>
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -35,13 +35,34 @@ export async function assertBothVerified(userA: string, userB: string) {
 
 /**
  * Same DM gates used to open a thread: MEET = mutual ACCEPTED (no KYC);
- * otherwise both must be VERIFIED and not SUSPENDED.
+ * ADMIN sender may message any non-suspended member; otherwise both must
+ * be VERIFIED and not SUSPENDED.
  */
 export async function assertDirectContactAllowed(
   meId: string,
   peerId: string,
   contextType?: string | null
 ) {
+  const me = await prisma.user.findUnique({
+    where: { id: meId },
+    select: { role: true, status: true },
+  });
+  if (me?.role === "ADMIN" && me.status !== "SUSPENDED") {
+    const peer = await prisma.user.findUnique({
+      where: { id: peerId },
+      select: { status: true },
+    });
+    if (!peer || peer.status === "SUSPENDED") {
+      return {
+        ok: false as const,
+        error: "Utilisateur indisponible.",
+        status: 404,
+        code: "ACCOUNT_UNAVAILABLE",
+      };
+    }
+    return { ok: true as const };
+  }
+
   if (contextType === "MEET") {
     const mutual = await prisma.meetContact.findFirst({
       where: {

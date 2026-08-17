@@ -535,3 +535,56 @@ export async function emailPlayStoreTestInvite(input: {
     ),
   });
 }
+
+export function personalizeBroadcastText(template: string, displayName: string) {
+  const name = (displayName || "").trim() || "membre Rfacto";
+  return template.replaceAll("{{name}}", name).replaceAll("{{prenom}}", name);
+}
+
+function plaintextToEmailHtml(text: string) {
+  const escaped = escapeHtml(text).replace(/\r\n/g, "\n");
+  return escaped
+    .split(/\n{2,}/)
+    .map((block) => `<p>${block.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
+
+/** Admin custom message to one member (bulk loop calls this). */
+export async function emailAdminBroadcast(input: {
+  email: string;
+  displayName: string;
+  subject: string;
+  body: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+}) {
+  const subject = personalizeBroadcastText(input.subject, input.displayName).trim();
+  const bodyText = personalizeBroadcastText(input.body, input.displayName);
+  const appUrl = getAppUrl();
+  const attachAbs = input.attachmentUrl
+    ? input.attachmentUrl.startsWith("http://") ||
+      input.attachmentUrl.startsWith("https://")
+      ? input.attachmentUrl
+      : `${appUrl}${input.attachmentUrl.startsWith("/") ? "" : "/"}${input.attachmentUrl}`
+    : "";
+  const attachHtml = attachAbs
+    ? `<p style="margin:20px 0 0;">
+         <a href="${escapeHtml(attachAbs)}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">
+           Télécharger ${escapeHtml(input.attachmentName || "le fichier")}
+         </a>
+       </p>`
+    : "";
+
+  return sendEmail({
+    to: input.email,
+    subject: subject || "Message Rfacto",
+    html: layout(
+      escapeHtml(subject || "Message Rfacto"),
+      `${plaintextToEmailHtml(bodyText)}
+       ${attachHtml}
+       <p style="margin-top:20px;font-size:13px;color:#5f6f68;">
+         Vous pouvez aussi retrouver ce message dans votre messagerie Rfacto.
+       </p>`
+    ),
+  });
+}

@@ -47,7 +47,7 @@ export function toAppMediaUrlFromBlob(blobUrl: string) {
 async function uploadFile(
   file: File,
   userId: string,
-  folder: "uploads" | "id-docs" | "community" | "jobs"
+  folder: "uploads" | "id-docs" | "community" | "jobs" | "broadcast"
 ) {
   const ext = extensionFor(file.type);
   const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -94,6 +94,11 @@ export async function uploadCommunityFile(file: File, userId: string) {
 /** Job CV / job profile documents (PDF or image). */
 export async function uploadJobFile(file: File, userId: string) {
   return uploadFile(file, userId, "jobs");
+}
+
+/** Admin broadcast attachments (images or PDF). */
+export async function uploadBroadcastFile(file: File, userId: string) {
+  return uploadFile(file, userId, "broadcast");
 }
 
 /** Stream a private blob through our API (auth optional — URL is unguessable). */
