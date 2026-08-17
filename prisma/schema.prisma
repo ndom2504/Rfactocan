@@ -1029,7 +1029,7 @@ model Call {
   calleeId    String
   mediaType   CallMediaType
   status      CallStatus    @default(RINGING)
-  /// Renseigné plus tard (LiveKit). Null à l'étape contrôle.
+  /// Room LiveKit déterministe `rfacto-call-{id}`. Pas un secret.
   livekitRoom String?
   startedAt   DateTime?
   answeredAt  DateTime?

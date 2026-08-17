@@ -5,6 +5,11 @@ import {
   otherUserId,
 } from "@/lib/dm";
 import { FCM_CHANNEL_CALLS } from "@/lib/fcm-channels";
+import {
+  createLivekitParticipantToken,
+  getLivekitConfig,
+  livekitRoomName,
+} from "@/lib/livekit";
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
@@ -217,7 +222,7 @@ export async function createCall(input: {
         throw Object.assign(new Error("CALL_IN_PROGRESS"), { code: "CALL_IN_PROGRESS" });
       }
 
-      return tx.call.create({
+      const created = await tx.call.create({
         data: {
           threadId: thread.id,
           callerId: input.userId,
@@ -225,6 +230,11 @@ export async function createCall(input: {
           mediaType: input.mediaType,
           status: "RINGING",
         },
+      });
+
+      return tx.call.update({
+        where: { id: created.id },
+        data: { livekitRoom: livekitRoomName(created.id) },
         include: callWithPeers,
       });
     });
@@ -426,4 +436,73 @@ export async function endCall(
   endReason?: unknown
 ) {
   return transitionCall({ callId, userId, action: "end", endReason });
+}
+
+export async function issueCallLivekitToken(callId: string, userId: string) {
+  const existing = await prisma.call.findUnique({
+    where: { id: callId },
+  });
+  if (
+    !existing ||
+    (existing.callerId !== userId && existing.calleeId !== userId)
+  ) {
+    return fail("Appel introuvable.", 404, "CALL_NOT_FOUND");
+  }
+
+  const now = new Date();
+  await persistMissedIfStale(existing, now);
+
+  const call = await prisma.call.findUnique({ where: { id: existing.id } });
+  if (!call) return fail("Appel introuvable.", 404, "CALL_NOT_FOUND");
+
+  if (call.status !== "ACCEPTED") {
+    const ended =
+      call.status === "ENDED" ||
+      call.status === "REJECTED" ||
+      call.status === "CANCELED" ||
+      call.status === "MISSED" ||
+      call.status === "FAILED";
+    return fail(
+      ended ? "Cet appel est terminé." : "L'appel n'est pas encore accepté.",
+      409,
+      ended ? "CALL_ENDED" : "CALL_NOT_ACCEPTED"
+    );
+  }
+
+  const config = getLivekitConfig();
+  if (!config) {
+    return fail(
+      "L'infrastructure d'appel n'est pas configurée.",
+      503,
+      "LIVEKIT_NOT_CONFIGURED"
+    );
+  }
+
+  let roomName = call.livekitRoom?.trim() || "";
+  if (!roomName) {
+    roomName = livekitRoomName(call.id);
+    await prisma.call.update({
+      where: { id: call.id },
+      data: { livekitRoom: roomName },
+    });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { displayName: true },
+  });
+
+  const token = await createLivekitParticipantToken({
+    identity: userId,
+    name: user?.displayName?.trim() || userId,
+    roomName,
+    config,
+  });
+
+  return {
+    ok: true as const,
+    livekitUrl: config.url,
+    token,
+    roomName,
+  };
 }
