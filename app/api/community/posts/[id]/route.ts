@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import {
+  COMMUNITY_MAX_ATTACHMENTS,
   COMMUNITY_POST_KINDS,
   isAllowedCommunityContentType,
   parseAttachmentsJson,
@@ -24,7 +25,7 @@ const patchSchema = z.object({
   kind: kindSchema.optional(),
   title: z.string().trim().max(120).nullable().optional(),
   body: z.string().trim().min(10).max(4000).optional(),
-  attachments: z.array(attachmentSchema).max(3).optional(),
+  attachments: z.array(attachmentSchema).max(COMMUNITY_MAX_ATTACHMENTS).optional(),
   /** Admin-only status change */
   status: z.enum(["OPEN", "HIDDEN", "REMOVED"]).optional(),
 });

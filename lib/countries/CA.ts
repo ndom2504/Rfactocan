@@ -25,6 +25,7 @@ export const CA: CountryConfig = {
     "evenements",
     "transport",
     "formation",
+    "consultation",
     "autre",
   ],
   payments: ["stripe", "interac", "bank"],

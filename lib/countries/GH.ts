@@ -24,6 +24,7 @@ export const GH: CountryConfig = {
     "transport",
     "transitaire",
     "formation",
+    "consultation",
     "autre",
   ],
   payments: ["mtn_momo", "mobile_money", "bank", "stripe"],

@@ -1,12 +1,20 @@
 import { Button } from "@/components/ui/button";
+import { safeNextPath } from "@/lib/app-url";
 
 export function GoogleSignInButton({
   label = "Continuer avec Google",
+  next,
 }: {
   label?: string;
+  next?: string | null;
 }) {
+  const safe = next ? safeNextPath(next, "") : "";
+  const href = safe
+    ? `/api/auth/google?next=${encodeURIComponent(safe)}`
+    : "/api/auth/google";
+
   return (
-    <a href="/api/auth/google" className="block w-full">
+    <a href={href} className="block w-full">
       <Button type="button" variant="outline" className="w-full">
         <svg
           aria-hidden

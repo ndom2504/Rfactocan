@@ -284,19 +284,29 @@ export default function ServiceListingDetailPage() {
               </Button>
             </>
           )}
-          {!isOwner && (
+          {!isOwner && canContact && (
             <Button
               type="button"
-              disabled={busy || !canContact}
+              disabled={busy}
               onClick={() => void contactProvider()}
             >
+              {t("services_contact")}
+            </Button>
+          )}
+          {!isOwner && meId && !meVerified && (
+            <Link href={`/profile?next=${encodeURIComponent(`/services/listing/${listing.id}`)}`}>
+              <Button type="button">{t("verify_identity")}</Button>
+            </Link>
+          )}
+          {!isOwner && meId && meVerified && !peerVerified && (
+            <Button type="button" disabled>
               {t("services_contact")}
             </Button>
           )}
         </div>
         {!isOwner && meId && !canContact && (
           <p className="mt-2 text-xs text-[var(--muted)]">
-            {t("dm_verified_required")}
+            {meVerified ? t("dm_verified_required") : t("services_verify_to_contact")}
           </p>
         )}
       </Card>

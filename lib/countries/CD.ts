@@ -25,6 +25,7 @@ export const CD: CountryConfig = {
     "transport",
     "transitaire",
     "formation",
+    "consultation",
     "autre",
   ],
   payments: [

@@ -26,6 +26,7 @@ export const CM: CountryConfig = {
     "transport",
     "transitaire",
     "formation",
+    "consultation",
     "autre",
   ],
   payments: ["mtn_momo", "orange_money", "mobile_money", "bank"],

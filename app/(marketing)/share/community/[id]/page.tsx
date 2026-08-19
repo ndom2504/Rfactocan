@@ -77,6 +77,9 @@ export default async function CommunitySharePage({ params }: Params) {
   );
   const title = post.title?.trim() || null;
   const appHref = post.href || `/community/${post.id}`;
+  const loginHref = `/login?next=${encodeURIComponent(appHref)}`;
+  const needsKyc =
+    Boolean(session) && session?.kycStatus !== "VERIFIED";
 
   return (
     <article className="mx-auto max-w-2xl space-y-5 px-4 py-10">
@@ -109,11 +112,19 @@ export default async function CommunitySharePage({ params }: Params) {
 
       <div className="flex flex-wrap gap-3 pt-2">
         <Link
-          href={session ? appHref : "/login"}
+          href={session ? appHref : loginHref}
           className="rounded-md bg-[var(--rfacto-green)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
         >
           {session ? "Ouvrir dans Rfacto" : "Se connecter pour commenter"}
         </Link>
+        {needsKyc && appHref.startsWith("/services/") ? (
+          <Link
+            href={`/profile?next=${encodeURIComponent(appHref)}`}
+            className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+          >
+            Vérifier mon identité pour contacter
+          </Link>
+        ) : null}
         <Link
           href="/community"
           className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted)] hover:bg-[var(--surface-2)]"

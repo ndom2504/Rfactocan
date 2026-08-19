@@ -114,6 +114,7 @@ export const COMMUNITY_ALLOWED_IMAGES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/gif",
 ]);
 
 export const COMMUNITY_ALLOWED_DOCS = new Set(["application/pdf"]);
@@ -124,10 +125,12 @@ export const COMMUNITY_ALLOWED_VIDEOS = new Set([
   "video/quicktime",
 ]);
 
-export const COMMUNITY_MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-export const COMMUNITY_MAX_DOC_BYTES = 5 * 1024 * 1024;
+export const COMMUNITY_MAX_IMAGE_BYTES = 50 * 1024 * 1024;
+export const COMMUNITY_MAX_DOC_BYTES = 50 * 1024 * 1024;
 /** Community clip limit (direct-to-Blob upload; bypasses serverless body limit). */
 export const COMMUNITY_MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+/** Photos / files per community post or DM album. */
+export const COMMUNITY_MAX_ATTACHMENTS = 10;
 
 export function isAllowedCommunityContentType(contentType: string) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";

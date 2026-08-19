@@ -12,6 +12,8 @@ import { UserAvatar } from "@/components/user-avatar";
 import { LinkedText } from "@/components/linked-text";
 import { cn, formatDate } from "@/lib/utils";
 import { formatMoneyFromCents } from "@/lib/currency";
+import { COMMUNITY_MAX_ATTACHMENTS } from "@/lib/community";
+import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import {
   SERVICE_PROCESSING_DAYS,
   servicePaymentStatusI18nKey,
@@ -79,8 +81,8 @@ export default function DirectMessageChatPage() {
   const [payOk, setPayOk] = useState("");
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -214,14 +216,16 @@ export default function DirectMessageChatPage() {
   }
 
   useEffect(() => {
-    if (!pendingFile) {
-      setPreviewUrl(null);
+    if (pendingFiles.length === 0) {
+      setPreviewUrls([]);
       return;
     }
-    const url = URL.createObjectURL(pendingFile);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [pendingFile]);
+    const urls = pendingFiles.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [pendingFiles]);
 
   useEffect(() => {
     setListingIdForPay(null);
@@ -243,62 +247,61 @@ export default function DirectMessageChatPage() {
   }, [thread?.lastContextType, thread?.lastContextId]);
 
   function clearAttachment() {
-    setPendingFile(null);
+    setPendingFiles([]);
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function uploadFile(file: File): Promise<string | null> {
-    setUploading(true);
-    setError("");
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
+  async function sendMessage(payload: {
+    body?: string;
+    attachmentUrl?: string | null;
+  }) {
+    const res = await fetch(`/api/dm/${id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
     const data = await res.json();
-    setUploading(false);
     if (!res.ok) {
-      setError(data.error ?? t("attach_failed"));
-      return null;
+      throw new Error(data.error || "Erreur");
     }
-    return data.url as string;
+    if (data.message) {
+      setMessages((prev) => [...prev, data.message]);
+    }
   }
 
   async function onSend(e: FormEvent) {
     e.preventDefault();
     if (sending || uploading) return;
     const bodyText = text.trim();
-    if (!bodyText && !pendingFile) return;
+    if (!bodyText && pendingFiles.length === 0) return;
 
     setSending(true);
+    setUploading(true);
     setError("");
-    let attachmentUrl: string | null = null;
-    if (pendingFile) {
-      attachmentUrl = await uploadFile(pendingFile);
-      if (!attachmentUrl) {
-        setSending(false);
-        return;
+    try {
+      const files = [...pendingFiles];
+      const urls: string[] = [];
+      for (const file of files) {
+        const att = await uploadCommunityAttachment(file);
+        urls.push(att.url);
       }
-    }
-
-    const res = await fetch(`/api/dm/${id}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        body: bodyText || undefined,
-        attachmentUrl,
-      }),
-    });
-    const data = await res.json();
-    setSending(false);
-    if (!res.ok) {
-      setError(data.error || "Erreur");
-      return;
-    }
-    setText("");
-    clearAttachment();
-    if (data.message) {
-      setMessages((prev) => [...prev, data.message]);
-    } else {
-      void load();
+      if (urls.length === 0) {
+        await sendMessage({ body: bodyText });
+      } else {
+        for (let i = 0; i < urls.length; i++) {
+          await sendMessage({
+            body: i === 0 ? bodyText || undefined : undefined,
+            attachmentUrl: urls[i],
+          });
+        }
+      }
+      setText("");
+      clearAttachment();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("attach_failed"));
+    } finally {
+      setSending(false);
+      setUploading(false);
     }
   }
 
@@ -671,39 +674,64 @@ export default function DirectMessageChatPage() {
       </div>
 
       <form onSubmit={onSend} className="space-y-3">
-        {previewUrl && (
-          <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewUrl}
-              alt=""
-              className="h-14 w-14 rounded object-cover"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm">{pendingFile?.name}</p>
-              <p className="text-xs text-[var(--muted)]">
-                {t("attachment_ready")}
-              </p>
+        {pendingFiles.length > 0 && (
+          <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-2">
+            <div className="flex flex-wrap gap-2">
+              {pendingFiles.map((file, i) => (
+                <div
+                  key={`${file.name}-${i}`}
+                  className="relative h-16 w-16 overflow-hidden rounded"
+                >
+                  {file.type.startsWith("image/") && previewUrls[i] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={previewUrls[i]}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[var(--surface)] px-1 text-center text-[10px] text-[var(--muted)]">
+                      {file.name}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="absolute right-0 top-0 rounded-bl bg-black/65 px-1 text-[10px] text-white"
+                    onClick={() =>
+                      setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))
+                    }
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={clearAttachment}
-            >
-              {t("remove_photo")}
-            </Button>
+            <p className="text-xs text-[var(--muted)]">
+              {t("attachment_ready")} · {pendingFiles.length}
+            </p>
           </div>
         )}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
             className="hidden"
             onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              setPendingFile(file);
+              const picked = Array.from(e.target.files ?? []);
+              if (!picked.length) return;
+              setPendingFiles((prev) => {
+                const next = [...prev, ...picked].slice(
+                  0,
+                  COMMUNITY_MAX_ATTACHMENTS
+                );
+                if (prev.length + picked.length > COMMUNITY_MAX_ATTACHMENTS) {
+                  setError(t("dm_attachments_max"));
+                }
+                return next;
+              });
+              e.target.value = "";
             }}
           />
           <Button
@@ -711,7 +739,11 @@ export default function DirectMessageChatPage() {
             variant="outline"
             size="icon"
             title={t("attach_file")}
-            disabled={sending || uploading}
+            disabled={
+              sending ||
+              uploading ||
+              pendingFiles.length >= COMMUNITY_MAX_ATTACHMENTS
+            }
             onClick={() => fileRef.current?.click()}
             aria-label={t("attach_file")}
             className="shrink-0"
@@ -730,7 +762,7 @@ export default function DirectMessageChatPage() {
           <Button
             type="submit"
             disabled={
-              sending || uploading || (!text.trim() && !pendingFile)
+              sending || uploading || (!text.trim() && pendingFiles.length === 0)
             }
             className="shrink-0"
           >

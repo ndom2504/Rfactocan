@@ -230,7 +230,7 @@ function LoginForm() {
       <CardDescription>{t("login_subtitle")}</CardDescription>
 
       <div className="mt-6 space-y-4">
-        <GoogleSignInButton />
+        <GoogleSignInButton next={params.get("next")} />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
           <span className="bg-[var(--surface)] px-2 relative z-10">
             {locale === "en" ? "or" : "ou"}
@@ -279,7 +279,14 @@ function LoginForm() {
       </form>
       <p className="mt-4 text-sm text-[var(--muted)]">
         {t("no_account")}{" "}
-        <Link href="/register" className="text-[var(--accent)] underline">
+        <Link
+          href={
+            params.get("next")
+              ? `/register?next=${encodeURIComponent(params.get("next")!)}`
+              : "/register"
+          }
+          className="text-[var(--accent)] underline"
+        >
           {t("nav_signup")}
         </Link>
       </p>

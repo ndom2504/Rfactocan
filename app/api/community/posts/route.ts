@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth";
 import {
   COMMUNITY_POST_KINDS,
   attachmentFromImageUrl,
+  COMMUNITY_MAX_ATTACHMENTS,
   isAllowedCommunityContentType,
   parseAttachmentsJson,
   type CommunityAttachment,
@@ -30,7 +31,7 @@ const createSchema = z.object({
   kind: kindSchema,
   title: z.string().trim().max(120).optional(),
   body: z.string().trim().min(10).max(4000),
-  attachments: z.array(attachmentSchema).max(3).optional(),
+  attachments: z.array(attachmentSchema).max(COMMUNITY_MAX_ATTACHMENTS).optional(),
 });
 
 type FeedAuthor = {

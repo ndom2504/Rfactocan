@@ -21,6 +21,7 @@ import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
 import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
+import { safeNextPath } from "@/lib/app-url";
 import {
   apiRoleToIntent,
   intentToApiRole,
@@ -424,6 +425,17 @@ function ProfileForm() {
             <p className="text-xs text-[var(--muted)]">
               {t("identity_section_hint")}
             </p>
+            {(() => {
+              const backTo = safeNextPath(searchParams.get("next"), "");
+              if (!backTo) return null;
+              return (
+                <Link href={backTo} className="inline-block">
+                  <Button type="button" variant="outline" size="sm">
+                    {t("view_service")}
+                  </Button>
+                </Link>
+              );
+            })()}
             {user.kycStatus !== "VERIFIED" && (
               <div className="space-y-2">
                 <Button disabled={busy} onClick={startKyc}>

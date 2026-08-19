@@ -24,6 +24,7 @@ export const MA: CountryConfig = {
     "transport",
     "transitaire",
     "formation",
+    "consultation",
     "autre",
   ],
   payments: ["stripe", "bank", "mobile_money"],

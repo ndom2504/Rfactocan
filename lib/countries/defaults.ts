@@ -15,6 +15,7 @@ export const DEFAULT_SERVICES: ServiceCategory[] = [
   "famille",
   "evenements",
   "formation",
+  "consultation",
   "transport",
   "autre",
 ];
@@ -46,6 +47,7 @@ export const SERVICE_LABELS_FR: Record<string, string> = {
   vente: "Vente",
   informatique: "Informatique & design",
   formation: "Formation",
+  consultation: "Consultation",
   transport: "Transport",
   transitaire: "Transit, logistique & commerce intl.",
   hotel: "Hébergement",
@@ -64,6 +66,7 @@ export const SERVICE_LABELS_EN: Record<string, string> = {
   vente: "Sales",
   informatique: "IT & design",
   formation: "Training",
+  consultation: "Consultation",
   transport: "Transport",
   transitaire: "Freight, logistics & intl. trade",
   hotel: "Lodging",

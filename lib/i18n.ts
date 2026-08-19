@@ -33,8 +33,8 @@ const dict = {
       "Partagez une annonce, une opportunité ou une info communautaire…",
     community_attach: "Joindre un fichier",
     community_attach_hint:
-      "Images (jpeg/png/webp, 2 Mo), vidéos courtes (mp4/webm/mov, max 100 Mo) ou PDF (5 Mo), max 3. Compressez les vidéos longues.",
-    community_attachments_max: "Maximum 3 fichiers par publication.",
+      "Images (jpeg/png/webp/gif, 50 Mo), vidéos courtes (mp4/webm/mov, max 100 Mo) ou PDF (50 Mo), jusqu’à 10 fichiers. Compressez les vidéos longues.",
+    community_attachments_max: "Maximum 10 fichiers par publication.",
     community_publish: "Publier l'annonce",
     community_empty: "Aucune annonce pour le moment. Soyez le premier.",
     community_delete: "Supprimer",
@@ -79,7 +79,7 @@ const dict = {
     services_title: "Colis & services",
     services_subtitle:
       "Parcourez les catégories ou publiez une offre : formation, sport, vente, informatique, hébergement…",
-    services_publish: "Publier un service",
+    services_publish: "Créer un service",
     services_publish_hint:
       "Pour les commerciaux : fret, cargo, transport et autres services par catégorie.",
     services_edit_title: "Modifier le service",
@@ -368,6 +368,10 @@ const dict = {
     dm_context_job: "Emploi",
     dm_verified_required:
       "Vous et le prestataire devez être vérifiés (KYC) pour discuter en direct.",
+    services_verify_to_contact:
+      "Vérifiez votre identité pour contacter ce prestataire.",
+    dm_attachments_max: "Maximum 10 fichiers par message.",
+    dm_attach_hint: "Photos et fichiers jusqu’à 50 Mo, plusieurs à la fois.",
     online: "En ligne",
     type_message: "Écrire un message…",
     delivery_country: "Pays de livraison",
@@ -438,7 +442,7 @@ const dict = {
     dashboard_actors_hint:
       "Voyageur (bagages) · Commercial (fret, cargo, services) · Client (commandes)",
     publish_trip_cta: "Publier un voyage",
-    publish_service_cta: "Publier un service",
+    publish_service_cta: "Créer un service",
     publish_shop_cta: "Créer ma boutique",
     shops_title: "Boutiques",
     shops_subtitle:
@@ -1362,7 +1366,7 @@ const dict = {
     send: "Envoyer",
     no_messages: "Aucun message. Présentez-vous et négociez les détails.",
     attach_file: "Joindre une image",
-    attach_hint: "Images jpeg, png, webp ou gif · max 2 Mo",
+    attach_hint: "Images jpeg, png, webp, gif ou PDF · jusqu’à 50 Mo, plusieurs fichiers",
     attach_failed: "Échec de l'envoi du fichier.",
     attachment_label: "Pièce jointe",
     attachment_ready: "Prêt à envoyer",
@@ -1606,8 +1610,8 @@ const dict = {
       "Share an announcement, opportunity or community update…",
     community_attach: "Attach a file",
     community_attach_hint:
-      "Images (jpeg/png/webp, 2 MB), short videos (mp4/webm/mov, max 100 MB) or PDF (5 MB), max 3. Compress long videos.",
-    community_attachments_max: "Maximum 3 files per post.",
+      "Images (jpeg/png/webp/gif, 50 MB), short videos (mp4/webm/mov, max 100 MB) or PDF (50 MB), up to 10 files. Compress long videos.",
+    community_attachments_max: "Maximum 10 files per post.",
     community_publish: "Publish announcement",
     community_empty: "No announcements yet. Be the first.",
     community_delete: "Delete",
@@ -1652,7 +1656,7 @@ const dict = {
     services_title: "Parcels & services",
     services_subtitle:
       "Browse categories or publish an offer: training, sport, sales, IT, lodging…",
-    services_publish: "Publish a service",
+    services_publish: "Create a service",
     services_publish_hint:
       "For businesses: freight, cargo, transport and other services by category.",
     services_edit_title: "Edit service",
@@ -1936,6 +1940,10 @@ const dict = {
     dm_context_job: "Job",
     dm_verified_required:
       "You and the provider must both be verified (KYC) to chat directly.",
+    services_verify_to_contact:
+      "Verify your identity to contact this provider.",
+    dm_attachments_max: "Maximum 10 files per message.",
+    dm_attach_hint: "Photos and files up to 50 MB, several at once.",
     online: "Online",
     type_message: "Type a message…",
     delivery_country: "Delivery country",
@@ -2005,7 +2013,7 @@ const dict = {
     dashboard_actors_hint:
       "Traveler (luggage) · Business (freight, cargo, services) · Client (orders)",
     publish_trip_cta: "Publish a trip",
-    publish_service_cta: "Publish a service",
+    publish_service_cta: "Create a service",
     publish_shop_cta: "Create my shop",
     shops_title: "Shops",
     shops_subtitle:
@@ -2922,7 +2930,7 @@ const dict = {
     send: "Send",
     no_messages: "No messages yet. Introduce yourself and agree on details.",
     attach_file: "Attach an image",
-    attach_hint: "jpeg, png, webp or gif · max 2 MB",
+    attach_hint: "jpeg, png, webp, gif or PDF · up to 50 MB, several files",
     attach_failed: "Failed to upload the file.",
     attachment_label: "Attachment",
     attachment_ready: "Ready to send",

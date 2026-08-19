@@ -22,6 +22,7 @@ export const SERVICE_CATEGORIES = [
   "vente",
   "informatique",
   "formation",
+  "consultation",
   "transport",
   "transitaire",
   "autre",
@@ -490,6 +491,88 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
         id: "autre_formation",
         labelFr: "Autre formation",
         labelEn: "Other training",
+      },
+    ],
+  },
+  {
+    id: "consultation",
+    labelFr: "Consultation",
+    labelEn: "Consultation",
+    hintFr:
+      "Conseil et expertise : sport, projet, business, juridique, santé, carrière…",
+    hintEn:
+      "Advice and expertise: sport, projects, business, legal, health, career…",
+    isParcel: false,
+    types: [
+      {
+        id: "sport",
+        labelFr: "Consultation sportive",
+        labelEn: "Sports consultation",
+      },
+      {
+        id: "projet",
+        labelFr: "Consultation projet",
+        labelEn: "Project consultation",
+      },
+      {
+        id: "business",
+        labelFr: "Consultation business / entreprise",
+        labelEn: "Business / company consultation",
+      },
+      {
+        id: "juridique",
+        labelFr: "Consultation juridique",
+        labelEn: "Legal consultation",
+      },
+      {
+        id: "finance",
+        labelFr: "Consultation financière",
+        labelEn: "Financial consultation",
+      },
+      {
+        id: "sante",
+        labelFr: "Consultation santé & bien-être",
+        labelEn: "Health & wellness consultation",
+      },
+      {
+        id: "education",
+        labelFr: "Consultation éducation",
+        labelEn: "Education consultation",
+      },
+      {
+        id: "immigration",
+        labelFr: "Consultation immigration",
+        labelEn: "Immigration consultation",
+      },
+      {
+        id: "immobilier",
+        labelFr: "Consultation immobilière",
+        labelEn: "Real-estate consultation",
+      },
+      {
+        id: "carriere",
+        labelFr: "Consultation carrière",
+        labelEn: "Career consultation",
+      },
+      {
+        id: "marketing",
+        labelFr: "Consultation marketing",
+        labelEn: "Marketing consultation",
+      },
+      {
+        id: "tech",
+        labelFr: "Consultation tech / digital",
+        labelEn: "Tech / digital consultation",
+      },
+      {
+        id: "agricole",
+        labelFr: "Consultation agricole",
+        labelEn: "Agricultural consultation",
+      },
+      {
+        id: "autre_consultation",
+        labelFr: "Autre consultation",
+        labelEn: "Other consultation",
       },
     ],
   },

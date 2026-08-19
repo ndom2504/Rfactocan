@@ -7,6 +7,7 @@
 import { upload } from "@vercel/blob/client";
 import {
   isVideoAttachment,
+  maxBytesForCommunityContentType,
   type CommunityAttachment,
 } from "@/lib/community";
 
@@ -85,6 +86,12 @@ async function uploadViaBlobDirect(file: File): Promise<CommunityAttachment> {
   if (file.size > config.maxVideoBytes) {
     throw new Error(
       `Fichier trop volumineux (max ${Math.floor(config.maxVideoBytes / (1024 * 1024))} Mo). Compressez la vidéo.`
+    );
+  }
+  const typeMax = maxBytesForCommunityContentType(file.type);
+  if (file.size > typeMax) {
+    throw new Error(
+      `Fichier trop volumineux (max ${Math.floor(typeMax / (1024 * 1024))} Mo).`
     );
   }
 

@@ -17,6 +17,7 @@ import { useI18n } from "@/components/locale-provider";
 import { CommunityVideoPlayer } from "@/components/community-video-player";
 import {
   COMMUNITY_FEED_FILTERS,
+  COMMUNITY_MAX_ATTACHMENTS,
   COMMUNITY_POST_KINDS,
   isImageAttachment,
   isVideoAttachment,
@@ -136,7 +137,7 @@ export function CommunityFeed() {
 
   async function onFilesSelected(files: FileList | null) {
     if (!files?.length) return;
-    const remaining = 3 - attachments.length;
+    const remaining = COMMUNITY_MAX_ATTACHMENTS - attachments.length;
     if (remaining <= 0) {
       setError(t("community_attachments_max"));
       return;
@@ -352,9 +353,9 @@ export function CommunityFeed() {
                   <input
                     type="file"
                     className="hidden"
-                    accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,application/pdf"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf"
                     multiple
-                    disabled={uploading || attachments.length >= 3}
+                    disabled={uploading || attachments.length >= COMMUNITY_MAX_ATTACHMENTS}
                     onChange={(e) => {
                       void onFilesSelected(e.target.files);
                       e.target.value = "";

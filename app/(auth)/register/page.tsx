@@ -14,6 +14,7 @@ import { CountrySelect } from "@/components/country-select";
 import { CountrySuggest } from "@/components/country-suggest";
 import { useI18n } from "@/components/locale-provider";
 import { markTourPendingIfNeeded } from "@/lib/guided-tour";
+import { safeNextPath } from "@/lib/app-url";
 import {
   intentToApiRole,
   normalizePrimaryIntent,
@@ -99,7 +100,8 @@ function RegisterForm() {
       return;
     }
     markTourPendingIfNeeded();
-    router.push("/dashboard?tour=1");
+    const next = safeNextPath(params.get("next"));
+    router.push(next === "/dashboard" ? "/dashboard?tour=1" : next);
     router.refresh();
   }
 
@@ -120,6 +122,7 @@ function RegisterForm() {
           label={
             locale === "en" ? "Sign up with Google" : "S'inscrire avec Google"
           }
+          next={params.get("next")}
         />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
           <span className="bg-[var(--surface)] px-2 relative z-10">
@@ -193,7 +196,14 @@ function RegisterForm() {
       </form>
       <p className="mt-4 text-sm text-[var(--muted)]">
         {t("have_account")}{" "}
-        <Link href="/login" className="text-[var(--accent)] underline">
+        <Link
+          href={
+            params.get("next")
+              ? `/login?next=${encodeURIComponent(params.get("next")!)}`
+              : "/login"
+          }
+          className="text-[var(--accent)] underline"
+        >
           {t("sign_in")}
         </Link>
       </p>

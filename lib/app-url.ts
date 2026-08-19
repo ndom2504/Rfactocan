@@ -8,6 +8,13 @@ export function getAppUrl() {
   return (fromEnv || "http://localhost:3000").replace(/\/$/, "");
 }
 
+/** Internal path only (blocks open redirects). */
+export function safeNextPath(value: string | null | undefined, fallback = "/dashboard") {
+  const next = (value || "").trim();
+  if (next.startsWith("/") && !next.startsWith("//")) return next;
+  return fallback;
+}
+
 export function getGoogleRedirectUri() {
   return `${getAppUrl()}/api/auth/google/callback`;
 }
