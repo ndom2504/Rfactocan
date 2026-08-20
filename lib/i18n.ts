@@ -102,6 +102,8 @@ const dict = {
     services_formation_topic_filter: "Filtrer par thème",
     services_formation_topic_custom: "Thème spécifique…",
     services_formation_topic_add: "Ajouter",
+    services_association_type: "Type d’association",
+    services_public_type: "Type de service public",
     services_photos: "Photos de l’offre (max 5)",
     services_photos_hint:
       "La première photo sert d’affiche (logo ou image du service). jpeg, png, webp, gif — max 100 Mo.",
@@ -1679,6 +1681,8 @@ const dict = {
     services_formation_topic_filter: "Filter by topic",
     services_formation_topic_custom: "Specific topic…",
     services_formation_topic_add: "Add",
+    services_association_type: "Association type",
+    services_public_type: "Public service type",
     services_photos: "Offer photos (max 5)",
     services_photos_hint:
       "The first photo is the cover (logo or service image). jpeg, png, webp, gif — max 100 MB.",

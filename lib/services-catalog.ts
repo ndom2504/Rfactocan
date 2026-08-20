@@ -23,6 +23,8 @@ export const SERVICE_CATEGORIES = [
   "informatique",
   "formation",
   "consultation",
+  "association",
+  "service_public",
   "transport",
   "transitaire",
   "autre",
@@ -573,6 +575,328 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
         id: "autre_consultation",
         labelFr: "Autre consultation",
         labelEn: "Other consultation",
+      },
+    ],
+  },
+  {
+    id: "association",
+    labelFr: "Association",
+    labelEn: "Association",
+    hintFr:
+      "Associations, ONG, mutuelles, coopératives et groupements : choisissez le type d’association",
+    hintEn:
+      "Associations, NGOs, mutuals, cooperatives and groups: choose the association type",
+    isParcel: false,
+    types: [
+      {
+        id: "culturelle",
+        labelFr: "Association culturelle",
+        labelEn: "Cultural association",
+      },
+      {
+        id: "communautaire",
+        labelFr: "Association communautaire",
+        labelEn: "Community association",
+      },
+      {
+        id: "diaspora",
+        labelFr: "Association de diaspora",
+        labelEn: "Diaspora association",
+      },
+      {
+        id: "religieuse",
+        labelFr: "Association religieuse",
+        labelEn: "Religious association",
+      },
+      {
+        id: "sportive",
+        labelFr: "Association sportive",
+        labelEn: "Sports association",
+      },
+      {
+        id: "jeunesse",
+        labelFr: "Association jeunesse / étudiante",
+        labelEn: "Youth / student association",
+      },
+      {
+        id: "femmes",
+        labelFr: "Association de femmes",
+        labelEn: "Women’s association",
+      },
+      {
+        id: "parents",
+        labelFr: "Association de parents d’élèves",
+        labelEn: "Parents association",
+      },
+      {
+        id: "professionnelle",
+        labelFr: "Association professionnelle",
+        labelEn: "Professional association",
+      },
+      {
+        id: "caritative",
+        labelFr: "Association caritative / humanitaire",
+        labelEn: "Charity / humanitarian association",
+      },
+      {
+        id: "developpement",
+        labelFr: "Association de développement",
+        labelEn: "Development association",
+      },
+      { id: "ong", labelFr: "ONG", labelEn: "NGO" },
+      { id: "fondation", labelFr: "Fondation", labelEn: "Foundation" },
+      { id: "cooperative", labelFr: "Coopérative", labelEn: "Cooperative" },
+      {
+        id: "mutuelle",
+        labelFr: "Mutuelle / tontine",
+        labelEn: "Mutual / tontine",
+      },
+      { id: "amicale", labelFr: "Amicale / club", labelEn: "Alumni / club" },
+      { id: "syndicat", labelFr: "Syndicat", labelEn: "Trade union" },
+      {
+        id: "quartier",
+        labelFr: "Association de quartier / village",
+        labelEn: "Neighborhood / village association",
+      },
+      {
+        id: "sante",
+        labelFr: "Association de santé / patients",
+        labelEn: "Health / patients association",
+      },
+      {
+        id: "environnement",
+        labelFr: "Association environnementale",
+        labelEn: "Environmental association",
+      },
+      {
+        id: "educative",
+        labelFr: "Association éducative",
+        labelEn: "Educational association",
+      },
+      {
+        id: "artistique",
+        labelFr: "Association artistique",
+        labelEn: "Arts association",
+      },
+      {
+        id: "entraide",
+        labelFr: "Association d’entraide / solidarité",
+        labelEn: "Mutual-aid / solidarity association",
+      },
+      {
+        id: "handicap",
+        labelFr: "Association handicap / inclusion",
+        labelEn: "Disability / inclusion association",
+      },
+      {
+        id: "agricole",
+        labelFr: "Association agricole / producteurs",
+        labelEn: "Farmers / producers association",
+      },
+      {
+        id: "commercants",
+        labelFr: "Association de commerçants",
+        labelEn: "Merchants association",
+      },
+      {
+        id: "gie",
+        labelFr: "GIE / groupement",
+        labelEn: "Economic interest group",
+      },
+      {
+        id: "droits_humains",
+        labelFr: "Droits humains / plaidoyer",
+        labelEn: "Human rights / advocacy",
+      },
+      {
+        id: "autre_association",
+        labelFr: "Autre association",
+        labelEn: "Other association",
+      },
+    ],
+  },
+  {
+    id: "service_public",
+    labelFr: "Service public",
+    labelEn: "Public service",
+    hintFr:
+      "Démarches et administrations : état civil, immigration, mairie, impôts, santé, justice…",
+    hintEn:
+      "Admin procedures: civil registry, immigration, city hall, taxes, health, courts…",
+    isParcel: false,
+    types: [
+      { id: "etat_civil", labelFr: "État civil", labelEn: "Civil registry" },
+      {
+        id: "identite_passeport",
+        labelFr: "Carte d’identité / passeport",
+        labelEn: "ID card / passport",
+      },
+      {
+        id: "immigration_visa",
+        labelFr: "Immigration / visa / séjour",
+        labelEn: "Immigration / visa / residence",
+      },
+      {
+        id: "consulat_ambassade",
+        labelFr: "Consulat / ambassade",
+        labelEn: "Consulate / embassy",
+      },
+      {
+        id: "carte_consulaire",
+        labelFr: "Carte consulaire",
+        labelEn: "Consular card",
+      },
+      {
+        id: "mairie_commune",
+        labelFr: "Mairie / commune",
+        labelEn: "City hall / municipality",
+      },
+      {
+        id: "prefecture",
+        labelFr: "Préfecture / sous-préfecture",
+        labelEn: "Prefecture",
+      },
+      {
+        id: "ministeres",
+        labelFr: "Ministères / administration",
+        labelEn: "Ministries / administration",
+      },
+      {
+        id: "impots_fiscalite",
+        labelFr: "Impôts / fiscalité",
+        labelEn: "Taxes / revenue",
+      },
+      {
+        id: "tresor_public",
+        labelFr: "Trésor public",
+        labelEn: "Public treasury",
+      },
+      {
+        id: "securite_sociale",
+        labelFr: "Sécurité sociale / CNSS",
+        labelEn: "Social security",
+      },
+      {
+        id: "sante_publique",
+        labelFr: "Santé publique / hôpital",
+        labelEn: "Public health / hospital",
+      },
+      {
+        id: "education_publique",
+        labelFr: "Éducation / inscriptions",
+        labelEn: "Education / enrollment",
+      },
+      {
+        id: "bourses_etudes",
+        labelFr: "Bourses d’études",
+        labelEn: "Scholarships",
+      },
+      {
+        id: "emploi_insertion",
+        labelFr: "Emploi / insertion",
+        labelEn: "Employment / job placement",
+      },
+      {
+        id: "retraite_pension",
+        labelFr: "Retraite / pension",
+        labelEn: "Pension / retirement",
+      },
+      {
+        id: "police_gendarmerie",
+        labelFr: "Police / gendarmerie",
+        labelEn: "Police / gendarmerie",
+      },
+      {
+        id: "justice_tribunal",
+        labelFr: "Justice / tribunal",
+        labelEn: "Courts / justice",
+      },
+      {
+        id: "aide_juridique",
+        labelFr: "Aide juridique",
+        labelEn: "Legal aid",
+      },
+      {
+        id: "aide_sociale",
+        labelFr: "Aide sociale",
+        labelEn: "Social assistance",
+      },
+      {
+        id: "logement_social",
+        labelFr: "Logement social",
+        labelEn: "Social housing",
+      },
+      {
+        id: "permis_conduire",
+        labelFr: "Permis de conduire",
+        labelEn: "Driver’s license",
+      },
+      {
+        id: "immatriculation_vehicule",
+        labelFr: "Immatriculation véhicule",
+        labelEn: "Vehicle registration",
+      },
+      {
+        id: "cadastre_foncier",
+        labelFr: "Cadastre / foncier / titres",
+        labelEn: "Land registry / titles",
+      },
+      {
+        id: "urbanisme",
+        labelFr: "Urbanisme / permis de construire",
+        labelEn: "Planning / building permits",
+      },
+      {
+        id: "registre_commerce",
+        labelFr: "Registre du commerce (RCCM)",
+        labelEn: "Business registry",
+      },
+      {
+        id: "marches_publics",
+        labelFr: "Marchés publics / appels d’offres",
+        labelEn: "Public procurement",
+      },
+      {
+        id: "eau_electricite",
+        labelFr: "Eau / électricité",
+        labelEn: "Water / electricity",
+      },
+      {
+        id: "transports_publics",
+        labelFr: "Transports publics",
+        labelEn: "Public transit",
+      },
+      { id: "douane", labelFr: "Douane", labelEn: "Customs" },
+      {
+        id: "poste_courrier",
+        labelFr: "Poste / courrier",
+        labelEn: "Postal service",
+      },
+      {
+        id: "legalisation_apostille",
+        labelFr: "Légalisation / apostille",
+        labelEn: "Legalization / apostille",
+      },
+      {
+        id: "documents_officiels",
+        labelFr: "Documents officiels / copies certifiées",
+        labelEn: "Official documents",
+      },
+      { id: "recensement", labelFr: "Recensement", labelEn: "Census" },
+      {
+        id: "protection_civile",
+        labelFr: "Protection civile / pompiers",
+        labelEn: "Civil protection / fire service",
+      },
+      {
+        id: "armee",
+        labelFr: "Armée / service national",
+        labelEn: "Army / national service",
+      },
+      {
+        id: "autre_service_public",
+        labelFr: "Autre service public",
+        labelEn: "Other public service",
       },
     ],
   },

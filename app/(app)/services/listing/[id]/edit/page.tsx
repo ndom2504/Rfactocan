@@ -258,7 +258,11 @@ export default function EditServicePage() {
                   ? t("services_sale_sector")
                   : category === "formation"
                     ? t("services_formation_domain")
-                    : t("services_type")}
+                    : category === "association"
+                      ? t("services_association_type")
+                      : category === "service_public"
+                        ? t("services_public_type")
+                        : t("services_type")}
               </Label>
               <Select
                 value={serviceType}

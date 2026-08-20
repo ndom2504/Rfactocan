@@ -386,7 +386,17 @@ export default function NewRequestPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="serviceType">{t("services_type")}</Label>
+              <Label htmlFor="serviceType">
+                {serviceCategory === "vente"
+                  ? t("services_sale_sector")
+                  : serviceCategory === "formation"
+                    ? t("services_formation_domain")
+                    : serviceCategory === "association"
+                      ? t("services_association_type")
+                      : serviceCategory === "service_public"
+                        ? t("services_public_type")
+                        : t("services_type")}
+              </Label>
               <Select
                 id="serviceType"
                 value={serviceType}
