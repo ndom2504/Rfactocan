@@ -15,6 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { CURRENCY_OPTIONS, currencyForCountry } from "@/lib/currency";
 import { getCities } from "@/lib/corridors";
 import {
+  composeGaServiceCity,
+  GA_QUARTIER_OTHER,
+  gaQuartiersForCity,
+  parseGaServiceCity,
+  resolveGaQuartier,
+} from "@/lib/countries/ga-quartiers";
+import {
   PRICE_UNITS,
   SERVICE_CATALOG,
   encodeTransportServiceType,
@@ -72,6 +79,8 @@ export default function EditServicePage() {
   const [description, setDescription] = useState("");
   const [country, setCountry] = useState("GA");
   const [city, setCity] = useState("");
+  const [quartier, setQuartier] = useState("");
+  const [customQuartier, setCustomQuartier] = useState("");
   const [currency, setCurrency] = useState(() => currencyForCountry("GA"));
   const [priceAmount, setPriceAmount] = useState("");
   const [priceUnit, setPriceUnit] = useState("forfait");
@@ -96,6 +105,10 @@ export default function EditServicePage() {
     [category, serviceType]
   );
   const cities = useMemo(() => getCities(country), [country]);
+  const gaQuartiers = useMemo(
+    () => (country === "GA" ? gaQuartiersForCity(city) : []),
+    [country, city]
+  );
   const publishable = SERVICE_CATALOG.filter((c) => !c.isParcel);
   const transportTypes = useMemo(
     () => transportServiceTypesForMode(transportMode),
@@ -128,7 +141,25 @@ export default function EditServicePage() {
         setTitle(listing.title);
         setDescription(listing.description);
         setCountry(listing.country);
-        setCity(listing.city);
+        if (listing.country.toUpperCase() === "GA") {
+          const parsed = parseGaServiceCity(listing.city);
+          setCity(parsed.city);
+          const known = gaQuartiersForCity(parsed.city);
+          if (parsed.quartier && known.includes(parsed.quartier)) {
+            setQuartier(parsed.quartier);
+            setCustomQuartier("");
+          } else if (parsed.quartier) {
+            setQuartier(GA_QUARTIER_OTHER);
+            setCustomQuartier(parsed.quartier);
+          } else {
+            setQuartier("");
+            setCustomQuartier("");
+          }
+        } else {
+          setCity(listing.city);
+          setQuartier("");
+          setCustomQuartier("");
+        }
         setCurrency(
           (listing.currency as typeof currency) ||
             currencyForCountry(listing.country)
@@ -198,7 +229,10 @@ export default function EditServicePage() {
       title: title.trim(),
       description: description.trim(),
       country,
-      city: city.trim(),
+      city:
+        country === "GA"
+          ? composeGaServiceCity(city, resolveGaQuartier(quartier, customQuartier))
+          : city.trim(),
       priceAmount: priceAmount ? Number(priceAmount) : null,
       priceUnit,
       currency,
@@ -459,6 +493,8 @@ export default function EditServicePage() {
           onChange={(code) => {
             setCountry(code);
             setCity("");
+            setQuartier("");
+            setCustomQuartier("");
             setCurrency(currencyForCountry(code));
           }}
         />
@@ -469,7 +505,11 @@ export default function EditServicePage() {
             <Select
               id="city"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setQuartier("");
+                setCustomQuartier("");
+              }}
               required
             >
               <option value="">{t("services_choose_city")}</option>
@@ -488,6 +528,53 @@ export default function EditServicePage() {
             />
           )}
         </div>
+
+        {country === "GA" && city ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="quartier">{t("services_quartier")}</Label>
+            {gaQuartiers.length > 0 ? (
+              <>
+                <Select
+                  id="quartier"
+                  value={quartier}
+                  onChange={(e) => {
+                    setQuartier(e.target.value);
+                    if (e.target.value !== GA_QUARTIER_OTHER) {
+                      setCustomQuartier("");
+                    }
+                  }}
+                >
+                  <option value="">{t("services_choose_quartier")}</option>
+                  {gaQuartiers.map((q) => (
+                    <option key={q} value={q}>
+                      {q}
+                    </option>
+                  ))}
+                  <option value={GA_QUARTIER_OTHER}>
+                    {t("services_quartier_other")}
+                  </option>
+                </Select>
+                {quartier === GA_QUARTIER_OTHER ? (
+                  <Input
+                    id="quartierCustom"
+                    value={customQuartier}
+                    onChange={(e) => setCustomQuartier(e.target.value)}
+                    placeholder={t("services_quartier_custom")}
+                    maxLength={60}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <Input
+                id="quartier"
+                value={customQuartier}
+                onChange={(e) => setCustomQuartier(e.target.value)}
+                placeholder={t("services_quartier_custom")}
+                maxLength={60}
+              />
+            )}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">

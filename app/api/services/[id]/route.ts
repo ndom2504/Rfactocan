@@ -21,7 +21,7 @@ const patchSchema = z.object({
   title: z.string().min(3).max(120).optional(),
   description: z.string().min(10).max(4000).optional(),
   country: z.string().min(2).max(2).optional(),
-  city: z.string().min(2).max(80).optional(),
+  city: z.string().min(2).max(120).optional(),
   priceAmount: z.coerce
     .number()
     .positive({ message: "Le prix du service est obligatoire." })

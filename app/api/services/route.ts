@@ -20,7 +20,7 @@ const createSchema = z.object({
   title: z.string().min(3).max(120),
   description: z.string().min(10).max(4000),
   country: z.string().min(2).max(2),
-  city: z.string().min(2).max(80),
+  city: z.string().min(2).max(120),
   priceAmount: z.coerce.number().positive({
     message: "Le prix du service est obligatoire.",
   }),

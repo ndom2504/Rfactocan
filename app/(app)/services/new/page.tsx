@@ -16,6 +16,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { CURRENCY_OPTIONS, currencyForCountry } from "@/lib/currency";
 import { getCities } from "@/lib/corridors";
 import {
+  composeGaServiceCity,
+  GA_QUARTIER_OTHER,
+  gaQuartiersForCity,
+  resolveGaQuartier,
+} from "@/lib/countries/ga-quartiers";
+import {
   PRICE_UNITS,
   SERVICE_CATALOG,
   encodeTransportServiceType,
@@ -50,6 +56,8 @@ function NewServiceForm() {
   const [transportType, setTransportType] = useState("TAXI");
   const [country, setCountry] = useState("GA");
   const [city, setCity] = useState("");
+  const [quartier, setQuartier] = useState("");
+  const [customQuartier, setCustomQuartier] = useState("");
   const [currency, setCurrency] = useState(() => currencyForCountry("GA"));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,6 +80,10 @@ function NewServiceForm() {
     [category, serviceType]
   );
   const cities = useMemo(() => getCities(country), [country]);
+  const gaQuartiers = useMemo(
+    () => (country === "GA" ? gaQuartiersForCity(city) : []),
+    [country, city]
+  );
   const publishable = SERVICE_CATALOG.filter((c) => !c.isParcel);
   const transportTypes = useMemo(
     () => transportServiceTypesForMode(transportMode),
@@ -145,7 +157,10 @@ function NewServiceForm() {
       title: String(fd.get("title") || ""),
       description: String(fd.get("description") || ""),
       country,
-      city: String(fd.get("city") || city),
+      city:
+        country === "GA"
+          ? composeGaServiceCity(city, resolveGaQuartier(quartier, customQuartier))
+          : String(fd.get("city") || city),
       priceAmount: fd.get("priceAmount")
         ? Number(fd.get("priceAmount"))
         : undefined,
@@ -418,6 +433,8 @@ function NewServiceForm() {
           onChange={(code) => {
             setCountry(code);
             setCity("");
+            setQuartier("");
+            setCustomQuartier("");
           }}
         />
 
@@ -428,7 +445,11 @@ function NewServiceForm() {
               id="city"
               name="city"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setQuartier("");
+                setCustomQuartier("");
+              }}
               required
             >
               <option value="">{t("services_choose_city")}</option>
@@ -448,6 +469,53 @@ function NewServiceForm() {
             />
           )}
         </div>
+
+        {country === "GA" && city ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="quartier">{t("services_quartier")}</Label>
+            {gaQuartiers.length > 0 ? (
+              <>
+                <Select
+                  id="quartier"
+                  value={quartier}
+                  onChange={(e) => {
+                    setQuartier(e.target.value);
+                    if (e.target.value !== GA_QUARTIER_OTHER) {
+                      setCustomQuartier("");
+                    }
+                  }}
+                >
+                  <option value="">{t("services_choose_quartier")}</option>
+                  {gaQuartiers.map((q) => (
+                    <option key={q} value={q}>
+                      {q}
+                    </option>
+                  ))}
+                  <option value={GA_QUARTIER_OTHER}>
+                    {t("services_quartier_other")}
+                  </option>
+                </Select>
+                {quartier === GA_QUARTIER_OTHER ? (
+                  <Input
+                    id="quartierCustom"
+                    value={customQuartier}
+                    onChange={(e) => setCustomQuartier(e.target.value)}
+                    placeholder={t("services_quartier_custom")}
+                    maxLength={60}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <Input
+                id="quartier"
+                value={customQuartier}
+                onChange={(e) => setCustomQuartier(e.target.value)}
+                placeholder={t("services_quartier_custom")}
+                maxLength={60}
+              />
+            )}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
