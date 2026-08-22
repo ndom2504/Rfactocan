@@ -8,9 +8,11 @@ import {
   verifyPhoneOtpToken,
 } from "@/lib/phone-otp";
 import {
+  countryFromE164,
   isPhonePlaceholderEmail,
   phonePlaceholderEmail,
-} from "@/lib/phone-ga";
+  profileCountryName,
+} from "@/lib/phone-auth";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -43,7 +45,7 @@ function publicUser(user: {
     email: isPhonePlaceholderEmail(user.email) ? null : user.email,
     displayName: user.displayName,
     role: user.role,
-    preferredCurrency: user.preferredCurrency || "XAF",
+    preferredCurrency: user.preferredCurrency || "CAD",
     phone: user.phone,
     country: user.country,
   };
@@ -83,14 +85,15 @@ export async function POST(request: Request) {
     if (!user) {
       const name = body.displayName!.trim();
       const referredById = await resolveReferralFromRequest(body.ref);
+      const phoneCountry = countryFromE164(phone) ?? "GA";
       user = await prisma.user.create({
         data: {
           email: phonePlaceholderEmail(phone),
           displayName: name,
           phone,
-          country: "Gabon",
+          country: profileCountryName(phoneCountry),
           role: body.role ?? "BOTH",
-          preferredCurrency: currencyForCountry("GA"),
+          preferredCurrency: currencyForCountry(phoneCountry),
           verifiedAt: new Date(),
           ...(referredById ? { referredById } : {}),
         },

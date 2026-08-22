@@ -79,6 +79,7 @@ function LoginForm() {
   const [info, setInfo] = useState("");
   const [authMode, setAuthMode] = useState<"phone" | "email">("email");
   const [phoneDisplayName, setPhoneDisplayName] = useState("");
+  const [phoneRegion, setPhoneRegion] = useState<"GA" | "CA">("CA");
 
   useEffect(() => {
     const mfa = params.get("mfa");
@@ -96,7 +97,10 @@ function LoginForm() {
     let cancelled = false;
     fetchSuggestedCountry()
       .then((detected) => {
-        if (!cancelled && detected?.code === "GA") setAuthMode("phone");
+        if (!cancelled && detected?.code) {
+          setPhoneRegion(detected.code === "GA" ? "GA" : "CA");
+          if (detected.code === "GA") setAuthMode("phone");
+        }
       })
       .catch(() => {});
     return () => {
@@ -260,6 +264,7 @@ function LoginForm() {
           <PhoneOtpAuth
             displayName={phoneDisplayName}
             onDisplayNameChange={setPhoneDisplayName}
+            region={phoneRegion}
             onLoggedIn={goNext}
           />
           <button

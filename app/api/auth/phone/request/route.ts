@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { issuePhoneOtp } from "@/lib/phone-otp";
-import { normalizeGabonPhone } from "@/lib/phone-ga";
+import {
+  normalizeAuthPhone,
+  type PhoneAuthCountry,
+} from "@/lib/phone-auth";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
   phone: z.string().min(7).max(24),
+  country: z.enum(["GA", "CA"]).optional(),
 });
 
 const ERRORS: Record<string, string> = {
   INVALID_PHONE:
-    "Numéro gabonais invalide. Exemple : 07 00 00 00 (Airtel ou Moov).",
+    "Numéro invalide. Gabon : 07 00 00 00. Canada : 514 555 0123.",
   RATE_LIMITED:
     "Trop de codes envoyés. Réessayez dans une heure.",
   TOO_SOON: "Patientez une minute avant de renvoyer un code.",
@@ -22,7 +26,8 @@ const ERRORS: Record<string, string> = {
 export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
-    const phone = normalizeGabonPhone(body.phone);
+    const hint = body.country as PhoneAuthCountry | undefined;
+    const phone = normalizeAuthPhone(body.phone, hint);
     if (!phone) {
       return NextResponse.json(
         { error: ERRORS.INVALID_PHONE },

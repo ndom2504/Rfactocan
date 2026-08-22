@@ -66,12 +66,17 @@ function RegisterForm() {
   const [refCode, setRefCode] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registerAuth, setRegisterAuth] = useState<"email" | "phone">("email");
 
   const role = useMemo(
     () => intentToApiRole(primaryIntent),
     [primaryIntent]
   );
-  const phoneSignup = resolveCountryCode(country) === "GA";
+  const countryCode = resolveCountryCode(country);
+  const phoneOnly = countryCode === "GA";
+  const phoneAllowed = countryCode === "GA" || countryCode === "CA";
+  const phoneSignup = phoneOnly || (phoneAllowed && registerAuth === "phone");
+  const phoneRegion = countryCode === "GA" ? "GA" : "CA";
 
   useEffect(() => {
     const fromQuery = params.get("ref")?.trim().toUpperCase() || null;
@@ -97,6 +102,11 @@ function RegisterForm() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (countryCode === "GA") setRegisterAuth("phone");
+    else if (countryCode !== "CA") setRegisterAuth("email");
+  }, [countryCode]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -193,6 +203,7 @@ function RegisterForm() {
             onDisplayNameChange={setDisplayName}
             role={role}
             refCode={refCode}
+            region={phoneRegion}
             onLoggedIn={goAfterAuth}
           />
         ) : (
@@ -234,9 +245,28 @@ function RegisterForm() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t("loading") : t("create_account")}
             </Button>
+            {countryCode === "CA" && (
+              <button
+                type="button"
+                className="w-full text-sm text-[var(--accent)] underline"
+                onClick={() => setRegisterAuth("phone")}
+              >
+                {t("phone_register_sms")}
+              </button>
+            )}
           </form>
         )}
         {phoneSignup && (
+          <>
+            {countryCode === "CA" && (
+              <button
+                type="button"
+                className="w-full text-sm text-[var(--accent)] underline"
+                onClick={() => setRegisterAuth("email")}
+              >
+                {t("phone_use_email")}
+              </button>
+            )}
           <p className="text-xs leading-relaxed text-[var(--muted)]">
             {t("terms_accept_register")}{" "}
             <Link href="/terms" className="text-[var(--accent)] underline">
@@ -247,6 +277,7 @@ function RegisterForm() {
               {t("nav_privacy")}
             </Link>
           </p>
+          </>
         )}
       </div>
       <p className="mt-4 text-sm text-[var(--muted)]">

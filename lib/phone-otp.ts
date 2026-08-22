@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
 import { generateOtpCode, hashOtpCode, MFA_MINUTES } from "@/lib/login-otp";
-import { maskGabonPhone } from "@/lib/phone-ga";
+import { maskAuthPhone } from "@/lib/phone-auth";
 import {
   checkPhoneVerification,
   isSmsConfigured,
@@ -106,7 +106,7 @@ export async function issuePhoneOtp(phone: string): Promise<
   return {
     ok: true,
     mfaToken: await createPhoneOtpToken(phone),
-    phoneHint: maskGabonPhone(phone),
+    phoneHint: maskAuthPhone(phone),
   };
 }
 

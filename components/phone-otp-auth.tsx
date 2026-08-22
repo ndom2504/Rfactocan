@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/components/locale-provider";
+import type { PhoneAuthCountry } from "@/lib/phone-auth";
 
 type Props = {
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   role?: "SENDER" | "TRAVELER" | "BOTH";
   refCode?: string | null;
+  region?: PhoneAuthCountry;
   onLoggedIn: () => void;
 };
 
@@ -19,6 +21,7 @@ export function PhoneOtpAuth({
   onDisplayNameChange,
   role,
   refCode,
+  region = "GA",
   onLoggedIn,
 }: Props) {
   const { t } = useI18n();
@@ -40,7 +43,7 @@ export function PhoneOtpAuth({
     const res = await fetch("/api/auth/phone/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone, country: region }),
     });
     const data = await res.json();
     setLoading(false);
@@ -175,21 +178,27 @@ export function PhoneOtpAuth({
 
   return (
     <form onSubmit={requestCode} className="space-y-4">
-      <p className="text-sm text-[var(--muted)]">{t("phone_otp_lead")}</p>
+      <p className="text-sm text-[var(--muted)]">
+        {region === "CA" ? t("phone_otp_lead_ca") : t("phone_otp_lead")}
+      </p>
       <div className="space-y-2">
-        <Label htmlFor="ga-phone">{t("phone_ga_label")}</Label>
+        <Label htmlFor="auth-phone">{t("phone_ga_label")}</Label>
         <div className="flex gap-2">
           <span className="flex h-10 items-center rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm text-[var(--muted)]">
-            +241
+            {region === "CA" ? "+1" : "+241"}
           </span>
           <Input
-            id="ga-phone"
+            id="auth-phone"
             type="tel"
             inputMode="tel"
             autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder={t("phone_ga_placeholder")}
+            placeholder={
+              region === "CA"
+                ? t("phone_ca_placeholder")
+                : t("phone_ga_placeholder")
+            }
             required
           />
         </div>

@@ -1242,14 +1242,18 @@ const dict = {
     otp_resend_error: "Impossible de renvoyer le code.",
     phone_otp_lead:
       "Au Gabon, connectez-vous avec votre numéro Airtel ou Moov. Un code SMS suffit — pas besoin d’email.",
+    phone_otp_lead_ca:
+      "Au Canada, vous pouvez aussi vous connecter avec votre numéro. Un code SMS suffit.",
     phone_ga_label: "Numéro de téléphone",
     phone_ga_placeholder: "07 00 00 00",
+    phone_ca_placeholder: "514 555 0123",
     phone_otp_send: "Recevoir le code SMS",
     phone_otp_sent: "Un code a été envoyé par SMS.",
     phone_otp_send_error: "Impossible d’envoyer le SMS.",
     phone_otp_name_required: "Indiquez votre nom pour créer le compte.",
-    phone_use_sms: "Connexion par SMS (Gabon)",
+    phone_use_sms: "Connexion par SMS",
     phone_use_email: "J’ai un email",
+    phone_register_sms: "Créer le compte par SMS",
     phone_account: "Compte téléphone",
 
     tour_label: "Visite guidée",
@@ -2830,14 +2834,18 @@ const dict = {
     otp_resend_error: "Could not resend the code.",
     phone_otp_lead:
       "In Gabon, sign in with your Airtel or Moov number. An SMS code is enough — no email needed.",
+    phone_otp_lead_ca:
+      "In Canada, you can also sign in with your phone number. An SMS code is enough.",
     phone_ga_label: "Phone number",
     phone_ga_placeholder: "07 00 00 00",
+    phone_ca_placeholder: "514 555 0123",
     phone_otp_send: "Send SMS code",
     phone_otp_sent: "A code was sent by SMS.",
     phone_otp_send_error: "Could not send the SMS.",
     phone_otp_name_required: "Enter your name to create the account.",
-    phone_use_sms: "Sign in with SMS (Gabon)",
+    phone_use_sms: "Sign in with SMS",
     phone_use_email: "I have an email",
+    phone_register_sms: "Create account with SMS",
     phone_account: "Phone account",
 
     tour_label: "Guided tour",
