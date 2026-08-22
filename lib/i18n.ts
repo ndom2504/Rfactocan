@@ -14,6 +14,7 @@ const dict = {
     nav_publish: "Publier",
     nav_bookings: "Réservations",
     nav_messages: "Messages",
+    nav_in: "In",
     nav_profile: "Profil",
     nav_admin: "Admin",
     community_title: "Communauté",
@@ -386,6 +387,7 @@ const dict = {
     call_peer: "Membre",
     dm_context_service: "Service",
     dm_context_job: "Emploi",
+    dm_context_in: "In",
     dm_verified_required:
       "Vous et le prestataire devez être vérifiés (KYC) pour discuter en direct.",
     services_verify_to_contact:
@@ -1596,6 +1598,33 @@ const dict = {
     // Messages
     messages_title: "Messages",
     messages_subtitle: "Conversations liées à vos réservations.",
+    in_tagline: "In - Le réseau des opportunités",
+    in_photo_hint: "Touchez l’avatar pour afficher votre visage.",
+    in_need_phone: "Activez In avec votre numéro",
+    in_activate_title: "Entrez dans In",
+    in_activate_body:
+      "In vous reconnaît par votre numéro. Un SMS suffit. Ensuite, discutez, envoyez des fichiers et appelez vos proches déjà sur Rfacto.",
+    in_send_code: "Recevoir le code",
+    in_confirm_code: "Ouvrir In",
+    in_change_number: "Changer de numéro",
+    in_otp: "Code SMS",
+    in_otp_sent: "Un code vient d’arriver.",
+    in_search_phone: "Numéro à retrouver sur In",
+    in_find: "Trouver",
+    in_import_contacts: "Importer le répertoire",
+    in_import_unavailable:
+      "L’import du répertoire est disponible sur Chrome Android. Sinon, saisissez un numéro.",
+    in_on_network: "{n} proches déjà sur In",
+    in_online: "En ligne maintenant",
+    in_open_chat: "Écrire",
+    in_invite_section: "Inviter sur In",
+    in_invite_hint:
+      "Ils recevront le lien Rfacto. Quand ils activeront In, ils apparaîtront ici.",
+    in_share_invite: "Partager le lien d’invitation",
+    in_invite_copied: "Lien copié",
+    in_empty: "Personne pour l’instant. Importez le répertoire ou cherchez un numéro.",
+    in_not_found: "Ce numéro n’est pas encore sur In.",
+    in_change_photo: "Changer la photo",
 
     // Status labels
     status_proposed: "Proposée",
@@ -1626,6 +1655,7 @@ const dict = {
     nav_publish: "Publish",
     nav_bookings: "Bookings",
     nav_messages: "Messages",
+    nav_in: "In",
     nav_profile: "Profile",
     nav_admin: "Admin",
     nav_login: "Log in",
@@ -1995,6 +2025,7 @@ const dict = {
     call_peer: "Member",
     dm_context_service: "Service",
     dm_context_job: "Job",
+    dm_context_in: "In",
     dm_verified_required:
       "You and the provider must both be verified (KYC) to chat directly.",
     services_verify_to_contact:
@@ -3192,6 +3223,33 @@ const dict = {
 
     messages_title: "Messages",
     messages_subtitle: "Conversations linked to your bookings.",
+    in_tagline: "In - The network of opportunities",
+    in_photo_hint: "Tap the avatar to show your face.",
+    in_need_phone: "Turn on In with your number",
+    in_activate_title: "Step into In",
+    in_activate_body:
+      "In knows you by your number. One SMS is enough. Then chat, send files and call people already on Rfacto.",
+    in_send_code: "Send code",
+    in_confirm_code: "Open In",
+    in_change_number: "Use another number",
+    in_otp: "SMS code",
+    in_otp_sent: "A code just arrived.",
+    in_search_phone: "Number to find on In",
+    in_find: "Find",
+    in_import_contacts: "Import contacts",
+    in_import_unavailable:
+      "Contact import works on Chrome for Android. Otherwise, type a number.",
+    in_on_network: "{n} people you know are on In",
+    in_online: "Online now",
+    in_open_chat: "Chat",
+    in_invite_section: "Invite to In",
+    in_invite_hint:
+      "They get the Rfacto link. When they turn on In, they appear here.",
+    in_share_invite: "Share invite link",
+    in_invite_copied: "Link copied",
+    in_empty: "Nobody yet. Import contacts or search a number.",
+    in_not_found: "This number is not on In yet.",
+    in_change_photo: "Change photo",
 
     status_proposed: "Proposed",
     status_awaiting_payment: "Awaiting payment",

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { HeaderProfileSlot } from "@/components/header-profile-slot";
 import { AppMain } from "@/components/app-main";
 import { CallProvider } from "@/components/call-provider";
+import { InFab } from "@/components/in-fab";
 
 export default async function AppLayout({
   children,
@@ -29,6 +30,7 @@ export default async function AppLayout({
     { href: "/community", label: t(locale, "nav_community") },
     { href: "/bookings", label: t(locale, "nav_bookings") },
     { href: "/messages", label: t(locale, "nav_messages") },
+    { href: "/in", label: t(locale, "nav_in") },
   ];
 
   return (
@@ -106,6 +108,7 @@ export default async function AppLayout({
           </nav>
         </header>
         <AppMain>{children}</AppMain>
+        <InFab label={t(locale, "in_tagline")} />
         <Suspense fallback={null}>
           <GuidedTour />
         </Suspense>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HomeHeroCarousel } from "@/components/home-hero-carousel";
-import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
+import { InFab } from "@/components/in-fab";
 import { Button } from "@/components/ui/button";
 import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
@@ -79,7 +79,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <WhatsAppCommunityButton label={t(locale, "cta_join_whatsapp")} />
+      <InFab label={t(locale, "in_tagline")} href={user ? "/in" : "/login?next=/in"} />
     </main>
   );
 }

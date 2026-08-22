@@ -7,7 +7,6 @@ import { t, bookingStatusLabel } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardSearchHub } from "@/components/dashboard-search-hub";
-import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { DashboardWelcomeBanner } from "@/components/dashboard-welcome-banner";
 import { getAmbassadorKpis } from "@/lib/ambassador-stats";
@@ -180,7 +179,6 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
-      <WhatsAppCommunityButton label={t(locale, "cta_join_whatsapp")} />
       </div>
     </div>
   );
