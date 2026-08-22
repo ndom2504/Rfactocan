@@ -1002,7 +1002,7 @@ model DirectThread {
   id              String    @id @default(cuid())
   userLowId       String
   userHighId      String
-  /// SERVICE | JOB | MEET
+  /// SERVICE | JOB | MEET | IN
   lastContextType String?
   lastContextId   String?
   lastMessageAt   DateTime?
@@ -1026,7 +1026,7 @@ model DirectMessage {
   senderId      String
   body          String
   attachmentUrl String?
-  /// SERVICE | JOB | MEET (contexte du message)
+  /// SERVICE | JOB | MEET | IN
   contextType   String?
   contextId     String?
   readAt        DateTime?

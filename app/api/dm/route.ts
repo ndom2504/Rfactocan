@@ -12,7 +12,7 @@ import { prisma } from "@/lib/prisma";
 
 const startSchema = z.object({
   toUserId: z.string().min(1),
-  contextType: z.enum(["SERVICE", "JOB", "MEET"]).optional(),
+  contextType: z.enum(["SERVICE", "JOB", "MEET", "IN"]).optional(),
   contextId: z.string().min(1).optional(),
   body: z.string().min(1).max(4000).optional(),
 });

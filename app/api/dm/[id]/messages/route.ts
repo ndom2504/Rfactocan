@@ -30,7 +30,7 @@ const postSchema = z
   .object({
     body: z.string().max(4000).optional().nullable(),
     attachmentUrl: attachmentUrlSchema.optional().nullable(),
-    contextType: z.enum(["SERVICE", "JOB", "MEET"]).optional().nullable(),
+    contextType: z.enum(["SERVICE", "JOB", "MEET", "IN"]).optional().nullable(),
     contextId: z.string().optional().nullable(),
   })
   .refine(

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { userSatisfiesKyc } from "@/lib/kyc-policy";
 
-export type DmContextType = "SERVICE" | "JOB" | "MEET";
+export type DmContextType = "SERVICE" | "JOB" | "MEET" | "IN";
 
 export function pairUserIds(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
@@ -71,6 +71,36 @@ export async function assertDirectContactAllowed(
         error: "Utilisateur indisponible.",
         status: 404,
         code: "ACCOUNT_UNAVAILABLE",
+      };
+    }
+    return { ok: true as const };
+  }
+
+  if (contextType === "IN") {
+    const [meUser, peerUser] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: meId },
+        select: { status: true, phone: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: peerId },
+        select: { status: true, phone: true },
+      }),
+    ]);
+    if (!meUser || meUser.status === "SUSPENDED" || !peerUser || peerUser.status === "SUSPENDED") {
+      return {
+        ok: false as const,
+        error: "Utilisateur indisponible.",
+        status: 404,
+        code: "ACCOUNT_UNAVAILABLE",
+      };
+    }
+    if (!meUser.phone) {
+      return {
+        ok: false as const,
+        error: "Activez In avec votre numéro pour discuter.",
+        status: 403,
+        code: "IN_PHONE_REQUIRED",
       };
     }
     return { ok: true as const };
