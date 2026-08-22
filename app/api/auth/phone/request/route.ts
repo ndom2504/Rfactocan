@@ -20,6 +20,8 @@ const ERRORS: Record<string, string> = {
   TOO_SOON: "Patientez une minute avant de renvoyer un code.",
   SMS_NOT_CONFIGURED:
     "L’envoi SMS n’est pas encore configuré (Twilio). Réessayez plus tard.",
+  SMS_TRIAL_UNVERIFIED:
+    "Compte Twilio d’essai : ce numéro doit d’abord être vérifié dans Twilio (Verified Caller IDs), ou passez le compte en production.",
   SMS_SEND_FAILED: "Impossible d’envoyer le SMS. Réessayez dans un instant.",
 };
 
@@ -42,7 +44,8 @@ export async function POST(request: Request) {
           ? 429
           : issued.error === "RATE_LIMITED"
             ? 429
-            : issued.error === "SMS_NOT_CONFIGURED"
+            : issued.error === "SMS_NOT_CONFIGURED" ||
+                issued.error === "SMS_TRIAL_UNVERIFIED"
               ? 503
               : 502;
       return NextResponse.json(

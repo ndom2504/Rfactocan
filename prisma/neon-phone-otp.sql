@@ -24,3 +24,18 @@ DO $$ BEGIN
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
+
+-- Older table used consumedAt; Prisma / this file use usedAt.
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'PhoneOtp' AND column_name = 'consumedAt'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'PhoneOtp' AND column_name = 'usedAt'
+  ) THEN
+    ALTER TABLE "PhoneOtp" RENAME COLUMN "consumedAt" TO "usedAt";
+  END IF;
+END $$;
+
+ALTER TABLE "PhoneOtp" ADD COLUMN IF NOT EXISTS "usedAt" TIMESTAMP(3);

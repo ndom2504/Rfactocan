@@ -87,6 +87,9 @@ export async function issuePhoneOtp(phone: string): Promise<
       if ("skipped" in sent && sent.skipped) {
         return { ok: false, error: "SMS_NOT_CONFIGURED" };
       }
+      if (sent.error === "TWILIO_21608") {
+        return { ok: false, error: "SMS_TRIAL_UNVERIFIED" };
+      }
       return { ok: false, error: "SMS_SEND_FAILED" };
     }
   }

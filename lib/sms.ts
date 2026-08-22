@@ -57,10 +57,16 @@ async function twilioForm(
     const text = await res.text().catch(() => "");
     if (!res.ok) {
       console.error("[sms] Twilio Verify error", res.status, text.slice(0, 400));
+      let twilioCode: number | undefined;
+      try {
+        twilioCode = (JSON.parse(text) as { code?: number }).code;
+      } catch {
+        /* keep HTTP status only */
+      }
       return {
         ok: false,
         skipped: false,
-        error: `TWILIO_${res.status}`,
+        error: twilioCode ? `TWILIO_${twilioCode}` : `TWILIO_${res.status}`,
         status: res.status,
         body: text,
       };
@@ -91,7 +97,7 @@ export async function startPhoneVerification(
   const params = new URLSearchParams();
   params.set("To", toE164);
   params.set("Channel", "sms");
-  params.set("Locale", "fr");
+  params.set("Locale", toE164.startsWith("+1") ? "en" : "fr");
   return twilioForm("Verifications", params);
 }
 
