@@ -24,9 +24,9 @@ export function DashboardWelcomeBanner({
   return (
     <section
       data-tour="welcome"
-      className="w-full overflow-hidden border-b border-[var(--border)] bg-[var(--surface)]"
+      className="relative z-20 w-full border-b border-[var(--border)] bg-[var(--surface)]"
     >
-      <div className="relative w-full bg-[var(--rfacto-green-dark)]">
+      <div className="relative overflow-hidden bg-[var(--rfacto-green-dark)]">
         {customBanner ? (
           <div className="relative h-40 w-full sm:h-48 md:h-[min(42vw,420px)] lg:h-[min(38vw,480px)]">
             {/* eslint-disable-next-line @next/next/no-img-element -- user uploads /api/media URLs */}
@@ -52,8 +52,8 @@ export function DashboardWelcomeBanner({
         <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--rfacto-gold)] to-transparent opacity-90" />
       </div>
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-6 pb-6 pt-0 text-center">
-        <div className="-mt-14 sm:-mt-16" data-tour="profile-menu">
+      <div className="relative z-30 mx-auto flex max-w-6xl flex-col items-center px-6 pb-6 pt-0 text-center">
+        <div className="relative z-30 -mt-14 sm:-mt-16" data-tour="profile-menu">
           <ProfileMenu
             displayName={displayName}
             avatarUrl={avatarUrl}
