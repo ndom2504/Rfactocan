@@ -12,9 +12,15 @@ import { PasswordInput } from "@/components/password-input";
 import { IntentPicker } from "@/components/intent-picker";
 import { CountrySelect } from "@/components/country-select";
 import { CountrySuggest } from "@/components/country-suggest";
+import { PhoneOtpAuth } from "@/components/phone-otp-auth";
 import { useI18n } from "@/components/locale-provider";
 import { markTourPendingIfNeeded } from "@/lib/guided-tour";
 import { safeNextPath } from "@/lib/app-url";
+import {
+  fetchSuggestedCountry,
+  resolveCountryCode,
+} from "@/lib/detect-country";
+import { getCountryName } from "@/lib/corridors";
 import {
   intentToApiRole,
   normalizePrimaryIntent,
@@ -65,6 +71,7 @@ function RegisterForm() {
     () => intentToApiRole(primaryIntent),
     [primaryIntent]
   );
+  const phoneSignup = resolveCountryCode(country) === "GA";
 
   useEffect(() => {
     const fromQuery = params.get("ref")?.trim().toUpperCase() || null;
@@ -75,6 +82,21 @@ function RegisterForm() {
     }
     setRefCode(readRefCookie());
   }, [params]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSuggestedCountry()
+      .then((detected) => {
+        if (cancelled || !detected?.code) return;
+        setCountry((current) =>
+          current ? current : getCountryName(detected.code) || detected.name
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,10 +121,19 @@ function RegisterForm() {
       setError(data.error ?? "Inscription impossible");
       return;
     }
+    finishSignup();
+  }
+
+  function finishSignup() {
     markTourPendingIfNeeded();
     const next = safeNextPath(params.get("next"));
     router.push(next === "/dashboard" ? "/dashboard?tour=1" : next);
     router.refresh();
+  }
+
+  function goAfterAuth() {
+    saveUserIntent({ primaryIntent, carrierType });
+    finishSignup();
   }
 
   return (
@@ -132,37 +163,14 @@ function RegisterForm() {
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="mt-2 space-y-4">
+      <div className="mt-2 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="displayName">{t("display_name")}</Label>
           <Input
             id="displayName"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("email")}</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">{t("password")}</Label>
-          <PasswordInput
-            id="password"
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            showLabel={t("show_password")}
-            hideLabel={t("hide_password")}
+            required={!phoneSignup}
           />
         </div>
         <IntentPicker
@@ -179,21 +187,68 @@ function RegisterForm() {
             onlyIfEmpty
           />
         </div>
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        <p className="text-xs leading-relaxed text-[var(--muted)]">
-          {t("terms_accept_register")}{" "}
-          <Link href="/terms" className="text-[var(--accent)] underline">
-            {t("nav_terms")}
-          </Link>
-          {" · "}
-          <Link href="/privacy" className="text-[var(--accent)] underline">
-            {t("nav_privacy")}
-          </Link>
-        </p>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? t("loading") : t("create_account")}
-        </Button>
-      </form>
+        {phoneSignup ? (
+          <PhoneOtpAuth
+            displayName={displayName}
+            onDisplayNameChange={setDisplayName}
+            role={role}
+            refCode={refCode}
+            onLoggedIn={goAfterAuth}
+          />
+        ) : (
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">{t("email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{t("password")}</Label>
+              <PasswordInput
+                id="password"
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                showLabel={t("show_password")}
+                hideLabel={t("hide_password")}
+              />
+            </div>
+            {error && <p className="text-sm text-red-700">{error}</p>}
+            <p className="text-xs leading-relaxed text-[var(--muted)]">
+              {t("terms_accept_register")}{" "}
+              <Link href="/terms" className="text-[var(--accent)] underline">
+                {t("nav_terms")}
+              </Link>
+              {" · "}
+              <Link href="/privacy" className="text-[var(--accent)] underline">
+                {t("nav_privacy")}
+              </Link>
+            </p>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? t("loading") : t("create_account")}
+            </Button>
+          </form>
+        )}
+        {phoneSignup && (
+          <p className="text-xs leading-relaxed text-[var(--muted)]">
+            {t("terms_accept_register")}{" "}
+            <Link href="/terms" className="text-[var(--accent)] underline">
+              {t("nav_terms")}
+            </Link>
+            {" · "}
+            <Link href="/privacy" className="text-[var(--accent)] underline">
+              {t("nav_privacy")}
+            </Link>
+          </p>
+        )}
+      </div>
       <p className="mt-4 text-sm text-[var(--muted)]">
         {t("have_account")}{" "}
         <Link

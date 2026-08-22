@@ -19,6 +19,8 @@ import { IntentPicker } from "@/components/intent-picker";
 import { PayoutChannelPicker } from "@/components/payout-channel-picker";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
+import { isKycRequiredForCountry } from "@/lib/kyc-policy";
+import { isPhonePlaceholderEmail } from "@/lib/phone-ga";
 import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
 import { safeNextPath } from "@/lib/app-url";
@@ -34,7 +36,8 @@ import {
 
 type User = {
   id: string;
-  email: string;
+  email: string | null;
+  phone?: string | null;
   displayName: string;
   bio: string | null;
   country: string | null;
@@ -389,6 +392,7 @@ function ProfileForm() {
 
   const kycLabel =
     KYC_STATUS_LABELS[user.kycStatus ?? "NONE"] ?? user.kycStatus;
+  const kycRequired = isKycRequiredForCountry(user.country);
   const bankReady =
     user.stripeConnectChargesEnabled && user.stripeConnectPayoutsEnabled;
 
@@ -400,12 +404,12 @@ function ProfileForm() {
         <div className="mt-4 flex flex-wrap gap-2">
           <Badge
             className={
-              user.kycStatus === "VERIFIED"
+              !kycRequired || user.kycStatus === "VERIFIED"
                 ? "bg-[var(--accent-soft)] text-[var(--accent)]"
                 : undefined
             }
           >
-            KYC : {kycLabel}
+            KYC : {kycRequired ? kycLabel : t("kyc_not_required")}
           </Badge>
           <Badge
             className={
@@ -422,6 +426,12 @@ function ProfileForm() {
         <div className="mt-4 space-y-6">
           <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
             <p className="text-sm font-medium">{t("identity_section_title")}</p>
+            {!kycRequired ? (
+              <p className="text-xs text-[var(--muted)]">
+                {t("kyc_not_required_country")}
+              </p>
+            ) : (
+              <>
             <p className="text-xs text-[var(--muted)]">
               {t("identity_section_hint")}
             </p>
@@ -538,6 +548,8 @@ function ProfileForm() {
               </div>
             </div>
             )}
+              </>
+            )}
           </div>
 
           <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
@@ -638,7 +650,11 @@ function ProfileForm() {
 
       <Card>
         <CardTitle>{t("profile_title")}</CardTitle>
-        <CardDescription>{user.email}</CardDescription>
+        <CardDescription>
+          {isPhonePlaceholderEmail(user.email)
+            ? user.phone || t("phone_account")
+            : user.email}
+        </CardDescription>
         <div className="mt-4 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
           <div className="relative h-28 w-full bg-[var(--surface)] sm:h-36">
             {bannerUrl ? (

@@ -1,6 +1,7 @@
 import type { HeraldCommissionSource } from "@prisma/client";
 import { travelerCanReceivePayments } from "@/lib/connect";
 import { prisma } from "@/lib/prisma";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 
 /**
@@ -239,6 +240,7 @@ export async function payoutHeraldAccrued(
       id: true,
       isAmbassador: true,
       kycStatus: true,
+      country: true,
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
       stripeConnectPayoutsEnabled: true,
@@ -249,7 +251,7 @@ export async function payoutHeraldAccrued(
   if (!herald?.isAmbassador) {
     return { ok: false, error: "Utilisateur non Héraut Réseau actif." };
   }
-  if (herald.kycStatus !== "VERIFIED") {
+  if (!userSatisfiesKyc(herald)) {
     return { ok: false, error: "KYC du Héraut non validé." };
   }
   if (

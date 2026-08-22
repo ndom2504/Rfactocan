@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { User, UserRole, UserStatus } from "@prisma/client";
+import { isKycRequiredForCountry } from "@/lib/kyc-policy";
 
 const COOKIE_NAME = "rfacto_session";
 const SESSION_DAYS = 14;
@@ -22,6 +23,8 @@ export type SessionUser = {
   ratingAvg: number;
   ratingCount: number;
   preferredCurrency: string;
+  country: string | null;
+  kycRequired: boolean;
 };
 
 function getSecret() {
@@ -111,6 +114,8 @@ async function sessionUserFromToken(
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,
       preferredCurrency: user.preferredCurrency || "CAD",
+      country: user.country,
+      kycRequired: isKycRequiredForCountry(user.country),
     };
   } catch {
     return null;

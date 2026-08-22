@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { PasswordInput } from "@/components/password-input";
+import { PhoneOtpAuth } from "@/components/phone-otp-auth";
 import { useI18n } from "@/components/locale-provider";
 import { isTourDone, markTourPendingIfNeeded } from "@/lib/guided-tour";
+import { fetchSuggestedCountry } from "@/lib/detect-country";
 
 const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
   google_not_configured: {
@@ -75,6 +77,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [info, setInfo] = useState("");
+  const [authMode, setAuthMode] = useState<"phone" | "email">("email");
+  const [phoneDisplayName, setPhoneDisplayName] = useState("");
 
   useEffect(() => {
     const mfa = params.get("mfa");
@@ -87,6 +91,18 @@ function LoginForm() {
       setError("");
     }
   }, [params, t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSuggestedCountry()
+      .then((detected) => {
+        if (!cancelled && detected?.code === "GA") setAuthMode("phone");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function goNext() {
     markTourPendingIfNeeded();
@@ -239,6 +255,22 @@ function LoginForm() {
         </div>
       </div>
 
+      {authMode === "phone" ? (
+        <div className="mt-2">
+          <PhoneOtpAuth
+            displayName={phoneDisplayName}
+            onDisplayNameChange={setPhoneDisplayName}
+            onLoggedIn={goNext}
+          />
+          <button
+            type="button"
+            className="mt-4 w-full text-sm text-[var(--accent)] underline"
+            onClick={() => setAuthMode("email")}
+          >
+            {t("phone_use_email")}
+          </button>
+        </div>
+      ) : (
       <form onSubmit={onSubmit} className="mt-2 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">{t("email")}</Label>
@@ -276,7 +308,15 @@ function LoginForm() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? t("loading") : t("sign_in")}
         </Button>
+        <button
+          type="button"
+          className="w-full text-sm text-[var(--accent)] underline"
+          onClick={() => setAuthMode("phone")}
+        >
+          {t("phone_use_sms")}
+        </button>
       </form>
+      )}
       <p className="mt-4 text-sm text-[var(--muted)]">
         {t("no_account")}{" "}
         <Link

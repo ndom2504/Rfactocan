@@ -5,6 +5,7 @@ import { getPaymentProvider } from "@/lib/payments/provider";
 import { effectivePricePerKg } from "@/lib/negotiation";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -93,7 +94,7 @@ export async function POST(_request: Request, { params }: Params) {
 
   const traveler = booking.trip.user;
   if (
-    traveler.kycStatus !== "VERIFIED" ||
+    !userSatisfiesKyc(traveler) ||
     !traveler.stripeConnectAccountId ||
     !traveler.stripeConnectChargesEnabled
   ) {

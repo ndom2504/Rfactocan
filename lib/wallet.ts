@@ -8,6 +8,7 @@ import {
 } from "@/lib/herald-commissions";
 import type { PayoutChannel, PayoutProvider } from "@/lib/user-intent";
 import { travelerCanReceivePayments } from "@/lib/connect";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 
 const PAYOUT_PROVIDERS = [
   "mobile_money",
@@ -206,6 +207,7 @@ export async function requestHeraldWithdrawal(
       id: true,
       isAmbassador: true,
       kycStatus: true,
+      country: true,
       payoutChannel: true,
       payoutProvider: true,
       payoutIdentifier: true,
@@ -223,7 +225,7 @@ export async function requestHeraldWithdrawal(
   if (!user.isAmbassador) {
     return { ok: false as const, error: "Programme Héraut Réseau requis." };
   }
-  if (user.kycStatus !== "VERIFIED") {
+  if (!userSatisfiesKyc(user)) {
     return { ok: false as const, error: "KYC requis pour retirer vos gains." };
   }
 

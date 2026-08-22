@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t, bookingStatusLabel } from "@/lib/i18n";
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
         displayName={user.displayName}
         avatarUrl={user.avatarUrl}
         bannerUrl={user.bannerUrl}
-        kycVerified={user.kycStatus === "VERIFIED"}
+        kycVerified={userSatisfiesKyc(user)}
       />
 
       <div className="mx-auto max-w-6xl space-y-8 px-6 py-8">

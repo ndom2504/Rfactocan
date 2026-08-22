@@ -206,7 +206,8 @@ model User {
   /// Profile cover / banner image
   bannerUrl                   String?
   country                     String?
-  phone                       String?
+  /// E.164 (ex. +24107470000). Unique when set — Gabon SMS login.
+  phone                       String?    @unique
   language                    String     @default("fr")
   preferredCurrency           String     @default("CAD")
   bio                         String?
@@ -275,6 +276,7 @@ model User {
   disputesAgainst  Dispute[]       @relation("DisputesAgainst")
   passwordResets   PasswordResetToken[]
   loginOtps        LoginOtp[]
+  phoneOtps        PhoneOtp[]
   notifications    Notification[]
   deviceTokens     DeviceToken[]
   communityPosts   CommunityPost[]
@@ -366,6 +368,22 @@ model LoginOtp {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+/// SMS OTP for Gabon phone login / signup (user may not exist yet).
+model PhoneOtp {
+  id        String    @id @default(cuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+  userId    String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([phone, createdAt])
 }
 
 model Trip {

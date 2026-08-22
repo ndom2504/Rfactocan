@@ -39,6 +39,7 @@ type Listing = {
     ratingAvg: number;
     ratingCount: number;
     verifiedAt: string | null;
+    country?: string | null;
     kycStatus?: string;
     avatarUrl?: string | null;
   };
@@ -53,6 +54,7 @@ export default function ServiceListingDetailPage() {
   const [busy, setBusy] = useState(false);
   const [meId, setMeId] = useState("");
   const [meKyc, setMeKyc] = useState("");
+  const [meKycRequired, setMeKycRequired] = useState(true);
 
   useEffect(() => {
     fetch(`/api/services/${id}`)
@@ -68,6 +70,7 @@ export default function ServiceListingDetailPage() {
         const data = await res.json();
         setMeId(data.user?.id ?? "");
         setMeKyc(data.user?.kycStatus ?? "");
+        setMeKycRequired(data.user?.kycRequired !== false);
       })
       .catch(() => {});
   }, [id]);
@@ -121,8 +124,11 @@ export default function ServiceListingDetailPage() {
 
   const category = listing.category;
   const isOwner = Boolean(meId) && meId === listing.userId;
-  const meVerified = meKyc === "VERIFIED";
-  const peerVerified = listing.user.kycStatus === "VERIFIED";
+  const meVerified = meKyc === "VERIFIED" || !meKycRequired;
+  const peerVerified =
+    listing.user.kycStatus === "VERIFIED" ||
+    listing.country === "GA" ||
+    listing.user.country === "GA";
   const canContact =
     !isOwner && Boolean(meId) && meVerified && peerVerified;
 

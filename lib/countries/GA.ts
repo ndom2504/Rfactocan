@@ -50,5 +50,5 @@ export const GA: CountryConfig = {
   payments: ["airtel_money", "moov_money", "mobile_money", "bank"],
   transportModes: ["AIR", "ROAD", "SEA"],
   communityWhatsApp: "RFacto Gabon",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

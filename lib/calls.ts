@@ -177,7 +177,8 @@ export async function createCall(input: {
   const allowed = await assertDirectContactAllowed(
     input.userId,
     calleeId,
-    thread.lastContextType
+    thread.lastContextType,
+    thread.lastContextId
   );
   if (!allowed.ok) {
     return fail(allowed.error, allowed.status, "code" in allowed ? allowed.code : undefined);

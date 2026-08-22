@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 type Props = {
   locale: Locale;
   kycStatus: string;
+  kycRequired?: boolean;
   connectCharges: boolean;
   connectPayouts: boolean;
   stripeConfigured: boolean;
@@ -18,14 +19,15 @@ type Props = {
 export function PaymentReadinessCard({
   locale,
   kycStatus,
+  kycRequired = true,
   connectCharges,
   connectPayouts,
   stripeConfigured,
 }: Props) {
   const steps = [
     {
-      ok: kycStatus === "VERIFIED",
-      label: t(locale, "kyc_step"),
+      ok: !kycRequired || kycStatus === "VERIFIED",
+      label: t(locale, kycRequired ? "kyc_step" : "kyc_not_required"),
     },
     {
       ok: connectCharges,

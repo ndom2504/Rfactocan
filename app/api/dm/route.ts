@@ -100,7 +100,8 @@ export async function POST(request: Request) {
     const allowed = await assertDirectContactAllowed(
       session.id,
       body.toUserId,
-      contextType
+      contextType,
+      contextId
     );
     if (!allowed.ok) {
       return NextResponse.json(

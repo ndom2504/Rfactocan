@@ -376,6 +376,9 @@ const dict = {
       "Vous et le prestataire devez être vérifiés (KYC) pour discuter en direct.",
     services_verify_to_contact:
       "Vérifiez votre identité pour contacter ce prestataire.",
+    kyc_not_required: "Non exigé",
+    kyc_not_required_country:
+      "Au Gabon, la vérification d’identité n’est pas exigée pour utiliser Rfacto.",
     dm_attachments_max: "Maximum 10 fichiers par message.",
     dm_attach_hint: "Photos et fichiers jusqu’à 50 Mo, plusieurs à la fois.",
     online: "En ligne",
@@ -1237,6 +1240,17 @@ const dict = {
     otp_resent: "Un nouveau code a été envoyé.",
     otp_invalid: "Code incorrect.",
     otp_resend_error: "Impossible de renvoyer le code.",
+    phone_otp_lead:
+      "Au Gabon, connectez-vous avec votre numéro Airtel ou Moov. Un code SMS suffit — pas besoin d’email.",
+    phone_ga_label: "Numéro de téléphone",
+    phone_ga_placeholder: "07 00 00 00",
+    phone_otp_send: "Recevoir le code SMS",
+    phone_otp_sent: "Un code a été envoyé par SMS.",
+    phone_otp_send_error: "Impossible d’envoyer le SMS.",
+    phone_otp_name_required: "Indiquez votre nom pour créer le compte.",
+    phone_use_sms: "Connexion par SMS (Gabon)",
+    phone_use_email: "J’ai un email",
+    phone_account: "Compte téléphone",
 
     tour_label: "Visite guidée",
     tour_replay: "Visite guidée",
@@ -1954,6 +1968,9 @@ const dict = {
       "You and the provider must both be verified (KYC) to chat directly.",
     services_verify_to_contact:
       "Verify your identity to contact this provider.",
+    kyc_not_required: "Not required",
+    kyc_not_required_country:
+      "In Gabon, identity verification is not required to use Rfacto.",
     dm_attachments_max: "Maximum 10 files per message.",
     dm_attach_hint: "Photos and files up to 50 MB, several at once.",
     online: "Online",
@@ -2811,6 +2828,17 @@ const dict = {
     otp_resent: "A new code was sent.",
     otp_invalid: "Incorrect code.",
     otp_resend_error: "Could not resend the code.",
+    phone_otp_lead:
+      "In Gabon, sign in with your Airtel or Moov number. An SMS code is enough — no email needed.",
+    phone_ga_label: "Phone number",
+    phone_ga_placeholder: "07 00 00 00",
+    phone_otp_send: "Send SMS code",
+    phone_otp_sent: "A code was sent by SMS.",
+    phone_otp_send_error: "Could not send the SMS.",
+    phone_otp_name_required: "Enter your name to create the account.",
+    phone_use_sms: "Sign in with SMS (Gabon)",
+    phone_use_email: "I have an email",
+    phone_account: "Phone account",
 
     tour_label: "Guided tour",
     tour_replay: "Guided tour",

@@ -81,7 +81,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const verified = await assertBothVerified(session.id, toReq.userId);
+    const verified = await assertBothVerified(
+      session.id,
+      toReq.userId,
+      toReq.fromCountry
+    );
     if (!verified.ok) {
       return NextResponse.json(
         {

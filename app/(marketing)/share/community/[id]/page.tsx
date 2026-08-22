@@ -79,7 +79,7 @@ export default async function CommunitySharePage({ params }: Params) {
   const appHref = post.href || `/community/${post.id}`;
   const loginHref = `/login?next=${encodeURIComponent(appHref)}`;
   const needsKyc =
-    Boolean(session) && session?.kycStatus !== "VERIFIED";
+    Boolean(session) && session.kycRequired && session.kycStatus !== "VERIFIED";
 
   return (
     <article className="mx-auto max-w-2xl space-y-5 px-4 py-10">

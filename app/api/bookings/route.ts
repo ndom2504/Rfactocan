@@ -9,6 +9,7 @@ import {
 import { notifyUser } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
 const createSchema = z.object({
@@ -164,7 +165,7 @@ export async function POST(request: Request) {
         );
       }
       if (isStripeConfigured()) {
-        if (trip.user.kycStatus !== "VERIFIED") {
+        if (!userSatisfiesKyc(trip.user)) {
           return NextResponse.json(
             {
               error:

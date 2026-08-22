@@ -14,6 +14,7 @@ import { formatMoneyFromCents } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 import type { BookingStatus } from "@prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
@@ -76,6 +77,8 @@ export async function GET(_request: Request, { params }: Params) {
               verifiedAt: true,
               avatarUrl: true,
               kycStatus: true,
+              country: true,
+              manualIdDocStatus: true,
               stripeConnectChargesEnabled: true,
               stripeConnectPayoutsEnabled: true,
               stripeConnectAccountId: true,
@@ -301,7 +304,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
       if (isStripeConfigured()) {
         const traveler = booking.trip.user;
-        if (traveler.kycStatus !== "VERIFIED") {
+        if (!userSatisfiesKyc(traveler)) {
           return NextResponse.json(
             {
               error:

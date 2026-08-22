@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { userSatisfiesKyc } from "@/lib/kyc-policy";
 
 export type DmContextType = "SERVICE" | "JOB" | "MEET";
 
@@ -6,10 +7,21 @@ export function pairUserIds(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
 }
 
-export async function assertBothVerified(userA: string, userB: string) {
+export async function assertBothVerified(
+  userA: string,
+  userB: string,
+  contextCountry?: string | null
+) {
   const users = await prisma.user.findMany({
     where: { id: { in: [userA, userB] } },
-    select: { id: true, kycStatus: true, displayName: true, status: true },
+    select: {
+      id: true,
+      kycStatus: true,
+      manualIdDocStatus: true,
+      country: true,
+      displayName: true,
+      status: true,
+    },
   });
   if (users.length !== 2) {
     return { ok: false as const, error: "Utilisateur introuvable.", status: 404 };
@@ -18,7 +30,7 @@ export async function assertBothVerified(userA: string, userB: string) {
     if (u.status === "SUSPENDED") {
       return { ok: false as const, error: "Compte indisponible.", status: 403 };
     }
-    if (u.kycStatus !== "VERIFIED") {
+    if (!userSatisfiesKyc(u, contextCountry)) {
       return {
         ok: false as const,
         error:
@@ -41,7 +53,8 @@ export async function assertBothVerified(userA: string, userB: string) {
 export async function assertDirectContactAllowed(
   meId: string,
   peerId: string,
-  contextType?: string | null
+  contextType?: string | null,
+  contextId?: string | null
 ) {
   const me = await prisma.user.findUnique({
     where: { id: meId },
@@ -97,7 +110,16 @@ export async function assertDirectContactAllowed(
     return { ok: true as const };
   }
 
-  return assertBothVerified(meId, peerId);
+  let contextCountry: string | null = null;
+  if (contextType === "SERVICE" && contextId) {
+    const listing = await prisma.serviceListing.findUnique({
+      where: { id: contextId },
+      select: { country: true },
+    });
+    contextCountry = listing?.country ?? null;
+  }
+
+  return assertBothVerified(meId, peerId, contextCountry);
 }
 
 export async function getOrCreateDirectThread(input: {
