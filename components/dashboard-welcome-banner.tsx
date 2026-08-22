@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ProfileMenu } from "@/components/profile-menu";
 import { useI18n } from "@/components/locale-provider";
+import { RFACTO_SLIDES, rfactoSlideSrc } from "@/lib/rfacto-slides";
 
 type Props = {
   displayName: string;
@@ -17,7 +18,7 @@ export function DashboardWelcomeBanner({
   bannerUrl,
   kycVerified,
 }: Props) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const customBanner = Boolean(bannerUrl);
 
   return (
@@ -25,33 +26,30 @@ export function DashboardWelcomeBanner({
       data-tour="welcome"
       className="w-full overflow-hidden border-b border-[var(--border)] bg-[var(--surface)]"
     >
-      <div className="relative h-40 w-full bg-[var(--rfacto-green-dark)] sm:h-48 md:h-[min(42vw,420px)] lg:h-[min(38vw,480px)]">
+      <div className="relative w-full bg-[var(--rfacto-green-dark)]">
         {customBanner ? (
-          // eslint-disable-next-line @next/next/no-img-element -- user uploads /api/media URLs
-          <img
-            src={bannerUrl!}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          />
+          <div className="relative h-40 w-full sm:h-48 md:h-[min(42vw,420px)] lg:h-[min(38vw,480px)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- user uploads /api/media URLs */}
+            <img
+              src={bannerUrl!}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
+          </div>
         ) : (
           <Image
-            src="/images/home/slide-communaute.png"
-            alt=""
-            fill
+            key={locale}
+            src={rfactoSlideSrc(RFACTO_SLIDES[0]!, locale)}
+            alt={t("home_slide_communaute_alt")}
+            width={1024}
+            height={576}
             priority
             sizes="100vw"
-            className="object-cover object-top md:object-contain md:object-center"
+            className="h-auto w-full"
           />
         )}
-        <div
-          className="absolute inset-0 opacity-100 md:opacity-20"
-          style={{
-            background:
-              "linear-gradient(160deg, rgba(27,59,20,0.4) 0%, rgba(40,84,29,0.2) 50%, rgba(64,77,53,0.4) 100%)",
-          }}
-        />
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--surface)] to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--rfacto-gold)] to-transparent opacity-90" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--surface)] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--rfacto-gold)] to-transparent opacity-90" />
       </div>
 
       <div className="relative mx-auto flex max-w-6xl flex-col items-center px-6 pb-6 pt-0 text-center">

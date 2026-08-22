@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
-import { RFACTO_SLIDES, RFACTO_SLIDE_MS } from "@/lib/rfacto-slides";
+import { RFACTO_SLIDES, RFACTO_SLIDE_MS, rfactoSlideSrc } from "@/lib/rfacto-slides";
 
 /** Full-viewport rotating banners behind auth forms. */
 export function AuthSlidesBackdrop() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export function AuthSlidesBackdrop() {
               }`}
             >
               <Image
-                src={slide.src}
+                src={rfactoSlideSrc(slide, locale)}
                 alt=""
                 fill
                 priority={i === 0}

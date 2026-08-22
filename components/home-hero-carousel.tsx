@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
-import { RFACTO_SLIDES } from "@/lib/rfacto-slides";
+import { RFACTO_SLIDES, rfactoSlideSrc } from "@/lib/rfacto-slides";
 
 const SLIDE = {
   ...RFACTO_SLIDES[0]!,
@@ -17,12 +17,12 @@ type Props = {
 };
 
 export function HomeHeroCarousel({ startHref, whatsappUrl = null }: Props) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const whatsapp = whatsappUrl;
 
   const image = (
     <Image
-      src={SLIDE.src}
+      src={rfactoSlideSrc(SLIDE, locale)}
       alt={t(SLIDE.altKey)}
       width={1024}
       height={576}
