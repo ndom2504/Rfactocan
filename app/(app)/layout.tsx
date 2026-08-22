@@ -13,6 +13,7 @@ import { GuidedTour } from "@/components/guided-tour";
 import { Badge } from "@/components/ui/badge";
 import { HeaderProfileSlot } from "@/components/header-profile-slot";
 import { AppMain } from "@/components/app-main";
+import { CallProvider } from "@/components/call-provider";
 
 export default async function AppLayout({
   children,
@@ -32,6 +33,7 @@ export default async function AppLayout({
 
   return (
     <LocaleProvider locale={locale}>
+      <CallProvider>
       <PresenceHeartbeat />
       <div className="min-h-screen">
         <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur">
@@ -108,6 +110,7 @@ export default async function AppLayout({
           <GuidedTour />
         </Suspense>
       </div>
+      </CallProvider>
     </LocaleProvider>
   );
 }

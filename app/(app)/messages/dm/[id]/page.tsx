@@ -19,6 +19,7 @@ import {
   servicePaymentStatusI18nKey,
 } from "@/lib/service-payment-status";
 import { Select } from "@/components/ui/select";
+import { useCallActions } from "@/components/call-provider";
 
 type Peer = {
   id: string;
@@ -73,6 +74,7 @@ export default function DirectMessageChatPage() {
   const params = useParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { t } = useI18n();
+  const { startOutgoing } = useCallActions();
   const [meId, setMeId] = useState("");
   const [peer, setPeer] = useState<Peer | null>(null);
   const [thread, setThread] = useState<Thread | null>(null);
@@ -95,11 +97,6 @@ export default function DirectMessageChatPage() {
   const [payBusy, setPayBusy] = useState(false);
   const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
-  const [outgoingCall, setOutgoingCall] = useState<{
-    id: string;
-    status: string;
-    mediaType?: string | null;
-  } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -156,22 +153,8 @@ export default function DirectMessageChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  useEffect(() => {
-    if (!outgoingCall?.id || outgoingCall.status !== "RINGING") return;
-    const timer = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/calls/${outgoingCall.id}`);
-        const data = await res.json();
-        if (data.call) setOutgoingCall(data.call);
-      } catch {
-        /* ignore */
-      }
-    }, 2000);
-    return () => clearInterval(timer);
-  }, [outgoingCall?.id, outgoingCall?.status]);
-
   async function startCall(mediaType: "AUDIO" | "VIDEO") {
-    if (!id || calling || outgoingCall) return;
+    if (!id || calling) return;
     setCalling(true);
     setError("");
     try {
@@ -183,36 +166,20 @@ export default function DirectMessageChatPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || t("call_failed"));
-      } else {
-        setOutgoingCall(data.call);
+      } else if (data.call) {
+        startOutgoing({
+          ...data.call,
+          direction: "outbound",
+          peer: peer
+            ? { displayName: peer.displayName, avatarUrl: peer.avatarUrl }
+            : data.call.peer,
+        });
       }
     } catch {
       setError(t("call_failed"));
     } finally {
       setCalling(false);
     }
-  }
-
-  async function cancelOutgoing() {
-    if (!outgoingCall) return;
-    try {
-      await fetch(`/api/calls/${outgoingCall.id}/cancel`, { method: "POST" });
-    } catch {
-      /* ignore */
-    }
-    setOutgoingCall(null);
-  }
-
-  async function hangUpOutgoing() {
-    if (!outgoingCall) return;
-    try {
-      if (outgoingCall.status === "ACCEPTED") {
-        await fetch(`/api/calls/${outgoingCall.id}/end`, { method: "POST" });
-      }
-    } catch {
-      /* ignore */
-    }
-    setOutgoingCall(null);
   }
 
   useEffect(() => {
@@ -368,7 +335,7 @@ export default function DirectMessageChatPage() {
             type="button"
             variant="outline"
             size="sm"
-            disabled={calling || Boolean(outgoingCall)}
+            disabled={calling}
             onClick={() => void startCall("AUDIO")}
           >
             {t("call_audio")}
@@ -377,7 +344,7 @@ export default function DirectMessageChatPage() {
             type="button"
             variant="outline"
             size="sm"
-            disabled={calling || Boolean(outgoingCall)}
+            disabled={calling}
             onClick={() => void startCall("VIDEO")}
           >
             {t("call_video")}
@@ -390,39 +357,6 @@ export default function DirectMessageChatPage() {
           </Link>
         </div>
       </div>
-
-      {outgoingCall && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="font-medium">
-            {outgoingCall.status === "RINGING"
-              ? t("call_ringing")
-              : outgoingCall.status === "ACCEPTED"
-                ? t("call_accepted")
-                : t("call_ended")}
-          </p>
-          {outgoingCall.status === "RINGING" ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-3"
-              onClick={() => void cancelOutgoing()}
-            >
-              {t("cancel")}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-3"
-              onClick={() => void hangUpOutgoing()}
-            >
-              {t("close")}
-            </Button>
-          )}
-        </div>
-      )}
 
       {peer && meId && canInvoice && (
         <div className="flex flex-wrap gap-2">
