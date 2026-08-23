@@ -10,8 +10,10 @@ import {
   phonePlaceholderEmail,
 } from "./phone-auth";
 import {
+  allowWebGoogleAuth,
   isSmsOnlyCountry,
   normalizePhoneForCountry,
+  showWebGoogleAuth,
 } from "./phone-countries";
 
 describe("normalizeGabonPhone", () => {
@@ -70,6 +72,14 @@ describe("normalizeAuthPhone", () => {
     assert.equal(isSmsOnlyCountry("FR"), false);
     assert.equal(isSmsOnlyCountry("CA"), false);
     assert.equal(isSmsOnlyCountry("CN"), false);
+  });
+
+  it("réaffiche Google web pour le Gabon (temp Play Store)", () => {
+    assert.equal(allowWebGoogleAuth("GA"), true);
+    assert.equal(allowWebGoogleAuth("SN"), false);
+    assert.equal(showWebGoogleAuth("GA"), true);
+    assert.equal(showWebGoogleAuth("SN"), false);
+    assert.equal(showWebGoogleAuth("CA"), true);
   });
 });
 

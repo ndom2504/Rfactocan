@@ -32,6 +32,7 @@ import {
   getPhonePlan,
   isSmsOnlyCountry,
   resolvePhoneCountry,
+  showWebGoogleAuth,
 } from "@/lib/phone-countries";
 
 const REF_COOKIE = "rfacto_ref";
@@ -80,6 +81,7 @@ function RegisterForm() {
   const countryCode =
     resolveCountryCode(country) ?? resolvePhoneCountry(country);
   const phoneOnly = isSmsOnlyCountry(countryCode);
+  const showGoogle = showWebGoogleAuth(countryCode);
   const phoneAllowed = Boolean(getPhonePlan(countryCode));
   const phoneSignup = phoneOnly || (phoneAllowed && registerAuth === "phone");
   const phoneRegion =
@@ -169,13 +171,14 @@ function RegisterForm() {
         </p>
       )}
 
-      {!phoneOnly && (
+      {showGoogle && (
       <div className="mt-6 space-y-4">
         <GoogleSignInButton
           label={
             locale === "en" ? "Sign up with Google" : "S'inscrire avec Google"
           }
           next={params.get("next")}
+          country={countryCode}
         />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
           <span className="bg-[var(--surface)] px-2 relative z-10">

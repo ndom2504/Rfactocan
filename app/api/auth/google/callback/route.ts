@@ -30,9 +30,16 @@ export async function GET(request: Request) {
   cookieStore.delete(STATE_COOKIE);
   const refFromCookie = cookieStore.get(REF_COOKIE)?.value ?? null;
 
-  let saved: { state: string; next: string } | null = null;
+  let saved: { state: string; next: string; country?: string | null } | null =
+    null;
   try {
-    saved = raw ? (JSON.parse(raw) as { state: string; next: string }) : null;
+    saved = raw
+      ? (JSON.parse(raw) as {
+          state: string;
+          next: string;
+          country?: string | null;
+        })
+      : null;
   } catch {
     saved = null;
   }
@@ -48,6 +55,7 @@ export async function GET(request: Request) {
     const profile = await fetchGoogleProfile(tokens.access_token);
     const result = await upsertUserFromGoogleProfile(profile, {
       ref: refFromCookie,
+      country: saved.country,
     });
 
     if (!result.ok) {

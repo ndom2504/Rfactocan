@@ -129,6 +129,22 @@ export function isSmsOnlyCountry(code?: string | null): boolean {
   return isAfricaCountry(code);
 }
 
+/**
+ * TEMP — Google web pour le Gabon pendant l’examen Play Store / Twilio prod.
+ * Retirer GA de cette liste une fois l’appli en production et Verify payant.
+ */
+const TEMP_WEB_GOOGLE_SMS_COUNTRIES = new Set(["GA"]);
+
+export function allowWebGoogleAuth(code?: string | null): boolean {
+  if (!code) return false;
+  return TEMP_WEB_GOOGLE_SMS_COUNTRIES.has(code.trim().toUpperCase());
+}
+
+/** Afficher le bouton Google sur le web (Canada/Europe, ou Gabon temporaire). */
+export function showWebGoogleAuth(code?: string | null): boolean {
+  return !isSmsOnlyCountry(code) || allowWebGoogleAuth(code);
+}
+
 export function listPhoneCountries() {
   return PHONE_PLANS.map((p) => ({
     code: p.code,

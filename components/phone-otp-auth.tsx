@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryPhoneFields } from "@/components/country-phone-fields";
 import { useI18n } from "@/components/locale-provider";
-import { isSmsOnlyCountry } from "@/lib/phone-countries";
+import { allowWebGoogleAuth, isSmsOnlyCountry } from "@/lib/phone-countries";
 
 type Props = {
   displayName: string;
@@ -195,7 +195,13 @@ export function PhoneOtpAuth({
   return (
     <form onSubmit={requestCode} className="space-y-4">
       <p className="text-sm text-[var(--muted)]">
-        {smsOnly ? t("phone_otp_lead_sms_only") : t("phone_otp_lead")}
+        {smsOnly
+          ? t(
+              allowWebGoogleAuth(country)
+                ? "phone_otp_lead_sms_only_google"
+                : "phone_otp_lead_sms_only"
+            )
+          : t("phone_otp_lead")}
       </p>
       <CountryPhoneFields
         region={country}

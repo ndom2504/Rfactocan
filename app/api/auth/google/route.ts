@@ -14,10 +14,12 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const next = searchParams.get("next") || "/dashboard";
+  const countryRaw = searchParams.get("country")?.trim().toUpperCase() || "";
+  const country = /^[A-Z]{2}$/.test(countryRaw) ? countryRaw : null;
   const state = crypto.randomUUID();
 
   const cookieStore = await cookies();
-  cookieStore.set(STATE_COOKIE, JSON.stringify({ state, next }), {
+  cookieStore.set(STATE_COOKIE, JSON.stringify({ state, next, country }), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

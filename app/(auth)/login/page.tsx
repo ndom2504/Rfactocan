@@ -13,7 +13,11 @@ import { PhoneOtpAuth } from "@/components/phone-otp-auth";
 import { useI18n } from "@/components/locale-provider";
 import { isTourDone, markTourPendingIfNeeded } from "@/lib/guided-tour";
 import { fetchSuggestedCountry } from "@/lib/detect-country";
-import { getPhonePlan, isSmsOnlyCountry } from "@/lib/phone-countries";
+import {
+  getPhonePlan,
+  isSmsOnlyCountry,
+  showWebGoogleAuth,
+} from "@/lib/phone-countries";
 
 const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
   google_not_configured: {
@@ -82,6 +86,7 @@ function LoginForm() {
   const [phoneDisplayName, setPhoneDisplayName] = useState("");
   const [phoneRegion, setPhoneRegion] = useState("CA");
   const smsOnly = isSmsOnlyCountry(phoneRegion);
+  const showGoogle = showWebGoogleAuth(phoneRegion);
 
   useEffect(() => {
     const mfa = params.get("mfa");
@@ -257,9 +262,12 @@ function LoginForm() {
       <CardTitle>{t("login_title")}</CardTitle>
       <CardDescription>{t("login_subtitle")}</CardDescription>
 
-      {!smsOnly && (
+      {showGoogle && (
       <div className="mt-6 space-y-4">
-        <GoogleSignInButton next={params.get("next")} />
+        <GoogleSignInButton
+          next={params.get("next")}
+          country={phoneRegion}
+        />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
           <span className="bg-[var(--surface)] px-2 relative z-10">
             {locale === "en" ? "or" : "ou"}
@@ -270,7 +278,7 @@ function LoginForm() {
       )}
 
       {authMode === "phone" ? (
-        <div className={smsOnly ? "mt-6" : "mt-2"}>
+        <div className={showGoogle ? "mt-2" : "mt-6"}>
           <PhoneOtpAuth
             displayName={phoneDisplayName}
             onDisplayNameChange={setPhoneDisplayName}

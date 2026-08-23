@@ -1270,6 +1270,8 @@ const dict = {
       "Vous pouvez aussi vous connecter avec votre numéro. Un code SMS suffit.",
     phone_otp_lead_sms_only:
       "Dans les pays d’Afrique, la connexion se fait uniquement par SMS. Un code suffit — pas besoin d’email.",
+    phone_otp_lead_sms_only_google:
+      "Le SMS reste disponible. En attendant l’appli sur le Play Store, vous pouvez aussi vous connecter avec Google.",
     phone_country: "Pays du numéro",
     phone_ga_label: "Numéro de téléphone",
     phone_ga_placeholder: "07 00 00 00",
@@ -2948,6 +2950,8 @@ const dict = {
       "You can also sign in with your phone number. An SMS code is enough.",
     phone_otp_lead_sms_only:
       "In African countries, sign-in is by SMS only. A code is enough — no email needed.",
+    phone_otp_lead_sms_only_google:
+      "SMS is still available. While the Play Store app is under review, you can also sign in with Google.",
     phone_country: "Number country",
     phone_ga_label: "Phone number",
     phone_ga_placeholder: "07 00 00 00",

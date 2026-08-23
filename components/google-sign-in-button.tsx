@@ -4,13 +4,20 @@ import { safeNextPath } from "@/lib/app-url";
 export function GoogleSignInButton({
   label = "Continuer avec Google",
   next,
+  country,
 }: {
   label?: string;
   next?: string | null;
+  country?: string | null;
 }) {
+  const params = new URLSearchParams();
   const safe = next ? safeNextPath(next, "") : "";
-  const href = safe
-    ? `/api/auth/google?next=${encodeURIComponent(safe)}`
+  if (safe) params.set("next", safe);
+  if (country && /^[A-Za-z]{2}$/.test(country)) {
+    params.set("country", country.toUpperCase());
+  }
+  const href = params.size
+    ? `/api/auth/google?${params.toString()}`
     : "/api/auth/google";
 
   return (
