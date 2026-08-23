@@ -8,6 +8,9 @@ export const runtime = "nodejs";
 /**
  * Serve private blobs with Accept-Ranges / partial responses so progressive
  * video (browser + Android MediaPlayer) can start without a full download.
+ *
+ * Audio must not use Range: Next/Vercel rewrites 206 → 200, so Chrome's
+ * 2-byte probe becomes the whole file and <audio> stays at 0:00.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,14 +20,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    const range = request.headers.get("range") ?? undefined;
+    const requestedRange = request.headers.get("range") ?? undefined;
     const ifNoneMatch = request.headers.get("if-none-match") ?? undefined;
+    const access = blobAccess();
+    let useRange = Boolean(requestedRange) && !isAudioAttachment("", url);
 
-    const result = await get(url, {
-      access: blobAccess(),
-      ifNoneMatch,
-      ...(range ? { headers: { Range: range } } : {}),
-    });
+    const fetchBlob = (range?: string) =>
+      get(url, {
+        access,
+        ifNoneMatch,
+        ...(range ? { headers: { Range: range } } : {}),
+      });
+
+    let result = await fetchBlob(useRange ? requestedRange : undefined);
 
     if (!result) {
       return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
@@ -41,19 +49,23 @@ export async function GET(request: Request) {
       });
     }
 
-    if (!result.stream) {
-      return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
-    }
-
     const rawType =
       result.blob.contentType ||
       result.headers.get("content-type") ||
       "application/octet-stream";
-    const contentType = isAudioAttachment(rawType, url)
-      ? guessVoiceNoteMime(url, rawType)
-      : rawType;
+    const audio = isAudioAttachment(rawType, url);
 
-    const contentRange = result.headers.get("content-range");
+    if (audio && useRange) {
+      result = await fetchBlob(undefined);
+      useRange = false;
+    }
+
+    if (!result?.stream) {
+      return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
+    }
+
+    const contentType = audio ? guessVoiceNoteMime(url, rawType) : rawType;
+    const contentRange = useRange ? result.headers.get("content-range") : null;
     const contentLength =
       result.headers.get("content-length") ||
       (typeof result.blob.size === "number" && !contentRange
@@ -63,7 +75,7 @@ export async function GET(request: Request) {
     const headers = new Headers();
     headers.set("Content-Type", contentType);
     headers.set("Cache-Control", "public, max-age=31536000, immutable");
-    headers.set("Accept-Ranges", "bytes");
+    headers.set("Accept-Ranges", audio ? "none" : "bytes");
     if (contentLength) headers.set("Content-Length", contentLength);
     if (contentRange) headers.set("Content-Range", contentRange);
     if (result.blob.etag) headers.set("ETag", result.blob.etag);
