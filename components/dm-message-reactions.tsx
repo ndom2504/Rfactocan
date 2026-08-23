@@ -6,6 +6,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
+import { Forward, Share2 } from "lucide-react";
 import { DM_REACTION_EMOJIS, type ReactionSummary } from "@/lib/dm-reactions";
 import { cn } from "@/lib/utils";
 
@@ -70,16 +71,24 @@ function pickEmoji(
 
 export function ReactionPicker({
   onPick,
+  onShare,
+  onForward,
+  shareLabel,
+  forwardLabel,
   alignEnd,
 }: {
   onPick: (emoji: string) => void;
+  onShare?: () => void;
+  onForward?: () => void;
+  shareLabel?: string;
+  forwardLabel?: string;
   alignEnd?: boolean;
 }) {
   return (
     <div
       data-dm-react-picker
       className={cn(
-        "absolute bottom-full z-30 mb-1 flex gap-0.5 rounded-full border border-black/10 bg-white px-1.5 py-1 shadow-lg",
+        "absolute bottom-full z-30 mb-1 flex max-w-[min(100vw-2rem,22rem)] flex-wrap items-center gap-0.5 rounded-full border border-black/10 bg-white px-1.5 py-1 shadow-lg",
         alignEnd ? "right-0" : "left-0"
       )}
       role="listbox"
@@ -96,6 +105,39 @@ export function ReactionPicker({
           {emoji}
         </button>
       ))}
+      {(onShare || onForward) && (
+        <span className="mx-0.5 h-6 w-px bg-black/10" aria-hidden />
+      )}
+      {onShare && (
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-black/5 hover:text-[var(--foreground)]"
+          title={shareLabel}
+          aria-label={shareLabel}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onShare();
+          }}
+        >
+          <Share2 className="h-4 w-4" />
+        </button>
+      )}
+      {onForward && (
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-black/5 hover:text-[var(--foreground)]"
+          title={forwardLabel}
+          aria-label={forwardLabel}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onForward();
+          }}
+        >
+          <Forward className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

@@ -23,6 +23,7 @@ import {
   useMessageLongPress,
 } from "@/components/dm-message-reactions";
 import { toggleReactionSummaries, type ReactionSummary } from "@/lib/dm-reactions";
+import { dmForwardPayload, shareDirectMessageContent } from "@/lib/dm-share";
 import {
   SERVICE_PROCESSING_DAYS,
   servicePaymentStatusI18nKey,
@@ -63,6 +64,15 @@ type ThreadPayment = {
   clientId: string;
   providerId: string;
   escrowUntilConfirm?: boolean;
+};
+
+type ForwardThread = {
+  id: string;
+  peer?: {
+    id?: string;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+  } | null;
 };
 
 function isVoiceMessage(url?: string | null, body?: string | null) {
@@ -115,6 +125,11 @@ export default function DirectMessageChatPage() {
   const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
   const [reactingToId, setReactingToId] = useState<string | null>(null);
+  const [forwardMessage, setForwardMessage] = useState<DmMessage | null>(null);
+  const [forwardThreads, setForwardThreads] = useState<ForwardThread[]>([]);
+  const [forwardLoading, setForwardLoading] = useState(false);
+  const [forwardBusyId, setForwardBusyId] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -233,6 +248,70 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  async function shareMessage(message: DmMessage) {
+    setReactingToId(null);
+    setError("");
+    setNotice("");
+    const result = await shareDirectMessageContent({
+      body: message.body,
+      attachmentUrl: message.attachmentUrl,
+    });
+    if (result === "failed") setError(t("dm_share_failed"));
+    else if (result === "downloaded") setNotice(t("dm_share_downloaded"));
+    else if (result === "copied") setNotice(t("dm_share_copied"));
+  }
+
+  async function openForward(message: DmMessage) {
+    setReactingToId(null);
+    setForwardMessage(message);
+    setForwardLoading(true);
+    setForwardThreads([]);
+    setError("");
+    try {
+      const res = await fetch("/api/dm");
+      const data = await res.json().catch(() => ({}));
+      const threads = (data.threads ?? []) as ForwardThread[];
+      setForwardThreads(threads.filter((thread) => thread.id !== id));
+    } catch {
+      setError(t("dm_forward_failed"));
+      setForwardMessage(null);
+    } finally {
+      setForwardLoading(false);
+    }
+  }
+
+  async function sendForward(targetId: string) {
+    if (!forwardMessage || forwardBusyId) return;
+    const payload = dmForwardPayload({
+      body: forwardMessage.body,
+      attachmentUrl: forwardMessage.attachmentUrl,
+    });
+    if (!payload) {
+      setError(t("dm_forward_failed"));
+      return;
+    }
+    setForwardBusyId(targetId);
+    setError("");
+    try {
+      const res = await fetch(`/api/dm/${targetId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || t("dm_forward_failed"));
+        return;
+      }
+      setNotice(t("dm_forward_ok"));
+      setForwardMessage(null);
+    } catch {
+      setError(t("dm_forward_failed"));
+    } finally {
+      setForwardBusyId(null);
+    }
+  }
+
   useEffect(() => {
     if (!reactingToId) return;
     const onKey = (e: KeyboardEvent) => {
@@ -241,7 +320,7 @@ export default function DirectMessageChatPage() {
     const onPointer = (e: Event) => {
       const node = e.target as Node | null;
       const el = node instanceof Element ? node : node?.parentElement;
-      if (el?.closest("[data-dm-react-picker]")) return;
+      if (el?.closest("[data-dm-react-picker], [data-dm-forward]")) return;
       setReactingToId(null);
     };
     window.addEventListener("keydown", onKey);
@@ -507,6 +586,7 @@ export default function DirectMessageChatPage() {
       )}
 
       {payOk && <p className="text-sm text-emerald-700">{payOk}</p>}
+      {notice && <p className="text-sm text-emerald-700">{notice}</p>}
       {error && <p className="text-sm text-red-700">{error}</p>}
 
       {invoices.length > 0 && (
@@ -592,6 +672,10 @@ export default function DirectMessageChatPage() {
               pickerOpen={reactingToId === m.id}
               onOpenPicker={() => setReactingToId(m.id)}
               onReact={(emoji) => void reactToMessage(m.id, emoji)}
+              onShare={() => void shareMessage(m)}
+              onForward={() => void openForward(m)}
+              shareLabel={t("dm_share")}
+              forwardLabel={t("dm_forward")}
             >
             <div
               className={`rounded-2xl px-3 py-2 text-sm select-none ${
@@ -816,6 +900,72 @@ export default function DirectMessageChatPage() {
         </div>
         <p className="text-xs text-[var(--muted)]">{t("attach_hint")}</p>
       </form>
+
+      {forwardMessage && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          onClick={() => {
+            if (!forwardBusyId) setForwardMessage(null);
+          }}
+        >
+          <div
+            data-dm-forward
+            className="max-h-[70vh] w-full max-w-md overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-semibold">{t("dm_forward_title")}</p>
+            {forwardLoading ? (
+              <p className="mt-3 text-sm text-[var(--muted)]">{t("loading")}</p>
+            ) : forwardThreads.length === 0 ? (
+              <p className="mt-3 text-sm text-[var(--muted)]">
+                {t("dm_forward_empty")}
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-1">
+                {forwardThreads.map((thread) => {
+                  const name = thread.peer?.displayName || t("dm_direct_chat");
+                  const busy = forwardBusyId === thread.id;
+                  return (
+                    <li key={thread.id}>
+                      <button
+                        type="button"
+                        disabled={Boolean(forwardBusyId)}
+                        onClick={() => void sendForward(thread.id)}
+                        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-[var(--surface-2)] disabled:opacity-60"
+                      >
+                        <UserAvatar
+                          name={name}
+                          avatarUrl={thread.peer?.avatarUrl}
+                          size="sm"
+                        />
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                          {name}
+                        </span>
+                        {busy && (
+                          <span className="text-xs text-[var(--muted)]">
+                            {t("loading")}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="mt-3 flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={Boolean(forwardBusyId)}
+                onClick={() => setForwardMessage(null)}
+              >
+                {t("cancel")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -826,6 +976,10 @@ function DmBubble({
   pickerOpen,
   onOpenPicker,
   onReact,
+  onShare,
+  onForward,
+  shareLabel,
+  forwardLabel,
   children,
 }: {
   message: DmMessage;
@@ -833,6 +987,10 @@ function DmBubble({
   pickerOpen: boolean;
   onOpenPicker: () => void;
   onReact: (emoji: string | null) => void;
+  onShare: () => void;
+  onForward: () => void;
+  shareLabel: string;
+  forwardLabel: string;
   children: ReactNode;
 }) {
   const longPress = useMessageLongPress(onOpenPicker);
@@ -844,7 +1002,14 @@ function DmBubble({
       }`}
     >
       {pickerOpen && (
-        <ReactionPicker alignEnd={mine} onPick={(emoji) => onReact(emoji)} />
+        <ReactionPicker
+          alignEnd={mine}
+          onPick={(emoji) => onReact(emoji)}
+          onShare={onShare}
+          onForward={onForward}
+          shareLabel={shareLabel}
+          forwardLabel={forwardLabel}
+        />
       )}
       <div
         className="w-full touch-manipulation [-webkit-touch-callout:none]"

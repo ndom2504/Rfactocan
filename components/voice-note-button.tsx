@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/components/locale-provider";
+import { stopAllVoicePlayback } from "@/lib/voice-audio";
 
 const MAX_MS = 120_000;
 
@@ -70,12 +71,14 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
   async function start() {
     setError("");
     clearPreview();
+    stopAllVoicePlayback();
     if (!navigator.mediaDevices?.getUserMedia) {
       setError(t("voice_unavailable"));
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stopAllVoicePlayback();
       streamRef.current = stream;
       const mime = pickMime();
       const rec = mime
@@ -167,7 +170,9 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
             src={preview.url}
             controls
             preload="metadata"
+            data-rfacto-voice
             className="h-9 max-w-[220px] flex-1"
+            onPlay={(e) => stopAllVoicePlayback(e.currentTarget)}
           />
           <Button
             type="button"

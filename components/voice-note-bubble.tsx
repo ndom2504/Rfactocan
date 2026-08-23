@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { guessVoiceNoteMime } from "@/lib/community";
+import { stopAllVoicePlayback } from "@/lib/voice-audio";
 import { cn } from "@/lib/utils";
 
 function barsFromKey(key: string, count = 32) {
@@ -61,11 +62,15 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
       setProgress(0);
       setCurrent(0);
     };
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
     const onErr = () => setError("Lecture impossible");
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", syncDuration);
     audio.addEventListener("durationchange", syncDuration);
     audio.addEventListener("canplay", syncDuration);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
     audio.addEventListener("ended", onEnd);
     audio.addEventListener("error", onErr);
     return () => {
@@ -73,6 +78,8 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
       audio.removeEventListener("loadedmetadata", syncDuration);
       audio.removeEventListener("durationchange", syncDuration);
       audio.removeEventListener("canplay", syncDuration);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnd);
       audio.removeEventListener("error", onErr);
     };
@@ -92,14 +99,14 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
   async function toggle() {
     const audio = audioRef.current;
     if (!audio) return;
-    if (playing) {
+    if (!audio.paused) {
       audio.pause();
-      setPlaying(false);
       return;
     }
     setError("");
     setBusy(true);
     try {
+      stopAllVoicePlayback(audio);
       try {
         await audio.play();
       } catch {
@@ -107,7 +114,6 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
         audio.load();
         await audio.play();
       }
-      setPlaying(true);
     } catch {
       setPlaying(false);
       setError("Lecture impossible");
@@ -138,6 +144,7 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
           src={url}
           preload="auto"
           playsInline
+          data-rfacto-voice
         />
         <button
           type="button"

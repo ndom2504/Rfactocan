@@ -1425,6 +1425,16 @@ const dict = {
     download_attachment: "Télécharger",
     react_message: "Réagir",
     react_failed: "Impossible d’enregistrer la réaction.",
+    dm_share: "Partager",
+    dm_forward: "Transférer",
+    dm_share_failed: "Impossible de partager ce message.",
+    dm_share_downloaded:
+      "Fichier téléchargé. Vous pouvez le partager depuis WhatsApp, Telegram ou vos fichiers.",
+    dm_share_copied: "Texte copié.",
+    dm_forward_title: "Transférer vers…",
+    dm_forward_empty: "Aucune autre conversation.",
+    dm_forward_ok: "Message transféré.",
+    dm_forward_failed: "Impossible de transférer le message.",
     chat_closed: "Cette conversation est fermée.",
     tracking_title: "Suivi de commande",
     tracking_hint:
@@ -3089,6 +3099,16 @@ const dict = {
     download_attachment: "Download",
     react_message: "React",
     react_failed: "Could not save the reaction.",
+    dm_share: "Share",
+    dm_forward: "Forward",
+    dm_share_failed: "Could not share this message.",
+    dm_share_downloaded:
+      "File downloaded. You can share it from WhatsApp, Telegram or your files.",
+    dm_share_copied: "Text copied.",
+    dm_forward_title: "Forward to…",
+    dm_forward_empty: "No other conversations.",
+    dm_forward_ok: "Message forwarded.",
+    dm_forward_failed: "Could not forward the message.",
     chat_closed: "This conversation is closed.",
     tracking_title: "Order tracking",
     tracking_hint:
