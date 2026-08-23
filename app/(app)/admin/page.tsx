@@ -45,6 +45,7 @@ type AdminData = {
     meetRomance?: number;
     meetContactsPending?: number;
     meetContactsAccepted?: number;
+    inUsers?: number;
   };
   users: Array<{
     id: string;
@@ -61,6 +62,10 @@ type AdminData = {
     stripeConnectChargesEnabled: boolean;
     ratingAvg: number;
     createdAt: string;
+    phone?: string | null;
+    country?: string | null;
+    lastSeenAt?: string | null;
+    inReady?: boolean;
     isAmbassador?: boolean;
     agentCode?: string | null;
     ambassadorRequestStatus?: string;
@@ -245,6 +250,7 @@ export default function AdminPage() {
   const [userTo, setUserTo] = useState("");
   const [userFromDraft, setUserFromDraft] = useState("");
   const [userToDraft, setUserToDraft] = useState("");
+  const [userInFilter, setUserInFilter] = useState<"" | "on" | "off">("");
   const [exportingEmails, setExportingEmails] = useState(false);
   const [sendingPlayInvite, setSendingPlayInvite] = useState(false);
   const [broadcastSubject, setBroadcastSubject] = useState("");
@@ -266,16 +272,19 @@ export default function AdminPage() {
     q?: string;
     from?: string;
     to?: string;
+    in?: "" | "on" | "off";
   }) {
     const letter = opts?.letter ?? userLetter;
     const q = opts?.q ?? userQuery;
     const from = opts?.from ?? userFrom;
     const to = opts?.to ?? userTo;
+    const inFilter = opts?.in ?? userInFilter;
     const params = new URLSearchParams();
     if (letter) params.set("letter", letter);
     if (q.trim()) params.set("q", q.trim());
     if (from.trim()) params.set("from", from.trim());
     if (to.trim()) params.set("to", to.trim());
+    if (inFilter) params.set("in", inFilter);
     const qs = params.toString();
     const res = await fetch(`/api/admin${qs ? `?${qs}` : ""}`);
     const json = await res.json();
@@ -330,6 +339,18 @@ export default function AdminPage() {
       q: userQuery,
       from: userFrom,
       to: userTo,
+      in: userInFilter,
+    });
+  }
+
+  function applyUserIn(next: "" | "on" | "off") {
+    setUserInFilter(next);
+    void load({
+      letter: userLetter,
+      q: userQuery,
+      from: userFrom,
+      to: userTo,
+      in: next,
     });
   }
 
@@ -343,6 +364,7 @@ export default function AdminPage() {
       q: userQueryDraft,
       from: userFromDraft,
       to: userToDraft,
+      in: userInFilter,
     });
   }
 
@@ -354,7 +376,8 @@ export default function AdminPage() {
     setUserTo("");
     setUserFromDraft("");
     setUserToDraft("");
-    void load({ letter: "", q: "", from: "", to: "" });
+    setUserInFilter("");
+    void load({ letter: "", q: "", from: "", to: "", in: "" });
   }
 
   async function action(
@@ -833,6 +856,7 @@ export default function AdminPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Utilisateurs", data.stats.users],
+          ["Membres In", data.stats.inUsers ?? 0],
           ["KYC vérifiés", data.stats.kycVerified],
           ["Paiements capturés", data.stats.paymentsCaptured],
           ["Frais plateforme (gains Rfacto)", formatCents(data.stats.platformFeesCadCents)],
@@ -1251,6 +1275,11 @@ export default function AdminPage() {
               {userFrom || userTo
                 ? ` · inscrit ${userFrom || "…"} → ${userTo || "…"}`
                 : ""}
+              {userInFilter === "on"
+                ? " · sur In"
+                : userInFilter === "off"
+                  ? " · hors In"
+                  : ""}
               {data.users.length >= 100 ? " (100 max affichés)" : ""}
             </p>
           </div>
@@ -1291,13 +1320,13 @@ export default function AdminPage() {
             <input
               value={userQueryDraft}
               onChange={(e) => setUserQueryDraft(e.target.value)}
-              placeholder="Nom ou email…"
+              placeholder="Nom, email ou numéro…"
               className="h-9 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
             />
             <Button type="submit" size="sm">
               Chercher
             </Button>
-            {(userQuery || userLetter || userFrom || userTo) && (
+            {(userQuery || userLetter || userFrom || userTo || userInFilter) && (
               <Button
                 type="button"
                 size="sm"
@@ -1309,6 +1338,36 @@ export default function AdminPage() {
             )}
           </form>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-xs font-medium text-[var(--muted)]">
+            In
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant={userInFilter === "" ? "secondary" : "outline"}
+            onClick={() => applyUserIn("")}
+          >
+            Tous
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={userInFilter === "on" ? "secondary" : "outline"}
+            onClick={() => applyUserIn("on")}
+          >
+            Sur In
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={userInFilter === "off" ? "secondary" : "outline"}
+            onClick={() => applyUserIn("off")}
+          >
+            Hors In
+          </Button>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -1346,9 +1405,29 @@ export default function AdminPage() {
                 <CardTitle className="text-base">{u.displayName}</CardTitle>
                 <CardDescription>
                   {u.email} · {u.role} · inscrit {formatDate(u.createdAt)}
+                  {u.country ? ` · ${u.country}` : ""}
+                  {u.lastSeenAt
+                    ? ` · vu ${formatDate(u.lastSeenAt)}`
+                    : ""}
                 </CardDescription>
+                {u.phone ? (
+                  <p className="mt-1 text-sm text-[var(--ink)]">
+                    In · {u.phone}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Pas encore sur In (aucun numéro lié)
+                  </p>
+                )}
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge>{u.status}</Badge>
+                  {u.inReady || u.phone ? (
+                    <Badge className="bg-[#c9a227]/20 text-[#6b5420]">
+                      In
+                    </Badge>
+                  ) : (
+                    <Badge>Hors In</Badge>
+                  )}
                   <Badge>
                     KYC: {KYC_STATUS_LABELS[u.kycStatus] ?? u.kycStatus}
                   </Badge>
@@ -1522,6 +1601,24 @@ export default function AdminPage() {
                     </Button>
                   </>
                 )}
+                {u.phone ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (
+                        !window.confirm(
+                          `Retirer ${u.displayName} de In ? Le numéro ${u.phone} sera délié. Le compte Rfacto reste actif.`
+                        )
+                      ) {
+                        return;
+                      }
+                      void action(u.id, "unlink_in");
+                    }}
+                  >
+                    Retirer In
+                  </Button>
+                ) : null}
                 {u.status !== "SUSPENDED" ? (
                   <Button
                     size="sm"

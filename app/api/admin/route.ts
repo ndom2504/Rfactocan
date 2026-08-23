@@ -22,6 +22,8 @@ export async function GET(request: Request) {
   const q = (searchParams.get("q") ?? "").trim();
   const fromRaw = (searchParams.get("from") ?? "").trim();
   const toRaw = (searchParams.get("to") ?? "").trim();
+  const inRaw = (searchParams.get("in") ?? "").trim().toLowerCase();
+  const inFilter = inRaw === "on" || inRaw === "off" ? inRaw : null;
 
   function parseDayStart(raw: string): Date | null {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
@@ -59,6 +61,7 @@ export async function GET(request: Request) {
     meetRomance,
     meetContactsPending,
     meetContactsAccepted,
+    inUsers,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.trip.count(),
@@ -96,6 +99,7 @@ export async function GET(request: Request) {
       .catch(() => 0),
     prisma.meetContact.count({ where: { status: "PENDING" } }).catch(() => 0),
     prisma.meetContact.count({ where: { status: "ACCEPTED" } }).catch(() => 0),
+    prisma.user.count({ where: { phone: { not: null } } }),
   ]);
 
   const openReports = await prisma.report.findMany({
@@ -127,6 +131,7 @@ export async function GET(request: Request) {
     take: 40,
   });
 
+  const phoneDigits = q.replace(/\D/g, "");
   const userWhere = {
     AND: [
       ...(letter
@@ -147,6 +152,15 @@ export async function GET(request: Request) {
                   displayName: { contains: q, mode: "insensitive" as const },
                 },
                 { email: { contains: q, mode: "insensitive" as const } },
+                {
+                  phone: {
+                    contains: q.replace(/\s/g, ""),
+                    mode: "insensitive" as const,
+                  },
+                },
+                ...(phoneDigits.length >= 4
+                  ? [{ phone: { contains: phoneDigits } }]
+                  : []),
               ],
             },
           ]
@@ -161,6 +175,8 @@ export async function GET(request: Request) {
             },
           ]
         : []),
+      ...(inFilter === "on" ? [{ phone: { not: null } }] : []),
+      ...(inFilter === "off" ? [{ phone: null }] : []),
     ],
   };
 
@@ -184,6 +200,9 @@ export async function GET(request: Request) {
       ratingAvg: true,
       ratingCount: true,
       createdAt: true,
+      phone: true,
+      country: true,
+      lastSeenAt: true,
       isAmbassador: true,
       agentCode: true,
       ambassadorRequestStatus: true,
@@ -196,6 +215,7 @@ export async function GET(request: Request) {
   const allUsers = allUsersRaw.map(({ manualIdDocUrl, ...u }) => ({
     ...u,
     hasManualIdDoc: Boolean(manualIdDocUrl),
+    inReady: Boolean(u.phone),
   }));
 
   const pendingManualIdsRaw = await prisma.user.findMany({
@@ -512,6 +532,7 @@ export async function GET(request: Request) {
       meetRomance,
       meetContactsPending,
       meetContactsAccepted,
+      inUsers,
     },
     openReports,
     openDisputes,
@@ -525,6 +546,7 @@ export async function GET(request: Request) {
       q,
       from: fromDate ? fromRaw : null,
       to: toDate ? toRaw : null,
+      in: inFilter,
     },
     payments: activityPayments,
     pendingOffers,
@@ -546,6 +568,7 @@ const userPatchSchema = z.object({
     "reject_ambassador_request",
     "payout_herald_commissions",
     "complete_wallet_withdrawal",
+    "unlink_in",
   ]),
   userId: z.string().optional(),
   withdrawalId: z.string().optional(),
@@ -808,6 +831,36 @@ export async function PATCH(request: Request) {
         stripeTransferId: result.stripeTransferId,
         commissionCount: result.commissionCount,
       });
+    }
+
+    if (body.action === "unlink_in") {
+      const existing = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, phone: true },
+      });
+      if (!existing) {
+        return NextResponse.json(
+          { error: "Utilisateur introuvable" },
+          { status: 404 }
+        );
+      }
+      if (!existing.phone) {
+        return NextResponse.json(
+          { error: "Cet utilisateur n'est pas sur In." },
+          { status: 400 }
+        );
+      }
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { phone: null },
+        select: {
+          id: true,
+          displayName: true,
+          email: true,
+          phone: true,
+        },
+      });
+      return NextResponse.json({ user, unlinked: true });
     }
 
     if (body.action === "reject_manual_id") {

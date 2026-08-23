@@ -42,13 +42,15 @@ type ContactsNav = Navigator & {
   };
 };
 
+const IN_AD_PATH = "/in/rfacto-in-ad.png";
+
 function inviteUrl(agentCode?: string | null) {
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://www.rfacto.com";
   const code = agentCode?.trim();
   return code
-    ? `${origin}/register?ref=${encodeURIComponent(code)}`
-    : `${origin}/register`;
+    ? `${origin}/share/in?ref=${encodeURIComponent(code)}`
+    : `${origin}/share/in`;
 }
 
 export function InHome({
@@ -231,15 +233,36 @@ export function InHome({
   }
 
   const link = inviteUrl(agentCode);
-  const inviteText =
-    locale === "en"
-      ? `Join me on In — the network of opportunities.\n${link}`
-      : `Rejoins-moi sur In — le réseau des opportunités.\n${link}`;
+  const inviteName = (me.displayName || displayName).trim();
+  const inviteText = (
+    inviteName
+      ? t("in_invite_share_signed").replace("{name}", inviteName)
+      : t("in_invite_share")
+  ).replace("{url}", link);
 
   async function shareInvite() {
+    try {
+      const res = await fetch(IN_AD_PATH);
+      const blob = await res.blob();
+      const file = new File([blob], "rfacto-in.png", {
+        type: blob.type || "image/png",
+      });
+      const withFile = {
+        title: "Rfacto + In",
+        text: inviteText,
+        url: link,
+        files: [file],
+      };
+      if (navigator.canShare?.(withFile)) {
+        await navigator.share(withFile);
+        return;
+      }
+    } catch {
+      // fall through to text share
+    }
     if (navigator.share) {
       try {
-        await navigator.share({ title: "In", text: inviteText, url: link });
+        await navigator.share({ title: "Rfacto + In", text: inviteText, url: link });
         return;
       } catch {
         // fall through

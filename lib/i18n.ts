@@ -1624,6 +1624,15 @@ const dict = {
     in_invite_hint:
       "Ils recevront le lien Rfacto. Quand ils activeront In, ils apparaîtront ici.",
     in_share_invite: "Partager le lien d’invitation",
+    in_invite_share:
+      "Inscris-toi sur Rfacto et rejoins-moi sur In pour bâtir des relations et un réseau pro business.\n\nIn — le réseau des opportunités.\n{url}",
+    in_invite_share_signed:
+      "Inscris-toi sur Rfacto et rejoins-moi sur In pour bâtir des relations et un réseau pro business.\n\n— {name}\nIn — le réseau des opportunités.\n{url}",
+    in_share_page_title:
+      "Rfacto + In : le duo qui construit vos relations et votre réseau d’affaires",
+    in_share_page_lead:
+      "Inscris-toi sur Rfacto et rejoins In pour bâtir des relations et un réseau pro business.",
+    in_share_page_cta: "Créer mon compte Rfacto",
     in_invite_copied: "Lien copié",
     in_empty: "Personne pour l’instant. Importez le répertoire ou cherchez un numéro.",
     in_not_found: "Ce numéro n’est pas encore sur In.",
@@ -3264,6 +3273,15 @@ const dict = {
     in_invite_hint:
       "They get the Rfacto link. When they turn on In, they appear here.",
     in_share_invite: "Share invite link",
+    in_invite_share:
+      "Sign up on Rfacto and join me on In to build relationships and a professional business network.\n\nIn — the network of opportunities.\n{url}",
+    in_invite_share_signed:
+      "Sign up on Rfacto and join me on In to build relationships and a professional business network.\n\n— {name}\nIn — the network of opportunities.\n{url}",
+    in_share_page_title:
+      "Rfacto + In: the duo that builds your relationships and business network",
+    in_share_page_lead:
+      "Sign up on Rfacto and join In to build relationships and a professional business network.",
+    in_share_page_cta: "Create my Rfacto account",
     in_invite_copied: "Link copied",
     in_empty: "Nobody yet. Import contacts or search a number.",
     in_not_found: "This number is not on In yet.",
