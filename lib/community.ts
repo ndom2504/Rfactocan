@@ -86,16 +86,34 @@ export function isImageAttachment(
 ) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
   if (type.startsWith("image/")) return true;
-  if (type.startsWith("video/") || type === "application/pdf") return false;
+  if (
+    type.startsWith("video/") ||
+    type.startsWith("audio/") ||
+    type === "application/pdf"
+  ) {
+    return false;
+  }
   // Mobile uploads often store application/octet-stream.
   const hay = (nameOrUrl || "").toLowerCase();
   return /\.(jpe?g|png|webp|gif)(\?|$)/i.test(hay);
+}
+
+export function isAudioAttachment(
+  contentType?: string | null,
+  nameOrUrl?: string | null
+) {
+  const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  if (type.startsWith("audio/")) return true;
+  const hay = decodeURIComponent(nameOrUrl || "").toLowerCase();
+  if (hay.includes("voice-note")) return true;
+  return /\.(m4a|aac|mp3|ogg|oga|wav|amr|3gpp|weba)(\?|#|$)/i.test(hay);
 }
 
 export function isVideoAttachment(
   contentType: string,
   nameOrUrl?: string | null
 ) {
+  if (isAudioAttachment(contentType, nameOrUrl)) return false;
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
   if (
     type.startsWith("video/") ||
@@ -125,6 +143,22 @@ export const COMMUNITY_ALLOWED_VIDEOS = new Set([
   "video/quicktime",
 ]);
 
+export const COMMUNITY_ALLOWED_AUDIOS = new Set([
+  "audio/webm",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/ogg",
+  "audio/aac",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/3gpp",
+  "audio/amr",
+  "audio/mp4a-latm",
+]);
+
+/** Voice notes in DM / In (FormData is enough under ~4 MB). */
+export const COMMUNITY_MAX_AUDIO_BYTES = 15 * 1024 * 1024;
+
 export const COMMUNITY_MAX_IMAGE_BYTES = 50 * 1024 * 1024;
 export const COMMUNITY_MAX_DOC_BYTES = 50 * 1024 * 1024;
 /** Community clip limit (direct-to-Blob upload; bypasses serverless body limit). */
@@ -137,13 +171,17 @@ export function isAllowedCommunityContentType(contentType: string) {
   return (
     COMMUNITY_ALLOWED_IMAGES.has(type) ||
     COMMUNITY_ALLOWED_DOCS.has(type) ||
-    COMMUNITY_ALLOWED_VIDEOS.has(type)
+    COMMUNITY_ALLOWED_VIDEOS.has(type) ||
+    COMMUNITY_ALLOWED_AUDIOS.has(type)
   );
 }
 
 export function maxBytesForCommunityContentType(contentType: string) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
   if (COMMUNITY_ALLOWED_IMAGES.has(type)) return COMMUNITY_MAX_IMAGE_BYTES;
+  if (COMMUNITY_ALLOWED_AUDIOS.has(type) || type.startsWith("audio/")) {
+    return COMMUNITY_MAX_AUDIO_BYTES;
+  }
   if (COMMUNITY_ALLOWED_VIDEOS.has(type) || type.startsWith("video/")) {
     return COMMUNITY_MAX_VIDEO_BYTES;
   }

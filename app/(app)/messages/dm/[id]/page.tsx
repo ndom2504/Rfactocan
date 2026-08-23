@@ -12,8 +12,10 @@ import { UserAvatar } from "@/components/user-avatar";
 import { LinkedText } from "@/components/linked-text";
 import { cn, formatDate } from "@/lib/utils";
 import { formatMoneyFromCents } from "@/lib/currency";
-import { COMMUNITY_MAX_ATTACHMENTS } from "@/lib/community";
+import { COMMUNITY_MAX_ATTACHMENTS, isAudioAttachment } from "@/lib/community";
+import { VIDEO_CALLS_ENABLED } from "@/lib/call-rules";
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
+import { VoiceNoteButton } from "@/components/voice-note-button";
 import {
   SERVICE_PROCESSING_DAYS,
   servicePaymentStatusI18nKey,
@@ -56,9 +58,21 @@ type ThreadPayment = {
 };
 
 function isImageUrl(url: string) {
+  if (isAudioAttachment("", url)) return false;
   if (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(url)) return true;
-  if (url.includes("/api/media")) return true;
-  if (url.includes("blob.vercel-storage.com")) return true;
+  if (url.includes("/api/media") && !isAudioAttachment("", url)) {
+    try {
+      const blob = new URL(url, "https://www.rfacto.com").searchParams.get("url");
+      if (blob && isAudioAttachment("", blob)) return false;
+      if (blob && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(blob)) return true;
+    } catch {
+      /* keep fallback */
+    }
+    return true;
+  }
+  if (url.includes("blob.vercel-storage.com") && !isAudioAttachment("", url)) {
+    return !/\.(pdf|mp4|webm|mov|m4a|mp3)(\?|$)/i.test(url);
+  }
   return false;
 }
 
@@ -66,7 +80,9 @@ function isAttachmentOnlyBody(body: string) {
   return (
     body === "Pièce jointe" ||
     body === "Attachment" ||
-    body === "📎"
+    body === "📎" ||
+    body === "Note vocale" ||
+    body === "Voice note"
   );
 }
 
@@ -340,15 +356,17 @@ export default function DirectMessageChatPage() {
           >
             {t("call_audio")}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={calling}
-            onClick={() => void startCall("VIDEO")}
-          >
-            {t("call_video")}
-          </Button>
+          {VIDEO_CALLS_ENABLED ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={calling}
+              onClick={() => void startCall("VIDEO")}
+            >
+              {t("call_video")}
+            </Button>
+          ) : null}
           <Link
             href="/messages"
             className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
@@ -523,6 +541,19 @@ export default function DirectMessageChatPage() {
             >
               {m.attachmentUrl && (
                 <div className="mb-2 space-y-2">
+                  {isAudioAttachment("", m.attachmentUrl) ? (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium opacity-90">
+                        {t("voice_note")}
+                      </p>
+                      <audio
+                        controls
+                        preload="metadata"
+                        src={m.attachmentUrl}
+                        className="w-full max-w-[260px]"
+                      />
+                    </div>
+                  ) : (
                   <a
                     href={m.attachmentUrl}
                     target="_blank"
@@ -540,6 +571,7 @@ export default function DirectMessageChatPage() {
                       <span className="underline">{t("open_attachment")}</span>
                     )}
                   </a>
+                  )}
                   <a
                     href={m.attachmentUrl}
                     download
@@ -684,6 +716,27 @@ export default function DirectMessageChatPage() {
           >
             <span className="text-lg leading-none">+</span>
           </Button>
+          <VoiceNoteButton
+            disabled={sending || uploading}
+            onRecorded={async (file) => {
+              setUploading(true);
+              setError("");
+              try {
+                const att = await uploadCommunityAttachment(file);
+                await sendMessage({
+                  body: t("voice_note"),
+                  attachmentUrl: att.url,
+                });
+              } catch (err) {
+                setError(
+                  err instanceof Error ? err.message : t("voice_failed")
+                );
+                throw err;
+              } finally {
+                setUploading(false);
+              }
+            }}
+          />
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}

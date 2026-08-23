@@ -3,6 +3,9 @@
 export const CALL_MEDIA_TYPES = ["AUDIO", "VIDEO"] as const;
 export type CallMediaTypeValue = (typeof CALL_MEDIA_TYPES)[number];
 
+/** Video calls stay in the codebase but are hidden until the renderer is solid. */
+export const VIDEO_CALLS_ENABLED = false;
+
 export const CALL_STATUSES = [
   "RINGING",
   "ACCEPTED",

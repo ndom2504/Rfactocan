@@ -23,6 +23,7 @@ import {
   RINGING_TIMEOUT_MS,
   sanitizeEndReason,
   STALE_NO_MEDIA_END_REASON,
+  VIDEO_CALLS_ENABLED,
   type CallAction,
   type CallMediaTypeValue,
 } from "@/lib/call-rules";
@@ -164,6 +165,14 @@ export async function createCall(input: {
   threadId: string;
   mediaType: CallMediaTypeValue;
 }) {
+  if (input.mediaType === "VIDEO" && !VIDEO_CALLS_ENABLED) {
+    return fail(
+      "Les appels vidéo arrivent bientôt. Passez un appel audio.",
+      400,
+      "VIDEO_DISABLED"
+    );
+  }
+
   const thread = await assertThreadParticipant(input.threadId, input.userId);
   if (!thread) {
     return fail("Conversation introuvable.", 404, "THREAD_NOT_FOUND");

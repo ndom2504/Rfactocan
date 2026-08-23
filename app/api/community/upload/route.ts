@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { getSessionUser } from "@/lib/auth";
 import {
+  COMMUNITY_ALLOWED_AUDIOS,
   COMMUNITY_ALLOWED_DOCS,
   COMMUNITY_ALLOWED_IMAGES,
   COMMUNITY_ALLOWED_VIDEOS,
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
             ...COMMUNITY_ALLOWED_IMAGES,
             ...COMMUNITY_ALLOWED_VIDEOS,
             ...COMMUNITY_ALLOWED_DOCS,
+            ...COMMUNITY_ALLOWED_AUDIOS,
           ];
 
           return {
