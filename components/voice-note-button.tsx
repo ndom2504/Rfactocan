@@ -32,10 +32,20 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState<{ file: File; url: string } | null>(
+    null
+  );
   const recRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const startedAt = useRef(0);
+
+  function clearPreview() {
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current.url);
+      return null;
+    });
+  }
 
   useEffect(() => {
     if (!recording) return;
@@ -52,11 +62,14 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
     return () => {
       recRef.current?.stop();
       streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (preview) URL.revokeObjectURL(preview.url);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function start() {
     setError("");
+    clearPreview();
     if (!navigator.mediaDevices?.getUserMedia) {
       setError(t("voice_unavailable"));
       return;
@@ -82,7 +95,7 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
     }
   }
 
-  function stop(send: boolean) {
+  function stop(keep: boolean) {
     const rec = recRef.current;
     if (!rec || rec.state === "inactive") {
       setRecording(false);
@@ -93,7 +106,7 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
       streamRef.current = null;
       recRef.current = null;
       setRecording(false);
-      if (!send) {
+      if (!keep) {
         chunksRef.current = [];
         return;
       }
@@ -105,12 +118,23 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
       const file = new File([blob], `voice-note.${ext}`, {
         type: blob.type || "audio/webm",
       });
-      setBusy(true);
-      void onRecorded(file)
-        .catch(() => setError(t("voice_failed")))
-        .finally(() => setBusy(false));
+      setPreview({ file, url: URL.createObjectURL(file) });
     };
     rec.stop();
+  }
+
+  async function sendPreview() {
+    if (!preview || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await onRecorded(preview.file);
+      clearPreview();
+    } catch {
+      setError(t("voice_failed"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (recording) {
@@ -128,8 +152,46 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
           {t("cancel")}
         </Button>
         <Button type="button" size="sm" onClick={() => stop(true)}>
-          {t("voice_send")}
+          {t("voice_stop")}
         </Button>
+      </div>
+    );
+  }
+
+  if (preview) {
+    return (
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="text-[11px] text-[var(--muted)]">{t("voice_preview")}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <audio
+            src={preview.url}
+            controls
+            preload="metadata"
+            className="h-9 max-w-[220px] flex-1"
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => {
+              clearPreview();
+            }}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={busy}
+            onClick={() => void sendPreview()}
+          >
+            {busy ? t("loading") : t("voice_send")}
+          </Button>
+        </div>
+        {error ? (
+          <p className="max-w-[16rem] text-[10px] text-red-600">{error}</p>
+        ) : null}
       </div>
     );
   }
