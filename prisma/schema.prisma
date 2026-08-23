@@ -306,6 +306,7 @@ model User {
   walletWithdrawals   WalletWithdrawal[]
   callsAsCaller       Call[]            @relation("CallCaller")
   callsAsCallee       Call[]            @relation("CallCallee")
+  directMessageReactions DirectMessageReaction[]
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -1032,11 +1033,27 @@ model DirectMessage {
   readAt        DateTime?
   createdAt     DateTime  @default(now())
 
-  thread DirectThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  sender User         @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  thread    DirectThread             @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender    User                     @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  reactions DirectMessageReaction[]
 
   @@index([threadId, createdAt])
   @@index([threadId, readAt])
+}
+
+/// One emoji reaction per user per direct message (WhatsApp-style).
+model DirectMessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
 }
 
 /// Appel 1-to-1 lié à un DirectThread (plan de contrôle). Pas de média ici.

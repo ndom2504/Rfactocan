@@ -6,6 +6,11 @@ import { getAppUrl } from "@/lib/app-url";
 function extensionFor(contentType: string) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
   if (type === "image/jpeg") return "jpg";
+  if (type === "audio/mp4" || type === "audio/mp4a-latm" || type === "audio/aac") {
+    return "m4a";
+  }
+  if (type === "audio/mpeg") return "mp3";
+  if (type === "audio/webm") return "webm";
   if (type === "video/quicktime") return "mov";
   if (type === "video/mp4") return "mp4";
   if (type === "video/webm") return "webm";

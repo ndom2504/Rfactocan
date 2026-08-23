@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,13 @@ import { COMMUNITY_MAX_ATTACHMENTS, isAudioAttachment } from "@/lib/community";
 import { VIDEO_CALLS_ENABLED } from "@/lib/call-rules";
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import { VoiceNoteButton } from "@/components/voice-note-button";
+import { VoiceNoteBubble } from "@/components/voice-note-bubble";
+import {
+  ReactionChips,
+  ReactionPicker,
+  useMessageLongPress,
+} from "@/components/dm-message-reactions";
+import { toggleReactionSummaries, type ReactionSummary } from "@/lib/dm-reactions";
 import {
   SERVICE_PROCESSING_DAYS,
   servicePaymentStatusI18nKey,
@@ -38,6 +45,7 @@ type DmMessage = {
   attachmentUrl?: string | null;
   contextType?: string | null;
   contextId?: string | null;
+  reactions?: ReactionSummary[];
 };
 
 type Thread = {
@@ -57,23 +65,16 @@ type ThreadPayment = {
   escrowUntilConfirm?: boolean;
 };
 
+function isVoiceMessage(url?: string | null, body?: string | null) {
+  const text = (body || "").trim();
+  if (text === "Note vocale" || text === "Voice note") return true;
+  return Boolean(url && isAudioAttachment("", url));
+}
+
 function isImageUrl(url: string) {
   if (isAudioAttachment("", url)) return false;
-  if (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(url)) return true;
-  if (url.includes("/api/media") && !isAudioAttachment("", url)) {
-    try {
-      const blob = new URL(url, "https://www.rfacto.com").searchParams.get("url");
-      if (blob && isAudioAttachment("", blob)) return false;
-      if (blob && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(blob)) return true;
-    } catch {
-      /* keep fallback */
-    }
-    return true;
-  }
-  if (url.includes("blob.vercel-storage.com") && !isAudioAttachment("", url)) {
-    return !/\.(pdf|mp4|webm|mov|m4a|mp3)(\?|$)/i.test(url);
-  }
-  return false;
+  const hay = decodeURIComponent(url);
+  return /\.(jpe?g|png|gif|webp)(\?|#|$)/i.test(hay);
 }
 
 function isAttachmentOnlyBody(body: string) {
@@ -113,6 +114,7 @@ export default function DirectMessageChatPage() {
   const [payBusy, setPayBusy] = useState(false);
   const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
+  const [reactingToId, setReactingToId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -197,6 +199,58 @@ export default function DirectMessageChatPage() {
       setCalling(false);
     }
   }
+
+  async function reactToMessage(messageId: string, emoji: string | null) {
+    if (!id || !emoji) return;
+    setReactingToId(null);
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? { ...m, reactions: toggleReactionSummaries(m.reactions ?? [], emoji) }
+          : m
+      )
+    );
+    try {
+      const res = await fetch(`/api/dm/${id}/messages/${messageId}/reaction`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || t("react_failed"));
+        await loadMessages();
+        return;
+      }
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, reactions: data.reactions ?? [] } : m
+        )
+      );
+    } catch {
+      setError(t("react_failed"));
+      await loadMessages();
+    }
+  }
+
+  useEffect(() => {
+    if (!reactingToId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setReactingToId(null);
+    };
+    const onPointer = (e: Event) => {
+      const node = e.target as Node | null;
+      const el = node instanceof Element ? node : node?.parentElement;
+      if (el?.closest("[data-dm-react-picker]")) return;
+      setReactingToId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [reactingToId]);
 
   useEffect(() => {
     if (pendingFiles.length === 0) {
@@ -531,29 +585,27 @@ export default function DirectMessageChatPage() {
             .replace(/\/service-payments\/[a-zA-Z0-9_-]+/gi, "")
             .trim();
           return (
-            <div
+            <DmBubble
               key={m.id}
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+              message={m}
+              mine={mine}
+              pickerOpen={reactingToId === m.id}
+              onOpenPicker={() => setReactingToId(m.id)}
+              onReact={(emoji) => void reactToMessage(m.id, emoji)}
+            >
+            <div
+              className={`rounded-2xl px-3 py-2 text-sm select-none ${
                 mine
-                  ? "ml-auto bg-[var(--accent)] text-white"
+                  ? "bg-[var(--accent)] text-white"
                   : "bg-[var(--surface-2)] text-[var(--foreground)]"
               }`}
             >
               {m.attachmentUrl && (
                 <div className="mb-2 space-y-2">
-                  {isAudioAttachment("", m.attachmentUrl) ? (
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium opacity-90">
-                        {t("voice_note")}
-                      </p>
-                      <audio
-                        controls
-                        preload="metadata"
-                        src={m.attachmentUrl}
-                        className="w-full max-w-[260px]"
-                      />
-                    </div>
+                  {isVoiceMessage(m.attachmentUrl, m.body) ? (
+                    <VoiceNoteBubble url={m.attachmentUrl} mine={mine} />
                   ) : (
+                    <>
                   <a
                     href={m.attachmentUrl}
                     target="_blank"
@@ -571,7 +623,6 @@ export default function DirectMessageChatPage() {
                       <span className="underline">{t("open_attachment")}</span>
                     )}
                   </a>
-                  )}
                   <a
                     href={m.attachmentUrl}
                     download
@@ -582,6 +633,8 @@ export default function DirectMessageChatPage() {
                   >
                     {t("download_attachment")}
                   </a>
+                    </>
+                  )}
                 </div>
               )}
               {m.body && !isAttachmentOnlyBody(m.body) && bodyWithoutPayLink && (
@@ -634,6 +687,7 @@ export default function DirectMessageChatPage() {
                 {formatDate(m.createdAt)}
               </p>
             </div>
+            </DmBubble>
           );
         })}
         <div ref={bottomRef} />
@@ -762,6 +816,47 @@ export default function DirectMessageChatPage() {
         </div>
         <p className="text-xs text-[var(--muted)]">{t("attach_hint")}</p>
       </form>
+    </div>
+  );
+}
+
+function DmBubble({
+  message,
+  mine,
+  pickerOpen,
+  onOpenPicker,
+  onReact,
+  children,
+}: {
+  message: DmMessage;
+  mine: boolean;
+  pickerOpen: boolean;
+  onOpenPicker: () => void;
+  onReact: (emoji: string | null) => void;
+  children: ReactNode;
+}) {
+  const longPress = useMessageLongPress(onOpenPicker);
+  return (
+    <div
+      data-dm-react
+      className={`relative flex max-w-[85%] flex-col ${
+        mine ? "ml-auto items-end" : "items-start"
+      }`}
+    >
+      {pickerOpen && (
+        <ReactionPicker alignEnd={mine} onPick={(emoji) => onReact(emoji)} />
+      )}
+      <div
+        className="w-full touch-manipulation [-webkit-touch-callout:none]"
+        {...longPress}
+      >
+        {children}
+      </div>
+      <ReactionChips
+        reactions={message.reactions ?? []}
+        mineBubble={mine}
+        onToggle={(emoji) => onReact(emoji)}
+      />
     </div>
   );
 }

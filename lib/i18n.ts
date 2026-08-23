@@ -1421,6 +1421,8 @@ const dict = {
     attachment_ready: "Prêt à envoyer",
     open_attachment: "Ouvrir la pièce jointe",
     download_attachment: "Télécharger",
+    react_message: "Réagir",
+    react_failed: "Impossible d’enregistrer la réaction.",
     chat_closed: "Cette conversation est fermée.",
     tracking_title: "Suivi de commande",
     tracking_hint:
@@ -3081,6 +3083,8 @@ const dict = {
     attachment_ready: "Ready to send",
     open_attachment: "Open attachment",
     download_attachment: "Download",
+    react_message: "React",
+    react_failed: "Could not save the reaction.",
     chat_closed: "This conversation is closed.",
     tracking_title: "Order tracking",
     tracking_hint:

@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { assertThreadParticipant, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
 import { isUserOnline } from "@/lib/presence";
 import { notifyUser } from "@/lib/notifications";
+import { summarizeReactions, type ReactionSummary } from "@/lib/dm-reactions";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -74,6 +75,19 @@ export async function GET(_request: Request, { params }: Params) {
   });
   const messages = recent.reverse();
 
+  let reactionByMessage: Record<string, ReactionSummary[]> = {};
+  if (messages.length > 0) {
+    try {
+      const reactionRows = await prisma.directMessageReaction.findMany({
+        where: { messageId: { in: messages.map((m) => m.id) } },
+        select: { messageId: true, userId: true, emoji: true },
+      });
+      reactionByMessage = summarizeReactions(reactionRows, session.id);
+    } catch (e) {
+      console.error("[dm] reactions", e);
+    }
+  }
+
   const peerId = otherUserId(thread, session.id);
   const peer = await prisma.user.findUnique({
     where: { id: peerId },
@@ -99,7 +113,10 @@ export async function GET(_request: Request, { params }: Params) {
       lastContextType: thread.lastContextType,
       lastContextId: thread.lastContextId,
     },
-    messages,
+    messages: messages.map((m) => ({
+      ...m,
+      reactions: reactionByMessage[m.id] ?? [],
+    })),
     canInvoice,
     peer: peer
       ? {
