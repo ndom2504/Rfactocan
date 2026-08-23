@@ -109,6 +109,27 @@ export function isAudioAttachment(
   return /\.(m4a|aac|mp3|ogg|oga|wav|amr|3gpp|weba)(\?|#|$)/i.test(hay);
 }
 
+/** MIME the browser <audio> element can use (Android notes are AAC in MP4). */
+export function guessVoiceNoteMime(
+  nameOrUrl?: string | null,
+  contentType?: string | null
+) {
+  const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  const hay = decodeURIComponent(nameOrUrl || "").toLowerCase();
+  if (type.includes("webm") || hay.includes(".webm") || hay.includes(".weba")) {
+    return "audio/webm";
+  }
+  if (type === "audio/mpeg" || hay.includes(".mp3")) return "audio/mpeg";
+  if (type.includes("ogg") || hay.includes(".ogg") || hay.includes(".oga")) {
+    return "audio/ogg";
+  }
+  if (type.includes("wav") || hay.includes(".wav")) return "audio/wav";
+  if (type.startsWith("audio/") && type !== "application/octet-stream") {
+    return type;
+  }
+  return "audio/mp4";
+}
+
 export function isVideoAttachment(
   contentType: string,
   nameOrUrl?: string | null

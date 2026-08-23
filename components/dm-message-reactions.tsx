@@ -25,6 +25,8 @@ export function useMessageLongPress(onOpen: () => void, ms = 450) {
   return {
     onPointerDown: (e: PointerEvent) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("button, a, audio")) return;
       openedRef.current = false;
       clear();
       timerRef.current = window.setTimeout(() => {
@@ -36,12 +38,19 @@ export function useMessageLongPress(onOpen: () => void, ms = 450) {
     onPointerCancel: clear,
     onPointerLeave: clear,
     onContextMenu: (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("button, a, audio")) return;
       e.preventDefault();
       openedRef.current = true;
       onOpen();
     },
     onClickCapture: (e: MouseEvent) => {
       if (!openedRef.current) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("button, a, audio")) {
+        openedRef.current = false;
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       openedRef.current = false;

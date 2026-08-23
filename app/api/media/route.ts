@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { get } from "@vercel/blob";
+import { guessVoiceNoteMime, isAudioAttachment } from "@/lib/community";
 import { blobAccess, isAllowedBlobUrl } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -44,10 +45,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
     }
 
-    const contentType =
+    const rawType =
       result.blob.contentType ||
       result.headers.get("content-type") ||
       "application/octet-stream";
+    const contentType = isAudioAttachment(rawType, url)
+      ? guessVoiceNoteMime(url, rawType)
+      : rawType;
 
     const contentRange = result.headers.get("content-range");
     const contentLength =
