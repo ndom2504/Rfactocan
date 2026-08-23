@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type Props = {
   label: string;
@@ -6,6 +9,9 @@ type Props = {
 };
 
 export function InFab({ label, href = "/in" }: Props) {
+  const path = usePathname();
+  if (path === "/in" || path.startsWith("/in/")) return null;
+
   return (
     <Link
       href={href}

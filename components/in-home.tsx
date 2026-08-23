@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MessageCircle, Phone, UserPlus, Video } from "lucide-react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,9 +85,7 @@ export function InHome({
   const [locals, setLocals] = useState<LocalContact[]>([]);
   const [copied, setCopied] = useState(false);
   const [pickerOk, setPickerOk] = useState(false);
-  const [pane, setPane] = useState<"hub" | "chat" | "directory" | "calls">(
-    "hub"
-  );
+  const [pane, setPane] = useState<"chat" | "directory" | "calls">("chat");
 
   useEffect(() => {
     const nav = navigator as ContactsNav;
@@ -337,42 +336,16 @@ export function InHome({
       {loading ? (
         <p className="text-sm text-[var(--muted)]">…</p>
       ) : me.ready ? (
-        pane === "hub" ? (
-          <div className="grid grid-cols-2 gap-3">
-            <InHubTile
-              title={t("in_tab_chat")}
-              hint={t("in_hub_chat_hint")}
-              badge={uniqueOnIn.length}
-              onClick={() => setPane("chat")}
-            />
-            <InHubTile
-              title={t("in_tab_directory")}
-              hint={t("in_hub_dir_hint")}
-              badge={invitees.length}
-              onClick={() => setPane("directory")}
-            />
-            <InHubTile
-              title={t("in_tab_calls")}
-              hint={t("in_hub_calls_hint")}
-              badge={uniqueOnIn.length}
-              onClick={() => setPane("calls")}
-            />
-            <InHubTile
-              title={t("in_tab_live")}
-              hint={t("in_tab_live_soon")}
-              disabled
-            />
-          </div>
-        ) : (
-        <>
-          <button
-            type="button"
-            className="text-sm font-medium text-[#D4AF37] underline"
-            onClick={() => setPane("hub")}
-          >
-            ← {t("in_back_hub")}
-          </button>
-
+        <div className="flex min-h-[28rem] flex-col gap-4 md:flex-row">
+          <InIconNav
+            pane={pane}
+            onPane={setPane}
+            chatCount={uniqueOnIn.length}
+            inviteCount={invitees.length}
+            variant="rail"
+            className="hidden md:flex"
+          />
+          <div className="min-w-0 flex-1 space-y-4 pb-20 md:pb-0">
           {(pane === "chat" || pane === "calls") && (
             <>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -506,8 +479,16 @@ export function InHome({
               ))}
             </div>
           )}
-        </>
-        )
+          </div>
+          <InIconNav
+            pane={pane}
+            onPane={setPane}
+            chatCount={uniqueOnIn.length}
+            inviteCount={invitees.length}
+            variant="bar"
+            className="md:hidden"
+          />
+        </div>
       ) : (
         <Card className="space-y-4 p-5">
           <h2 className="text-xl font-semibold">{t("in_activate_title")}</h2>
@@ -562,37 +543,68 @@ export function InHome({
   );
 }
 
-function InHubTile({
-  title,
-  hint,
-  badge = 0,
-  disabled,
-  onClick,
+function InIconNav({
+  pane,
+  onPane,
+  chatCount,
+  inviteCount,
+  variant,
+  className = "",
 }: {
-  title: string;
-  hint: string;
-  badge?: number;
-  disabled?: boolean;
-  onClick?: () => void;
+  pane: "chat" | "directory" | "calls";
+  onPane: (next: "chat" | "directory" | "calls") => void;
+  chatCount: number;
+  inviteCount: number;
+  variant: "rail" | "bar";
+  className?: string;
 }) {
+  const { t } = useI18n();
+  const items = [
+    { id: "chat" as const, label: t("in_tab_chat"), Icon: MessageCircle, badge: chatCount },
+    { id: "directory" as const, label: t("in_tab_directory"), Icon: UserPlus, badge: inviteCount },
+    { id: "calls" as const, label: t("in_tab_calls"), Icon: Phone, badge: 0 },
+  ];
+  const rail = variant === "rail";
+
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="flex min-h-[148px] flex-col justify-between rounded-2xl bg-[#10241F] p-4 text-left disabled:opacity-45"
+    <nav
+      className={
+        rail
+          ? `sticky top-24 flex w-[4.5rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-[#10241F] py-4 ${className}`
+          : `fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[#1c3a32] bg-[#10241F] px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] ${className}`
+      }
+      aria-label="In"
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-[family-name:var(--font-display)] text-xl font-semibold text-[#D4AF37]">
-          {title}
-        </p>
-        {!disabled && badge > 0 && (
-          <span className="rounded-full bg-[#D4AF37] px-2 py-0.5 text-xs font-bold text-[#10241F]">
-            {badge}
-          </span>
-        )}
-      </div>
-      <p className="text-sm text-[#F3E6B0]">{hint}</p>
-    </button>
+      {items.map((item) => {
+        const active = pane === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onPane(item.id)}
+            className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 ${
+              active ? "text-[#D4AF37]" : "text-[#F3E6B0]/70"
+            }`}
+          >
+            <item.Icon className="h-6 w-6" strokeWidth={active ? 2.4 : 1.8} />
+            <span className="text-[11px] font-medium">{item.label}</span>
+            {item.badge > 0 && (
+              <span className="absolute right-1 top-0 min-w-4 rounded-full bg-[#D4AF37] px-1 text-center text-[10px] font-bold text-[#10241F]">
+                {item.badge}
+              </span>
+            )}
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        disabled
+        title={t("in_tab_live_soon")}
+        className="flex flex-col items-center justify-center gap-1 px-3 py-2 text-[#F3E6B0]/30"
+      >
+        <Video className="h-6 w-6" />
+        <span className="text-[11px] font-medium">{t("in_tab_live")}</span>
+      </button>
+    </nav>
   );
 }
