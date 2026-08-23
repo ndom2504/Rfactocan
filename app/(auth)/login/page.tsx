@@ -13,6 +13,7 @@ import { PhoneOtpAuth } from "@/components/phone-otp-auth";
 import { useI18n } from "@/components/locale-provider";
 import { isTourDone, markTourPendingIfNeeded } from "@/lib/guided-tour";
 import { fetchSuggestedCountry } from "@/lib/detect-country";
+import { getPhonePlan, isSmsOnlyCountry } from "@/lib/phone-countries";
 
 const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
   google_not_configured: {
@@ -79,7 +80,8 @@ function LoginForm() {
   const [info, setInfo] = useState("");
   const [authMode, setAuthMode] = useState<"phone" | "email">("email");
   const [phoneDisplayName, setPhoneDisplayName] = useState("");
-  const [phoneRegion, setPhoneRegion] = useState<"GA" | "CA">("CA");
+  const [phoneRegion, setPhoneRegion] = useState("CA");
+  const smsOnly = isSmsOnlyCountry(phoneRegion);
 
   useEffect(() => {
     const mfa = params.get("mfa");
@@ -97,9 +99,11 @@ function LoginForm() {
     let cancelled = false;
     fetchSuggestedCountry()
       .then((detected) => {
-        if (!cancelled && detected?.code) {
-          setPhoneRegion(detected.code === "GA" ? "GA" : "CA");
-          if (detected.code === "GA") setAuthMode("phone");
+        if (cancelled || !detected?.code) return;
+        const plan = getPhonePlan(detected.code);
+        if (plan) {
+          setPhoneRegion(plan.code);
+          if (isSmsOnlyCountry(plan.code)) setAuthMode("phone");
         }
       })
       .catch(() => {});
@@ -107,6 +111,10 @@ function LoginForm() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (smsOnly) setAuthMode("phone");
+  }, [smsOnly]);
 
   function goNext() {
     markTourPendingIfNeeded();
@@ -249,6 +257,7 @@ function LoginForm() {
       <CardTitle>{t("login_title")}</CardTitle>
       <CardDescription>{t("login_subtitle")}</CardDescription>
 
+      {!smsOnly && (
       <div className="mt-6 space-y-4">
         <GoogleSignInButton next={params.get("next")} />
         <div className="relative py-1 text-center text-xs text-[var(--muted)]">
@@ -258,15 +267,18 @@ function LoginForm() {
           <div className="absolute inset-x-0 top-1/2 border-t border-[var(--border)]" />
         </div>
       </div>
+      )}
 
       {authMode === "phone" ? (
-        <div className="mt-2">
+        <div className={smsOnly ? "mt-6" : "mt-2"}>
           <PhoneOtpAuth
             displayName={phoneDisplayName}
             onDisplayNameChange={setPhoneDisplayName}
             region={phoneRegion}
+            onRegionChange={setPhoneRegion}
             onLoggedIn={goNext}
           />
+          {!smsOnly && (
           <button
             type="button"
             className="mt-4 w-full text-sm text-[var(--accent)] underline"
@@ -274,6 +286,7 @@ function LoginForm() {
           >
             {t("phone_use_email")}
           </button>
+          )}
         </div>
       ) : (
       <form onSubmit={onSubmit} className="mt-2 space-y-4">

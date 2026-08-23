@@ -28,6 +28,11 @@ import {
   type CarrierType,
   type PrimaryIntent,
 } from "@/lib/user-intent";
+import {
+  getPhonePlan,
+  isSmsOnlyCountry,
+  resolvePhoneCountry,
+} from "@/lib/phone-countries";
 
 const REF_COOKIE = "rfacto_ref";
 const REF_MAX_AGE = 60 * 60 * 24 * 30;
@@ -72,11 +77,13 @@ function RegisterForm() {
     () => intentToApiRole(primaryIntent),
     [primaryIntent]
   );
-  const countryCode = resolveCountryCode(country);
-  const phoneOnly = countryCode === "GA";
-  const phoneAllowed = countryCode === "GA" || countryCode === "CA";
+  const countryCode =
+    resolveCountryCode(country) ?? resolvePhoneCountry(country);
+  const phoneOnly = isSmsOnlyCountry(countryCode);
+  const phoneAllowed = Boolean(getPhonePlan(countryCode));
   const phoneSignup = phoneOnly || (phoneAllowed && registerAuth === "phone");
-  const phoneRegion = countryCode === "GA" ? "GA" : "CA";
+  const phoneRegion =
+    countryCode && getPhonePlan(countryCode) ? countryCode : "CA";
 
   useEffect(() => {
     const fromQuery = params.get("ref")?.trim().toUpperCase() || null;
@@ -94,7 +101,11 @@ function RegisterForm() {
       .then((detected) => {
         if (cancelled || !detected?.code) return;
         setCountry((current) =>
-          current ? current : getCountryName(detected.code) || detected.name
+          current
+            ? current
+            : getCountryName(detected.code) ||
+              getPhonePlan(detected.code)?.name ||
+              detected.name
         );
       })
       .catch(() => {});
@@ -104,9 +115,9 @@ function RegisterForm() {
   }, []);
 
   useEffect(() => {
-    if (countryCode === "GA") setRegisterAuth("phone");
-    else if (countryCode !== "CA") setRegisterAuth("email");
-  }, [countryCode]);
+    if (phoneOnly) setRegisterAuth("phone");
+    else if (!phoneAllowed) setRegisterAuth("email");
+  }, [phoneOnly, phoneAllowed]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,6 +169,7 @@ function RegisterForm() {
         </p>
       )}
 
+      {!phoneOnly && (
       <div className="mt-6 space-y-4">
         <GoogleSignInButton
           label={
@@ -172,6 +184,7 @@ function RegisterForm() {
           <div className="absolute inset-x-0 top-1/2 border-t border-[var(--border)]" />
         </div>
       </div>
+      )}
 
       <div className="mt-2 space-y-4">
         <div className="space-y-2">
@@ -204,6 +217,9 @@ function RegisterForm() {
             role={role}
             refCode={refCode}
             region={phoneRegion}
+            onRegionChange={(code) => {
+              setCountry(getCountryName(code) || code);
+            }}
             onLoggedIn={goAfterAuth}
           />
         ) : (
@@ -245,7 +261,7 @@ function RegisterForm() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t("loading") : t("create_account")}
             </Button>
-            {countryCode === "CA" && (
+            {phoneAllowed && !phoneOnly && (
               <button
                 type="button"
                 className="w-full text-sm text-[var(--accent)] underline"
@@ -258,7 +274,7 @@ function RegisterForm() {
         )}
         {phoneSignup && (
           <>
-            {countryCode === "CA" && (
+            {phoneAllowed && !phoneOnly && (
               <button
                 type="button"
                 className="w-full text-sm text-[var(--accent)] underline"

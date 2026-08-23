@@ -1257,9 +1257,12 @@ const dict = {
     otp_invalid: "Code incorrect.",
     otp_resend_error: "Impossible de renvoyer le code.",
     phone_otp_lead:
-      "Au Gabon, connectez-vous avec votre numéro Airtel ou Moov. Un code SMS suffit — pas besoin d’email.",
+      "Vous pouvez aussi vous connecter avec votre numéro. Un code SMS suffit.",
     phone_otp_lead_ca:
-      "Au Canada, vous pouvez aussi vous connecter avec votre numéro. Un code SMS suffit.",
+      "Vous pouvez aussi vous connecter avec votre numéro. Un code SMS suffit.",
+    phone_otp_lead_sms_only:
+      "Dans les pays d’Afrique, la connexion se fait uniquement par SMS. Un code suffit — pas besoin d’email.",
+    phone_country: "Pays du numéro",
     phone_ga_label: "Numéro de téléphone",
     phone_ga_placeholder: "07 00 00 00",
     phone_ca_placeholder: "514 555 0123",
@@ -1625,6 +1628,18 @@ const dict = {
     in_empty: "Personne pour l’instant. Importez le répertoire ou cherchez un numéro.",
     in_not_found: "Ce numéro n’est pas encore sur In.",
     in_change_photo: "Changer la photo",
+    in_tab_chat: "Chat",
+    in_tab_directory: "Répertoire",
+    in_tab_calls: "Appels",
+    in_tab_live: "Live",
+    in_tab_live_soon: "Bientôt",
+    in_hub_chat_hint: "Discutez avec vos proches déjà sur In",
+    in_hub_dir_hint: "Invitez votre carnet à rejoindre In",
+    in_hub_calls_hint: "Appelez ceux qui sont déjà sur In",
+    in_chat_empty:
+      "Personne à écrire pour l’instant. Cherchez un numéro ou ouvrez le répertoire.",
+    in_calls_empty: "Personne à appeler pour l’instant.",
+    in_back_hub: "Accueil In",
 
     // Status labels
     status_proposed: "Proposée",
@@ -2891,9 +2906,12 @@ const dict = {
     otp_invalid: "Incorrect code.",
     otp_resend_error: "Could not resend the code.",
     phone_otp_lead:
-      "In Gabon, sign in with your Airtel or Moov number. An SMS code is enough — no email needed.",
+      "You can also sign in with your phone number. An SMS code is enough.",
     phone_otp_lead_ca:
-      "In Canada, you can also sign in with your phone number. An SMS code is enough.",
+      "You can also sign in with your phone number. An SMS code is enough.",
+    phone_otp_lead_sms_only:
+      "In African countries, sign-in is by SMS only. A code is enough — no email needed.",
+    phone_country: "Number country",
     phone_ga_label: "Phone number",
     phone_ga_placeholder: "07 00 00 00",
     phone_ca_placeholder: "514 555 0123",
@@ -3250,6 +3268,17 @@ const dict = {
     in_empty: "Nobody yet. Import contacts or search a number.",
     in_not_found: "This number is not on In yet.",
     in_change_photo: "Change photo",
+    in_tab_chat: "Chat",
+    in_tab_directory: "Directory",
+    in_tab_calls: "Calls",
+    in_tab_live: "Live",
+    in_tab_live_soon: "Soon",
+    in_hub_chat_hint: "Chat with people already on In",
+    in_hub_dir_hint: "Invite your address book to In",
+    in_hub_calls_hint: "Call people already on In",
+    in_chat_empty: "Nobody to chat with yet. Search a number or open the directory.",
+    in_calls_empty: "Nobody to call yet.",
+    in_back_hub: "In home",
 
     status_proposed: "Proposed",
     status_awaiting_payment: "Awaiting payment",

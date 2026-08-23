@@ -1,20 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { issuePhoneOtp } from "@/lib/phone-otp";
-import {
-  normalizeAuthPhone,
-  type PhoneAuthCountry,
-} from "@/lib/phone-auth";
+import { normalizeAuthPhone } from "@/lib/phone-auth";
+import { getPhonePlan } from "@/lib/phone-countries";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
   phone: z.string().min(7).max(24),
-  country: z.enum(["GA", "CA"]).optional(),
+  country: z.string().length(2).optional(),
 });
 
 const ERRORS: Record<string, string> = {
   INVALID_PHONE:
-    "Numéro invalide. Gabon : 07 00 00 00. Canada : 514 555 0123.",
+    "Numéro invalide. Indiquez le pays et un mobile local, ou un numéro au format +indicatif.",
   RATE_LIMITED:
     "Trop de codes envoyés. Réessayez dans une heure.",
   TOO_SOON: "Patientez une minute avant de renvoyer un code.",
@@ -28,7 +26,13 @@ const ERRORS: Record<string, string> = {
 export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
-    const hint = body.country as PhoneAuthCountry | undefined;
+    const hint = body.country?.toUpperCase();
+    if (hint && !getPhonePlan(hint)) {
+      return NextResponse.json(
+        { error: ERRORS.INVALID_PHONE },
+        { status: 400 }
+      );
+    }
     const phone = normalizeAuthPhone(body.phone, hint);
     if (!phone) {
       return NextResponse.json(

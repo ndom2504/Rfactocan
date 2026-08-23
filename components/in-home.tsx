@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { fetchSuggestedCountry } from "@/lib/detect-country";
+import { CountryPhoneFields } from "@/components/country-phone-fields";
+import { getPhonePlan } from "@/lib/phone-countries";
 
 type InMe = {
   id?: string;
@@ -75,20 +77,25 @@ export function InHome({
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
-  const [region, setRegion] = useState<"GA" | "CA">("CA");
+  const [region, setRegion] = useState("CA");
   const [busy, setBusy] = useState(false);
   const [lookup, setLookup] = useState("");
   const [matches, setMatches] = useState<InMatch[]>([]);
   const [locals, setLocals] = useState<LocalContact[]>([]);
   const [copied, setCopied] = useState(false);
   const [pickerOk, setPickerOk] = useState(false);
+  const [pane, setPane] = useState<"hub" | "chat" | "directory" | "calls">(
+    "hub"
+  );
 
   useEffect(() => {
     const nav = navigator as ContactsNav;
     setPickerOk(Boolean(nav.contacts?.select));
     fetchSuggestedCountry()
       .then((detected) => {
-        if (detected?.code === "GA") setRegion("GA");
+        if (detected?.code && getPhonePlan(detected.code)) {
+          setRegion(detected.code);
+        }
       })
       .catch(() => {});
     fetch("/api/in/me")
@@ -330,142 +337,189 @@ export function InHome({
       {loading ? (
         <p className="text-sm text-[var(--muted)]">…</p>
       ) : me.ready ? (
-        <>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="in-lookup">{t("in_search_phone")}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="in-lookup"
-                  value={lookup}
-                  onChange={(e) => setLookup(e.target.value)}
-                  placeholder={region === "GA" ? "07 00 00 00" : "514 555 0123"}
-                />
-                <Button type="button" onClick={() => void findOne()} disabled={busy}>
-                  {t("in_find")}
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-end">
-              <Button
-                type="button"
-                variant="gold"
-                onClick={() => void importContacts()}
-              >
-                {t("in_import_contacts")}
-              </Button>
-            </div>
+        pane === "hub" ? (
+          <div className="grid grid-cols-2 gap-3">
+            <InHubTile
+              title={t("in_tab_chat")}
+              hint={t("in_hub_chat_hint")}
+              badge={uniqueOnIn.length}
+              onClick={() => setPane("chat")}
+            />
+            <InHubTile
+              title={t("in_tab_directory")}
+              hint={t("in_hub_dir_hint")}
+              badge={invitees.length}
+              onClick={() => setPane("directory")}
+            />
+            <InHubTile
+              title={t("in_tab_calls")}
+              hint={t("in_hub_calls_hint")}
+              badge={uniqueOnIn.length}
+              onClick={() => setPane("calls")}
+            />
+            <InHubTile
+              title={t("in_tab_live")}
+              hint={t("in_tab_live_soon")}
+              disabled
+            />
           </div>
-          {!pickerOk && (
-            <p className="text-xs text-[var(--muted)]">{t("in_import_unavailable")}</p>
-          )}
+        ) : (
+        <>
+          <button
+            type="button"
+            className="text-sm font-medium text-[#D4AF37] underline"
+            onClick={() => setPane("hub")}
+          >
+            ← {t("in_back_hub")}
+          </button>
 
-          {uniqueOnIn.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-[#D4AF37]">
-                {t("in_on_network").replace("{n}", String(uniqueOnIn.length))}
-              </h2>
-              <div className="grid gap-3">
-                {uniqueOnIn.map((row) => {
-                  const match = row.match!;
-                  return (
+          {(pane === "chat" || pane === "calls") && (
+            <>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="in-lookup">{t("in_search_phone")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="in-lookup"
+                      value={lookup}
+                      onChange={(e) => setLookup(e.target.value)}
+                      placeholder={
+                        getPhonePlan(region)?.placeholder || "514 555 0123"
+                      }
+                    />
+                    <Button type="button" onClick={() => void findOne()} disabled={busy}>
+                      {t("in_find")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {uniqueOnIn.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold text-[#D4AF37]">
+                    {t("in_on_network").replace("{n}", String(uniqueOnIn.length))}
+                  </h2>
+                  <div className="grid gap-3">
+                    {uniqueOnIn.map((row) => {
+                      const match = row.match!;
+                      return (
+                        <Card key={match.userId} className="flex items-center justify-between gap-3 p-4">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <UserAvatar
+                              name={match.displayName || row.name}
+                              avatarUrl={match.avatarUrl}
+                              size="lg"
+                              online={match.online}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium">
+                                {match.displayName || row.name}
+                              </p>
+                              <p className="text-sm text-[var(--muted)]">
+                                {match.online ? t("in_online") : row.phone}
+                              </p>
+                            </div>
+                          </div>
+                          <Button size="sm" onClick={() => void openChat(match)}>
+                            {pane === "calls" ? t("in_tab_calls") : t("in_open_chat")}
+                          </Button>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {matches.length > 0 && uniqueOnIn.length === 0 && (
+                <div className="grid gap-3">
+                  {matches.map((match) => (
                     <Card key={match.userId} className="flex items-center justify-between gap-3 p-4">
                       <div className="flex min-w-0 items-center gap-3">
                         <UserAvatar
-                          name={match.displayName || row.name}
+                          name={match.displayName || "In"}
                           avatarUrl={match.avatarUrl}
                           size="lg"
                           online={match.online}
                         />
-                        <div className="min-w-0">
-                          <p className="font-medium">
-                            {match.displayName || row.name}
-                          </p>
+                        <div>
+                          <p className="font-medium">{match.displayName}</p>
                           <p className="text-sm text-[var(--muted)]">
-                            {match.online ? t("in_online") : row.phone}
+                            {match.online ? t("in_online") : match.phone}
                           </p>
                         </div>
                       </div>
                       <Button size="sm" onClick={() => void openChat(match)}>
-                        {t("in_open_chat")}
+                        {pane === "calls" ? t("in_tab_calls") : t("in_open_chat")}
                       </Button>
                     </Card>
-                  );
-                })}
-              </div>
-            </div>
+                  ))}
+                </div>
+              )}
+
+              {uniqueOnIn.length === 0 && matches.length === 0 && (
+                <p className="text-sm text-[var(--muted)]">
+                  {pane === "calls" ? t("in_calls_empty") : t("in_chat_empty")}
+                </p>
+              )}
+
+              {lookup && matches.length === 0 && locals.length > 0 && (
+                <p className="text-sm text-[var(--muted)]">{t("in_not_found")}</p>
+              )}
+            </>
           )}
 
-          {matches.length > 0 && uniqueOnIn.length === 0 && (
-            <div className="grid gap-3">
-              {matches.map((match) => (
-                <Card key={match.userId} className="flex items-center justify-between gap-3 p-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <UserAvatar
-                      name={match.displayName || "In"}
-                      avatarUrl={match.avatarUrl}
-                      size="lg"
-                      online={match.online}
-                    />
-                    <div>
-                      <p className="font-medium">{match.displayName}</p>
-                      <p className="text-sm text-[var(--muted)]">
-                        {match.online ? t("in_online") : match.phone}
-                      </p>
-                    </div>
+          {pane === "directory" && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                <Button
+                  type="button"
+                  variant="gold"
+                  onClick={() => void importContacts()}
+                >
+                  {t("in_import_contacts")}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => void shareInvite()}>
+                  {copied ? t("in_invite_copied") : t("in_share_invite")}
+                </Button>
+              </div>
+              {!pickerOk && (
+                <p className="text-xs text-[var(--muted)]">{t("in_import_unavailable")}</p>
+              )}
+              <h2 className="text-lg font-semibold">{t("in_invite_section")}</h2>
+              <p className="text-sm text-[var(--muted)]">{t("in_invite_hint")}</p>
+              {invitees.length === 0 && (
+                <p className="text-sm text-[var(--muted)]">{t("in_empty")}</p>
+              )}
+              {invitees.slice(0, 40).map((c) => (
+                <Card key={`${c.name}-${c.phone}`} className="flex items-center justify-between gap-3 p-4">
+                  <div>
+                    <p className="font-medium">{c.name}</p>
+                    <p className="text-sm text-[var(--muted)]">{c.phone}</p>
                   </div>
-                  <Button size="sm" onClick={() => void openChat(match)}>
-                    {t("in_open_chat")}
-                  </Button>
+                  <a
+                    href={`sms:${encodeURIComponent(c.phone)}?body=${encodeURIComponent(inviteText)}`}
+                    className="text-sm font-medium text-[var(--accent)]"
+                  >
+                    SMS
+                  </a>
                 </Card>
               ))}
             </div>
           )}
-
-          {matches.length === 0 && locals.length === 0 && (
-            <p className="text-sm text-[var(--muted)]">{t("in_empty")}</p>
-          )}
-
-          {lookup && matches.length === 0 && locals.length > 0 && (
-            <p className="text-sm text-[var(--muted)]">{t("in_not_found")}</p>
-          )}
-
-          <div className="space-y-3">
-            <h2 className="text-lg font-semibold">{t("in_invite_section")}</h2>
-            <p className="text-sm text-[var(--muted)]">{t("in_invite_hint")}</p>
-            <Button type="button" variant="outline" onClick={() => void shareInvite()}>
-              {copied ? t("in_invite_copied") : t("in_share_invite")}
-            </Button>
-            {invitees.slice(0, 40).map((c) => (
-              <Card key={`${c.name}-${c.phone}`} className="flex items-center justify-between gap-3 p-4">
-                <div>
-                  <p className="font-medium">{c.name}</p>
-                  <p className="text-sm text-[var(--muted)]">{c.phone}</p>
-                </div>
-                <a
-                  href={`sms:${encodeURIComponent(c.phone)}?body=${encodeURIComponent(inviteText)}`}
-                  className="text-sm font-medium text-[var(--accent)]"
-                >
-                  SMS
-                </a>
-              </Card>
-            ))}
-          </div>
         </>
+        )
       ) : (
         <Card className="space-y-4 p-5">
           <h2 className="text-xl font-semibold">{t("in_activate_title")}</h2>
           <p className="text-sm text-[var(--muted)]">{t("in_activate_body")}</p>
           {!mfaToken ? (
             <div className="space-y-2">
-              <Label htmlFor="in-phone">
-                {region === "GA" ? "+241" : "+1"}
-              </Label>
-              <Input
+              <CountryPhoneFields
                 id="in-phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={region === "GA" ? "07 00 00 00" : "514 555 0123"}
+                region={region}
+                onRegionChange={setRegion}
+                phone={phone}
+                onPhoneChange={setPhone}
               />
               <Button type="button" disabled={busy || !phone.trim()} onClick={() => void requestCode()}>
                 {t("in_send_code")}
@@ -505,5 +559,40 @@ export function InHome({
       {info && <p className="text-sm text-[#D4AF37]">{info}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
+  );
+}
+
+function InHubTile({
+  title,
+  hint,
+  badge = 0,
+  disabled,
+  onClick,
+}: {
+  title: string;
+  hint: string;
+  badge?: number;
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="flex min-h-[148px] flex-col justify-between rounded-2xl bg-[#10241F] p-4 text-left disabled:opacity-45"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-[family-name:var(--font-display)] text-xl font-semibold text-[#D4AF37]">
+          {title}
+        </p>
+        {!disabled && badge > 0 && (
+          <span className="rounded-full bg-[#D4AF37] px-2 py-0.5 text-xs font-bold text-[#10241F]">
+            {badge}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-[#F3E6B0]">{hint}</p>
+    </button>
   );
 }

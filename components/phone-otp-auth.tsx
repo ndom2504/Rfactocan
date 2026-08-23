@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CountryPhoneFields } from "@/components/country-phone-fields";
 import { useI18n } from "@/components/locale-provider";
-import type { PhoneAuthCountry } from "@/lib/phone-auth";
+import { isSmsOnlyCountry } from "@/lib/phone-countries";
 
 type Props = {
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   role?: "SENDER" | "TRAVELER" | "BOTH";
   refCode?: string | null;
-  region?: PhoneAuthCountry;
+  region?: string;
+  onRegionChange?: (code: string) => void;
   onLoggedIn: () => void;
 };
 
@@ -21,11 +23,13 @@ export function PhoneOtpAuth({
   onDisplayNameChange,
   role,
   refCode,
-  region = "GA",
+  region = "CA",
+  onRegionChange,
   onLoggedIn,
 }: Props) {
   const { t } = useI18n();
   const [phone, setPhone] = useState("");
+  const [localRegion, setLocalRegion] = useState(region);
   const [otpCode, setOtpCode] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [phoneHint, setPhoneHint] = useState("");
@@ -35,6 +39,18 @@ export function PhoneOtpAuth({
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
+  useEffect(() => {
+    setLocalRegion(region);
+  }, [region]);
+
+  const country = onRegionChange ? region : localRegion;
+  const smsOnly = isSmsOnlyCountry(country);
+
+  function setCountry(code: string) {
+    if (onRegionChange) onRegionChange(code);
+    else setLocalRegion(code);
+  }
+
   async function requestCode(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -43,7 +59,7 @@ export function PhoneOtpAuth({
     const res = await fetch("/api/auth/phone/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, country: region }),
+      body: JSON.stringify({ phone, country }),
     });
     const data = await res.json();
     setLoading(false);
@@ -179,30 +195,14 @@ export function PhoneOtpAuth({
   return (
     <form onSubmit={requestCode} className="space-y-4">
       <p className="text-sm text-[var(--muted)]">
-        {region === "CA" ? t("phone_otp_lead_ca") : t("phone_otp_lead")}
+        {smsOnly ? t("phone_otp_lead_sms_only") : t("phone_otp_lead")}
       </p>
-      <div className="space-y-2">
-        <Label htmlFor="auth-phone">{t("phone_ga_label")}</Label>
-        <div className="flex gap-2">
-          <span className="flex h-10 items-center rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm text-[var(--muted)]">
-            {region === "CA" ? "+1" : "+241"}
-          </span>
-          <Input
-            id="auth-phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={
-              region === "CA"
-                ? t("phone_ca_placeholder")
-                : t("phone_ga_placeholder")
-            }
-            required
-          />
-        </div>
-      </div>
+      <CountryPhoneFields
+        region={country}
+        onRegionChange={setCountry}
+        phone={phone}
+        onPhoneChange={setPhone}
+      />
       {info && !error && (
         <p className="text-sm text-[var(--accent)]">{info}</p>
       )}

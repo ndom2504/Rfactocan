@@ -9,6 +9,10 @@ import {
   normalizeGabonPhone,
   phonePlaceholderEmail,
 } from "./phone-auth";
+import {
+  isSmsOnlyCountry,
+  normalizePhoneForCountry,
+} from "./phone-countries";
 
 describe("normalizeGabonPhone", () => {
   it("accepte 07 local, +241 et 00241", () => {
@@ -49,6 +53,23 @@ describe("normalizeAuthPhone", () => {
     assert.equal(normalizeAuthPhone("5145550123"), "+15145550123");
     assert.equal(normalizeAuthPhone("5145550123", "CA"), "+15145550123");
     assert.equal(normalizeAuthPhone("+24107470012", "CA"), "+24107470012");
+  });
+
+  it("normalise Sénégal, Côte d’Ivoire, France et Nigeria", () => {
+    assert.equal(normalizePhoneForCountry("77 000 00 00", "SN"), "+221770000000");
+    assert.equal(normalizePhoneForCountry("07 00 00 00 00", "CI"), "+2250700000000");
+    assert.equal(normalizePhoneForCountry("06 12 34 56 78", "FR"), "+33612345678");
+    assert.equal(normalizePhoneForCountry("802 000 0000", "NG"), "+2348020000000");
+    assert.equal(normalizeAuthPhone("+221770000000"), "+221770000000");
+  });
+
+  it("SMS seul en Afrique, email+SMS ailleurs", () => {
+    assert.equal(isSmsOnlyCountry("SN"), true);
+    assert.equal(isSmsOnlyCountry("CI"), true);
+    assert.equal(isSmsOnlyCountry("GA"), true);
+    assert.equal(isSmsOnlyCountry("FR"), false);
+    assert.equal(isSmsOnlyCountry("CA"), false);
+    assert.equal(isSmsOnlyCountry("CN"), false);
   });
 });
 

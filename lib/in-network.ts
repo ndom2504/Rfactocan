@@ -3,6 +3,10 @@ import {
   normalizeCanadaPhone,
   normalizeGabonPhone,
 } from "@/lib/phone-auth";
+import {
+  countryFromDial,
+  normalizePhoneForCountry,
+} from "@/lib/phone-countries";
 
 const MAX_INPUT_PHONES = 400;
 
@@ -18,6 +22,11 @@ export function contactPhoneCandidates(raw: string): string[] {
   if (auth) found.add(auth);
   if (ga) found.add(ga);
   if (ca) found.add(ca);
+  const iso = countryFromDial(trimmed);
+  if (iso) {
+    const n = normalizePhoneForCountry(trimmed, iso);
+    if (n) found.add(n);
+  }
 
   const digits = trimmed.replace(/\D/g, "");
   if (digits.length >= 8 && digits.length <= 15) {
