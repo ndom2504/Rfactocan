@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { flattenMatchPhones } from "@/lib/in-network";
+import { matchDirectoryUsers, sanitizeMatchPhones } from "@/lib/in-network";
 import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
-
-const schema = z.object({
-  phones: z.array(z.string().min(3).max(32)).max(400),
-});
 
 export async function POST(request: Request) {
   const session = await getSessionUser();
@@ -30,15 +25,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = schema.parse(await request.json());
-    const candidates = flattenMatchPhones(body.phones);
-    if (candidates.length === 0) {
+    const body = await request.json().catch(() => ({}));
+    const phones = sanitizeMatchPhones(
+      body && typeof body === "object" ? (body as { phones?: unknown }).phones : []
+    );
+    if (phones.length === 0) {
       return NextResponse.json({ matches: [] });
     }
 
     const users = await prisma.user.findMany({
       where: {
-        phone: { in: candidates },
+        phone: { not: null },
         id: { not: me.id },
         status: { not: "SUSPENDED" },
       },
@@ -49,10 +46,11 @@ export async function POST(request: Request) {
         phone: true,
         lastSeenAt: true,
       },
-      take: 200,
+      take: 5000,
     });
 
-    const peerIds = users.map((u) => u.id);
+    const hits = matchDirectoryUsers(phones, users);
+    const peerIds = [...new Set(hits.map((hit) => hit.user.id))];
     const threads =
       peerIds.length === 0
         ? []
@@ -78,13 +76,13 @@ export async function POST(request: Request) {
       threadByPeer.set(peerId, { id: thread.id, lastMessageAt: thread.lastMessageAt });
     }
 
-    const matches = users.map((user) => {
+    const matches = hits.map(({ user, phone }) => {
       const thread = threadByPeer.get(user.id);
       return {
         userId: user.id,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
-        phone: user.phone,
+        phone,
         online: isUserOnline(user.lastSeenAt),
         lastSeenAt: user.lastSeenAt,
         threadId: thread?.id ?? null,
@@ -93,9 +91,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ matches });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Liste de numéros invalide." }, { status: 400 });
-    }
     console.error("[in/match]", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

@@ -125,6 +125,11 @@ export function phoneIndexKeys(raw: string): string[] {
   return [...keys];
 }
 
+/** Clés assez longues pour éviter les collisions entre pays. */
+export function phoneMatchKeys(raw: string): string[] {
+  return [...new Set(phoneIndexKeys(raw).filter((key) => key.length >= 8))];
+}
+
 export function indexByPhoneKeys<T>(
   items: T[],
   phoneOf: (item: T) => string | null | undefined

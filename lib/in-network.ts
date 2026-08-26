@@ -3,6 +3,7 @@ import {
   normalizeCanadaPhone,
   normalizeGabonPhone,
   phoneLookupValues,
+  phoneMatchKeys,
 } from "@/lib/phone-auth";
 import {
   countryFromDial,
@@ -63,4 +64,61 @@ export function flattenMatchPhones(phones: string[]): string[] {
     }
   }
   return [...out];
+}
+
+export function sanitizeMatchPhones(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const value of input) {
+    if (typeof value !== "string") continue;
+    const raw = value.trim();
+    if (raw.replace(/\D/g, "").length < 6) continue;
+    if (seen.has(raw)) continue;
+    seen.add(raw);
+    out.push(raw.slice(0, 64));
+    if (out.length >= MAX_INPUT_PHONES) break;
+  }
+  return out;
+}
+
+export type InDirectoryUser = {
+  id: string;
+  phone: string | null;
+};
+
+/** Relie chaque numéro du carnet aux membres In, y compris 07 vs 077 Gabon. */
+export function matchDirectoryUsers<T extends InDirectoryUser>(
+  contactPhones: string[],
+  users: T[]
+): Array<{ user: T; phone: string }> {
+  const inputs = sanitizeMatchPhones(contactPhones).map((raw) => ({
+    raw,
+    keys: phoneMatchKeys(raw),
+  }));
+  const keyToRaws = new Map<string, string[]>();
+  for (const input of inputs) {
+    for (const key of input.keys) {
+      const list = keyToRaws.get(key) ?? [];
+      list.push(input.raw);
+      keyToRaws.set(key, list);
+    }
+  }
+
+  const rows: Array<{ user: T; phone: string }> = [];
+  for (const user of users) {
+    if (!user.phone) continue;
+    const matched = new Set<string>();
+    for (const key of phoneMatchKeys(user.phone)) {
+      for (const raw of keyToRaws.get(key) ?? []) matched.add(raw);
+    }
+    if (matched.size === 0) continue;
+    let count = 0;
+    for (const phone of matched) {
+      rows.push({ user, phone });
+      count += 1;
+      if (count >= 5) break;
+    }
+  }
+  return rows;
 }
