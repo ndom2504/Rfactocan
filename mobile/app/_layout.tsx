@@ -78,6 +78,19 @@ export default function RootLayout() {
             name="booking/[id]"
             options={{ headerShown: true, title: "Réservation" }}
           />
+          <Stack.Screen
+            name="services"
+            options={{ headerShown: true, title: "Services" }}
+          />
+          <Stack.Screen name="in" options={{ headerShown: true, title: "In" }} />
+          <Stack.Screen
+            name="messages/[id]"
+            options={{ headerShown: true, title: "Conversation" }}
+          />
+          <Stack.Screen
+            name="shops/[id]"
+            options={{ headerShown: true, title: "Boutique" }}
+          />
         </Stack>
       </AuthGate>
     </AuthProvider>

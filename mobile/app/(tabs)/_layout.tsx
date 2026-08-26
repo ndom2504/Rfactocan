@@ -36,41 +36,48 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="trips"
+        name="actions"
         options={{
-          title: "Voyages",
+          title: "Actions",
           tabBarIcon: ({ color }) => (
-            <TabIcon name="plane" color={String(color)} />
+            <TabIcon name="th-large" color={String(color)} />
           ),
         }}
       />
       <Tabs.Screen
-        name="requests"
+        name="community"
         options={{
-          title: "Demandes",
+          title: "Communauté",
           tabBarIcon: ({ color }) => (
-            <TabIcon name="cube" color={String(color)} />
+            <TabIcon name="group" color={String(color)} />
           ),
         }}
       />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: "Messages",
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="comments" color={String(color)} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="shops"
+        options={{
+          title: "Boutiques",
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="shopping-cart" color={String(color)} />
+          ),
+        }}
+      />
+      <Tabs.Screen name="trips" options={{ href: null, title: "Voyages" }} />
+      <Tabs.Screen name="requests" options={{ href: null, title: "Demandes" }} />
       <Tabs.Screen
         name="bookings"
-        options={{
-          title: "Réservations",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="list" color={String(color)} />
-          ),
-        }}
+        options={{ href: null, title: "Réservations" }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profil",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="user" color={String(color)} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="profile" options={{ href: null, title: "Profil" }} />
     </Tabs>
   );
 }

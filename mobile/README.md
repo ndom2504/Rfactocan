@@ -10,14 +10,15 @@ Application Expo branchée sur l’API Next.js (`Authorization: Bearer`).
 Fait :
 - Bundle id `com.rfacto.app`
 - Projet EAS `d8977989-e19b-4dfa-92e3-25e47b779597` (compte Expo `ndom2504`)
-- Auth email + mot de passe **et** OTP SMS (Twilio), voyages / demandes / réservations, paiement Stripe in-app browser
+- Auth email + mot de passe **et** OTP SMS (Twilio)
+- Navigation type Android : Accueil, Actions, Communauté, Messages, Boutiques
+- In (activation SMS + recherche numéro + chat)
+- Voyages / demandes / réservations / services / boutiques (listes API)
 - `eas.json` + drapeau Apple « pas de chiffrement export » (`ITSAppUsesNonExemptEncryption`)
 
 Pas encore :
-- `eas login` (bloqué le 18 juillet) → aucun `.ipa` / TestFlight
-- Dossier `ios/` (généré sur Mac ou par EAS, gitignoré)
-- Compte **Apple Developer** (99 $/an) + app App Store Connect
-- Parité avec Android : In, SMS Afrique, vocaux, appels LiveKit, communauté, Google / Sign in with Apple
+- Compte **Apple Developer** (99 $/an) + premier build TestFlight
+- Parité avancée : vocaux, appels LiveKit, push, Google / Sign in with Apple, contacts du téléphone
 
 ## Configuration
 
