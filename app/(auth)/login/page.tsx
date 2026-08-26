@@ -15,6 +15,7 @@ import { isTourDone, markTourPendingIfNeeded } from "@/lib/guided-tour";
 import { fetchSuggestedCountry } from "@/lib/detect-country";
 import {
   getPhonePlan,
+  isAfricaCountry,
   isSmsOnlyCountry,
   showWebGoogleAuth,
 } from "@/lib/phone-countries";
@@ -108,7 +109,7 @@ function LoginForm() {
         const plan = getPhonePlan(detected.code);
         if (plan) {
           setPhoneRegion(plan.code);
-          if (isSmsOnlyCountry(plan.code)) setAuthMode("phone");
+          if (isAfricaCountry(plan.code)) setAuthMode("phone");
         }
       })
       .catch(() => {});
@@ -116,10 +117,6 @@ function LoginForm() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (smsOnly) setAuthMode("phone");
-  }, [smsOnly]);
 
   function goNext() {
     markTourPendingIfNeeded();

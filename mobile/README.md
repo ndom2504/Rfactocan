@@ -1,13 +1,23 @@
-# Rfacto Mobile (Expo → Android Studio)
+# Rfacto Mobile (Expo → iOS / Android)
 
-Application Android/iOS native branchée sur l’API Next.js de Rfacto (`Authorization: Bearer`).
+Application Expo branchée sur l’API Next.js (`Authorization: Bearer`).
 
-## Prérequis
+- **iPhone / App Store** : ce dossier (`mobile/`). Build cloud via **EAS** depuis Windows.
+- **Android Play** : app Kotlin native (`AndroidStudioProjects/rfactocan`), pas ce projet.
 
-- Node.js 20+
-- Compte Expo (optionnel pour le store)
-- [Android Studio](https://developer.android.com/studio) (SDK + émulateur)
-- API Rfacto joignable (`https://www.rfacto.com` ou IP locale `:3000`)
+## Où on en est (août 2026)
+
+Fait :
+- Bundle id `com.rfacto.app`
+- Projet EAS `d8977989-e19b-4dfa-92e3-25e47b779597` (compte Expo `ndom2504`)
+- Auth email + mot de passe **et** OTP SMS (Twilio), voyages / demandes / réservations, paiement Stripe in-app browser
+- `eas.json` + drapeau Apple « pas de chiffrement export » (`ITSAppUsesNonExemptEncryption`)
+
+Pas encore :
+- `eas login` (bloqué le 18 juillet) → aucun `.ipa` / TestFlight
+- Dossier `ios/` (généré sur Mac ou par EAS, gitignoré)
+- Compte **Apple Developer** (99 $/an) + app App Store Connect
+- Parité avec Android : In, SMS Afrique, vocaux, appels LiveKit, communauté, Google / Sign in with Apple
 
 ## Configuration
 
@@ -16,21 +26,11 @@ cd mobile
 cp .env.example .env
 ```
 
-Éditez `.env` :
-
 ```
 EXPO_PUBLIC_API_URL=https://www.rfacto.com
 ```
 
-En local (téléphone/émulateur sur le même réseau) :
-
-```
-EXPO_PUBLIC_API_URL=http://192.168.x.x:3000
-```
-
-Sur l’émulateur Android, `http://10.0.2.2:3000` pointe vers le `localhost` de votre PC.
-
-## Lancer en mode Expo (rapide)
+## Test (Expo Go)
 
 ```bash
 cd mobile
@@ -38,37 +38,48 @@ npm install
 npm start
 ```
 
-Puis `a` pour Android, ou scannez le QR avec Expo Go (Bearer + SecureStore : préférer un build natif).
+Scannez le QR avec Expo Go. Utile pour l’UI, pas pour le store (SecureStore limité dans Go).
 
-## Android Studio (projet natif)
+## Build iOS depuis Windows (EAS)
+
+1. Compte [Apple Developer](https://developer.apple.com/programs/).
+2. Dans un terminal :
 
 ```bash
 cd mobile
-npm install
-npx expo prebuild --platform android
+npx eas-cli login
+npx eas-cli init --id d8977989-e19b-4dfa-92e3-25e47b779597
+npx eas-cli build --platform ios --profile production
 ```
 
-1. Ouvrez le dossier `mobile/android` dans **Android Studio**
-2. Laissez Gradle synchroniser
-3. Choisissez un émulateur ou un appareil USB
-4. Run ▶
-
-Alternative CLI :
+EAS signe et compile dans le cloud. Premier build : suivre les questions Apple (équipe, certificats).  
+Le `.ipa` part sur [expo.dev](https://expo.dev) ; ensuite :
 
 ```bash
+npx eas-cli submit --platform ios
+```
+
+(ou upload manuel dans Transporter / App Store Connect → TestFlight.)
+
+## Build iOS sur Mac
+
+```bash
+cd mobile
+npx expo prebuild --platform ios
+npx expo run:ios
+```
+
+Ouvrir `mobile/ios` dans Xcode si besoin.
+
+## Android (ce dossier Expo)
+
+```bash
+npx expo prebuild --platform android
 npx expo run:android
 ```
 
-Les dossiers `android/` et `ios/` sont générés localement (gitignorés). Relancez `prebuild` après changement de plugins natifs.
+Le store Android de prod reste le projet Kotlin.
 
-## Fonctionnalités v1
+## Hors v1 Expo
 
-- Connexion / inscription (email + mot de passe)
-- Profil + devise préférée
-- Voyages & demandes (liste, détail, création)
-- Réservations, acceptation, chat
-- Paiement Stripe via navigateur in-app (`expo-web-browser`)
-
-## Hors v1
-
-Google Sign-In natif, Stripe Payment Sheet, KYC/Connect in-app, push notifications.
+Google Sign-In, Sign in with Apple (obligatoire dès qu’on ajoute Google), In, push, LiveKit, Stripe Payment Sheet.

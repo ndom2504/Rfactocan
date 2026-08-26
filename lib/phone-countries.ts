@@ -13,7 +13,7 @@ export type PhonePlan = {
   keepTrunkZero?: boolean;
 };
 
-/** Afrique = OTP SMS seul. Europe / Amérique / Asie = email + SMS. */
+/** Tous les pays : email + SMS (+ Google). smsOnly n’est plus utilisé. */
 export const PHONE_PLANS: PhonePlan[] = [
   // Afrique
   { code: "DZ", name: "Algérie", nameEn: "Algeria", dial: "213", min: 8, max: 10, region: "africa", placeholder: "551 23 45 67" },
@@ -125,24 +125,18 @@ export function isAfricaCountry(code?: string | null): boolean {
   return getPhonePlan(code)?.region === "africa";
 }
 
-export function isSmsOnlyCountry(code?: string | null): boolean {
-  return isAfricaCountry(code);
+/** Conservé pour compat : plus aucun pays n’est SMS-only. */
+export function isSmsOnlyCountry(_code?: string | null): boolean {
+  return false;
 }
 
-/**
- * TEMP — Google web pour le Gabon pendant l’examen Play Store / Twilio prod.
- * Retirer GA de cette liste une fois l’appli en production et Verify payant.
- */
-const TEMP_WEB_GOOGLE_SMS_COUNTRIES = new Set(["GA"]);
-
-export function allowWebGoogleAuth(code?: string | null): boolean {
-  if (!code) return false;
-  return TEMP_WEB_GOOGLE_SMS_COUNTRIES.has(code.trim().toUpperCase());
+export function allowWebGoogleAuth(_code?: string | null): boolean {
+  return true;
 }
 
-/** Afficher le bouton Google sur le web (Canada/Europe, ou Gabon temporaire). */
-export function showWebGoogleAuth(code?: string | null): boolean {
-  return !isSmsOnlyCountry(code) || allowWebGoogleAuth(code);
+/** Google web partout (email + SMS aussi). */
+export function showWebGoogleAuth(_code?: string | null): boolean {
+  return true;
 }
 
 export function listPhoneCountries() {
@@ -152,7 +146,7 @@ export function listPhoneCountries() {
     nameEn: p.nameEn,
     dial: `+${p.dial}`,
     placeholder: p.placeholder,
-    smsOnly: p.region === "africa",
+    smsOnly: false,
     region: p.region,
   }));
 }

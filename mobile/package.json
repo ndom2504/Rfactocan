@@ -33,7 +33,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "prebuild": "expo prebuild --platform android",
-    "run:android": "expo run:android"
+    "prebuild:ios": "expo prebuild --platform ios",
+    "run:android": "expo run:android",
+    "eas:ios": "eas build --platform ios --profile production",
+    "eas:ios:preview": "eas build --platform ios --profile preview"
   },
   "private": true
 }

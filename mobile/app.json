@@ -9,7 +9,14 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rfacto.app"
+      "bundleIdentifier": "com.rfacto.app",
+      "infoPlist": {
+        "CFBundleDisplayName": "Rfacto",
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.rfacto.app",
@@ -41,6 +48,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d8977989-e19b-4dfa-92e3-25e47b779597"
+      }
+    },
+    "owner": "ndom2504"
   }
 }

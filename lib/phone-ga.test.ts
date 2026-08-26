@@ -10,7 +10,6 @@ import {
   phonePlaceholderEmail,
 } from "./phone-auth";
 import {
-  allowWebGoogleAuth,
   isSmsOnlyCountry,
   normalizePhoneForCountry,
   showWebGoogleAuth,
@@ -65,20 +64,14 @@ describe("normalizeAuthPhone", () => {
     assert.equal(normalizeAuthPhone("+221770000000"), "+221770000000");
   });
 
-  it("SMS seul en Afrique, email+SMS ailleurs", () => {
-    assert.equal(isSmsOnlyCountry("SN"), true);
-    assert.equal(isSmsOnlyCountry("CI"), true);
-    assert.equal(isSmsOnlyCountry("GA"), true);
+  it("email + SMS partout, plus de SMS-only Afrique", () => {
+    assert.equal(isSmsOnlyCountry("SN"), false);
+    assert.equal(isSmsOnlyCountry("CI"), false);
+    assert.equal(isSmsOnlyCountry("GA"), false);
     assert.equal(isSmsOnlyCountry("FR"), false);
     assert.equal(isSmsOnlyCountry("CA"), false);
-    assert.equal(isSmsOnlyCountry("CN"), false);
-  });
-
-  it("réaffiche Google web pour le Gabon (temp Play Store)", () => {
-    assert.equal(allowWebGoogleAuth("GA"), true);
-    assert.equal(allowWebGoogleAuth("SN"), false);
     assert.equal(showWebGoogleAuth("GA"), true);
-    assert.equal(showWebGoogleAuth("SN"), false);
+    assert.equal(showWebGoogleAuth("SN"), true);
     assert.equal(showWebGoogleAuth("CA"), true);
   });
 });

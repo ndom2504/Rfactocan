@@ -19,6 +19,12 @@ export type AuthUser = {
   ratingCount?: number;
 };
 
+type PhoneOtpStart = {
+  mfaToken: string;
+  phoneHint: string;
+  isNew: boolean;
+};
+
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
@@ -31,6 +37,15 @@ type AuthContextValue = {
   >;
   verifyLoginOtp: (mfaToken: string, code: string) => Promise<void>;
   resendLoginOtp: (mfaToken: string) => Promise<string>;
+  requestPhoneOtp: (phone: string, country: string) => Promise<PhoneOtpStart>;
+  verifyPhoneOtp: (
+    mfaToken: string,
+    code: string,
+    displayName?: string
+  ) => Promise<void>;
+  resendPhoneOtp: (
+    mfaToken: string
+  ) => Promise<{ mfaToken?: string; phoneHint?: string }>;
   register: (input: {
     email: string;
     password: string;
@@ -124,6 +139,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data.emailHint || "";
   }, []);
 
+  const requestPhoneOtp = useCallback(async (phone: string, country: string) => {
+    const data = await api<{
+      mfaToken: string;
+      phoneHint?: string;
+      isNew?: boolean;
+    }>("/api/auth/phone/request", {
+      method: "POST",
+      body: JSON.stringify({ phone, country }),
+    });
+    return {
+      mfaToken: data.mfaToken,
+      phoneHint: data.phoneHint || phone,
+      isNew: Boolean(data.isNew),
+    };
+  }, []);
+
+  const verifyPhoneOtp = useCallback(
+    async (mfaToken: string, code: string, displayName?: string) => {
+      const data = await api<{ token: string; user: AuthUser }>(
+        "/api/auth/phone/verify",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            mfaToken,
+            code,
+            displayName: displayName || undefined,
+            role: "BOTH",
+          }),
+        }
+      );
+      await setToken(data.token);
+      setUser(data.user);
+    },
+    []
+  );
+
+  const resendPhoneOtp = useCallback(async (mfaToken: string) => {
+    return api<{ mfaToken?: string; phoneHint?: string }>(
+      "/api/auth/phone/resend",
+      {
+        method: "POST",
+        body: JSON.stringify({ mfaToken }),
+      }
+    );
+  }, []);
+
   const register = useCallback(
     async (input: {
       email: string;
@@ -157,11 +218,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       verifyLoginOtp,
       resendLoginOtp,
+      requestPhoneOtp,
+      verifyPhoneOtp,
+      resendPhoneOtp,
       register,
       logout,
       refresh,
     }),
-    [user, loading, login, verifyLoginOtp, resendLoginOtp, register, logout, refresh]
+    [user, loading, login, verifyLoginOtp, resendLoginOtp, requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp, register, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

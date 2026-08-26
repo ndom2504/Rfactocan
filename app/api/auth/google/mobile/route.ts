@@ -16,7 +16,11 @@ const schema = z.object({
  * POST { idToken: string } → { token, user } | { mfaRequired, mfaToken, emailHint }
  */
 export async function POST(request: Request) {
-  if (!process.env.GOOGLE_CLIENT_ID && !process.env.GOOGLE_ANDROID_CLIENT_ID) {
+  if (
+    !process.env.GOOGLE_CLIENT_ID &&
+    !process.env.GOOGLE_ANDROID_CLIENT_ID &&
+    !process.env.GOOGLE_IOS_CLIENT_ID
+  ) {
     return NextResponse.json(
       { error: "Google Auth n'est pas configuré." },
       { status: 503 }

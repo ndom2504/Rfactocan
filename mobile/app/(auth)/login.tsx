@@ -1,12 +1,14 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, Pressable } from "react-native";
-import { useAuth } from "@/lib/auth-context";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text } from "react-native";
+import { PhoneOtpAuth } from "@/components/phone-otp-auth";
 import { Button, ErrorText, Field, Muted, Screen, Title } from "@/components/ui";
+import { useAuth } from "@/lib/auth-context";
 import { colors } from "@/lib/theme";
 
 export default function LoginScreen() {
   const { login, verifyLoginOtp, resendLoginOtp } = useAuth();
+  const [mode, setMode] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -16,6 +18,7 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+  const [phoneDisplayName, setPhoneDisplayName] = useState("");
 
   async function onSubmit() {
     setLoading(true);
@@ -110,11 +113,28 @@ export default function LoginScreen() {
                 </Text>
               </Pressable>
             </>
+          ) : mode === "phone" ? (
+            <>
+              <PhoneOtpAuth
+                displayName={phoneDisplayName}
+                onDisplayNameChange={setPhoneDisplayName}
+                onLoggedIn={() => {}}
+              />
+              <Pressable onPress={() => setMode("email")} style={{ marginTop: 16 }}>
+                <Text style={{ color: colors.accent, fontWeight: "600", textAlign: "center" }}>
+                  J’ai un email
+                </Text>
+              </Pressable>
+              <Link href="/(auth)/register" style={{ marginTop: 16 }}>
+                <Text style={{ color: colors.accent, fontWeight: "600", textAlign: "center" }}>
+                  Créer un compte
+                </Text>
+              </Link>
+            </>
           ) : (
             <>
               <Muted>
-                Connectez-vous pour trouver un voyageur ou proposer de transporter
-                un colis.
+                Connectez-vous avec un email ou un code SMS.
               </Muted>
               <Field
                 label="Email"
@@ -133,6 +153,11 @@ export default function LoginScreen() {
               />
               <ErrorText>{error}</ErrorText>
               <Button label="Se connecter" onPress={onSubmit} loading={loading} />
+              <Pressable onPress={() => setMode("phone")} style={{ marginTop: 16 }}>
+                <Text style={{ color: colors.accent, fontWeight: "600", textAlign: "center" }}>
+                  Connexion par SMS
+                </Text>
+              </Pressable>
               <Link href="/(auth)/register" style={{ marginTop: 16 }}>
                 <Text style={{ color: colors.accent, fontWeight: "600" }}>
                   Créer un compte
