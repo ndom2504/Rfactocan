@@ -12,7 +12,11 @@
       "bundleIdentifier": "com.rfacto.app",
       "infoPlist": {
         "CFBundleDisplayName": "Rfacto",
-        "CFBundleAllowMixedLocalizations": true
+        "CFBundleAllowMixedLocalizations": true,
+        "NSContactsUsageDescription": "In retrouve vos proches déjà inscrits sur Rfacto.",
+        "NSPhotoLibraryUsageDescription": "Rfacto envoie des photos dans Messages.",
+        "NSCameraUsageDescription": "Rfacto envoie des photos dans Messages.",
+        "NSMicrophoneUsageDescription": "Rfacto enregistre des notes vocales et passe des appels dans Messages."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -26,7 +30,12 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -38,13 +47,36 @@
       "expo-secure-store",
       "expo-web-browser",
       [
+        "expo-contacts",
+        {
+          "contactsPermission": "In retrouve vos proches déjà inscrits sur Rfacto."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Rfacto envoie des photos dans Messages.",
+          "cameraPermission": "Rfacto envoie des photos dans Messages."
+        }
+      ],
+      "expo-document-picker",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Rfacto enregistre des notes vocales et passe des appels dans Messages.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#0f6b4c"
         }
-      ]
+      ],
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
     ],
     "experiments": {
       "typedRoutes": true

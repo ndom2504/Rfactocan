@@ -53,3 +53,53 @@ export async function api<T = unknown>(
   }
   return data;
 }
+
+export function mediaUrl(url?: string | null) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  const path = url.startsWith("/") ? url : `/${url}`;
+  return `${getApiUrl()}${path}`;
+}
+
+export async function uploadFile(
+  path: string,
+  file: { uri: string; name: string; type: string }
+): Promise<{ url: string; name?: string; contentType?: string }> {
+  const token = await getToken();
+  const form = new FormData();
+  form.append("file", {
+    uri: file.uri,
+    name: file.name,
+    type: file.type,
+  } as unknown as Blob);
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${getApiUrl()}${path}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    url?: string;
+    name?: string;
+    contentType?: string;
+    error?: string;
+  };
+  if (!res.ok || !data.url) {
+    throw new Error(data.error || `Erreur ${res.status}`);
+  }
+  return { url: data.url, name: data.name, contentType: data.contentType };
+}
+
+export function isImageAttachment(url?: string | null) {
+  if (!url) return false;
+  try {
+    const hay = decodeURIComponent(url);
+    if (/\.(m4a|aac|mp3|ogg|oga|wav|amr|3gpp|weba|mp4|webm|mov|pdf)(\?|#|$)/i.test(hay)) {
+      return false;
+    }
+    return /\.(jpe?g|png|gif|webp)(\?|#|$)/i.test(hay);
+  } catch {
+    return /\.(jpe?g|png|gif|webp)(\?|#|$)/i.test(url);
+  }
+}

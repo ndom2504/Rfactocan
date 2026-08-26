@@ -3,10 +3,14 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { CallProvider } from "@/components/call-provider";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { setupLivekitGlobals } from "@/lib/calls";
 import { colors } from "@/lib/theme";
 
 export { ErrorBoundary } from "expo-router";
+
+setupLivekitGlobals();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,6 +58,7 @@ export default function RootLayout() {
     <AuthProvider>
       <StatusBar style="dark" />
       <AuthGate>
+        <CallProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)" />
@@ -92,6 +97,7 @@ export default function RootLayout() {
             options={{ headerShown: true, title: "Boutique" }}
           />
         </Stack>
+        </CallProvider>
       </AuthGate>
     </AuthProvider>
   );
