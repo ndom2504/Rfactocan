@@ -78,6 +78,77 @@ export function phoneLookupValues(e164: string): string[] {
   return [...out];
 }
 
+/**
+ * Clés de jointure carnet ↔ membre In (suffixes + alias Gabon 07/077).
+ * Un contact et un match se rejoignent s’ils partagent au moins une clé.
+ */
+export function phoneIndexKeys(raw: string): string[] {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return [];
+  const keys = new Set<string>();
+
+  const add = (value: string) => {
+    if (!value) return;
+    keys.add(value);
+    if (value.length >= 7) keys.add(value.slice(-7));
+    if (value.length >= 8) keys.add(value.slice(-8));
+    if (value.length >= 9) keys.add(value.slice(-9));
+    if (value.length >= 10) keys.add(value.slice(-10));
+  };
+
+  add(digits);
+
+  const asE164 = (d: string) => (d ? `+${d}` : "");
+  const expandE164 = (e164: string) => {
+    for (const alias of phoneLookupValues(e164)) {
+      add(alias.replace(/\D/g, ""));
+    }
+  };
+
+  if (raw.trim().startsWith("+") || digits.length >= 10) {
+    expandE164(asE164(digits));
+  }
+  if (/^241([2-9])\1\d{6}$/.test(digits) || /^2410[2-9]\d{6}$/.test(digits)) {
+    expandE164(asE164(digits));
+  }
+  if (/^2410[2-9]\d{7}$/.test(digits) && digits.length === 12) {
+    expandE164(`+241${digits.slice(4)}`);
+  }
+  if (/^0([2-9])\1\d{6}$/.test(digits) && digits.length === 9) {
+    expandE164(`+241${digits.slice(1)}`);
+  }
+  if (/^0[2-9]\d{6}$/.test(digits) && digits.length === 8) {
+    const nsn = `${digits[1]}${digits.slice(1)}`;
+    expandE164(`+241${nsn}`);
+  }
+
+  return [...keys];
+}
+
+export function indexByPhoneKeys<T>(
+  items: T[],
+  phoneOf: (item: T) => string | null | undefined
+): Map<string, T> {
+  const map = new Map<string, T>();
+  for (const item of items) {
+    for (const key of phoneIndexKeys(phoneOf(item) || "")) {
+      map.set(key, item);
+    }
+  }
+  return map;
+}
+
+export function lookupByPhoneKeys<T>(
+  index: Map<string, T>,
+  phone: string
+): T | undefined {
+  for (const key of phoneIndexKeys(phone)) {
+    const hit = index.get(key);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
 /** Format E.164 pour Twilio Verify. Gabon : +2410 + 8 chiffres (077…), les opérateurs gardent souvent le 0. */
 export function toTwilioE164(phone: string): string {
   const digits = phone.replace(/\D/g, "");

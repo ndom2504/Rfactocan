@@ -12,6 +12,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { fetchSuggestedCountry } from "@/lib/detect-country";
 import { CountryPhoneFields } from "@/components/country-phone-fields";
 import { getPhonePlan } from "@/lib/phone-countries";
+import { indexByPhoneKeys, lookupByPhoneKeys } from "@/lib/phone-auth";
 
 type InMe = {
   id?: string;
@@ -54,6 +55,39 @@ type ContactsNav = Navigator & {
 };
 
 const IN_AD_PATH = "/in/rfacto-in-ad.png";
+const IN_CONTACTS_STORAGE = "rfacto-in-contacts-v1";
+
+function readStoredContacts(): LocalContact[] {
+  try {
+    const raw = localStorage.getItem(IN_CONTACTS_STORAGE);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (row): row is LocalContact =>
+          Boolean(row) &&
+          typeof row === "object" &&
+          typeof (row as LocalContact).phone === "string" &&
+          (row as LocalContact).phone.trim().length >= 6
+      )
+      .map((row) => ({
+        name: typeof row.name === "string" && row.name.trim() ? row.name.trim() : row.phone,
+        phone: row.phone.trim(),
+      }))
+      .slice(0, 400);
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredContacts(rows: LocalContact[]) {
+  try {
+    localStorage.setItem(IN_CONTACTS_STORAGE, JSON.stringify(rows.slice(0, 400)));
+  } catch {
+    // quota / private mode
+  }
+}
 
 function inviteUrl(agentCode?: string | null) {
   const origin =
@@ -100,6 +134,7 @@ export function InHome({
   const [locals, setLocals] = useState<LocalContact[]>([]);
   const [copied, setCopied] = useState(false);
   const [pickerOk, setPickerOk] = useState(false);
+  const [lookupMissed, setLookupMissed] = useState(false);
   const [pane, setPane] = useState<"chat" | "directory" | "calls">("chat");
 
   useEffect(() => {
@@ -122,10 +157,18 @@ export function InHome({
   }, []);
 
   useEffect(() => {
-    if (me.ready) void loadInThreads();
+    if (!me.ready) return;
+    void loadInThreads();
+    const stored = readStoredContacts();
+    if (!stored.length) return;
+    setLocals(stored);
+    void matchPhones(stored.map((row) => row.phone), { merge: true });
   }, [me.ready]);
 
-  async function matchPhones(phones: string[]) {
+  async function matchPhones(
+    phones: string[],
+    opts?: { merge?: boolean }
+  ) {
     if (!phones.length) return;
     const res = await fetch("/api/in/match", {
       method: "POST",
@@ -137,7 +180,13 @@ export function InHome({
       setError(data.error || "");
       return;
     }
-    setMatches(data.matches || []);
+    const incoming = (data.matches || []) as InMatch[];
+    setMatches((prev) => {
+      if (!opts?.merge) return incoming;
+      const map = new Map(prev.map((item) => [item.userId, item]));
+      for (const item of incoming) map.set(item.userId, item);
+      return [...map.values()];
+    });
   }
 
   async function loadInThreads() {
@@ -249,6 +298,7 @@ export function InHome({
         }
       }
       setLocals(rows);
+      writeStoredContacts(rows);
       await matchPhones(rows.map((r) => r.phone));
     } catch {
       // user cancelled
@@ -259,10 +309,24 @@ export function InHome({
     if (!lookup.trim()) return;
     setBusy(true);
     setError("");
-    await matchPhones([lookup.trim()]);
-    setLocals((prev) => {
-      if (prev.some((p) => p.phone === lookup.trim())) return prev;
-      return [{ name: lookup.trim(), phone: lookup.trim() }, ...prev];
+    setLookupMissed(false);
+    const res = await fetch("/api/in/match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phones: [lookup.trim()] }),
+    });
+    const data = await res.json().catch(() => ({}));
+    const found = (data.matches || []) as InMatch[];
+    if (!res.ok) {
+      setError(data.error || "");
+      setBusy(false);
+      return;
+    }
+    setLookupMissed(found.length === 0);
+    setMatches((prev) => {
+      const map = new Map(prev.map((item) => [item.userId, item]));
+      for (const item of found) map.set(item.userId, item);
+      return [...map.values()];
     });
     setBusy(false);
   }
@@ -327,41 +391,29 @@ export function InHome({
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const matchByPhone = useMemo(() => {
-    const map = new Map<string, InMatch>();
-    for (const m of matches) {
-      const digits = (m.phone || "").replace(/\D/g, "");
-      if (digits) map.set(digits, m);
-      if (digits.length >= 8) map.set(digits.slice(-8), m);
-      if (digits.length >= 9) map.set(digits.slice(-9), m);
-      if (digits.length >= 10) map.set(digits.slice(-10), m);
-    }
-    return map;
-  }, [matches]);
+  const matchByPhone = useMemo(
+    () => indexByPhoneKeys(matches, (item) => item.phone),
+    [matches]
+  );
 
   const onIn = locals
-    .map((c) => {
-      const digits = c.phone.replace(/\D/g, "");
-      const match =
-        matchByPhone.get(digits) ||
-        (digits.length >= 10 ? matchByPhone.get(digits.slice(-10)) : undefined) ||
-        (digits.length >= 9 ? matchByPhone.get(digits.slice(-9)) : undefined) ||
-        (digits.length >= 8 ? matchByPhone.get(digits.slice(-8)) : undefined);
-      return { ...c, match };
-    })
+    .map((c) => ({ ...c, match: lookupByPhoneKeys(matchByPhone, c.phone) }))
     .filter((r) => r.match);
   const uniqueOnIn = Array.from(
     new Map(onIn.map((r) => [r.match!.userId, r])).values()
   );
-  const invitees = locals.filter((c) => {
-    const digits = c.phone.replace(/\D/g, "");
-    return !(
-      matchByPhone.get(digits) ||
-      (digits.length >= 10 && matchByPhone.get(digits.slice(-10))) ||
-      (digits.length >= 9 && matchByPhone.get(digits.slice(-9))) ||
-      (digits.length >= 8 && matchByPhone.get(digits.slice(-8)))
-    );
-  });
+  const unmatchedMatches = matches.filter(
+    (item) => !uniqueOnIn.some((row) => row.match!.userId === item.userId)
+  );
+  const chatPeople = [
+    ...uniqueOnIn,
+    ...unmatchedMatches.map((item) => ({
+      name: item.displayName || "In",
+      phone: item.phone || "",
+      match: item,
+    })),
+  ];
+  const invitees = locals.filter((c) => !lookupByPhoneKeys(matchByPhone, c.phone));
 
   return (
     <div className="space-y-6">
@@ -420,7 +472,7 @@ export function InHome({
           <InIconNav
             pane={pane}
             onPane={setPane}
-            chatCount={uniqueOnIn.length}
+            chatCount={chatPeople.length}
             inviteCount={invitees.length}
             variant="rail"
             className="hidden md:flex"
@@ -490,13 +542,13 @@ export function InHome({
                 </div>
               )}
 
-              {uniqueOnIn.length > 0 && (
+              {chatPeople.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold text-[#D4AF37]">
-                    {t("in_on_network").replace("{n}", String(uniqueOnIn.length))}
+                    {t("in_on_network").replace("{n}", String(chatPeople.length))}
                   </h2>
                   <div className="grid gap-3">
-                    {uniqueOnIn.map((row) => {
+                    {chatPeople.map((row) => {
                       const match = row.match!;
                       return (
                         <Card key={match.userId} className="flex items-center justify-between gap-3 p-4">
@@ -526,39 +578,24 @@ export function InHome({
                 </div>
               )}
 
-              {matches.length > 0 && uniqueOnIn.length === 0 && (
-                <div className="grid gap-3">
-                  {matches.map((match) => (
-                    <Card key={match.userId} className="flex items-center justify-between gap-3 p-4">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <UserAvatar
-                          name={match.displayName || "In"}
-                          avatarUrl={match.avatarUrl}
-                          size="lg"
-                          online={match.online}
-                        />
-                        <div>
-                          <p className="font-medium">{match.displayName}</p>
-                          <p className="text-sm text-[var(--muted)]">
-                            {match.online ? t("in_online") : match.phone}
-                          </p>
-                        </div>
-                      </div>
-                      <Button size="sm" onClick={() => void openChat(match)}>
-                        {pane === "calls" ? t("in_tab_calls") : t("in_open_chat")}
-                      </Button>
-                    </Card>
-                  ))}
+              {chatPeople.length === 0 && inThreads.length === 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm text-[var(--muted)]">
+                    {pane === "calls" ? t("in_calls_empty") : t("in_chat_empty")}
+                  </p>
+                  {pane === "chat" ? (
+                    <Button
+                      type="button"
+                      variant="gold"
+                      onClick={() => void importContacts()}
+                    >
+                      {t("in_import_contacts")}
+                    </Button>
+                  ) : null}
                 </div>
               )}
 
-              {uniqueOnIn.length === 0 && matches.length === 0 && inThreads.length === 0 && (
-                <p className="text-sm text-[var(--muted)]">
-                  {pane === "calls" ? t("in_calls_empty") : t("in_chat_empty")}
-                </p>
-              )}
-
-              {lookup && matches.length === 0 && locals.length > 0 && (
+              {lookupMissed && (
                 <p className="text-sm text-[var(--muted)]">{t("in_not_found")}</p>
               )}
             </>
@@ -606,7 +643,7 @@ export function InHome({
           <InIconNav
             pane={pane}
             onPane={setPane}
-            chatCount={uniqueOnIn.length}
+            chatCount={chatPeople.length}
             inviteCount={invitees.length}
             variant="bar"
             className="md:hidden"

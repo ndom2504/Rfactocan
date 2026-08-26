@@ -168,9 +168,11 @@ export default function InScreen() {
         (row, index, list) =>
           list.findIndex((x) => x.match.userId === row.match.userId) === index
       );
-    const extras = lookupHits
-      .filter((hit) => !fromBook.some((row) => row.match.userId === hit.userId))
+    const seen = new Set(fromBook.map((row) => row.match.userId));
+    const extras = [...lookupHits, ...matches]
       .filter((hit) => {
+        if (seen.has(hit.userId)) return false;
+        seen.add(hit.userId);
         const q = query.trim().toLowerCase();
         if (!q) return true;
         return (
@@ -179,13 +181,13 @@ export default function InScreen() {
         );
       })
       .map((hit) => ({
-        id: `lookup-${hit.userId}`,
+        id: `match-${hit.userId}`,
         name: hit.displayName || "Membre In",
         phone: hit.phone || lookup,
         match: hit,
       }));
-    return [...extras, ...fromBook];
-  }, [rows, lookupHits, query, lookup]);
+    return [...fromBook, ...extras];
+  }, [rows, lookupHits, matches, query, lookup]);
   const invitees = useMemo(
     () => rows.filter((row) => !row.match).slice(0, 80),
     [rows]
@@ -475,7 +477,7 @@ export default function InScreen() {
                 Le répertoire reste sur votre téléphone. Rfacto n’importe pas vos contacts.
               </Muted>
               <Button
-                label={scanning ? "Lecture du carnet…" : "Lire le carnet"}
+                label={scanning ? "Lecture du carnet…" : "Actualiser le carnet"}
                 onPress={() => void scanContacts()}
                 loading={scanning}
               />
@@ -486,11 +488,6 @@ export default function InScreen() {
                   onPress={() => void Linking.openSettings()}
                 />
               ) : null}
-              <Button
-                label="Inviter via WhatsApp / Messages"
-                variant="outline"
-                onPress={() => void shareInvite()}
-              />
             </Card>
             <Card>
               <Text style={{ fontWeight: "700", marginBottom: 8 }}>Retrouver un contact</Text>
@@ -553,6 +550,18 @@ export default function InScreen() {
                 </Text>
               </Pressable>
             </View>
+            {pane === "invite" ? (
+              <Card>
+                <Muted>
+                  Envoyez le lien seulement aux personnes qui ne sont pas encore sur In.
+                </Muted>
+                <Button
+                  label="Inviter via WhatsApp / Messages"
+                  variant="outline"
+                  onPress={() => void shareInvite()}
+                />
+              </Card>
+            ) : null}
             {pane === "in" && inThreads.length > 0 ? (
               <View style={{ marginBottom: 12 }}>
                 <Text style={{ fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
@@ -590,7 +599,7 @@ export default function InScreen() {
           ) : (
             <Muted>
               {pane === "in"
-                ? "Personne de votre carnet n’est encore sur In. Invitez-les, ou cherchez un numéro."
+                ? "Personne de votre carnet n’est encore sur In. Passez sur Inviter pour envoyer le lien."
                 : "Tous vos contacts avec un numéro sont déjà sur In, ou le carnet n’a pas encore été lu."}
             </Muted>
           )

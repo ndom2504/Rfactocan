@@ -1670,7 +1670,7 @@ const dict = {
     in_hub_dir_hint: "Invitez votre carnet à rejoindre In",
     in_hub_calls_hint: "Appelez ceux qui sont déjà sur In",
     in_chat_empty:
-      "Personne à écrire pour l’instant. Cherchez un numéro ou ouvrez le répertoire.",
+      "Personne de votre répertoire n’est encore sur In. Importez le carnet : les inscrits apparaissent ici, les autres dans Répertoire.",
     in_calls_empty: "Personne à appeler pour l’instant.",
     in_back_hub: "Accueil In",
 
@@ -3342,7 +3342,8 @@ const dict = {
     in_hub_chat_hint: "Chat with people already on In",
     in_hub_dir_hint: "Invite your address book to In",
     in_hub_calls_hint: "Call people already on In",
-    in_chat_empty: "Nobody to chat with yet. Search a number or open the directory.",
+    in_chat_empty:
+      "Nobody from your address book is on In yet. Import contacts: people already on In appear here; others stay in Directory.",
     in_calls_empty: "Nobody to call yet.",
     in_back_hub: "In home",
 

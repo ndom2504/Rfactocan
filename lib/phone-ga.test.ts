@@ -7,6 +7,7 @@ import {
   normalizeAuthPhone,
   normalizeCanadaPhone,
   normalizeGabonPhone,
+  phoneIndexKeys,
   phoneLookupValues,
   phonePlaceholderEmail,
   toTwilioE164,
@@ -103,5 +104,23 @@ describe("masque et email technique", () => {
     ]);
     assert.equal(toTwilioE164("+24107470012"), "+241077470012");
     assert.equal(toTwilioE164("+24177470012"), "+241077470012");
+  });
+});
+
+function sharesPhoneIndex(a: string, b: string) {
+  const keys = new Set(phoneIndexKeys(a));
+  return phoneIndexKeys(b).some((key) => keys.has(key));
+}
+
+describe("phoneIndexKeys", () => {
+  it("joint un membre In Gabon à l’ancien 07 et au 077 du carnet", () => {
+    assert.equal(sharesPhoneIndex("+24177470012", "07 47 00 12"), true);
+    assert.equal(sharesPhoneIndex("+24177470012", "077 47 00 12"), true);
+    assert.equal(sharesPhoneIndex("+24177470012", "+24107470012"), true);
+    assert.equal(sharesPhoneIndex("+24177470012", "+241077470012"), true);
+  });
+
+  it("joint un numéro canadien même sans indicatif", () => {
+    assert.equal(sharesPhoneIndex("+15145550123", "514-555-0123"), true);
   });
 });

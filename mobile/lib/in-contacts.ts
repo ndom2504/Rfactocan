@@ -21,6 +21,39 @@ function digits(value: string) {
   return value.replace(/\D/g, "");
 }
 
+/** Keep in sync with lib/phone-auth.ts phoneIndexKeys (Gabon 07/077 aliases). */
+function phoneIndexKeys(raw: string): string[] {
+  const d = digits(raw);
+  if (!d) return [];
+  const keys = new Set<string>();
+  const add = (value: string) => {
+    if (!value) return;
+    keys.add(value);
+    if (value.length >= 7) keys.add(value.slice(-7));
+    if (value.length >= 8) keys.add(value.slice(-8));
+    if (value.length >= 9) keys.add(value.slice(-9));
+    if (value.length >= 10) keys.add(value.slice(-10));
+  };
+  add(d);
+  const expand = (e164Digits: string) => {
+    add(e164Digits);
+    if (/^241([2-9])\1\d{6}$/.test(e164Digits)) {
+      const nsn = e164Digits.slice(3);
+      add(`2410${nsn[0]}${nsn.slice(2)}`);
+    }
+    if (/^2410[2-9]\d{6}$/.test(e164Digits)) {
+      const rest = e164Digits.slice(4);
+      add(`241${rest[0]}${rest}`);
+    }
+  };
+  if (raw.trim().startsWith("+") || d.length >= 10) expand(d);
+  if (/^241([2-9])\1\d{6}$/.test(d) || /^2410[2-9]\d{6}$/.test(d)) expand(d);
+  if (/^2410[2-9]\d{7}$/.test(d) && d.length === 12) expand(`241${d.slice(4)}`);
+  if (/^0([2-9])\1\d{6}$/.test(d) && d.length === 9) expand(`241${d.slice(1)}`);
+  if (/^0[2-9]\d{6}$/.test(d) && d.length === 8) expand(`241${d[1]}${d.slice(1)}`);
+  return [...keys];
+}
+
 export async function loadDeviceContacts(): Promise<
   { ok: true; contacts: PhoneContact[] } | { ok: false; denied: boolean }
 > {
@@ -86,23 +119,19 @@ export function mergeContactsWithMatches(
 ): InContactRow[] {
   const byDigits = new Map<string, InMatch>();
   for (const item of matches) {
-    const d = digits(item.phone || "");
-    if (!d) continue;
-    byDigits.set(d, item);
-    if (d.length >= 8) byDigits.set(d.slice(-8), item);
-    if (d.length >= 9) byDigits.set(d.slice(-9), item);
-    if (d.length >= 10) byDigits.set(d.slice(-10), item);
+    for (const key of phoneIndexKeys(item.phone || "")) {
+      byDigits.set(key, item);
+    }
   }
 
   const q = query.trim().toLowerCase();
   return contacts
     .map((contact) => {
-      const d = digits(contact.phone);
-      const match =
-        byDigits.get(d) ||
-        (d.length >= 10 ? byDigits.get(d.slice(-10)) : undefined) ||
-        (d.length >= 9 ? byDigits.get(d.slice(-9)) : undefined) ||
-        (d.length >= 8 ? byDigits.get(d.slice(-8)) : undefined);
+      let match: InMatch | undefined;
+      for (const key of phoneIndexKeys(contact.phone)) {
+        match = byDigits.get(key);
+        if (match) break;
+      }
       return { ...contact, match };
     })
     .filter((row) => {
