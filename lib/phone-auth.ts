@@ -78,12 +78,15 @@ export function phoneLookupValues(e164: string): string[] {
   return [...out];
 }
 
-/** Format E.164 attendu par Twilio Verify (Gabon sans le 0 d’accès). */
+/** Format E.164 pour Twilio Verify. Gabon : +2410 + 8 chiffres (077…), les opérateurs gardent souvent le 0. */
 export function toTwilioE164(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  if (/^2410[2-9]\d{6}$/.test(digits)) {
+  if (/^2410[2-9]\d{6}$/.test(digits) && digits.length === 11) {
     const rest = digits.slice(4);
-    return `+241${rest[0]}${rest}`;
+    return `+2410${rest[0]}${rest}`;
+  }
+  if (/^241[2-9]\d{7}$/.test(digits) && digits.length === 11) {
+    return `+2410${digits.slice(3)}`;
   }
   return phone.startsWith("+") ? phone : `+${digits}`;
 }

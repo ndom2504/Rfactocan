@@ -20,6 +20,10 @@ const ERRORS: Record<string, string> = {
     "L’envoi SMS n’est pas encore configuré (Twilio). Réessayez plus tard.",
   SMS_TRIAL_UNVERIFIED:
     "Compte Twilio d’essai : ce numéro doit d’abord être vérifié dans Twilio (Verified Caller IDs), ou passez le compte en production.",
+  SMS_GEO_BLOCKED:
+    "Twilio bloque encore le Gabon / ce pays. Dans Twilio : Verify → Settings → Geo permissions, autorisez le SMS vers ce pays.",
+  SMS_FRAUD_BLOCKED:
+    "Twilio Fraud Guard a bloqué ce préfixe pour 12 h. Réessayez plus tard, ou ajoutez le numéro à la Safe List Verify.",
   SMS_SEND_FAILED: "Impossible d’envoyer le SMS. Réessayez dans un instant.",
 };
 
@@ -43,8 +47,12 @@ export async function POST(request: Request) {
           : issued.error === "RATE_LIMITED"
             ? 429
             : issued.error === "SMS_NOT_CONFIGURED" ||
-                issued.error === "SMS_TRIAL_UNVERIFIED"
+                issued.error === "SMS_TRIAL_UNVERIFIED" ||
+                issued.error === "SMS_GEO_BLOCKED" ||
+                issued.error === "SMS_FRAUD_BLOCKED"
               ? 503
+              : issued.error === "INVALID_PHONE"
+                ? 400
               : 502;
       return NextResponse.json(
         {

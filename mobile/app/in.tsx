@@ -34,6 +34,12 @@ type InMe = {
   displayName?: string | null;
 };
 
+type InChatThread = {
+  id: string;
+  lastMessage?: { body?: string | null; attachmentUrl?: string | null } | null;
+  peer?: { displayName?: string | null } | null;
+};
+
 function inviteUrl() {
   return `${getApiUrl()}/share/in`;
 }
@@ -69,6 +75,7 @@ export default function InScreen() {
   const [query, setQuery] = useState("");
   const [contacts, setContacts] = useState<PhoneContact[]>([]);
   const [matches, setMatches] = useState<InMatch[]>([]);
+  const [inThreads, setInThreads] = useState<InChatThread[]>([]);
   const [contactsDenied, setContactsDenied] = useState(false);
   const [pane, setPane] = useState<"in" | "invite">("in");
   const [error, setError] = useState("");
@@ -82,6 +89,10 @@ export default function InScreen() {
     try {
       const data = await api<InMe>("/api/in/me");
       setMe(data);
+      if (data.ready) {
+        const chats = await api<{ threads: InChatThread[] }>("/api/dm?scope=in");
+        setInThreads(chats.threads ?? []);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -542,6 +553,35 @@ export default function InScreen() {
                 </Text>
               </Pressable>
             </View>
+            {pane === "in" && inThreads.length > 0 ? (
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
+                  Discussions In
+                </Text>
+                {inThreads.map((th) => (
+                  <Pressable
+                    key={th.id}
+                    onPress={() => router.push(`/messages/${th.id}` as Href)}
+                    style={{
+                      backgroundColor: colors.surface,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      padding: 12,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text style={{ fontWeight: "700", color: colors.foreground }}>
+                      {th.peer?.displayName || "Contact In"}
+                    </Text>
+                    <Muted>
+                      {th.lastMessage?.body?.trim() ||
+                        (th.lastMessage?.attachmentUrl ? "Pièce jointe" : "Ouvrir")}
+                    </Muted>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
@@ -556,13 +596,6 @@ export default function InScreen() {
           )
         }
         renderItem={renderRow}
-        ListFooterComponent={
-          <Button
-            label="Voir les messages"
-            variant="outline"
-            onPress={() => router.push("/(tabs)/messages" as Href)}
-          />
-        }
       />
     </Screen>
   );

@@ -101,7 +101,7 @@ describe("masque et email technique", () => {
       "+24107470012",
       "+24177470012",
     ]);
-    assert.equal(toTwilioE164("+24107470012"), "+24177470012");
-    assert.equal(toTwilioE164("+24177470012"), "+24177470012");
+    assert.equal(toTwilioE164("+24107470012"), "+241077470012");
+    assert.equal(toTwilioE164("+24177470012"), "+241077470012");
   });
 });

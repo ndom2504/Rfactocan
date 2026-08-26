@@ -2,6 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { userSatisfiesKyc } from "@/lib/kyc-policy";
 
 export type DmContextType = "SERVICE" | "JOB" | "MEET" | "IN";
+export type DmChannel = "APP" | "IN";
+
+export function dmChannel(contextType?: string | null): DmChannel {
+  return contextType === "IN" ? "IN" : "APP";
+}
 
 export function pairUserIds(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
@@ -159,8 +164,11 @@ export async function getOrCreateDirectThread(input: {
   contextId?: string | null;
 }) {
   const [userLowId, userHighId] = pairUserIds(input.meId, input.peerId);
+  const channel = dmChannel(input.contextType);
   const existing = await prisma.directThread.findUnique({
-    where: { userLowId_userHighId: { userLowId, userHighId } },
+    where: {
+      userLowId_userHighId_channel: { userLowId, userHighId, channel },
+    },
   });
   if (existing) {
     if (input.contextType || input.contextId) {
@@ -182,6 +190,7 @@ export async function getOrCreateDirectThread(input: {
     data: {
       userLowId,
       userHighId,
+      channel,
       lastContextType: input.contextType ?? null,
       lastContextId: input.contextId ?? null,
     },

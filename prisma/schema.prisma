@@ -997,12 +997,14 @@ model MeetContact {
   @@index([fromUserId, status])
 }
 
-/// Fil de discussion direct entre 2 utilisateurs (services / emploi / rencontre — pas colis).
-/// userLowId / userHighId = ids triés pour unicité du couple.
+/// Fil de discussion direct entre 2 utilisateurs.
+/// channel APP = messagerie services / emploi / rencontre ; IN = communauté In.
 model DirectThread {
   id              String    @id @default(cuid())
   userLowId       String
   userHighId      String
+  /// APP | IN
+  channel         String    @default("APP")
   /// SERVICE | JOB | MEET | IN
   lastContextType String?
   lastContextId   String?
@@ -1015,10 +1017,11 @@ model DirectThread {
   messages DirectMessage[]
   calls    Call[]
 
-  @@unique([userLowId, userHighId])
+  @@unique([userLowId, userHighId, channel])
   @@index([lastMessageAt])
   @@index([userLowId])
   @@index([userHighId])
+  @@index([channel])
 }
 
 model DirectMessage {

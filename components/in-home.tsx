@@ -31,6 +31,17 @@ type InMatch = {
   threadId?: string | null;
 };
 
+type InThread = {
+  id: string;
+  lastMessageAt?: string | null;
+  peer?: {
+    id?: string;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  lastMessage?: { body?: string | null; attachmentUrl?: string | null } | null;
+};
+
 type LocalContact = { name: string; phone: string };
 
 type ContactsNav = Navigator & {
@@ -80,10 +91,12 @@ export function InHome({
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [phoneHint, setPhoneHint] = useState("");
   const [region, setRegion] = useState("CA");
   const [busy, setBusy] = useState(false);
   const [lookup, setLookup] = useState("");
   const [matches, setMatches] = useState<InMatch[]>([]);
+  const [inThreads, setInThreads] = useState<InThread[]>([]);
   const [locals, setLocals] = useState<LocalContact[]>([]);
   const [copied, setCopied] = useState(false);
   const [pickerOk, setPickerOk] = useState(false);
@@ -108,6 +121,10 @@ export function InHome({
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (me.ready) void loadInThreads();
+  }, [me.ready]);
+
   async function matchPhones(phones: string[]) {
     if (!phones.length) return;
     const res = await fetch("/api/in/match", {
@@ -121,6 +138,12 @@ export function InHome({
       return;
     }
     setMatches(data.matches || []);
+  }
+
+  async function loadInThreads() {
+    const res = await fetch("/api/dm?scope=in");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) setInThreads(data.threads || []);
   }
 
   async function requestCode() {
@@ -138,7 +161,38 @@ export function InHome({
       return;
     }
     setMfaToken(data.mfaToken);
-    setInfo(t("in_otp_sent"));
+    setPhoneHint(typeof data.phoneHint === "string" ? data.phoneHint : "");
+    setInfo(
+      data.phoneHint
+        ? `${t("in_otp_sent")} ${data.phoneHint}`
+        : t("in_otp_sent")
+    );
+  }
+
+  async function resendCode() {
+    if (!mfaToken) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch("/api/auth/phone/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mfaToken }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) {
+      setError(data.error || t("in_need_phone"));
+      return;
+    }
+    if (typeof data.mfaToken === "string") setMfaToken(data.mfaToken);
+    if (typeof data.phoneHint === "string" && data.phoneHint) {
+      setPhoneHint(data.phoneHint);
+    }
+    setInfo(
+      data.phoneHint
+        ? `${t("in_otp_sent")} ${data.phoneHint}`
+        : t("in_otp_sent")
+    );
   }
 
   async function confirmCode() {
@@ -393,6 +447,49 @@ export function InHome({
                 </div>
               </div>
 
+              {inThreads.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold text-[#D4AF37]">
+                    {t("in_conversations")}
+                  </h2>
+                  <div className="grid gap-3">
+                    {inThreads.map((th) => (
+                      <Card
+                        key={th.id}
+                        className="flex items-center justify-between gap-3 p-4"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <UserAvatar
+                            name={th.peer?.displayName || "In"}
+                            avatarUrl={th.peer?.avatarUrl}
+                            size="lg"
+                          />
+                          <div className="min-w-0">
+                            <p className="font-medium">
+                              {th.peer?.displayName || t("dm_direct_chat")}
+                            </p>
+                            <p className="truncate text-sm text-[var(--muted)]">
+                              {th.lastMessage?.body?.trim() ||
+                                (th.lastMessage?.attachmentUrl
+                                  ? t("attachment_label")
+                                  : t("no_messages"))}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/messages/dm/${th.id}`)
+                          }
+                        >
+                          {t("in_open_chat")}
+                        </Button>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {uniqueOnIn.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold text-[#D4AF37]">
@@ -455,7 +552,7 @@ export function InHome({
                 </div>
               )}
 
-              {uniqueOnIn.length === 0 && matches.length === 0 && (
+              {uniqueOnIn.length === 0 && matches.length === 0 && inThreads.length === 0 && (
                 <p className="text-sm text-[var(--muted)]">
                   {pane === "calls" ? t("in_calls_empty") : t("in_chat_empty")}
                 </p>
@@ -535,6 +632,9 @@ export function InHome({
           ) : (
             <div className="space-y-2">
               <Label htmlFor="in-otp">{t("in_otp")}</Label>
+              {phoneHint ? (
+                <p className="text-sm text-[var(--muted)]">{phoneHint}</p>
+              ) : null}
               <Input
                 id="in-otp"
                 value={code}
@@ -551,9 +651,19 @@ export function InHome({
               <Button
                 type="button"
                 variant="ghost"
+                disabled={busy}
+                onClick={() => void resendCode()}
+              >
+                {t("otp_resend")}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => {
                   setMfaToken(null);
                   setCode("");
+                  setPhoneHint("");
+                  setInfo("");
                 }}
               >
                 {t("in_change_number")}

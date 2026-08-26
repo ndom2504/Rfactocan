@@ -73,6 +73,12 @@ async function twilioForm(
         body: text,
       };
     }
+    if (path === "Verifications") {
+      console.info(
+        "[sms] Twilio Verify started",
+        params.get("To")?.replace(/\d(?=\d{2})/g, "•")
+      );
+    }
     return { ok: true, body: text };
   } catch (e) {
     console.error("[sms] Twilio Verify request failed", e);

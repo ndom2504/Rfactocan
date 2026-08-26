@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         ? []
         : await prisma.directThread.findMany({
             where: {
+              channel: "IN",
               OR: [
                 { userLowId: me.id, userHighId: { in: peerIds } },
                 { userHighId: me.id, userLowId: { in: peerIds } },

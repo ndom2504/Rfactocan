@@ -26,15 +26,19 @@ const peerSelect = {
   ratingCount: true,
 } as const;
 
-/** GET — list my direct threads (services / jobs). */
-export async function GET() {
+/** GET — list my direct threads. ?scope=in = communauté In ; sinon messagerie services. */
+export async function GET(request: Request) {
   const session = await getSessionUser();
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
+  const scope = new URL(request.url).searchParams.get("scope");
+  const channel = scope === "in" ? "IN" : "APP";
+
   const threads = await prisma.directThread.findMany({
     where: {
+      channel,
       OR: [{ userLowId: session.id }, { userHighId: session.id }],
     },
     include: {
@@ -63,6 +67,7 @@ export async function GET() {
     return {
       id: t.id,
       kind: "dm" as const,
+      channel: t.channel,
       lastContextType: t.lastContextType,
       lastContextId: t.lastContextId,
       lastMessageAt: t.lastMessageAt,
@@ -159,6 +164,7 @@ export async function POST(request: Request) {
         thread: {
           id: thread.id,
           kind: "dm",
+          channel: thread.channel,
           lastContextType: thread.lastContextType,
           lastContextId: thread.lastContextId,
           peer,

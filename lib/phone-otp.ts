@@ -90,6 +90,15 @@ export async function issuePhoneOtp(phone: string): Promise<
       if (sent.error === "TWILIO_21608") {
         return { ok: false, error: "SMS_TRIAL_UNVERIFIED" };
       }
+      if (sent.error === "TWILIO_60605") {
+        return { ok: false, error: "SMS_GEO_BLOCKED" };
+      }
+      if (sent.error === "TWILIO_60410") {
+        return { ok: false, error: "SMS_FRAUD_BLOCKED" };
+      }
+      if (sent.error === "TWILIO_60200" || sent.error === "TWILIO_21614") {
+        return { ok: false, error: "INVALID_PHONE" };
+      }
       return { ok: false, error: "SMS_SEND_FAILED" };
     }
   }

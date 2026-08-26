@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS "DirectThread" (
   "id" TEXT NOT NULL,
   "userLowId" TEXT NOT NULL,
   "userHighId" TEXT NOT NULL,
+  "channel" TEXT NOT NULL DEFAULT 'APP',
   "lastContextType" TEXT,
   "lastContextId" TEXT,
   "lastMessageAt" TIMESTAMP(3),
@@ -12,8 +13,8 @@ CREATE TABLE IF NOT EXISTS "DirectThread" (
   CONSTRAINT "DirectThread_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS "DirectThread_userLowId_userHighId_key"
-  ON "DirectThread" ("userLowId", "userHighId");
+CREATE UNIQUE INDEX IF NOT EXISTS "DirectThread_userLowId_userHighId_channel_key"
+  ON "DirectThread" ("userLowId", "userHighId", "channel");
 
 CREATE INDEX IF NOT EXISTS "DirectThread_lastMessageAt_idx"
   ON "DirectThread" ("lastMessageAt");
@@ -23,6 +24,9 @@ CREATE INDEX IF NOT EXISTS "DirectThread_userLowId_idx"
 
 CREATE INDEX IF NOT EXISTS "DirectThread_userHighId_idx"
   ON "DirectThread" ("userHighId");
+
+CREATE INDEX IF NOT EXISTS "DirectThread_channel_idx"
+  ON "DirectThread" ("channel");
 
 CREATE TABLE IF NOT EXISTS "DirectMessage" (
   "id" TEXT NOT NULL,

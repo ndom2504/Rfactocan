@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { assertThreadParticipant, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
+import { assertThreadParticipant, dmChannel, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
 import { isUserOnline } from "@/lib/presence";
 import { notifyUser } from "@/lib/notifications";
 import { summarizeReactions, type ReactionSummary } from "@/lib/dm-reactions";
@@ -110,6 +110,7 @@ export async function GET(_request: Request, { params }: Params) {
   return NextResponse.json({
     thread: {
       id: thread.id,
+      channel: thread.channel,
       lastContextType: thread.lastContextType,
       lastContextId: thread.lastContextId,
     },
@@ -156,14 +157,18 @@ export async function POST(request: Request, { params }: Params) {
       },
     });
 
+    const sameChannel =
+      !body.contextType ||
+      dmChannel(body.contextType) === (thread.channel || dmChannel(thread.lastContextType));
+
     await prisma.directThread.update({
       where: { id },
       data: {
         lastMessageAt: message.createdAt,
-        ...(body.contextType
+        ...(body.contextType && sameChannel
           ? { lastContextType: body.contextType }
           : {}),
-        ...(body.contextId
+        ...(body.contextId && sameChannel
           ? { lastContextId: body.contextId }
           : {}),
       },

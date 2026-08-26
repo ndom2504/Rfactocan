@@ -51,6 +51,7 @@ type DmMessage = {
 
 type Thread = {
   id: string;
+  channel?: string | null;
   lastContextType?: string | null;
   lastContextId?: string | null;
 };
@@ -501,10 +502,17 @@ export default function DirectMessageChatPage() {
             </Button>
           ) : null}
           <Link
-            href="/messages"
+            href={
+              thread?.channel === "IN" || thread?.lastContextType === "IN"
+                ? "/in"
+                : "/messages"
+            }
             className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
           >
-            ← {t("messages_title")}
+            ←{" "}
+            {thread?.channel === "IN" || thread?.lastContextType === "IN"
+              ? t("dm_context_in")
+              : t("messages_title")}
           </Link>
         </div>
       </div>

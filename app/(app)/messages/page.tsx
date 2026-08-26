@@ -33,6 +33,7 @@ export default async function MessagesPage() {
     }),
     prisma.directThread.findMany({
       where: {
+        channel: "APP",
         OR: [{ userLowId: user.id }, { userHighId: user.id }],
       },
       include: {
@@ -91,9 +92,7 @@ export default async function MessagesPage() {
         ? t(locale, "dm_context_job")
         : th.lastContextType === "SERVICE"
           ? t(locale, "dm_context_service")
-          : th.lastContextType === "IN"
-            ? t(locale, "dm_context_in")
-            : t(locale, "dm_direct_chat");
+          : t(locale, "dm_direct_chat");
     const preview = last
       ? last.attachmentUrl
         ? `📎 ${last.body?.slice(0, 60) || t(locale, "attachment_label")}`

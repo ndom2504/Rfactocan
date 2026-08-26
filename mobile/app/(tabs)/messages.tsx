@@ -52,7 +52,7 @@ export default function MessagesScreen() {
           onRefresh={load}
           ListEmptyComponent={
             <Muted>
-              Aucune conversation. Ouvrez In pour retrouver vos contacts.
+              Aucune conversation de service. Les discussions In sont dans l’onglet In.
             </Muted>
           }
           renderItem={({ item }) => (

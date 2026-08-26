@@ -68,7 +68,13 @@ export async function GET(_request: Request, { params }: Params) {
         const [low, high] =
           session.id < userId ? [session.id, userId] : [userId, session.id];
         const thread = await prisma.directThread.findUnique({
-          where: { userLowId_userHighId: { userLowId: low, userHighId: high } },
+          where: {
+            userLowId_userHighId_channel: {
+              userLowId: low,
+              userHighId: high,
+              channel: "APP",
+            },
+          },
         });
         threadId = thread?.id ?? null;
       } else if (sent?.status === "PENDING") {

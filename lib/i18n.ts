@@ -1622,7 +1622,8 @@ const dict = {
 
     // Messages
     messages_title: "Messages",
-    messages_subtitle: "Conversations liées à vos réservations.",
+    messages_subtitle:
+      "Réservations, services et emplois. Les discussions In restent dans In.",
     in_tagline: "In - Le réseau des opportunités",
     in_photo_hint: "Touchez l’avatar pour afficher votre visage.",
     in_need_phone: "Activez In avec votre numéro",
@@ -1642,6 +1643,7 @@ const dict = {
     in_on_network: "{n} proches déjà sur In",
     in_online: "En ligne maintenant",
     in_open_chat: "Écrire",
+    in_conversations: "Discussions In",
     in_invite_section: "Inviter sur In",
     in_invite_hint:
       "Ils recevront le lien Rfacto. Quand ils activeront In, ils apparaîtront ici.",
@@ -3293,7 +3295,8 @@ const dict = {
     admin_community_remove: "Remove",
 
     messages_title: "Messages",
-    messages_subtitle: "Conversations linked to your bookings.",
+    messages_subtitle:
+      "Bookings, services and jobs. In chats stay inside In.",
     in_tagline: "In - The network of opportunities",
     in_photo_hint: "Tap the avatar to show your face.",
     in_need_phone: "Turn on In with your number",
@@ -3313,6 +3316,7 @@ const dict = {
     in_on_network: "{n} people you know are on In",
     in_online: "Online now",
     in_open_chat: "Chat",
+    in_conversations: "In chats",
     in_invite_section: "Invite to In",
     in_invite_hint:
       "They get the Rfacto link. When they turn on In, they appear here.",
