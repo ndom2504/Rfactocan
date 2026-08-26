@@ -180,7 +180,7 @@ export function PhoneOtpAuth({
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
-        placeholder={country?.placeholder || "07 00 00 00"}
+        placeholder={country?.placeholder || "077 00 00 00"}
       />
       {!!info && !error ? (
         <Text style={{ color: colors.accent, marginBottom: 8 }}>{info}</Text>

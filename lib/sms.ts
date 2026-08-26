@@ -2,6 +2,8 @@
  * Twilio Verify (SMS OTP). No TWILIO_FROM — Verify owns the sender and the code.
  * Local/dev without credentials: caller may fall back to a console-logged code.
  */
+import { toTwilioE164 } from "@/lib/phone-auth";
+
 function twilioAuthHeader() {
   const sid = process.env.TWILIO_ACCOUNT_SID?.trim();
   const token = process.env.TWILIO_AUTH_TOKEN?.trim();
@@ -94,10 +96,11 @@ export async function startPhoneVerification(
     return { ok: false, skipped: true };
   }
 
+  const to = toTwilioE164(toE164);
   const params = new URLSearchParams();
-  params.set("To", toE164);
+  params.set("To", to);
   params.set("Channel", "sms");
-  params.set("Locale", toE164.startsWith("+1") ? "en" : "fr");
+  params.set("Locale", to.startsWith("+1") ? "en" : "fr");
   return twilioForm("Verifications", params);
 }
 
@@ -115,7 +118,7 @@ export async function checkPhoneVerification(
   }
 
   const params = new URLSearchParams();
-  params.set("To", toE164);
+  params.set("To", toTwilioE164(toE164));
   params.set("Code", code);
   const result = await twilioForm("VerificationCheck", params);
   if (!result.ok) return result;

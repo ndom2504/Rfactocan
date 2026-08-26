@@ -6,6 +6,7 @@ import {
   getPhonePlan,
   isSmsOnlyCountry,
   normalizePhoneForCountry,
+  resolvePhoneCountry,
 } from "@/lib/phone-countries";
 
 export type PhoneAuthCountry = string;
@@ -37,10 +38,9 @@ export function normalizeAuthPhone(
   hint?: PhoneAuthCountry | null
 ): string | null {
   const trimmed = input.trim();
-  if (hint) {
-    const hinted = normalizePhoneForCountry(trimmed, hint);
-    if (hinted) return hinted;
-  }
+  const resolved = resolvePhoneCountry(hint);
+
+  // Un +indicatif a priorité sur le pays du menu (copier-coller WhatsApp, etc.).
   if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
     const iso = countryFromDial(trimmed);
     if (iso) {
@@ -48,7 +48,44 @@ export function normalizeAuthPhone(
       if (n) return n;
     }
   }
+
+  if (resolved) {
+    const hinted = normalizePhoneForCountry(trimmed, resolved);
+    if (hinted) return hinted;
+  }
+
+  const fromDigits = countryFromDial(trimmed);
+  if (fromDigits) {
+    const n = normalizePhoneForCountry(trimmed, fromDigits);
+    if (n) return n;
+  }
+
   return normalizeGabonPhone(trimmed) ?? normalizeCanadaPhone(trimmed);
+}
+
+/** Ancien stockage Gabon (+2410…) et plan 2024 (+24177…) : même ligne. */
+export function phoneLookupValues(e164: string): string[] {
+  const out = new Set<string>([e164]);
+  const digits = e164.replace(/\D/g, "");
+  if (/^241([2-9])\1\d{6}$/.test(digits)) {
+    const nsn = digits.slice(3);
+    out.add(`+2410${nsn[0]}${nsn.slice(2)}`);
+  }
+  if (/^2410[2-9]\d{6}$/.test(digits)) {
+    const rest = digits.slice(4);
+    out.add(`+241${rest[0]}${rest}`);
+  }
+  return [...out];
+}
+
+/** Format E.164 attendu par Twilio Verify (Gabon sans le 0 d’accès). */
+export function toTwilioE164(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (/^2410[2-9]\d{6}$/.test(digits)) {
+    const rest = digits.slice(4);
+    return `+241${rest[0]}${rest}`;
+  }
+  return phone.startsWith("+") ? phone : `+${digits}`;
 }
 
 export function countryFromE164(e164: string): PhoneAuthCountry | null {

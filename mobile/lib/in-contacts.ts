@@ -90,6 +90,7 @@ export function mergeContactsWithMatches(
     if (!d) continue;
     byDigits.set(d, item);
     if (d.length >= 8) byDigits.set(d.slice(-8), item);
+    if (d.length >= 9) byDigits.set(d.slice(-9), item);
     if (d.length >= 10) byDigits.set(d.slice(-10), item);
   }
 
@@ -100,6 +101,7 @@ export function mergeContactsWithMatches(
       const match =
         byDigits.get(d) ||
         (d.length >= 10 ? byDigits.get(d.slice(-10)) : undefined) ||
+        (d.length >= 9 ? byDigits.get(d.slice(-9)) : undefined) ||
         (d.length >= 8 ? byDigits.get(d.slice(-8)) : undefined);
       return { ...contact, match };
     })

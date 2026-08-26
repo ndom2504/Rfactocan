@@ -5,6 +5,7 @@ import { consumePhoneOtp, verifyPhoneOtpToken } from "@/lib/phone-otp";
 import {
   countryFromE164,
   maskAuthPhone,
+  phoneLookupValues,
   profileCountryName,
 } from "@/lib/phone-auth";
 import { prisma } from "@/lib/prisma";
@@ -47,8 +48,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({
-      where: { phone },
+    const existing = await prisma.user.findFirst({
+      where: { phone: { in: phoneLookupValues(phone) } },
       select: { id: true, status: true },
     });
     if (existing && existing.id !== session.id) {

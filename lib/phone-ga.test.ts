@@ -7,7 +7,9 @@ import {
   normalizeAuthPhone,
   normalizeCanadaPhone,
   normalizeGabonPhone,
+  phoneLookupValues,
   phonePlaceholderEmail,
+  toTwilioE164,
 } from "./phone-auth";
 import {
   isSmsOnlyCountry,
@@ -16,12 +18,14 @@ import {
 } from "./phone-countries";
 
 describe("normalizeGabonPhone", () => {
-  it("accepte 07 local, +241 et 00241", () => {
-    assert.equal(normalizeGabonPhone("07 47 00 12"), "+24107470012");
-    assert.equal(normalizeGabonPhone("+241 07 47 00 12"), "+24107470012");
-    assert.equal(normalizeGabonPhone("0024107470012"), "+24107470012");
-    assert.equal(normalizeGabonPhone("24107470012"), "+24107470012");
-    assert.equal(normalizeGabonPhone("7470012"), "+24107470012");
+  it("accepte le plan 2024 (077 local, +241 sans le 0) et l’ancien 07", () => {
+    assert.equal(normalizeGabonPhone("077 47 00 12"), "+24177470012");
+    assert.equal(normalizeGabonPhone("07 47 00 12"), "+24177470012");
+    assert.equal(normalizeGabonPhone("+241 77 47 00 12"), "+24177470012");
+    assert.equal(normalizeGabonPhone("+241 07 47 00 12"), "+24177470012");
+    assert.equal(normalizeGabonPhone("00241077470012"), "+24177470012");
+    assert.equal(normalizeGabonPhone("24107470012"), "+24177470012");
+    assert.equal(normalizeGabonPhone("7470012"), "+24177470012");
   });
 
   it("refuse les numéros hors Gabon ou trop courts", () => {
@@ -45,15 +49,18 @@ describe("normalizeCanadaPhone", () => {
     assert.equal(normalizeCanadaPhone("0145550123"), null);
     assert.equal(normalizeCanadaPhone("5550123"), null);
     assert.equal(normalizeCanadaPhone("+24107470012"), null);
+    assert.equal(normalizeCanadaPhone("+24177470012"), null);
   });
 });
 
 describe("normalizeAuthPhone", () => {
   it("choisit Gabon ou Canada selon le numéro, avec hint", () => {
-    assert.equal(normalizeAuthPhone("07 47 00 12"), "+24107470012");
+    assert.equal(normalizeAuthPhone("07 47 00 12"), "+24177470012");
+    assert.equal(normalizeAuthPhone("077 47 00 12"), "+24177470012");
     assert.equal(normalizeAuthPhone("5145550123"), "+15145550123");
     assert.equal(normalizeAuthPhone("5145550123", "CA"), "+15145550123");
-    assert.equal(normalizeAuthPhone("+24107470012", "CA"), "+24107470012");
+    assert.equal(normalizeAuthPhone("+24177470012", "CA"), "+24177470012");
+    assert.equal(normalizeAuthPhone("+241 77 47 00 12", "CA"), "+24177470012");
   });
 
   it("normalise Sénégal, Côte d’Ivoire, France et Nigeria", () => {
@@ -78,7 +85,7 @@ describe("normalizeAuthPhone", () => {
 
 describe("masque et email technique", () => {
   it("masque le milieu du numéro", () => {
-    assert.equal(maskGabonPhone("+24107470012"), "+241 07 •• •• 12");
+    assert.equal(maskGabonPhone("+24177470012"), "+241 77 •• •• 12");
     assert.equal(maskCanadaPhone("+15145550123"), "+1 514 ••• •123");
   });
 
@@ -87,5 +94,14 @@ describe("masque et email technique", () => {
     assert.equal(email, "15145550123@phone.rfacto.local");
     assert.equal(isPhonePlaceholderEmail(email), true);
     assert.equal(isPhonePlaceholderEmail("a@b.com"), false);
+  });
+
+  it("relie l’ancien E.164 Gabon au plan 2024", () => {
+    assert.deepEqual(phoneLookupValues("+24177470012").sort(), [
+      "+24107470012",
+      "+24177470012",
+    ]);
+    assert.equal(toTwilioE164("+24107470012"), "+24177470012");
+    assert.equal(toTwilioE164("+24177470012"), "+24177470012");
   });
 });

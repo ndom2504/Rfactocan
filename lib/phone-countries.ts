@@ -9,7 +9,7 @@ export type PhonePlan = {
   max: number;
   region: AuthRegion;
   placeholder: string;
-  /** Gabon stores the national leading 0 in E.164 (+2410…). */
+  /** Côte d’Ivoire / Congo-Brazza keep the national leading 0 in E.164. */
   keepTrunkZero?: boolean;
 };
 
@@ -36,7 +36,8 @@ export const PHONE_PLANS: PhonePlan[] = [
   { code: "ER", name: "Érythrée", nameEn: "Eritrea", dial: "291", min: 7, max: 7, region: "africa", placeholder: "7 000 000" },
   { code: "SZ", name: "Eswatini", nameEn: "Eswatini", dial: "268", min: 8, max: 8, region: "africa", placeholder: "76 00 0000" },
   { code: "ET", name: "Éthiopie", nameEn: "Ethiopia", dial: "251", min: 9, max: 9, region: "africa", placeholder: "91 000 0000" },
-  { code: "GA", name: "Gabon", nameEn: "Gabon", dial: "241", min: 8, max: 8, region: "africa", placeholder: "07 00 00 00", keepTrunkZero: true },
+  // Depuis avril 2024 : national 9 chiffres (077…), E.164 +241 + 8 chiffres (sans le 0).
+  { code: "GA", name: "Gabon", nameEn: "Gabon", dial: "241", min: 8, max: 8, region: "africa", placeholder: "077 00 00 00" },
   { code: "GM", name: "Gambie", nameEn: "Gambia", dial: "220", min: 7, max: 7, region: "africa", placeholder: "301 0000" },
   { code: "GH", name: "Ghana", nameEn: "Ghana", dial: "233", min: 9, max: 9, region: "africa", placeholder: "24 000 0000" },
   { code: "GN", name: "Guinée", nameEn: "Guinea", dial: "224", min: 9, max: 9, region: "africa", placeholder: "620 00 00 00" },
@@ -151,20 +152,33 @@ export function listPhoneCountries() {
   }));
 }
 
+function restLengthOk(plan: PhonePlan, restLen: number): boolean {
+  const minRest = Math.max(1, plan.min - 1);
+  const maxRest = plan.max + (plan.keepTrunkZero ? 0 : 1);
+  return restLen >= minRest && restLen <= maxRest;
+}
+
 function nationalDigits(input: string, plan: PhonePlan): string | null {
   const digits = input.replace(/\D/g, "");
   if (!digits) return null;
   let national = digits;
   if (national.startsWith(`00${plan.dial}`)) {
     national = national.slice(2 + plan.dial.length);
-  } else if (national.startsWith(plan.dial) && national.length > plan.dial.length + plan.min - 1) {
-    national = national.slice(plan.dial.length);
+  } else if (national.startsWith(plan.dial)) {
+    const rest = national.slice(plan.dial.length);
+    if (restLengthOk(plan, rest.length)) {
+      national = rest;
+    }
   }
   if (!plan.keepTrunkZero && national.startsWith("0")) {
     national = national.slice(1);
   }
   if (plan.keepTrunkZero && national.length === plan.min - 1 && /^[2-9]/.test(national)) {
     national = `0${national}`;
+  }
+  // Plan 2024 : 07 47 00 12 (7 chiffres hors 0) → 077 47 00 12.
+  if (plan.code === "GA" && national.length === 7 && /^[2-9]/.test(national)) {
+    national = `${national[0]}${national}`;
   }
   if (national.length < plan.min || national.length > plan.max) return null;
   return national;
@@ -181,7 +195,7 @@ export function normalizePhoneForCountry(
   if (plan.code === "CA" || plan.code === "US") {
     if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(national)) return null;
   }
-  if (plan.code === "GA" && !/^0[2-9]\d{6}$/.test(national)) return null;
+  if (plan.code === "GA" && !/^[2-9]\d{7}$/.test(national)) return null;
   return `+${plan.dial}${national}`;
 }
 
@@ -193,7 +207,7 @@ export function countryFromDial(e164: string): string | null {
   for (const plan of DIAL_SORTED) {
     if (digits.startsWith(plan.dial)) {
       const rest = digits.slice(plan.dial.length);
-      if (rest.length >= plan.min && rest.length <= plan.max + (plan.keepTrunkZero ? 0 : 0)) {
+      if (restLengthOk(plan, rest.length)) {
         if (plan.dial === "1" && rest.length === 10) return plan.code === "US" ? "CA" : plan.code;
         return plan.code;
       }

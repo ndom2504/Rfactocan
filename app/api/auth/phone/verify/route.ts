@@ -10,6 +10,7 @@ import {
 import {
   countryFromE164,
   isPhonePlaceholderEmail,
+  phoneLookupValues,
   phonePlaceholderEmail,
   profileCountryName,
 } from "@/lib/phone-auth";
@@ -62,7 +63,9 @@ export async function POST(request: Request) {
       );
     }
 
-    let user = await prisma.user.findUnique({ where: { phone } });
+    let user = await prisma.user.findFirst({
+      where: { phone: { in: phoneLookupValues(phone) } },
+    });
     if (!user && (body.displayName?.trim().length ?? 0) < 2) {
       return NextResponse.json(
         {
@@ -103,7 +106,7 @@ export async function POST(request: Request) {
         { error: "Ce compte est suspendu." },
         { status: 403 }
       );
-    } else if (!user.phone) {
+    } else if (!user.phone || user.phone !== phone) {
       user = await prisma.user.update({
         where: { id: user.id },
         data: { phone },

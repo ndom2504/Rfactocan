@@ -93,6 +93,10 @@ export default function RootLayout() {
             options={{ headerShown: true, title: "Conversation" }}
           />
           <Stack.Screen
+            name="community/[id]"
+            options={{ headerShown: true, title: "Publication" }}
+          />
+          <Stack.Screen
             name="shops/[id]"
             options={{ headerShown: true, title: "Boutique" }}
           />

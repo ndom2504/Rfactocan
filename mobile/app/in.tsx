@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   FlatList,
   Linking,
+  Modal,
   Platform,
   Pressable,
   Share,
@@ -59,6 +60,7 @@ export default function InScreen() {
   const [me, setMe] = useState<InMe | null>(null);
   const [countries, setCountries] = useState<PhoneCountry[]>([]);
   const [country, setCountry] = useState<PhoneCountry | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
@@ -351,17 +353,35 @@ export default function InScreen() {
         <Card>
           <Text style={{ fontWeight: "700", marginBottom: 8 }}>Activer In</Text>
           <Muted>Un numéro vérifié par SMS suffit.</Muted>
-          <Field
-            label="Pays (code, ex. GA, CA, SN)"
-            autoCapitalize="characters"
-            value={country?.code ?? "GA"}
-            onChangeText={(code) => {
-              const found = countries.find(
-                (c) => c.code === code.trim().toUpperCase()
-              );
-              if (found) setCountry(found);
+          <Pressable
+            onPress={() => setPickerOpen(true)}
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              marginBottom: 12,
+              marginTop: 12,
             }}
-          />
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                color: colors.foreground,
+                marginBottom: 4,
+              }}
+            >
+              Pays du numéro
+            </Text>
+            <Text style={{ fontSize: 16, color: colors.foreground }}>
+              {country
+                ? `${country.name} (${country.dial})`
+                : "Choisir…"}
+            </Text>
+          </Pressable>
           {!mfaToken ? (
             <>
               <Field
@@ -369,7 +389,7 @@ export default function InScreen() {
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
-                placeholder={country?.placeholder || "07 00 00 00"}
+                placeholder={country?.placeholder || "077 00 00 00"}
               />
               <Button label="Recevoir le code" onPress={sendCode} loading={busy} />
             </>
@@ -387,6 +407,39 @@ export default function InScreen() {
             </>
           )}
         </Card>
+        <Modal
+          visible={pickerOpen}
+          animationType="slide"
+          onRequestClose={() => setPickerOpen(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 48 }}>
+            <Pressable onPress={() => setPickerOpen(false)} style={{ padding: 16 }}>
+              <Text style={{ color: colors.accent, fontWeight: "600" }}>Fermer</Text>
+            </Pressable>
+            <FlatList
+              data={countries}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    setCountry(item);
+                    setPickerOpen(false);
+                  }}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                  }}
+                >
+                  <Text style={{ color: colors.foreground, fontSize: 16 }}>
+                    {item.name} {item.dial}
+                  </Text>
+                </Pressable>
+              )}
+            />
+          </View>
+        </Modal>
       </Screen>
     );
   }
@@ -441,7 +494,7 @@ export default function InScreen() {
                 keyboardType="phone-pad"
                 value={lookup}
                 onChangeText={setLookup}
-                placeholder="07 00 00 00"
+                placeholder="077 00 00 00"
               />
               <Button label="Chercher ce numéro" onPress={search} loading={busy} />
             </Card>

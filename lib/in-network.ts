@@ -2,6 +2,7 @@ import {
   normalizeAuthPhone,
   normalizeCanadaPhone,
   normalizeGabonPhone,
+  phoneLookupValues,
 } from "@/lib/phone-auth";
 import {
   countryFromDial,
@@ -42,8 +43,16 @@ export function contactPhoneCandidates(raw: string): string[] {
       const gaLast = normalizeGabonPhone(digits.slice(-8));
       if (gaLast) found.add(gaLast);
     }
+    if (digits.length >= 9) {
+      const gaNine = normalizeGabonPhone(digits.slice(-9));
+      if (gaNine) found.add(gaNine);
+    }
   }
-  return [...found];
+  const expanded = new Set<string>();
+  for (const value of found) {
+    for (const alias of phoneLookupValues(value)) expanded.add(alias);
+  }
+  return [...expanded];
 }
 
 export function flattenMatchPhones(phones: string[]): string[] {

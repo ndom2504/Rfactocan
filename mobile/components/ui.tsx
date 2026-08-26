@@ -77,6 +77,7 @@ export function Button({
 export function Field({
   label,
   secureTextEntry,
+  style,
   ...props
 }: { label: string } & TextInputProps) {
   const [visible, setVisible] = React.useState(false);
@@ -88,7 +89,7 @@ export function Field({
       <View style={styles.inputRow}>
         <TextInput
           placeholderTextColor={colors.muted}
-          style={[styles.input, isPassword && styles.inputWithToggle]}
+          style={[styles.input, isPassword && styles.inputWithToggle, style]}
           secureTextEntry={isPassword && !visible}
           {...props}
         />

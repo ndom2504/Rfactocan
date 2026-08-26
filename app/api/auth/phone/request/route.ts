@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { issuePhoneOtp } from "@/lib/phone-otp";
-import { normalizeAuthPhone } from "@/lib/phone-auth";
-import { getPhonePlan } from "@/lib/phone-countries";
+import { normalizeAuthPhone, phoneLookupValues } from "@/lib/phone-auth";
+import { resolvePhoneCountry } from "@/lib/phone-countries";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  phone: z.string().min(7).max(24),
-  country: z.string().length(2).optional(),
+  phone: z.string().min(7).max(40),
+  country: z.string().min(1).max(80).optional(),
 });
 
 const ERRORS: Record<string, string> = {
@@ -26,13 +26,7 @@ const ERRORS: Record<string, string> = {
 export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
-    const hint = body.country?.toUpperCase();
-    if (hint && !getPhonePlan(hint)) {
-      return NextResponse.json(
-        { error: ERRORS.INVALID_PHONE },
-        { status: 400 }
-      );
-    }
+    const hint = resolvePhoneCountry(body.country);
     const phone = normalizeAuthPhone(body.phone, hint);
     if (!phone) {
       return NextResponse.json(
@@ -61,8 +55,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({
-      where: { phone },
+    const existing = await prisma.user.findFirst({
+      where: { phone: { in: phoneLookupValues(phone) } },
       select: { id: true },
     });
 

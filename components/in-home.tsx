@@ -279,6 +279,7 @@ export function InHome({
       const digits = (m.phone || "").replace(/\D/g, "");
       if (digits) map.set(digits, m);
       if (digits.length >= 8) map.set(digits.slice(-8), m);
+      if (digits.length >= 9) map.set(digits.slice(-9), m);
       if (digits.length >= 10) map.set(digits.slice(-10), m);
     }
     return map;
@@ -290,6 +291,7 @@ export function InHome({
       const match =
         matchByPhone.get(digits) ||
         (digits.length >= 10 ? matchByPhone.get(digits.slice(-10)) : undefined) ||
+        (digits.length >= 9 ? matchByPhone.get(digits.slice(-9)) : undefined) ||
         (digits.length >= 8 ? matchByPhone.get(digits.slice(-8)) : undefined);
       return { ...c, match };
     })
@@ -302,6 +304,7 @@ export function InHome({
     return !(
       matchByPhone.get(digits) ||
       (digits.length >= 10 && matchByPhone.get(digits.slice(-10))) ||
+      (digits.length >= 9 && matchByPhone.get(digits.slice(-9))) ||
       (digits.length >= 8 && matchByPhone.get(digits.slice(-8)))
     );
   });
