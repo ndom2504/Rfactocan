@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
@@ -101,6 +101,9 @@ function isAttachmentOnlyBody(body: string) {
 export default function DirectMessageChatPage() {
   const params = useParams<{ id: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const pathname = usePathname();
+  const router = useRouter();
+  const inRoute = Boolean(pathname?.startsWith("/in/chat"));
   const { t } = useI18n();
   const { startOutgoing } = useCallActions();
   const [meId, setMeId] = useState("");
@@ -147,7 +150,10 @@ export default function DirectMessageChatPage() {
       setMessages(msgData.messages ?? []);
       setPeer(msgData.peer ?? null);
       setThread(msgData.thread ?? null);
-      setCanInvoice(Boolean(msgData.canInvoice));
+      setCanInvoice(
+        Boolean(msgData.canInvoice) && msgData.thread?.channel !== "IN"
+      );
+      if (msgData.thread?.channel === "IN") setInvoices([]);
       setError("");
     } else {
       setError(msgData.error || "Erreur");
@@ -182,6 +188,15 @@ export default function DirectMessageChatPage() {
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !thread?.channel) return;
+    if (thread.channel === "IN" && !inRoute) {
+      router.replace(`/in/chat/${id}`);
+    } else if (thread.channel !== "IN" && inRoute) {
+      router.replace(`/messages/dm/${id}`);
+    }
+  }, [id, thread?.channel, inRoute, router]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -269,7 +284,9 @@ export default function DirectMessageChatPage() {
     setForwardThreads([]);
     setError("");
     try {
-      const res = await fetch("/api/dm");
+      const res = await fetch(
+        inRoute || thread?.channel === "IN" ? "/api/dm?scope=in" : "/api/dm"
+      );
       const data = await res.json().catch(() => ({}));
       const threads = (data.threads ?? []) as ForwardThread[];
       setForwardThreads(threads.filter((thread) => thread.id !== id));
@@ -503,15 +520,15 @@ export default function DirectMessageChatPage() {
           ) : null}
           <Link
             href={
-              thread?.channel === "IN" || thread?.lastContextType === "IN"
+              inRoute || thread?.channel === "IN" || thread?.lastContextType === "IN"
                 ? "/in"
                 : "/messages"
             }
             className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
           >
             ←{" "}
-            {thread?.channel === "IN" || thread?.lastContextType === "IN"
-              ? t("dm_context_in")
+            {inRoute || thread?.channel === "IN" || thread?.lastContextType === "IN"
+              ? t("nav_in")
               : t("messages_title")}
           </Link>
         </div>

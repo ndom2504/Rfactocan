@@ -93,6 +93,10 @@ export default function RootLayout() {
             options={{ headerShown: true, title: "Conversation" }}
           />
           <Stack.Screen
+            name="in-chat/[id]"
+            options={{ headerShown: true, title: "In" }}
+          />
+          <Stack.Screen
             name="community/[id]"
             options={{ headerShown: true, title: "Publication" }}
           />

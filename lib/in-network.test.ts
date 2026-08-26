@@ -25,6 +25,20 @@ describe("matchDirectoryUsers", () => {
     assert.equal(hits[0].phone, "07 47 00 12");
   });
 
+  it("relie les numéros admin In (Gabon 076 et Canada 819/438)", () => {
+    const christina = { id: "c", phone: "+24176455397" };
+    const divine = { id: "d", phone: "+18199191846" };
+    const goudegnon = { id: "g", phone: "+14385272566" };
+    const hits = matchDirectoryUsers(
+      ["076 45 53 97", "819 919 1846", "438-527-2566"],
+      [christina, divine, goudegnon]
+    );
+    assert.deepEqual(
+      hits.map((hit) => hit.user.id).sort(),
+      ["c", "d", "g"]
+    );
+  });
+
   it("relie aussi le 077 national et un numéro canadien", () => {
     const hits = matchDirectoryUsers(
       ["077 47 00 12", "514-555-0123"],

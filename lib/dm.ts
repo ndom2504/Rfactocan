@@ -8,6 +8,21 @@ export function dmChannel(contextType?: string | null): DmChannel {
   return contextType === "IN" ? "IN" : "APP";
 }
 
+export function inConversationPath(threadId: string) {
+  return `/in/chat/${threadId}`;
+}
+
+export function appConversationPath(threadId: string) {
+  return `/messages/dm/${threadId}`;
+}
+
+export function conversationPath(
+  threadId: string,
+  channel?: string | null
+) {
+  return channel === "IN" ? inConversationPath(threadId) : appConversationPath(threadId);
+}
+
 export function pairUserIds(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
 }

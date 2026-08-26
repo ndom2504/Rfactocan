@@ -265,7 +265,7 @@ export default function InScreen() {
             body: JSON.stringify({ toUserId: match.userId, contextType: "IN" }),
           })
         ).thread.id;
-      router.push(`/messages/${threadId}` as Href);
+      router.push(`/in-chat/${threadId}` as Href);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Conversation impossible.");
     } finally {
@@ -570,7 +570,7 @@ export default function InScreen() {
                 {inThreads.map((th) => (
                   <Pressable
                     key={th.id}
-                    onPress={() => router.push(`/messages/${th.id}` as Href)}
+                    onPress={() => router.push(`/in-chat/${th.id}` as Href)}
                     style={{
                       backgroundColor: colors.surface,
                       borderRadius: 14,

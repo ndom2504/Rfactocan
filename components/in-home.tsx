@@ -13,6 +13,7 @@ import { fetchSuggestedCountry } from "@/lib/detect-country";
 import { CountryPhoneFields } from "@/components/country-phone-fields";
 import { getPhonePlan } from "@/lib/phone-countries";
 import { indexByPhoneKeys, lookupByPhoneKeys } from "@/lib/phone-auth";
+import { inConversationPath } from "@/lib/dm";
 
 type InMe = {
   id?: string;
@@ -333,7 +334,7 @@ export function InHome({
 
   async function openChat(match: InMatch) {
     if (match.threadId) {
-      router.push(`/messages/dm/${match.threadId}`);
+      router.push(inConversationPath(match.threadId));
       return;
     }
     const res = await fetch("/api/dm", {
@@ -347,7 +348,7 @@ export function InHome({
       setError(data.error || "");
       return;
     }
-    router.push(`/messages/dm/${id}`);
+    router.push(inConversationPath(id));
   }
 
   const link = inviteUrl(agentCode);
@@ -405,14 +406,45 @@ export function InHome({
   const unmatchedMatches = matches.filter(
     (item) => !uniqueOnIn.some((row) => row.match!.userId === item.userId)
   );
-  const chatPeople = [
-    ...uniqueOnIn,
-    ...unmatchedMatches.map((item) => ({
-      name: item.displayName || "In",
-      phone: item.phone || "",
-      match: item,
-    })),
-  ];
+  const chatPeople = (() => {
+    const byId = new Map<
+      string,
+      { name: string; phone: string; match: InMatch }
+    >();
+    for (const row of uniqueOnIn) {
+      byId.set(row.match!.userId, {
+        name: row.match!.displayName || row.name,
+        phone: row.phone,
+        match: row.match!,
+      });
+    }
+    for (const item of unmatchedMatches) {
+      if (byId.has(item.userId)) continue;
+      byId.set(item.userId, {
+        name: item.displayName || "In",
+        phone: item.phone || "",
+        match: item,
+      });
+    }
+    for (const th of inThreads) {
+      const peerId = th.peer?.id;
+      if (!peerId || byId.has(peerId)) continue;
+      byId.set(peerId, {
+        name: th.peer?.displayName || "In",
+        phone: "",
+        match: {
+          userId: peerId,
+          displayName: th.peer?.displayName,
+          avatarUrl: th.peer?.avatarUrl,
+          threadId: th.id,
+        },
+      });
+    }
+    return [...byId.values()];
+  })();
+  const chatRoster = chatPeople.filter(
+    (row) => !inThreads.some((th) => th.peer?.id === row.match.userId)
+  );
   const invitees = locals.filter((c) => !lookupByPhoneKeys(matchByPhone, c.phone));
 
   return (
@@ -531,7 +563,7 @@ export function InHome({
                         <Button
                           size="sm"
                           onClick={() =>
-                            router.push(`/messages/dm/${th.id}`)
+                            router.push(inConversationPath(th.id))
                           }
                         >
                           {t("in_open_chat")}
@@ -542,13 +574,13 @@ export function InHome({
                 </div>
               )}
 
-              {chatPeople.length > 0 && (
+              {chatRoster.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold text-[#D4AF37]">
                     {t("in_on_network").replace("{n}", String(chatPeople.length))}
                   </h2>
                   <div className="grid gap-3">
-                    {chatPeople.map((row) => {
+                    {chatRoster.map((row) => {
                       const match = row.match!;
                       return (
                         <Card key={match.userId} className="flex items-center justify-between gap-3 p-4">

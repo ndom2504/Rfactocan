@@ -111,6 +111,12 @@ export function phoneIndexKeys(raw: string): string[] {
   if (/^241([2-9])\1\d{6}$/.test(digits) || /^2410[2-9]\d{6}$/.test(digits)) {
     expandE164(asE164(digits));
   }
+  // Gabon 8 chiffres NSN (076… comme +24176455397) : aussi le national avec 0.
+  if (/^241[2-9]\d{7}$/.test(digits) && digits.length === 11) {
+    const nsn = digits.slice(3);
+    add(nsn);
+    add(`0${nsn}`);
+  }
   if (/^2410[2-9]\d{7}$/.test(digits) && digits.length === 12) {
     expandE164(`+241${digits.slice(4)}`);
   }
@@ -120,6 +126,9 @@ export function phoneIndexKeys(raw: string): string[] {
   if (/^0[2-9]\d{6}$/.test(digits) && digits.length === 8) {
     const nsn = `${digits[1]}${digits.slice(1)}`;
     expandE164(`+241${nsn}`);
+  }
+  if (/^0[2-9]\d{7}$/.test(digits) && digits.length === 9) {
+    expandE164(`+241${digits.slice(1)}`);
   }
 
   return [...keys];

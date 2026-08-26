@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { assertThreadParticipant, dmChannel, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
+import { assertThreadParticipant, conversationPath, dmChannel, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
 import { isUserOnline } from "@/lib/presence";
 import { notifyUser } from "@/lib/notifications";
 import { summarizeReactions, type ReactionSummary } from "@/lib/dm-reactions";
@@ -184,7 +184,7 @@ export async function POST(request: Request, { params }: Params) {
       type: "DIRECT_MESSAGE",
       title: `Message de ${me?.displayName || "Un membre"}`,
       body: (text || "Pièce jointe").slice(0, 120),
-      href: `/messages/dm/${id}`,
+      href: conversationPath(id, thread.channel),
     });
 
     return NextResponse.json({ message }, { status: 201 });

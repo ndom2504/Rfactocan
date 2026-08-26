@@ -48,9 +48,14 @@ function phoneIndexKeys(raw: string): string[] {
   };
   if (raw.trim().startsWith("+") || d.length >= 10) expand(d);
   if (/^241([2-9])\1\d{6}$/.test(d) || /^2410[2-9]\d{6}$/.test(d)) expand(d);
+  if (/^241[2-9]\d{7}$/.test(d) && d.length === 11) {
+    add(d.slice(3));
+    add(`0${d.slice(3)}`);
+  }
   if (/^2410[2-9]\d{7}$/.test(d) && d.length === 12) expand(`241${d.slice(4)}`);
   if (/^0([2-9])\1\d{6}$/.test(d) && d.length === 9) expand(`241${d.slice(1)}`);
   if (/^0[2-9]\d{6}$/.test(d) && d.length === 8) expand(`241${d[1]}${d.slice(1)}`);
+  if (/^0[2-9]\d{7}$/.test(d) && d.length === 9) expand(`241${d.slice(1)}`);
   return [...keys];
 }
 

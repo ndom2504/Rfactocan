@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import {
   assertDirectContactAllowed,
+  conversationPath,
   getOrCreateDirectThread,
   otherUserId,
   type DmContextType,
@@ -150,7 +151,7 @@ export async function POST(request: Request) {
         type: "DIRECT_MESSAGE",
         title: `Message de ${me?.displayName || session.displayName || "Un membre"}`,
         body: body.body.trim().slice(0, 120),
-        href: `/messages/dm/${thread.id}`,
+        href: conversationPath(thread.id, thread.channel),
       });
     }
 
