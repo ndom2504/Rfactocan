@@ -29,13 +29,14 @@ export default function ActionsScreen() {
           />
         </Card>
         <Card>
-          <Text style={{ fontWeight: "700", marginBottom: 8 }}>Commander</Text>
+          <Text style={{ fontWeight: "700", marginBottom: 8 }}>Annoncer</Text>
           <Muted>
-            Parcourez le fil et contactez un voyageur ou un prestataire.
+            Publiez une annonce, un événement ou un communiqué dans le fil
+            Communauté.
           </Muted>
           <Button
-            label="Commander"
-            onPress={() => router.push("/(tabs)/community")}
+            label="Annoncer"
+            onPress={() => router.push("/(tabs)/community?annoncer=1")}
           />
         </Card>
       </ScrollView>

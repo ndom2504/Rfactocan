@@ -1,5 +1,5 @@
 export type CommunityKind = "BUSINESS" | "OPPORTUNITY" | "COMMUNITY";
-export type CommunityFilter = "" | "TRIP" | "PARCEL" | "SERVICE";
+export type CommunityFilter = "" | "ANNOUNCE" | "TRIP" | "PARCEL" | "SERVICE";
 
 export type CommunityAttachment = {
   url: string;
@@ -31,16 +31,24 @@ export type CommunityPost = {
 };
 
 export const KIND_LABELS: Record<string, string> = {
+  ANNOUNCE: "Annonces",
   TRIP: "Voyages",
   PARCEL: "Colis",
   SERVICE: "Services",
-  BUSINESS: "Affaires",
-  OPPORTUNITY: "Opportunités",
-  COMMUNITY: "Communauté",
+  BUSINESS: "Communiqué",
+  OPPORTUNITY: "Événement",
+  COMMUNITY: "Annonce",
 };
+
+export const PUBLISH_KINDS: { id: CommunityKind; label: string }[] = [
+  { id: "COMMUNITY", label: "Annonce" },
+  { id: "OPPORTUNITY", label: "Événement" },
+  { id: "BUSINESS", label: "Communiqué" },
+];
 
 export const FILTERS: { id: CommunityFilter; label: string }[] = [
   { id: "", label: "Tout" },
+  { id: "ANNOUNCE", label: "Annonces" },
   { id: "TRIP", label: "Voyages" },
   { id: "PARCEL", label: "Colis" },
   { id: "SERVICE", label: "Services" },

@@ -170,9 +170,32 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
+  const wantAnnounce = !kind || kind === "ANNOUNCE";
   const wantTrip = matchesKindFilter("TRIP", kind);
   const wantParcel = matchesKindFilter("PARCEL", kind);
   const wantService = matchesKindFilter("SERVICE", kind);
+
+  if (wantAnnounce) {
+    try {
+      const posts = await prisma.communityPost.findMany({
+        where: { status: "OPEN", sourceKey: null },
+        include: {
+          author: { select: AUTHOR_SELECT },
+          _count: { select: { comments: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 40,
+      });
+      for (const p of posts) {
+        feed.push({
+          ...serializePost(p),
+          isOwner: p.authorId === session.id || session.role === "ADMIN",
+        });
+      }
+    } catch (error) {
+      console.error("CommunityPost query failed:", error);
+    }
+  }
 
   const [trips, parcels, services] = await Promise.all([
     wantTrip

@@ -6,8 +6,9 @@ export const COMMUNITY_POST_KINDS = [
 
 export type CommunityPostKindId = (typeof COMMUNITY_POST_KINDS)[number];
 
-/** Marketplace feed filters: trips, parcel needs, services. */
+/** Marketplace + community announcement filters. */
 export const COMMUNITY_FEED_FILTERS = [
+  "ANNOUNCE",
   "TRIP",
   "PARCEL",
   "SERVICE",

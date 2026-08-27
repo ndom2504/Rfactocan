@@ -34,7 +34,7 @@ export default function HomeScreen() {
         </Pressable>
         <Muted>
           Colis et services — publiez un trajet, un besoin d’expédition ou un
-          service, puis commandez depuis le fil.
+          service, ou annoncez un événement dans le fil.
         </Muted>
         <Card>
           <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
@@ -54,11 +54,14 @@ export default function HomeScreen() {
         </Card>
         <Card>
           <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
-            Commander
+            Annoncer
           </Text>
+          <Muted>
+            Publiez une annonce, un événement ou un communiqué dans le fil.
+          </Muted>
           <Button
-            label="Parcourir la communauté"
-            onPress={() => router.push("/(tabs)/community")}
+            label="Annoncer"
+            onPress={() => router.push("/(tabs)/community?annoncer=1")}
           />
           <Button
             label="Messages"

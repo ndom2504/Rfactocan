@@ -17,33 +17,35 @@ const dict = {
     nav_in: "In",
     nav_profile: "Profil",
     nav_admin: "Admin",
+    nav_announce: "Annoncer",
     community_title: "Communauté",
     community_subtitle:
-      "Voyages, besoins d’expédition et services — parcourez, réservez, contactez.",
+      "Voyages, colis, services — et les annonces, événements et communiqués de la communauté.",
     community_guidelines:
-      "Fil d’annonces live : kilos, trajets et services essentiels. Contactez un voyageur ou un prestataire, ou publiez la vôtre.",
+      "Publiez un voyage, un colis, un service, ou une annonce (événement, communiqué). Elle apparaît tout de suite dans le fil.",
     community_announce: "Annoncer",
     community_announce_prompt:
-      "Parcourez les voyages, les colis à expédier et les services, puis consultez l’annonce.",
+      "Annoncez un événement ou un communiqué : il est publié automatiquement dans la communauté.",
     community_announce_modal_title: "Nouvelle annonce",
-    community_kind_business: "Affaires",
-    community_kind_opportunity: "Opportunités",
-    community_kind_community: "Communauté",
+    community_kind_business: "Communiqué",
+    community_kind_opportunity: "Événement",
+    community_kind_community: "Annonce",
     community_kind_jobs: "Emplois",
     community_kind_meet: "Rencontre privée",
     community_kind_trip: "Voyages",
     community_kind_parcel: "Colis",
     community_kind_service: "Services",
+    community_kind_announce: "Annonces",
     community_title_placeholder: "Titre (optionnel)",
     community_body_placeholder:
-      "Partagez une annonce, une opportunité ou une info communautaire…",
+      "Décrivez l’annonce, l’événement ou le communiqué (au moins 10 caractères)…",
     community_attach: "Joindre un fichier",
     community_attach_hint:
       "Images (jpeg/png/webp/gif, 50 Mo), vidéos courtes (mp4/webm/mov, max 100 Mo) ou PDF (50 Mo), jusqu’à 10 fichiers. Compressez les vidéos longues.",
     community_attachments_max: "Maximum 10 fichiers par publication.",
     community_publish: "Publier l'annonce",
     community_empty:
-      "Aucune offre pour le moment. Publiez un voyage, un besoin d’expédition ou un service.",
+      "Rien pour le moment. Annoncez un événement, ou publiez un voyage, un colis ou un service.",
     community_delete: "Supprimer",
     community_delete_confirm: "Supprimer cette publication ?",
     community_edit: "Modifier",
@@ -1308,10 +1310,10 @@ const dict = {
       "Le bouton Publier ouvre voyage, service ou commande — disponible partout dans l’app.",
     tour_ctas_title: "Trois actions principales",
     tour_ctas_body:
-      "Publier un voyage (je livre), un service (je suis pro), ou une commande (j’envoie / je reçois).",
+      "Publier un voyage (je livre), un service (je suis pro), un colis (j’envoie), ou annoncer un événement dans le fil.",
     tour_search_title: "Rechercher",
     tour_search_body:
-      "Cherchez un voyage, un colis ou un service — les mêmes actions que Publier et Commander.",
+      "Cherchez un voyage, un colis ou un service, ou annoncez un événement dans le fil.",
     tour_stats_title: "Votre activité",
     tour_stats_body:
       "Suivez vos livraisons ouvertes, commandes ouvertes et votre note moyenne.",
@@ -1320,7 +1322,7 @@ const dict = {
       "Vos dernières réservations apparaissent ici. Ouvrir pour suivre paiement et livraison.",
     tour_nav_title: "Navigation",
     tour_nav_body:
-      "Tableau de bord, Communauté, Commander et Messages : les écrans du quotidien.",
+      "Tableau de bord, Communauté, Annoncer et Messages : les écrans du quotidien.",
     tour_bookings_title: "Réservations",
     tour_bookings_body:
       "Suivez propositions, paiements et livraisons. Le statut (en attente, payé, annulé…) indique l’étape.",
@@ -1716,36 +1718,38 @@ const dict = {
     nav_in: "In",
     nav_profile: "Profile",
     nav_admin: "Admin",
+    nav_announce: "Announce",
     nav_login: "Log in",
     nav_signup: "Sign up",
     verified: "Verified",
     community_title: "Community",
     community_subtitle:
-      "Trips, parcel needs and services — browse, book, get in touch.",
+      "Trips, parcels, services — plus community announcements, events and notices.",
     community_guidelines:
-      "Live marketplace feed: kilos, routes and essential services. Contact a traveler or provider, or publish yours.",
+      "Publish a trip, a parcel, a service, or an announcement (event, notice). It appears in the feed right away.",
     community_announce: "Announce",
     community_announce_prompt:
-      "Browse trips, parcels to ship and services, then open a listing.",
+      "Announce an event or a notice: it is published automatically in the community.",
     community_announce_modal_title: "New announcement",
-    community_kind_business: "Business",
-    community_kind_opportunity: "Opportunities",
-    community_kind_community: "Community",
+    community_kind_business: "Notice",
+    community_kind_opportunity: "Event",
+    community_kind_community: "Announcement",
     community_kind_jobs: "Jobs",
     community_kind_meet: "Private meetup",
     community_kind_trip: "Trips",
     community_kind_parcel: "Parcels",
     community_kind_service: "Services",
+    community_kind_announce: "Announcements",
     community_title_placeholder: "Title (optional)",
     community_body_placeholder:
-      "Share an announcement, opportunity or community update…",
+      "Describe the announcement, event or notice (at least 10 characters)…",
     community_attach: "Attach a file",
     community_attach_hint:
       "Images (jpeg/png/webp/gif, 50 MB), short videos (mp4/webm/mov, max 100 MB) or PDF (50 MB), up to 10 files. Compress long videos.",
     community_attachments_max: "Maximum 10 files per post.",
     community_publish: "Publish announcement",
     community_empty:
-      "No listings yet. Publish a trip, a parcel need or a service.",
+      "Nothing yet. Announce an event, or publish a trip, a parcel or a service.",
     community_delete: "Delete",
     community_delete_confirm: "Delete this post?",
     community_edit: "Edit",
@@ -3000,10 +3004,10 @@ const dict = {
       "The Publish button opens trip, service, or order — available anywhere in the app.",
     tour_ctas_title: "Three main actions",
     tour_ctas_body:
-      "Publish a trip (I deliver), a service (I’m a pro), or an order (I send / receive).",
+      "Publish a trip (I deliver), a service (I’m a pro), a parcel (I send), or announce an event in the feed.",
     tour_search_title: "Search",
     tour_search_body:
-      "Find a trip, a parcel or a service — the same actions as Publish and Order.",
+      "Find a trip, a parcel or a service, or announce an event in the feed.",
     tour_stats_title: "Your activity",
     tour_stats_body:
       "Track open deliveries, open orders, and your average rating.",
@@ -3012,7 +3016,7 @@ const dict = {
       "Your latest bookings appear here. Open one to follow payment and delivery.",
     tour_nav_title: "Navigation",
     tour_nav_body:
-      "Dashboard, Community, Order, and Messages: the everyday screens.",
+      "Dashboard, Community, Announce and Messages: the everyday screens.",
     tour_bookings_title: "Bookings",
     tour_bookings_body:
       "Track proposals, payments, and deliveries. Status badges show the current step.",

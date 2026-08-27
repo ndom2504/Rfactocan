@@ -106,9 +106,9 @@ export default async function DashboardPage() {
             {t(locale, "publish_listing_cta")}
           </Button>
         </Link>
-        <Link href="/community" className="w-full">
+        <Link href="/community?annoncer=1" className="w-full">
           <Button className="h-14 w-full rounded-full bg-[var(--rfacto-green)] text-lg font-semibold text-white shadow-md shadow-[rgba(40,84,29,0.28)] hover:bg-[var(--rfacto-green-light)]">
-            {t(locale, "nav_requests")}
+            {t(locale, "nav_announce")}
           </Button>
         </Link>
       </div>
