@@ -23,20 +23,9 @@ export default function ActionsScreen() {
             onPress={() => router.push("/request/new")}
           />
           <Button
-            label="Publier"
+            label="Publier un service"
             variant="outline"
-            onPress={() => router.push("/services")}
-          />
-        </Card>
-        <Card>
-          <Text style={{ fontWeight: "700", marginBottom: 8 }}>Annoncer</Text>
-          <Muted>
-            Publiez une annonce, un événement ou un communiqué dans le fil
-            Communauté.
-          </Muted>
-          <Button
-            label="Annoncer"
-            onPress={() => router.push("/(tabs)/community?annoncer=1")}
+            onPress={() => router.push("/service/new")}
           />
         </Card>
       </ScrollView>

@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Linking, Platform, ScrollView, Text } from "react-native";
 import { useAuth } from "@/lib/auth-context";
@@ -14,6 +15,7 @@ import {
 import { colors } from "@/lib/theme";
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, logout, refresh } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [preferredCurrency, setPreferredCurrency] = useState(
@@ -130,6 +132,11 @@ export default function ProfileScreen() {
           ) : null}
           <Button label="Enregistrer" onPress={save} loading={loading} />
         </Card>
+        <Button
+          label="Réservations"
+          variant="outline"
+          onPress={() => router.push("/(tabs)/bookings")}
+        />
         <Button label="Se déconnecter" variant="outline" onPress={logout} />
         <Card>
           <Muted>

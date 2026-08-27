@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text } from "react-native";
-import { Card, ErrorText, Muted, Screen } from "@/components/ui";
+import { Button, Card, ErrorText, Muted, Screen } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import { colors } from "@/lib/theme";
@@ -53,6 +53,12 @@ export default function ServicesScreen() {
           refreshing={loading}
           onRefresh={load}
           ListEmptyComponent={<Muted>Aucun service publié.</Muted>}
+          ListHeaderComponent={
+            <Button
+              label="Publier un service"
+              onPress={() => router.push("/service/new")}
+            />
+          }
           renderItem={({ item }) => (
             <Pressable onPress={() => router.push("/(tabs)/messages")}>
               <Card>

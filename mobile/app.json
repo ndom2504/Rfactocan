@@ -14,8 +14,8 @@
         "CFBundleDisplayName": "Rfacto",
         "CFBundleAllowMixedLocalizations": true,
         "NSContactsUsageDescription": "In retrouve vos proches déjà inscrits sur Rfacto.",
-        "NSPhotoLibraryUsageDescription": "Rfacto envoie des photos dans Messages.",
-        "NSCameraUsageDescription": "Rfacto envoie des photos dans Messages.",
+        "NSPhotoLibraryUsageDescription": "Rfacto joint des photos aux messages et aux annonces.",
+        "NSCameraUsageDescription": "Rfacto joint des photos aux messages et aux annonces.",
         "NSMicrophoneUsageDescription": "Rfacto enregistre des notes vocales et passe des appels dans Messages."
       },
       "config": {
@@ -55,8 +55,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Rfacto envoie des photos dans Messages.",
-          "cameraPermission": "Rfacto envoie des photos dans Messages."
+          "photosPermission": "Rfacto joint des photos aux messages et aux annonces.",
+          "cameraPermission": "Rfacto joint des photos aux messages et aux annonces."
         }
       ],
       "expo-document-picker",

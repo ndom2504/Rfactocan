@@ -87,6 +87,10 @@ export default function RootLayout() {
             name="services"
             options={{ headerShown: true, title: "Services" }}
           />
+          <Stack.Screen
+            name="service/new"
+            options={{ headerShown: true, title: "Publier un service" }}
+          />
           <Stack.Screen name="in" options={{ headerShown: true, title: "In" }} />
           <Stack.Screen
             name="messages/[id]"

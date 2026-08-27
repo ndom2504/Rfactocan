@@ -33,8 +33,8 @@ export default function HomeScreen() {
           <Title>Bonjour {first}</Title>
         </Pressable>
         <Muted>
-          Colis et services — publiez un trajet, un besoin d’expédition ou un
-          service, ou annoncez un événement dans le fil.
+          Transporter, expédier ou publier un service — ou annoncer un événement
+          dans le fil.
         </Muted>
         <Card>
           <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
@@ -49,26 +49,18 @@ export default function HomeScreen() {
           <Button
             label="Publier un service"
             variant="outline"
-            onPress={() => router.push("/services")}
+            onPress={() => router.push("/service/new")}
           />
-        </Card>
-        <Card>
-          <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
-            Annoncer
-          </Text>
-          <Muted>
-            Publiez une annonce, un événement ou un communiqué dans le fil.
-          </Muted>
           <Button
             label="Annoncer"
-            onPress={() => router.push("/(tabs)/community?annoncer=1")}
-          />
-          <Button
-            label="Messages"
-            variant="outline"
-            onPress={() => router.push("/(tabs)/messages")}
+            onPress={() => router.push("/(tabs)/announce")}
           />
         </Card>
+        <Button
+          label="Réservations"
+          variant="outline"
+          onPress={() => router.push("/(tabs)/bookings")}
+        />
       </ScrollView>
     </Screen>
   );

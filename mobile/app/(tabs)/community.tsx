@@ -1,29 +1,22 @@
-import * as ImagePicker from "expo-image-picker";
 import { type Href, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { Button, Card, ErrorText, Field, Muted, Screen } from "@/components/ui";
-import { api, mediaUrl, uploadFile } from "@/lib/api";
+import { api, mediaUrl } from "@/lib/api";
 import {
   attachmentIsImage,
   FILTERS,
   isNativeCommunityPostId,
   postMatchesQuery,
-  PUBLISH_KINDS,
-  type CommunityAttachment,
   type CommunityFilter,
-  type CommunityKind,
   type CommunityPost,
   KIND_LABELS,
 } from "@/lib/community";
@@ -74,13 +67,6 @@ export default function CommunityScreen() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [composerOpen, setComposerOpen] = useState(false);
-  const [kind, setKind] = useState<CommunityKind>("COMMUNITY");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [attachments, setAttachments] = useState<CommunityAttachment[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -105,8 +91,10 @@ export default function CommunityScreen() {
   );
 
   useEffect(() => {
-    if (params.annoncer === "1") setComposerOpen(true);
-  }, [params.annoncer]);
+    if (params.annoncer === "1") {
+      router.replace("/(tabs)/announce");
+    }
+  }, [params.annoncer, router]);
 
   const visible = useMemo(
     () => posts.filter((p) => postMatchesQuery(p, query)),
@@ -145,82 +133,6 @@ export default function CommunityScreen() {
     }
   }
 
-  async function pickAttachments() {
-    const remaining = 10 - attachments.length;
-    if (remaining <= 0) {
-      setError("Maximum 10 fichiers par publication.");
-      return;
-    }
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      setError("Autorisez l’accès aux photos pour joindre une image.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.7,
-      allowsMultipleSelection: true,
-      selectionLimit: remaining,
-    });
-    if (result.canceled) return;
-    setUploading(true);
-    setError("");
-    try {
-      const next = [...attachments];
-      for (const [index, asset] of (result.assets ?? []).entries()) {
-        const name = asset.fileName || `photo-${index + 1}.jpg`;
-        const type = asset.mimeType || "image/jpeg";
-        const uploaded = await uploadFile("/api/community/upload", {
-          uri: asset.uri,
-          name,
-          type,
-        });
-        next.push({
-          url: uploaded.url,
-          name: uploaded.name || name,
-          contentType: uploaded.contentType || type,
-          size: 0,
-        });
-      }
-      setAttachments(next);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload échoué");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function publish() {
-    const text = body.trim();
-    if (text.length < 10) {
-      setError("Décrivez l’annonce (au moins 10 caractères).");
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      await api("/api/community/posts", {
-        method: "POST",
-        body: JSON.stringify({
-          kind,
-          title: title.trim() || undefined,
-          body: text,
-          attachments: attachments.length ? attachments : undefined,
-        }),
-      });
-      setTitle("");
-      setBody("");
-      setAttachments([]);
-      setKind("COMMUNITY");
-      setComposerOpen(false);
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Publication impossible");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <Screen style={{ paddingBottom: 0 }}>
       <ErrorText>{error}</ErrorText>
@@ -237,10 +149,7 @@ export default function CommunityScreen() {
             </Muted>
             <Button
               label="Annoncer"
-              onPress={() => {
-                setError("");
-                setComposerOpen(true);
-              }}
+              onPress={() => router.push("/(tabs)/announce")}
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={{ flexDirection: "row", flexWrap: "nowrap", paddingBottom: 4 }}>
@@ -318,116 +227,6 @@ export default function CommunityScreen() {
           );
         }}
       />
-
-      <Modal
-        visible={composerOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => {
-          if (!busy && !uploading) setComposerOpen(false);
-        }}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            backgroundColor: "rgba(0,0,0,0.4)",
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: colors.background,
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              padding: 16,
-              maxHeight: "90%",
-            }}
-          >
-            <Text
-              style={{
-                fontWeight: "700",
-                fontSize: 18,
-                color: colors.foreground,
-                marginBottom: 6,
-              }}
-            >
-              Nouvelle annonce
-            </Text>
-            <Muted>
-              Annonce, événement ou communiqué — publié automatiquement dans le
-              fil.
-            </Muted>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 12 }}>
-                {PUBLISH_KINDS.map((item) => (
-                  <Chip
-                    key={item.id}
-                    label={item.label}
-                    selected={kind === item.id}
-                    onPress={() => setKind(item.id)}
-                  />
-                ))}
-              </View>
-              <Field
-                label="Titre (optionnel)"
-                value={title}
-                onChangeText={(v) => setTitle(v.slice(0, 120))}
-                placeholder="Titre"
-              />
-              <Field
-                label="Texte"
-                value={body}
-                onChangeText={(v) => setBody(v.slice(0, 4000))}
-                placeholder="Décrivez l’annonce (au moins 10 caractères)…"
-                multiline
-                style={{ minHeight: 96, textAlignVertical: "top" }}
-              />
-              <Button
-                label={uploading ? "Envoi…" : "Joindre une image"}
-                variant="outline"
-                disabled={uploading || busy || attachments.length >= 10}
-                onPress={() => void pickAttachments()}
-              />
-              {attachments.length > 0 ? (
-                <ScrollView horizontal style={{ marginBottom: 12 }}>
-                  {attachments.map((att, index) => (
-                    <Pressable
-                      key={`${att.url}-${index}`}
-                      onPress={() =>
-                        setAttachments((prev) => prev.filter((_, i) => i !== index))
-                      }
-                    >
-                      <Image
-                        source={{ uri: mediaUrl(att.url) }}
-                        style={{
-                          width: 72,
-                          height: 72,
-                          borderRadius: 8,
-                          marginRight: 8,
-                          backgroundColor: colors.surface2,
-                        }}
-                      />
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              ) : null}
-              <Button
-                label="Publier l'annonce"
-                disabled={busy || uploading || body.trim().length < 10}
-                loading={busy}
-                onPress={() => void publish()}
-              />
-              <Button
-                label="Annuler"
-                variant="outline"
-                disabled={busy || uploading}
-                onPress={() => setComposerOpen(false)}
-              />
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </Screen>
   );
 }

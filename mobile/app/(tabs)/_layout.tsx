@@ -36,20 +36,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="actions"
-        options={{
-          title: "Publier",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="th-large" color={String(color)} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="community"
         options={{
           title: "Communauté",
           tabBarIcon: ({ color }) => (
             <TabIcon name="group" color={String(color)} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="announce"
+        options={{
+          title: "Annoncer",
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="bullhorn" color={String(color)} />
           ),
         }}
       />
@@ -61,6 +61,10 @@ export default function TabLayout() {
             <TabIcon name="comments" color={String(color)} />
           ),
         }}
+      />
+      <Tabs.Screen
+        name="actions"
+        options={{ href: null, title: "Publier" }}
       />
       <Tabs.Screen
         name="shops"
