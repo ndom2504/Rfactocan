@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { CommunityPostKind } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth";
 import {
-  COMMUNITY_POST_KINDS,
   attachmentFromImageUrl,
   COMMUNITY_MAX_ATTACHMENTS,
   isAllowedCommunityContentType,
@@ -11,7 +10,6 @@ import {
   type CommunityAttachment,
 } from "@/lib/community";
 import { loadAuthorConnections } from "@/lib/connections";
-import { scoreMeetMatch, toPublicMeetProfile } from "@/lib/meet";
 import { prisma } from "@/lib/prisma";
 import {
   communitySourceKey,
@@ -56,7 +54,7 @@ type FeedItem = {
   createdAt: Date | string;
   updatedAt?: Date | string;
   href: string | null;
-  source: "post" | "service" | "shop" | "trip" | "job" | "meet";
+  source: "post" | "service" | "shop" | "trip" | "parcel" | "job" | "meet";
   author: FeedAuthor;
   isOwner: boolean;
   viewCount: number;
@@ -113,6 +111,44 @@ function serializePost(post: {
   };
 }
 
+function toFeedAuthor(
+  user: {
+    id: string;
+    displayName: string;
+    avatarUrl: string | null;
+    bio: string | null;
+    country: string | null;
+    kycStatus: string;
+    ratingAvg: number;
+    ratingCount: number;
+  },
+  country?: string | null
+): FeedAuthor {
+  return {
+    id: user.id,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    bio: user.bio,
+    country: user.country ?? country ?? null,
+    verified: user.kycStatus === "VERIFIED",
+    ratingAvg: user.ratingAvg,
+    ratingCount: user.ratingCount,
+    connectionCount: 0,
+    connectedByMe: false,
+  };
+}
+
+const AUTHOR_SELECT = {
+  id: true,
+  displayName: true,
+  avatarUrl: true,
+  bio: true,
+  country: true,
+  kycStatus: true,
+  ratingAvg: true,
+  ratingCount: true,
+} as const;
+
 function matchesKindFilter(kind: string, filter: string) {
   if (!filter) return true;
   return kind === filter;
@@ -134,431 +170,121 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-    try {
-    // JOB / MEET are feed-only; skip DB posts filter for those chips
-    if (kind !== "JOB" && kind !== "MEET") {
-      const posts = await prisma.communityPost.findMany({
-        where: {
-          status: "OPEN",
-          sourceKey: null,
-          ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
-            ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
-            : {}),
-        },
-        include: {
-          author: {
-            select: {
-              id: true,
-              displayName: true,
-              avatarUrl: true,
-              bio: true,
-              country: true,
-              kycStatus: true,
-              ratingAvg: true,
-              ratingCount: true,
-            },
-          },
-          _count: { select: { comments: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take,
-      });
-      for (const p of posts) {
-        feed.push({
-          ...serializePost(p),
-          isOwner: p.authorId === session.id || session.role === "ADMIN",
-        });
-      }
-    }
-  } catch (error) {
-    console.error("CommunityPost query failed (table missing on DB?):", error);
-    if (kind !== "JOB" && kind !== "MEET") {
-      try {
-        const posts = await prisma.communityPost.findMany({
-          where: {
-            status: "OPEN",
-            ...(kind && (COMMUNITY_POST_KINDS as readonly string[]).includes(kind)
-              ? { kind: kind as (typeof COMMUNITY_POST_KINDS)[number] }
-              : {}),
-          },
-          omit: { sourceKey: true },
-          include: {
-            author: {
-              select: {
-                id: true,
-                displayName: true,
-                avatarUrl: true,
-                bio: true,
-                country: true,
-                kycStatus: true,
-                ratingAvg: true,
-                ratingCount: true,
-              },
-            },
-            _count: { select: { comments: true } },
-          },
+  const wantTrip = matchesKindFilter("TRIP", kind);
+  const wantParcel = matchesKindFilter("PARCEL", kind);
+  const wantService = matchesKindFilter("SERVICE", kind);
+
+  const [trips, parcels, services] = await Promise.all([
+    wantTrip
+      ? prisma.trip.findMany({
+          where: { status: "OPEN" },
+          include: { user: { select: AUTHOR_SELECT } },
           orderBy: { createdAt: "desc" },
-          take,
-        });
-        for (const p of posts) {
-          feed.push({
-            ...serializePost(p),
-            isOwner: p.authorId === session.id || session.role === "ADMIN",
-          });
-        }
-      } catch (fallbackError) {
-        console.error("CommunityPost fallback query failed:", fallbackError);
-      }
-    }
+          take: 40,
+        })
+      : Promise.resolve([]),
+    wantParcel
+      ? prisma.parcelRequest.findMany({
+          where: { status: "OPEN", needType: "PARCEL" },
+          include: { user: { select: AUTHOR_SELECT } },
+          orderBy: { createdAt: "desc" },
+          take: 40,
+        })
+      : Promise.resolve([]),
+    wantService
+      ? prisma.serviceListing.findMany({
+          where: { status: "OPEN" },
+          include: { user: { select: AUTHOR_SELECT } },
+          orderBy: { createdAt: "desc" },
+          take: 40,
+        })
+      : Promise.resolve([]),
+  ]);
+
+  for (const trip of trips) {
+    const author = trip.user;
+    feed.push({
+      id: `trip:${trip.id}`,
+      kind: "TRIP",
+      title: `${trip.fromCity} → ${trip.toCity}`,
+      body: [
+        trip.weightKg != null ? `Capacité ${trip.weightKg} kg` : null,
+        trip.departAt
+          ? `Départ ${new Date(trip.departAt).toLocaleDateString("fr-CA")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · ") || "Voyage publié sur Rfacto",
+      attachments: [],
+      createdAt: trip.createdAt,
+      href: `/trips/${trip.id}`,
+      source: "trip",
+      author: toFeedAuthor(author, trip.fromCountry),
+      isOwner: author.id === session.id,
+      viewCount: 0,
+      commentCount: 0,
+    });
   }
 
-  // Same réseau pro items Android surfaced (services / boutiques / voyages / emplois / rencontre)
-  const includeNetwork =
-    !kind ||
-    kind === "BUSINESS" ||
-    kind === "OPPORTUNITY" ||
-    kind === "COMMUNITY" ||
-    kind === "JOB" ||
-    kind === "MEET";
-
-  if (includeNetwork && kind !== "MEET") {
-    const [services, shops, trips, jobs] = await Promise.all([
-      matchesKindFilter("BUSINESS", kind) || matchesKindFilter("COMMUNITY", kind)
-        ? prisma.serviceListing.findMany({
-            where: { status: "OPEN" },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  avatarUrl: true,
-                  bio: true,
-                  country: true,
-                  kycStatus: true,
-                  ratingAvg: true,
-                  ratingCount: true,
-                },
-              },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 25,
-          })
-        : Promise.resolve([]),
-      matchesKindFilter("BUSINESS", kind)
-        ? prisma.shop.findMany({
-            where: { status: "OPEN" },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  avatarUrl: true,
-                  bio: true,
-                  country: true,
-                  kycStatus: true,
-                  ratingAvg: true,
-                  ratingCount: true,
-                },
-              },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 20,
-          })
-        : Promise.resolve([]),
-      matchesKindFilter("OPPORTUNITY", kind) || matchesKindFilter("COMMUNITY", kind)
-        ? prisma.trip.findMany({
-            where: { status: "OPEN" },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  avatarUrl: true,
-                  bio: true,
-                  country: true,
-                  kycStatus: true,
-                  ratingAvg: true,
-                  ratingCount: true,
-                },
-              },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 20,
-          })
-        : Promise.resolve([]),
-      matchesKindFilter("JOB", kind) ||
-      matchesKindFilter("OPPORTUNITY", kind) ||
-      !kind
-        ? prisma.parcelRequest.findMany({
-            where: {
-              status: "OPEN",
-              needType: { in: ["JOB_SEEK", "JOB_OFFER"] },
-              userId: { not: session.id },
-            },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  avatarUrl: true,
-                  bio: true,
-                  country: true,
-                  kycStatus: true,
-                  ratingAvg: true,
-                  ratingCount: true,
-                },
-              },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 25,
-          })
-        : Promise.resolve([]),
-    ]);
-
-    for (const s of services) {
-      const author = s.user;
-      let cover: string | null = null;
-      try {
-        const photos = JSON.parse(s.photosJson || "[]") as unknown;
-        if (Array.isArray(photos) && typeof photos[0] === "string") {
-          cover = photos[0];
-        }
-      } catch {
-        /* ignore */
-      }
-      const attachment = attachmentFromImageUrl(cover, s.title);
-      feed.push({
-        id: `svc:${s.id}`,
-        kind: "BUSINESS",
-        title: s.title,
-        body: s.description,
-        attachments: attachment ? [attachment] : [],
-        createdAt: s.createdAt,
-        href: `/services/listing/${s.id}`,
-        source: "service",
-        author: {
-          id: author.id,
-          displayName: author.displayName,
-          avatarUrl: author.avatarUrl,
-          bio: author.bio,
-          country: author.country ?? s.country,
-          verified: author.kycStatus === "VERIFIED",
-          ratingAvg: author.ratingAvg,
-          ratingCount: author.ratingCount,
-          connectionCount: 0,
-          connectedByMe: false,
-        },
-        isOwner: author.id === session.id,
-        viewCount: 0,
-        commentCount: 0,
-      });
-    }
-
-    for (const shop of shops) {
-      const author = shop.user;
-      feed.push({
-        id: `shop:${shop.id}`,
-        kind: "BUSINESS",
-        title: shop.name,
-        body: shop.description?.trim() || shop.name,
-        attachments: (() => {
-          const cover = attachmentFromImageUrl(
-            shop.coverUrl || shop.logoUrl,
-            shop.name
-          );
-          return cover ? [cover] : [];
-        })(),
-        createdAt: shop.createdAt,
-        href: `/shops/${shop.id}`,
-        source: "shop",
-        author: {
-          id: author.id,
-          displayName: author.displayName,
-          avatarUrl: author.avatarUrl ?? shop.logoUrl,
-          bio: author.bio,
-          country: author.country ?? shop.country,
-          verified: author.kycStatus === "VERIFIED",
-          ratingAvg: author.ratingAvg,
-          ratingCount: author.ratingCount,
-          connectionCount: 0,
-          connectedByMe: false,
-        },
-        isOwner: author.id === session.id,
-        viewCount: 0,
-        commentCount: 0,
-      });
-    }
-
-    for (const trip of trips) {
-      const author = trip.user;
-      feed.push({
-        id: `trip:${trip.id}`,
-        kind: "OPPORTUNITY",
-        title: `${trip.fromCity} → ${trip.toCity}`,
-        body: [
-          trip.weightKg != null ? `Capacité ${trip.weightKg} kg` : null,
-          trip.departAt
-            ? `Départ ${new Date(trip.departAt).toLocaleDateString("fr-CA")}`
-            : null,
-        ]
-          .filter(Boolean)
-          .join(" · ") || "Voyage publié sur Rfacto",
-        attachments: [],
-        createdAt: trip.createdAt,
-        href: `/trips/${trip.id}`,
-        source: "trip",
-        author: {
-          id: author.id,
-          displayName: author.displayName,
-          avatarUrl: author.avatarUrl,
-          bio: author.bio,
-          country: author.country ?? trip.fromCountry,
-          verified: author.kycStatus === "VERIFIED",
-          ratingAvg: author.ratingAvg,
-          ratingCount: author.ratingCount,
-          connectionCount: 0,
-          connectedByMe: false,
-        },
-        isOwner: author.id === session.id,
-        viewCount: 0,
-        commentCount: 0,
-      });
-    }
-
-    for (const job of jobs) {
-      const author = job.user;
-      const place = [job.toCity, job.toCountry].filter(Boolean).join(", ");
-      const roleLabel =
-        job.needType === "JOB_OFFER" ? "Offre d'emploi" : "Recherche d'emploi";
-      feed.push({
-        id: `job:${job.id}`,
-        kind: "JOB",
-        title: job.jobTitle?.trim() || roleLabel,
-        body: [
-          roleLabel,
-          job.jobSector ? `Secteur : ${job.jobSector}` : null,
-          place || null,
-          job.description?.slice(0, 280) || null,
-        ]
-          .filter(Boolean)
-          .join(" · "),
-        attachments: [],
-        createdAt: job.createdAt,
-        href: `/requests/${job.id}`,
-        source: "job",
-        author: {
-          id: author.id,
-          displayName: author.displayName,
-          avatarUrl: author.avatarUrl,
-          bio: author.bio,
-          country: author.country ?? job.toCountry,
-          verified: author.kycStatus === "VERIFIED",
-          ratingAvg: author.ratingAvg,
-          ratingCount: author.ratingCount,
-          connectionCount: 0,
-          connectedByMe: false,
-        },
-        isOwner: author.id === session.id,
-        viewCount: 0,
-        commentCount: 0,
-      });
-    }
-  }
-
-  // Rencontre privée : matching selon le profil de l'utilisateur
-  if (!kind || kind === "MEET" || kind === "OPPORTUNITY") {
+  for (const req of parcels) {
+    const author = req.user;
+    let cover: string | null = null;
     try {
-      const myMeet = await prisma.meetProfile.findUnique({
-        where: { userId: session.id },
-      });
-      if (myMeet?.active) {
-        const candidates = await prisma.meetProfile.findMany({
-          where: {
-            active: true,
-            kind: myMeet.kind,
-            userId: { not: session.id },
-            user: { status: { not: "SUSPENDED" } },
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                displayName: true,
-                avatarUrl: true,
-                bio: true,
-                country: true,
-                kycStatus: true,
-                ratingAvg: true,
-                ratingCount: true,
-              },
-            },
-          },
-          orderBy: { updatedAt: "desc" },
-          take: 80,
-        });
-
-        const scored = candidates
-          .map((p) => ({
-            profile: p,
-            score: scoreMeetMatch(myMeet, p),
-          }))
-          .filter((x) => x.score >= 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 40);
-
-        for (const { profile: p, score } of scored) {
-          const pub = toPublicMeetProfile(p, {
-            viewerId: session.id,
-            matchScore: score,
-          });
-          const place = [pub.city, pub.country].filter(Boolean).join(", ");
-          const kindFr =
-            p.kind === "BUSINESS" ? "Rencontre affaires" : "Rencontre amour";
-          const ageBit = pub.age != null ? `${pub.age} ans` : null;
-          feed.push({
-            id: `meet:${p.id}`,
-            kind: "MEET",
-            title: pub.headline,
-            body: [kindFr, place || null, ageBit, pub.interests, pub.bio?.slice(0, 220)]
-              .filter(Boolean)
-              .join(" · "),
-            attachments:
-              pub.photoUrl && pub.photoVisible
-                ? [
-                    {
-                      url: pub.photoUrl,
-                      name: "presentation",
-                      contentType: "image/jpeg",
-                      size: 0,
-                    },
-                  ]
-                : [],
-            createdAt: p.updatedAt,
-            href: `/meet/${p.userId}`,
-            source: "meet",
-            author: {
-              id: p.user.id,
-              displayName: p.user.displayName,
-              avatarUrl: pub.photoUrl || (pub.photoVisible ? p.user.avatarUrl : null),
-              bio: p.user.bio,
-              country: p.user.country ?? pub.country,
-              verified: p.user.kycStatus === "VERIFIED",
-              ratingAvg: p.user.ratingAvg,
-              ratingCount: p.user.ratingCount,
-              connectionCount: 0,
-              connectedByMe: false,
-            },
-            isOwner: false,
-            viewCount: 0,
-            commentCount: 0,
-          });
-        }
-      } else if (kind === "MEET") {
-        // No matches without profile — leave feed empty for this filter
+      const photos = JSON.parse(req.photosJson || "[]") as unknown;
+      if (Array.isArray(photos) && typeof photos[0] === "string") {
+        cover = photos[0];
       }
-    } catch (error) {
-      console.error("Meet profiles feed inject failed:", error);
+    } catch {
+      /* ignore */
     }
+    const attachment = attachmentFromImageUrl(cover, `${req.fromCity}-${req.toCity}`);
+    feed.push({
+      id: `parcel:${req.id}`,
+      kind: "PARCEL",
+      title: `${req.fromCity} → ${req.toCity}`,
+      body: [
+        req.weightKg ? `${req.weightKg} kg` : null,
+        req.description?.slice(0, 280) || null,
+      ]
+        .filter(Boolean)
+        .join(" · ") || "Besoin d’expédition",
+      attachments: attachment ? [attachment] : [],
+      createdAt: req.createdAt,
+      href: `/requests/${req.id}`,
+      source: "parcel",
+      author: toFeedAuthor(author, req.fromCountry),
+      isOwner: author.id === session.id,
+      viewCount: 0,
+      commentCount: 0,
+    });
+  }
+
+  for (const s of services) {
+    const author = s.user;
+    let cover: string | null = null;
+    try {
+      const photos = JSON.parse(s.photosJson || "[]") as unknown;
+      if (Array.isArray(photos) && typeof photos[0] === "string") {
+        cover = photos[0];
+      }
+    } catch {
+      /* ignore */
+    }
+    const attachment = attachmentFromImageUrl(cover, s.title);
+    feed.push({
+      id: `svc:${s.id}`,
+      kind: "SERVICE",
+      title: s.title,
+      body: s.description,
+      attachments: attachment ? [attachment] : [],
+      createdAt: s.createdAt,
+      href: `/services/listing/${s.id}`,
+      source: "service",
+      author: toFeedAuthor(author, s.country),
+      isOwner: author.id === session.id,
+      viewCount: 0,
+      commentCount: 0,
+    });
   }
 
   feed.sort(

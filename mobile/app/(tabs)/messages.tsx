@@ -1,4 +1,4 @@
-import { Link, useFocusEffect, useRouter } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text } from "react-native";
 import { Card, ErrorText, Muted, Screen } from "@/components/ui";
@@ -15,7 +15,6 @@ type Thread = {
 };
 
 export default function MessagesScreen() {
-  const router = useRouter();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -51,9 +50,7 @@ export default function MessagesScreen() {
           refreshing={loading}
           onRefresh={load}
           ListEmptyComponent={
-            <Muted>
-              Aucune conversation de service. Les discussions In sont dans l’onglet In.
-            </Muted>
+            <Muted>Aucune conversation pour le moment.</Muted>
           }
           renderItem={({ item }) => (
             <Link href={`/messages/${item.id}`} asChild>
@@ -75,20 +72,6 @@ export default function MessagesScreen() {
           )}
         />
       )}
-      <Pressable
-        onPress={() => router.push("/in")}
-        style={{
-          position: "absolute",
-          right: 16,
-          bottom: 24,
-          backgroundColor: colors.accent,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderRadius: 999,
-        }}
-      >
-        <Text style={{ color: "#fff", fontWeight: "700" }}>In</Text>
-      </Pressable>
     </Screen>
   );
 }

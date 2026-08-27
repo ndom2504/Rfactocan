@@ -1,1 +1,5 @@
-export { default } from "../../../messages/dm/[id]/page";
+import { redirect } from "next/navigation";
+
+export default function InChatPage() {
+  redirect("/community");
+}

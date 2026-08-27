@@ -6,11 +6,11 @@ export const COMMUNITY_POST_KINDS = [
 
 export type CommunityPostKindId = (typeof COMMUNITY_POST_KINDS)[number];
 
-/** Extra feed filter chips (not used for publishing posts). */
+/** Marketplace feed filters: trips, parcel needs, services. */
 export const COMMUNITY_FEED_FILTERS = [
-  ...COMMUNITY_POST_KINDS,
-  "JOB",
-  "MEET",
+  "TRIP",
+  "PARCEL",
+  "SERVICE",
 ] as const;
 
 export type CommunityFeedFilterId = (typeof COMMUNITY_FEED_FILTERS)[number];

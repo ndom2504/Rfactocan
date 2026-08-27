@@ -1,7 +1,5 @@
-import { isImageAttachment } from "@/lib/api";
-
 export type CommunityKind = "BUSINESS" | "OPPORTUNITY" | "COMMUNITY";
-export type CommunityFilter = "" | CommunityKind | "JOB" | "MEET";
+export type CommunityFilter = "" | "TRIP" | "PARCEL" | "SERVICE";
 
 export type CommunityAttachment = {
   url: string;
@@ -33,26 +31,19 @@ export type CommunityPost = {
 };
 
 export const KIND_LABELS: Record<string, string> = {
+  TRIP: "Voyages",
+  PARCEL: "Colis",
+  SERVICE: "Services",
   BUSINESS: "Affaires",
   OPPORTUNITY: "Opportunités",
   COMMUNITY: "Communauté",
-  JOB: "Emplois",
-  MEET: "Rencontre",
 };
-
-export const PUBLISH_KINDS: { id: CommunityKind; label: string }[] = [
-  { id: "BUSINESS", label: "Affaires" },
-  { id: "OPPORTUNITY", label: "Opportunités" },
-  { id: "COMMUNITY", label: "Communauté" },
-];
 
 export const FILTERS: { id: CommunityFilter; label: string }[] = [
   { id: "", label: "Tout" },
-  { id: "BUSINESS", label: "Affaires" },
-  { id: "OPPORTUNITY", label: "Opportunités" },
-  { id: "COMMUNITY", label: "Communauté" },
-  { id: "JOB", label: "Emplois" },
-  { id: "MEET", label: "Rencontre" },
+  { id: "TRIP", label: "Voyages" },
+  { id: "PARCEL", label: "Colis" },
+  { id: "SERVICE", label: "Services" },
 ];
 
 export function isNativeCommunityPostId(id: string) {
@@ -66,7 +57,8 @@ export function attachmentIsImage(att: {
 }) {
   const type = (att.contentType || "").toLowerCase();
   if (type.startsWith("image/")) return true;
-  return isImageAttachment(att.url) || isImageAttachment(att.name);
+  const hay = `${att.url} ${att.name || ""}`.toLowerCase();
+  return /\.(jpe?g|png|webp|gif)(\?|$)/i.test(hay);
 }
 
 export function postMatchesQuery(post: CommunityPost, query: string) {

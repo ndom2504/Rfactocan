@@ -253,43 +253,13 @@ export default function NewRequestPage() {
             ? t("order_receive_hint")
             : t("new_request_subtitle");
 
-  const needHint =
-    needType === "PARCEL"
-      ? t("order_need_parcel_hint")
-      : needType === "SERVICE"
-        ? t("order_need_service_hint")
-        : needType === "PRODUCT"
-          ? t("order_need_product_hint")
-          : needType === "JOB_SEEK"
-            ? t("order_need_job_seek_hint")
-            : needType === "MEET"
-              ? t("order_need_meet_hint")
-              : t("order_need_job_offer_hint");
-
   return (
     <Card className="max-w-2xl">
       <CardTitle>{t("new_request_title")}</CardTitle>
       <CardDescription>{subtitle}</CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="needType">{t("order_need_type")}</Label>
-          <Select
-            id="needType"
-            value={needType}
-            onChange={(e) => {
-              const next = e.target.value as OrderNeedTypeId | "MEET";
-              setNeedType(next);
-              if (next === "MEET" || !isJobNeedType(next)) setJobCvUrl(null);
-            }}
-          >
-            <option value="PARCEL">{t("order_need_parcel")}</option>
-            <option value="SERVICE">{t("order_need_service")}</option>
-            <option value="PRODUCT">{t("order_need_product")}</option>
-            <option value="JOB_SEEK">{t("order_need_job_seek")}</option>
-            <option value="JOB_OFFER">{t("order_need_job_offer")}</option>
-            <option value="MEET">{t("order_need_meet")}</option>
-          </Select>
-          <p className="text-xs text-[var(--muted)]">{needHint}</p>
+          <p className="text-xs text-[var(--muted)]">{t("order_need_parcel_hint")}</p>
         </div>
 
         {needType === "MEET" && (

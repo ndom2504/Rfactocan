@@ -29,6 +29,7 @@ export default function NewRequestScreen() {
       const data = await api<{ request: { id: string } }>("/api/requests", {
         method: "POST",
         body: JSON.stringify({
+          needType: "PARCEL",
           fromCountry: fromCountry.trim().toUpperCase(),
           fromCity: fromCity.trim(),
           toCountry: toCountry.trim().toUpperCase(),

@@ -38,7 +38,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="actions"
         options={{
-          title: "Actions",
+          title: "Publier",
           tabBarIcon: ({ color }) => (
             <TabIcon name="th-large" color={String(color)} />
           ),
@@ -64,12 +64,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="shops"
-        options={{
-          title: "Boutiques",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="shopping-cart" color={String(color)} />
-          ),
-        }}
+        options={{ href: null, title: "Boutiques" }}
       />
       <Tabs.Screen name="trips" options={{ href: null, title: "Voyages" }} />
       <Tabs.Screen name="requests" options={{ href: null, title: "Demandes" }} />

@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { HeaderProfileSlot } from "@/components/header-profile-slot";
 import { AppMain } from "@/components/app-main";
 import { CallProvider } from "@/components/call-provider";
-import { InFab } from "@/components/in-fab";
 
 export default async function AppLayout({
   children,
@@ -26,11 +25,9 @@ export default async function AppLayout({
   const locale = await getRequestLocale();
 
   const links = [
-    { href: "/dashboard", label: t(locale, "nav_dashboard") },
-    { href: "/community", label: t(locale, "nav_community") },
-    { href: "/bookings", label: t(locale, "nav_bookings") },
-    { href: "/messages", label: t(locale, "nav_messages") },
-    { href: "/in", label: t(locale, "nav_in") },
+    { href: "/community", label: t(locale, "nav_community"), id: "community" },
+    { href: "/community", label: t(locale, "nav_requests"), id: "order" },
+    { href: "/messages", label: t(locale, "nav_messages"), id: "messages" },
   ];
 
   return (
@@ -50,7 +47,7 @@ export default async function AppLayout({
               <nav className="hidden gap-4 md:flex" data-tour="nav">
                 {links.map((l) => (
                   <Link
-                    key={l.href}
+                    key={l.id}
                     href={l.href}
                     className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
                   >
@@ -90,7 +87,7 @@ export default async function AppLayout({
           >
             {links.map((l) => (
               <Link
-                key={l.href}
+                key={l.id}
                 href={l.href}
                 className="whitespace-nowrap text-sm text-[var(--muted)]"
               >
@@ -108,7 +105,6 @@ export default async function AppLayout({
           </nav>
         </header>
         <AppMain>{children}</AppMain>
-        <InFab label={t(locale, "in_tagline")} />
         <Suspense fallback={null}>
           <GuidedTour />
         </Suspense>

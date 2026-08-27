@@ -10,6 +10,7 @@ export default async function CommunityPage() {
       <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
         {t(locale, "community_title")}
       </h1>
+      <p className="text-[var(--muted)]">{t(locale, "community_subtitle")}</p>
       <CommunityFeed />
     </div>
   );

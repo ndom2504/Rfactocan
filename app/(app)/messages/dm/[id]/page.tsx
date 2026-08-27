@@ -192,7 +192,7 @@ export default function DirectMessageChatPage() {
   useEffect(() => {
     if (!id || !thread?.channel) return;
     if (thread.channel === "IN" && !inRoute) {
-      router.replace(`/in/chat/${id}`);
+      router.replace("/community");
     } else if (thread.channel !== "IN" && inRoute) {
       router.replace(`/messages/dm/${id}`);
     }
@@ -519,17 +519,10 @@ export default function DirectMessageChatPage() {
             </Button>
           ) : null}
           <Link
-            href={
-              inRoute || thread?.channel === "IN" || thread?.lastContextType === "IN"
-                ? "/in"
-                : "/messages"
-            }
+            href="/messages"
             className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
           >
-            ←{" "}
-            {inRoute || thread?.channel === "IN" || thread?.lastContextType === "IN"
-              ? t("nav_in")
-              : t("messages_title")}
+            ← {t("messages_title")}
           </Link>
         </div>
       </div>

@@ -32,30 +32,38 @@ export default function HomeScreen() {
           </View>
           <Title>Bonjour {first}</Title>
         </Pressable>
-        <Muted>In — le réseau des opportunités. Livrez, commandez, discutez.</Muted>
+        <Muted>
+          Colis et services — publiez un trajet, un besoin d’expédition ou un
+          service, puis commandez depuis le fil.
+        </Muted>
         <Card>
           <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
-            In
+            Publier
           </Text>
-          <Muted>
-            Chat, répertoire et appels avec les contacts déjà sur Rfacto.
-          </Muted>
-          <Button label="Ouvrir In" onPress={() => router.push("/in")} />
+          <Button label="Transporter" onPress={() => router.push("/trip/new")} />
+          <Button
+            label="Expédier"
+            variant="outline"
+            onPress={() => router.push("/request/new")}
+          />
+          <Button
+            label="Publier un service"
+            variant="outline"
+            onPress={() => router.push("/services")}
+          />
         </Card>
         <Card>
           <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
-            Accès rapide
+            Commander
           </Text>
-          <Button label="Communauté" onPress={() => router.push("/(tabs)/community")} />
+          <Button
+            label="Parcourir la communauté"
+            onPress={() => router.push("/(tabs)/community")}
+          />
           <Button
             label="Messages"
             variant="outline"
             onPress={() => router.push("/(tabs)/messages")}
-          />
-          <Button
-            label="Actions"
-            variant="outline"
-            onPress={() => router.push("/(tabs)/actions")}
           />
         </Card>
       </ScrollView>

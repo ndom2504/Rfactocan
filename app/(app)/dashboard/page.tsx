@@ -93,30 +93,22 @@ export default async function DashboardPage() {
       >
         <Link href="/trips/new" className="w-full">
           <Button className="h-12 w-full text-base">
-            {t(locale, "publish_trip_cta")}
+            {t(locale, "publish_transport_cta")}
+          </Button>
+        </Link>
+        <Link href="/requests/new?need=PARCEL" className="w-full">
+          <Button className="h-12 w-full text-base">
+            {t(locale, "publish_ship_cta")}
           </Button>
         </Link>
         <Link href="/services/new" className="w-full">
           <Button className="h-12 w-full text-base">
-            {t(locale, "publish_service_cta")}
+            {t(locale, "publish_listing_cta")}
           </Button>
         </Link>
-        <Link href="/shops/new" className="w-full">
-          <Button className="h-12 w-full text-base">
-            {t(locale, "publish_shop_cta")}
-          </Button>
-        </Link>
-        <Link href="/projects" className="w-full">
-          <Button
-            className="h-12 w-full text-base"
-            variant="outline"
-          >
-            {t(locale, "my_projects_browse")}
-          </Button>
-        </Link>
-        <Link href="/requests/new" className="w-full">
+        <Link href="/community" className="w-full">
           <Button className="h-14 w-full rounded-full bg-[var(--rfacto-green)] text-lg font-semibold text-white shadow-md shadow-[rgba(40,84,29,0.28)] hover:bg-[var(--rfacto-green-light)]">
-            {t(locale, "publish_order_cta")}
+            {t(locale, "nav_requests")}
           </Button>
         </Link>
       </div>

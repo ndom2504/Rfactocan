@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HomeHeroCarousel } from "@/components/home-hero-carousel";
-import { InFab } from "@/components/in-fab";
 import { Button } from "@/components/ui/button";
 import { getSessionUser } from "@/lib/auth";
 import { getRequestLocale } from "@/lib/locale";
@@ -78,8 +77,6 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
-
-      <InFab label={t(locale, "in_tagline")} href={user ? "/in" : "/login?next=/in"} />
     </main>
   );
 }

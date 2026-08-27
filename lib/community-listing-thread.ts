@@ -109,6 +109,33 @@ export async function listingFromFeedId(
     };
   }
 
+  if (type === "parcel") {
+    const req = await prisma.parcelRequest.findFirst({
+      where: { id: sourceId, status: "OPEN", needType: "PARCEL" },
+      select: {
+        userId: true,
+        fromCity: true,
+        toCity: true,
+        weightKg: true,
+        description: true,
+      },
+    });
+    if (!req) return null;
+    return {
+      authorId: req.userId,
+      kind: "OPPORTUNITY",
+      title: `${req.fromCity} → ${req.toCity}`,
+      body: [
+        req.weightKg ? `${req.weightKg} kg` : null,
+        req.description?.slice(0, 280) || null,
+      ]
+        .filter(Boolean)
+        .join(" · ") || "Besoin d’expédition",
+      attachments: [],
+      href: `/requests/${sourceId}`,
+    };
+  }
+
   if (type === "job") {
     const job = await prisma.parcelRequest.findFirst({
       where: { id: sourceId, status: "OPEN" },
@@ -142,6 +169,8 @@ export async function listingFromFeedId(
       href: `/requests/${sourceId}`,
     };
   }
+
+  if (type !== "meet") return null;
 
   const profile = await prisma.meetProfile.findFirst({
     where: { id: sourceId, active: true },

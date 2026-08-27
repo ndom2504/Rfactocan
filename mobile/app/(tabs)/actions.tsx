@@ -7,25 +7,35 @@ export default function ActionsScreen() {
   return (
     <Screen>
       <ScrollView>
-        <Title>Actions</Title>
-        <Muted>Services, livraisons, demandes et réservations.</Muted>
+        <Title>Publier</Title>
+        <Muted>
+          Transporter un colis, expédier un besoin, ou publier un service.
+        </Muted>
         <Card>
-          <Text style={{ fontWeight: "700", marginBottom: 8 }}>Hub</Text>
-          <Button label="Services" onPress={() => router.push("/services")} />
+          <Text style={{ fontWeight: "700", marginBottom: 8 }}>Publier</Text>
           <Button
-            label="Voyages / livraisons"
-            variant="outline"
-            onPress={() => router.push("/(tabs)/trips")}
+            label="Transporter"
+            onPress={() => router.push("/trip/new")}
           />
           <Button
-            label="Demandes"
+            label="Expédier"
             variant="outline"
-            onPress={() => router.push("/(tabs)/requests")}
+            onPress={() => router.push("/request/new")}
           />
           <Button
-            label="Réservations"
+            label="Publier"
             variant="outline"
-            onPress={() => router.push("/(tabs)/bookings")}
+            onPress={() => router.push("/services")}
+          />
+        </Card>
+        <Card>
+          <Text style={{ fontWeight: "700", marginBottom: 8 }}>Commander</Text>
+          <Muted>
+            Parcourez le fil et contactez un voyageur ou un prestataire.
+          </Muted>
+          <Button
+            label="Commander"
+            onPress={() => router.push("/(tabs)/community")}
           />
         </Card>
       </ScrollView>

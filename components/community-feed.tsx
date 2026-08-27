@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { CommunityMediaGrid } from "@/components/community-media-grid";
 import { CommunityPostActions } from "@/components/community-post-actions";
 import { ExpandableText } from "@/components/expandable-text";
@@ -14,18 +13,11 @@ import {
 import { communitySharePath } from "@/lib/community-share";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
-import { CommunityVideoPlayer } from "@/components/community-video-player";
 import {
   COMMUNITY_FEED_FILTERS,
-  COMMUNITY_MAX_ATTACHMENTS,
-  COMMUNITY_POST_KINDS,
-  isImageAttachment,
-  isVideoAttachment,
   type CommunityAttachment,
   type CommunityFeedFilterId,
-  type CommunityPostKindId,
 } from "@/lib/community";
-import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import type { DictKey } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils";
 import { isNativeCommunityPostId } from "@/lib/community-source";
@@ -38,7 +30,7 @@ type FeedPost = {
   attachments: CommunityAttachment[];
   createdAt: string;
   href?: string | null;
-  source?: "post" | "service" | "shop" | "trip" | "job" | "meet";
+  source?: "post" | "service" | "shop" | "trip" | "parcel" | "job" | "meet";
   isOwner: boolean;
   viewCount?: number;
   commentCount?: number;
@@ -57,6 +49,9 @@ type FeedPost = {
 };
 
 const kindLabelKey: Record<string, DictKey> = {
+  TRIP: "community_kind_trip",
+  PARCEL: "community_kind_parcel",
+  SERVICE: "community_kind_service",
   BUSINESS: "community_kind_business",
   OPPORTUNITY: "community_kind_opportunity",
   COMMUNITY: "community_kind_community",
@@ -70,14 +65,7 @@ export function CommunityFeed() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"" | CommunityFeedFilterId>("");
-  const [kind, setKind] = useState<CommunityPostKindId>("BUSINESS");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [attachments, setAttachments] = useState<CommunityAttachment[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [composerOpen, setComposerOpen] = useState(false);
   const [commentingId, setCommentingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -119,78 +107,6 @@ export function CommunityFeed() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  useEffect(() => {
-    if (!composerOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeComposer();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- closeComposer is stable enough for modal lifecycle
-  }, [composerOpen, busy, uploading]);
-
-  async function onFilesSelected(files: FileList | null) {
-    if (!files?.length) return;
-    const remaining = COMMUNITY_MAX_ATTACHMENTS - attachments.length;
-    if (remaining <= 0) {
-      setError(t("community_attachments_max"));
-      return;
-    }
-    setUploading(true);
-    setError(null);
-    try {
-      const next: CommunityAttachment[] = [...attachments];
-      for (const file of Array.from(files).slice(0, remaining)) {
-        const att = await uploadCommunityAttachment(file);
-        next.push(att);
-      }
-      setAttachments(next);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload échoué");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function publish() {
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/community/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind,
-          title: title.trim() || undefined,
-          body: body.trim(),
-          attachments,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Publication impossible");
-      setTitle("");
-      setBody("");
-      setAttachments([]);
-      setComposerOpen(false);
-      setPosts((prev) => [data.post, ...prev]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function closeComposer() {
-    if (busy || uploading) return;
-    setComposerOpen(false);
-    setError(null);
-  }
 
   async function removePost(id: string) {
     setPosts((prev) => prev.filter((p) => p.id !== id));
@@ -261,196 +177,14 @@ export function CommunityFeed() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <section className="flex flex-col items-start gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-base font-medium text-[var(--foreground)] sm:text-lg">
-          {t("community_announce_prompt")}
-        </p>
-        <Button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setComposerOpen(true);
-          }}
-          className="w-full shrink-0 sm:w-auto"
-        >
-          {t("community_announce")}
-        </Button>
-      </section>
+      <p className="text-base text-[var(--muted)] sm:text-lg">
+        {t("community_announce_prompt")}
+      </p>
 
-      {!composerOpen && error && (
-        <p className="text-sm text-red-700" role="alert">
+      {error && (
+        <p className="text-sm text-red-600" role="alert">
           {error}
         </p>
-      )}
-
-      {composerOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
-          role="presentation"
-          onClick={closeComposer}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("community_announce_modal_title")}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-                  {t("community_announce_modal_title")}
-                </h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  {t("community_guidelines")}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded-full px-2 py-1 text-sm text-[var(--muted)] hover:bg-[var(--surface-2)]"
-                onClick={closeComposer}
-                aria-label={t("close")}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {COMMUNITY_POST_KINDS.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setKind(k)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                      kind === k
-                        ? "bg-[var(--rfacto-green)] text-white"
-                        : "bg-[var(--surface-2)] text-[var(--foreground)] hover:bg-[var(--surface-3)]"
-                    }`}
-                  >
-                    {t(kindLabelKey[k])}
-                  </button>
-                ))}
-              </div>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                maxLength={120}
-                placeholder={t("community_title_placeholder")}
-                className="w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              />
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={4}
-                maxLength={4000}
-                placeholder={t("community_body_placeholder")}
-                className="w-full resize-y whitespace-pre-wrap break-words rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              />
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="cursor-pointer text-sm font-medium text-[var(--accent)]">
-                  {uploading ? t("loading") : t("community_attach")}
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf"
-                    multiple
-                    disabled={uploading || attachments.length >= COMMUNITY_MAX_ATTACHMENTS}
-                    onChange={(e) => {
-                      void onFilesSelected(e.target.files);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-                <span className="text-xs text-[var(--muted)]">
-                  {t("community_attach_hint")}
-                </span>
-              </div>
-              {attachments.length > 0 && (
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {attachments.map((a, i) => (
-                    <div
-                      key={`${a.url}-${i}`}
-                      className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-2)]"
-                    >
-                      {isImageAttachment(a.contentType) ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={a.url}
-                          alt={a.name}
-                          className="h-40 w-full object-cover"
-                        />
-                      ) : isVideoAttachment(a.contentType, a.name || a.url) ? (
-                        <CommunityVideoPlayer src={a.url} compact />
-                      ) : (
-                        <a
-                          href={a.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-40 flex-col items-center justify-center gap-2 px-3 text-center"
-                        >
-                          <span className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--accent)]">
-                            PDF
-                          </span>
-                          <span className="line-clamp-2 text-xs text-[var(--muted)]">
-                            {a.name}
-                          </span>
-                          <span className="text-[11px] text-[var(--accent)] underline">
-                            {t("community_preview_open")}
-                          </span>
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        className="absolute right-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs text-white hover:bg-black/80"
-                        onClick={() =>
-                          setAttachments((prev) =>
-                            prev.filter((_, idx) => idx !== i)
-                          )
-                        }
-                        aria-label={t("close")}
-                      >
-                        ✕
-                      </button>
-                      {(isImageAttachment(a.contentType) ||
-                        isVideoAttachment(a.contentType, a.name || a.url)) && (
-                        <p className="truncate border-t border-[var(--border)] px-2 py-1.5 text-[11px] text-[var(--muted)]">
-                          {a.name}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {attachments.length > 0 && (
-                <p className="text-xs text-[var(--muted)]">
-                  {t("community_preview_hint")}
-                </p>
-              )}
-              {error && (
-                <p className="text-sm text-red-700" role="alert">
-                  {error}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={busy || uploading}
-                  onClick={closeComposer}
-                >
-                  {t("close")}
-                </Button>
-                <Button
-                  disabled={busy || uploading || body.trim().length < 10}
-                  onClick={() => void publish()}
-                >
-                  {busy ? t("loading") : t("community_publish")}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -472,18 +206,7 @@ export function CommunityFeed() {
       {loading ? (
         <p className="text-sm text-[var(--muted)]">{t("loading")}</p>
       ) : posts.length === 0 ? (
-        <div className="space-y-2 text-sm text-[var(--muted)]">
-          <p>{t("community_empty")}</p>
-          {filter === "MEET" && (
-            <p>
-              <Link href="/meet" className="font-medium text-[var(--accent)] hover:underline">
-                {t("meet_create_cta")}
-              </Link>
-              {" — "}
-              {t("meet_subtitle")}
-            </p>
-          )}
-        </div>
+        <p className="text-sm text-[var(--muted)]">{t("community_empty")}</p>
       ) : (
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
           {posts.map((post) => (
@@ -551,13 +274,15 @@ export function CommunityFeed() {
                 </div>
               )}
 
-              <p className="mt-2 text-xs text-[var(--muted)]">
-                {post.source === "post" || !post.source
-                  ? `${post.viewCount ?? 0} ${t("community_views")} · `
-                  : ""}
-                {post.commentCount ?? 0} {t("community_comments")}
-              </p>
               <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
+                {post.href ? (
+                  <Link
+                    href={post.href}
+                    className="rounded-md bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
+                  >
+                    {t("community_see")}
+                  </Link>
+                ) : null}
                 <button
                   type="button"
                   title={t("community_connect_hint")}
@@ -586,16 +311,6 @@ export function CommunityFeed() {
                 >
                   {t("community_comment_action")}
                 </button>
-                <Link
-                  href={
-                    post.source === "post" || !post.source
-                      ? `/community/${post.id}`
-                      : post.href || "/community"
-                  }
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent-soft)]"
-                >
-                  {t("community_see")}
-                </Link>
                 <CommunityShareButton
                   url={absoluteShareUrl(communitySharePath(post.id))}
                   title={post.title}
