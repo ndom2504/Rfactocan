@@ -1449,6 +1449,11 @@ const dict = {
     dm_forward_empty: "Aucune autre conversation.",
     dm_forward_ok: "Message transféré.",
     dm_forward_failed: "Impossible de transférer le message.",
+    dm_delete_file: "Supprimer le fichier",
+    dm_delete_file_confirm:
+      "Supprimer ce fichier de la conversation ? L’autre personne ne le verra plus.",
+    dm_delete_file_ok: "Fichier supprimé.",
+    dm_delete_file_failed: "Impossible de supprimer le fichier.",
     chat_closed: "Cette conversation est fermée.",
     tracking_title: "Suivi de commande",
     tracking_hint:
@@ -3139,6 +3144,11 @@ const dict = {
     dm_forward_empty: "No other conversations.",
     dm_forward_ok: "Message forwarded.",
     dm_forward_failed: "Could not forward the message.",
+    dm_delete_file: "Delete file",
+    dm_delete_file_confirm:
+      "Delete this file from the conversation? The other person will no longer see it.",
+    dm_delete_file_ok: "File deleted.",
+    dm_delete_file_failed: "Could not delete the file.",
     chat_closed: "This conversation is closed.",
     tracking_title: "Order tracking",
     tracking_hint:

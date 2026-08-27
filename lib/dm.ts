@@ -321,3 +321,16 @@ export async function userIsServiceProviderInThread(input: {
     return false;
   }
 }
+
+/** Placeholder bodies used when a DM is only a file or voice note. */
+export function isDmPlaceholderBody(body?: string | null) {
+  const text = (body || "").trim();
+  return (
+    !text ||
+    text === "Pièce jointe" ||
+    text === "Attachment" ||
+    text === "📎" ||
+    text === "Note vocale" ||
+    text === "Voice note"
+  );
+}

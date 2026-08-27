@@ -298,6 +298,35 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  async function deleteAttachment(message: DmMessage) {
+    setReactingToId(null);
+    if (!window.confirm(t("dm_delete_file_confirm"))) return;
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch(`/api/dm/${id}/messages/${message.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || t("dm_delete_file_failed"));
+        return;
+      }
+      if (data.deletedMessage) {
+        setMessages((prev) => prev.filter((m) => m.id !== message.id));
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === message.id ? { ...m, attachmentUrl: null } : m
+          )
+        );
+      }
+      setNotice(t("dm_delete_file_ok"));
+    } catch {
+      setError(t("dm_delete_file_failed"));
+    }
+  }
+
   async function sendForward(targetId: string) {
     if (!forwardMessage || forwardBusyId) return;
     const payload = dmForwardPayload({
@@ -692,8 +721,14 @@ export default function DirectMessageChatPage() {
               onReact={(emoji) => void reactToMessage(m.id, emoji)}
               onShare={() => void shareMessage(m)}
               onForward={() => void openForward(m)}
+              onDeleteFile={
+                mine && m.attachmentUrl
+                  ? () => void deleteAttachment(m)
+                  : undefined
+              }
               shareLabel={t("dm_share")}
               forwardLabel={t("dm_forward")}
+              deleteLabel={t("dm_delete_file")}
             >
             <div
               className={`rounded-2xl px-3 py-2 text-sm select-none ${
@@ -703,7 +738,7 @@ export default function DirectMessageChatPage() {
               }`}
             >
               {m.attachmentUrl && (
-                <div className="mb-2 space-y-2">
+                <div className="mb-2 space-y-2" data-dm-attachment>
                   {isVoiceMessage(m.attachmentUrl, m.body) ? (
                     <VoiceNoteBubble url={m.attachmentUrl} mine={mine} />
                   ) : (
@@ -996,8 +1031,10 @@ function DmBubble({
   onReact,
   onShare,
   onForward,
+  onDeleteFile,
   shareLabel,
   forwardLabel,
+  deleteLabel,
   children,
 }: {
   message: DmMessage;
@@ -1007,8 +1044,10 @@ function DmBubble({
   onReact: (emoji: string | null) => void;
   onShare: () => void;
   onForward: () => void;
+  onDeleteFile?: () => void;
   shareLabel: string;
   forwardLabel: string;
+  deleteLabel: string;
   children: ReactNode;
 }) {
   const longPress = useMessageLongPress(onOpenPicker);
@@ -1025,8 +1064,10 @@ function DmBubble({
           onPick={(emoji) => onReact(emoji)}
           onShare={onShare}
           onForward={onForward}
+          onDelete={onDeleteFile}
           shareLabel={shareLabel}
           forwardLabel={forwardLabel}
+          deleteLabel={deleteLabel}
         />
       )}
       <div

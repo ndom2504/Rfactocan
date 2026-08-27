@@ -5,6 +5,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -99,6 +100,44 @@ export default function DirectChatScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  function confirmDeleteFile(message: Message) {
+    if (message.senderId !== user?.id || !message.attachmentUrl) return;
+    Alert.alert(
+      "Supprimer le fichier",
+      "Supprimer ce fichier de la conversation ? L’autre personne ne le verra plus.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => void deleteAttachment(message),
+        },
+      ]
+    );
+  }
+
+  async function deleteAttachment(message: Message) {
+    if (!id) return;
+    setError("");
+    try {
+      const data = await api<{ deletedMessage?: boolean }>(
+        `/api/dm/${id}/messages/${message.id}`,
+        { method: "DELETE" }
+      );
+      if (data.deletedMessage) {
+        setMessages((prev) => prev.filter((m) => m.id !== message.id));
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === message.id ? { ...m, attachmentUrl: null } : m
+          )
+        );
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible de supprimer le fichier.");
+    }
+  }
 
   async function startCall() {
     if (!id || calling) return;
@@ -290,10 +329,13 @@ export default function DirectChatScreen() {
                 }}
               >
                 {voice && url ? (
-                  <VoiceNoteBubble url={url} mine={mine} />
+                  <Pressable onLongPress={() => confirmDeleteFile(item)}>
+                    <VoiceNoteBubble url={url} mine={mine} />
+                  </Pressable>
                 ) : url ? (
                   <Pressable
                     onPress={() => void Linking.openURL(url)}
+                    onLongPress={() => confirmDeleteFile(item)}
                     style={{ marginBottom: showBody ? 8 : 0 }}
                   >
                     {isImageAttachment(item.attachmentUrl) ? (

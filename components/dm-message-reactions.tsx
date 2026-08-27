@@ -6,7 +6,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { Forward, Share2 } from "lucide-react";
+import { Forward, Share2, Trash2 } from "lucide-react";
 import { DM_REACTION_EMOJIS, type ReactionSummary } from "@/lib/dm-reactions";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,13 @@ export function useMessageLongPress(onOpen: () => void, ms = 450) {
     onPointerDown: (e: PointerEvent) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       const target = e.target as HTMLElement | null;
-      if (target?.closest("button, a, audio")) return;
+      if (target?.closest("button, audio")) return;
+      if (
+        target?.closest("a") &&
+        !target.closest("[data-dm-attachment]")
+      ) {
+        return;
+      }
       openedRef.current = false;
       clear();
       timerRef.current = window.setTimeout(() => {
@@ -40,7 +46,13 @@ export function useMessageLongPress(onOpen: () => void, ms = 450) {
     onPointerLeave: clear,
     onContextMenu: (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target?.closest("button, a, audio")) return;
+      if (target?.closest("button, audio")) return;
+      if (
+        target?.closest("a") &&
+        !target.closest("[data-dm-attachment]")
+      ) {
+        return;
+      }
       e.preventDefault();
       openedRef.current = true;
       onOpen();
@@ -48,7 +60,14 @@ export function useMessageLongPress(onOpen: () => void, ms = 450) {
     onClickCapture: (e: MouseEvent) => {
       if (!openedRef.current) return;
       const target = e.target as HTMLElement | null;
-      if (target?.closest("button, a, audio")) {
+      if (target?.closest("button, audio")) {
+        openedRef.current = false;
+        return;
+      }
+      if (
+        target?.closest("a") &&
+        !target.closest("[data-dm-attachment]")
+      ) {
         openedRef.current = false;
         return;
       }
@@ -73,15 +92,19 @@ export function ReactionPicker({
   onPick,
   onShare,
   onForward,
+  onDelete,
   shareLabel,
   forwardLabel,
+  deleteLabel,
   alignEnd,
 }: {
   onPick: (emoji: string) => void;
   onShare?: () => void;
   onForward?: () => void;
+  onDelete?: () => void;
   shareLabel?: string;
   forwardLabel?: string;
+  deleteLabel?: string;
   alignEnd?: boolean;
 }) {
   return (
@@ -105,7 +128,7 @@ export function ReactionPicker({
           {emoji}
         </button>
       ))}
-      {(onShare || onForward) && (
+      {(onShare || onForward || onDelete) && (
         <span className="mx-0.5 h-6 w-px bg-black/10" aria-hidden />
       )}
       {onShare && (
@@ -136,6 +159,21 @@ export function ReactionPicker({
           }}
         >
           <Forward className="h-4 w-4" />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 transition hover:bg-red-50"
+          title={deleteLabel}
+          aria-label={deleteLabel}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
         </button>
       )}
     </div>
