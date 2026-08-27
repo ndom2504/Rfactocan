@@ -614,7 +614,7 @@ const dict = {
     search_requests_placeholder: "Nom, ville, description…",
     dashboard_search_title: "Rechercher",
     dashboard_search_hint:
-      "Choisissez le type de recherche, puis affinez vos critères.",
+      "Transporter, expédier ou publier : cherchez un voyage, un colis ou un service, puis contactez.",
     search_filter_type: "Type de recherche",
     search_mode_voyageurs: "Voyageurs",
     search_mode_services: "Services",
@@ -1311,7 +1311,7 @@ const dict = {
       "Publier un voyage (je livre), un service (je suis pro), ou une commande (j’envoie / je reçois).",
     tour_search_title: "Rechercher",
     tour_search_body:
-      "Cherchez des voyageurs, des services ou des clients. Affinez par région, pays, ville et date.",
+      "Cherchez un voyage, un colis ou un service — les mêmes actions que Publier et Commander.",
     tour_stats_title: "Votre activité",
     tour_stats_body:
       "Suivez vos livraisons ouvertes, commandes ouvertes et votre note moyenne.",
@@ -1320,7 +1320,7 @@ const dict = {
       "Vos dernières réservations apparaissent ici. Ouvrir pour suivre paiement et livraison.",
     tour_nav_title: "Navigation",
     tour_nav_body:
-      "Tableau de bord, Réservations et Messages : les trois écrans essentiels du quotidien.",
+      "Tableau de bord, Communauté, Commander et Messages : les écrans du quotidien.",
     tour_bookings_title: "Réservations",
     tour_bookings_body:
       "Suivez propositions, paiements et livraisons. Le statut (en attente, payé, annulé…) indique l’étape.",
@@ -2309,7 +2309,7 @@ const dict = {
     search_requests_placeholder: "Name, city, description…",
     dashboard_search_title: "Search",
     dashboard_search_hint:
-      "Choose a search type, then refine your filters.",
+      "Transport, ship or publish: find a trip, a parcel or a service, then get in touch.",
     search_filter_type: "Search type",
     search_mode_voyageurs: "Travelers",
     search_mode_services: "Services",
@@ -3003,7 +3003,7 @@ const dict = {
       "Publish a trip (I deliver), a service (I’m a pro), or an order (I send / receive).",
     tour_search_title: "Search",
     tour_search_body:
-      "Find travelers, services, or clients. Refine by region, country, city, and date.",
+      "Find a trip, a parcel or a service — the same actions as Publish and Order.",
     tour_stats_title: "Your activity",
     tour_stats_body:
       "Track open deliveries, open orders, and your average rating.",
@@ -3012,7 +3012,7 @@ const dict = {
       "Your latest bookings appear here. Open one to follow payment and delivery.",
     tour_nav_title: "Navigation",
     tour_nav_body:
-      "Dashboard, Bookings, and Messages: the three everyday screens.",
+      "Dashboard, Community, Order, and Messages: the everyday screens.",
     tour_bookings_title: "Bookings",
     tour_bookings_body:
       "Track proposals, payments, and deliveries. Status badges show the current step.",

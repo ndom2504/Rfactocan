@@ -4,24 +4,15 @@ import { useState } from "react";
 import { TravelerSearch } from "@/components/traveler-search";
 import { RequestSearch } from "@/components/request-search";
 import { ServiceSearch } from "@/components/service-search";
-import { ShopSearch } from "@/components/shop-search";
-import { JobSearch } from "@/components/job-search";
-import { MeetSearch } from "@/components/meet-search";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useI18n } from "@/components/locale-provider";
 
-export type SearchMode =
-  | "voyageurs"
-  | "services"
-  | "boutiques"
-  | "clients"
-  | "emplois"
-  | "rencontres";
+export type SearchMode = "voyageurs" | "colis" | "services";
 
 type Props = {
-  /** Kept for compatibility — all modes are available. */
+  /** Kept for compatibility — all marketplace modes are available. */
   canSearchLivreurs?: boolean;
   canSearchCommandes?: boolean;
 };
@@ -49,21 +40,15 @@ export function DashboardSearchHub(_props: Props) {
             value={mode}
             onChange={(e) => setMode(e.target.value as SearchMode)}
           >
-            <option value="voyageurs">{t("search_mode_voyageurs")}</option>
-            <option value="services">{t("search_mode_services")}</option>
-            <option value="boutiques">{t("search_mode_shops")}</option>
-            <option value="clients">{t("search_mode_clients")}</option>
-            <option value="emplois">{t("search_mode_jobs")}</option>
-            <option value="rencontres">{t("search_mode_meet")}</option>
+            <option value="voyageurs">{t("publish_transport_cta")}</option>
+            <option value="colis">{t("publish_ship_cta")}</option>
+            <option value="services">{t("publish_listing_cta")}</option>
           </Select>
         </div>
 
         {mode === "voyageurs" && <TravelerSearch hideHeading plain />}
+        {mode === "colis" && <RequestSearch hideHeading plain />}
         {mode === "services" && <ServiceSearch hideHeading plain />}
-        {mode === "boutiques" && <ShopSearch hideHeading plain />}
-        {mode === "clients" && <RequestSearch hideHeading plain />}
-        {mode === "emplois" && <JobSearch hideHeading plain />}
-        {mode === "rencontres" && <MeetSearch hideHeading plain />}
       </Card>
     </section>
   );
