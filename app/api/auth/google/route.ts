@@ -25,7 +25,13 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
-    const state = await signGoogleMobileState(doneOrigin);
+    let state: string;
+    try {
+      const returnUrl = searchParams.get("returnUrl")?.trim() || "";
+      state = await signGoogleMobileState(doneOrigin, returnUrl || undefined);
+    } catch {
+      state = await signGoogleMobileState(doneOrigin);
+    }
     return NextResponse.redirect(getGoogleAuthUrl(state));
   }
 

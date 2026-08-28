@@ -1,16 +1,25 @@
 import { googleMobileErrorMessage } from "@/lib/google-mobile-oauth";
+import { OpenRfactoButton } from "./open-rfacto";
 
 export default async function GoogleAppReturnPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ticket?: string; error?: string }>;
+  searchParams: Promise<{
+    ticket?: string;
+    error?: string;
+    app?: string;
+    mfa?: string;
+  }>;
 }) {
-  const { ticket, error } = await searchParams;
+  const { ticket, error, app, mfa } = await searchParams;
+  const needsCode = mfa === "1" && Boolean(ticket);
   const message = error
     ? googleMobileErrorMessage(error)
-    : ticket
-      ? "Connexion réussie. Retour dans l'app…"
-      : "Vous pouvez fermer cette fenêtre.";
+    : needsCode
+      ? "Un code a été envoyé par email. Ouvrez Rfacto pour le coller."
+      : ticket
+        ? "Connexion réussie. Retour dans Rfacto…"
+        : "Vous pouvez fermer cette fenêtre.";
 
   return (
     <main
@@ -27,10 +36,19 @@ export default async function GoogleAppReturnPage({
         textAlign: "center",
       }}
     >
-      <p style={{ fontSize: 18, fontWeight: 600 }}>{message}</p>
-      <p style={{ marginTop: 12, opacity: 0.85 }}>
-        Vous pouvez fermer cette fenêtre.
-      </p>
+      <p style={{ fontSize: 20, fontWeight: 700 }}>{message}</p>
+      {app ? (
+        <OpenRfactoButton
+          app={app}
+          ticket={ticket}
+          error={error}
+          mfa={needsCode}
+        />
+      ) : (
+        <p style={{ marginTop: 16, opacity: 0.85 }}>
+          Revenez à Expo Go, puis réessayez Continuer avec Google.
+        </p>
+      )}
     </main>
   );
 }

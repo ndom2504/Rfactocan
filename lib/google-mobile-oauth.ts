@@ -31,7 +31,7 @@ export function isAllowedDoneOrigin(origin: string) {
 /** Deep links back into Expo Go / the native app — never https. */
 export function isAllowedAppReturnUrl(uri: string) {
   const value = uri.trim();
-  if (!value || value.length > 800) return false;
+  if (!value || value.length > 1500) return false;
   try {
     const url = new URL(value);
     const protocol = url.protocol.replace(":", "").toLowerCase();
@@ -44,11 +44,21 @@ export function isAllowedAppReturnUrl(uri: string) {
   }
 }
 
-export async function signGoogleMobileState(doneOrigin: string) {
+export async function signGoogleMobileState(
+  doneOrigin: string,
+  appReturnUrl?: string
+) {
   if (!isAllowedDoneOrigin(doneOrigin)) {
     throw new Error("doneOrigin invalide");
   }
-  return new SignJWT({ mobile: true, doneOrigin })
+  if (appReturnUrl && !isAllowedAppReturnUrl(appReturnUrl)) {
+    throw new Error("returnUrl invalide");
+  }
+  return new SignJWT({
+    mobile: true,
+    doneOrigin,
+    ...(appReturnUrl ? { appReturnUrl } : {}),
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("10m")
@@ -63,7 +73,15 @@ export async function readGoogleMobileState(state: string | null) {
       return null;
     }
     if (!isAllowedDoneOrigin(payload.doneOrigin)) return null;
-    return { doneOrigin: payload.doneOrigin.replace(/\/$/, "") };
+    const appReturnUrl =
+      typeof payload.appReturnUrl === "string" &&
+      isAllowedAppReturnUrl(payload.appReturnUrl)
+        ? payload.appReturnUrl
+        : undefined;
+    return {
+      doneOrigin: payload.doneOrigin.replace(/\/$/, ""),
+      appReturnUrl,
+    };
   } catch {
     return null;
   }
@@ -133,13 +151,21 @@ export function redirectToMobileDone(
 
 export async function redirectToMobileTicket(
   doneOrigin: string,
-  ticket: GoogleMobileTicket
+  ticket: GoogleMobileTicket,
+  appReturnUrl?: string
 ) {
   if (ticket.error) {
-    return redirectToMobileDone(doneOrigin, { error: ticket.error });
+    return redirectToMobileDone(doneOrigin, {
+      error: ticket.error,
+      app: appReturnUrl,
+    });
   }
   const signed = await signGoogleMobileTicket(ticket);
-  return redirectToMobileDone(doneOrigin, { ticket: signed });
+  return redirectToMobileDone(doneOrigin, {
+    ticket: signed,
+    app: appReturnUrl,
+    mfa: ticket.mfaToken ? "1" : undefined,
+  });
 }
 
 export function mobileDonePageHtml(message: string) {
