@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/locale-provider";
 import { requestTourStart } from "@/lib/guided-tour";
 import { cn } from "@/lib/utils";
@@ -27,7 +26,6 @@ export function ProfileMenu({
   className,
 }: Props) {
   const { t } = useI18n();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -88,9 +86,8 @@ export function ProfileMenu({
 
   async function logout() {
     setOpen(false);
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
-    router.refresh();
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    window.location.assign("/login");
   }
 
   const menu =

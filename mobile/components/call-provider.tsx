@@ -7,9 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { CallOverlay } from "@/components/call-overlay";
 import { useAuth } from "@/lib/auth-context";
-import { type ActiveCall, fetchInboundRinging } from "@/lib/calls";
+import {
+  type ActiveCall,
+  fetchInboundRinging,
+  isLivekitNativeAvailable,
+} from "@/lib/calls";
 
 const CallContext = createContext<{
   startOutgoing: (call: ActiveCall) => void;
@@ -54,11 +57,30 @@ export function CallProvider({ children }: { children: ReactNode }) {
   return (
     <CallContext.Provider value={{ startOutgoing }}>
       {children}
-      {active ? (
-        <CallOverlay call={active} onUpdate={setActive} onClose={close} />
+      {active && isLivekitNativeAvailable() ? (
+        <CallOverlayHost
+          call={active}
+          onUpdate={setActive}
+          onClose={close}
+        />
       ) : null}
     </CallContext.Provider>
   );
+}
+
+function CallOverlayHost({
+  call,
+  onUpdate,
+  onClose,
+}: {
+  call: ActiveCall;
+  onUpdate: (call: ActiveCall) => void;
+  onClose: () => void;
+}) {
+  // Keep LiveKit / WebRTC out of the Expo Go startup graph.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { CallOverlay } = require("./call-overlay") as typeof import("./call-overlay");
+  return <CallOverlay call={call} onUpdate={onUpdate} onClose={onClose} />;
 }
 
 export function useCallActions() {

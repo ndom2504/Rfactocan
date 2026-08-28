@@ -14,6 +14,9 @@ export type CommunityAuthor = {
   avatarUrl?: string | null;
   country?: string | null;
   verified?: boolean;
+  bio?: string | null;
+  connectionCount?: number;
+  connectedByMe?: boolean;
 };
 
 export type CommunityPost = {
@@ -26,6 +29,7 @@ export type CommunityPost = {
   href?: string | null;
   source?: string;
   commentCount?: number;
+  viewCount?: number;
   isOwner?: boolean;
   author?: CommunityAuthor;
 };
@@ -63,10 +67,25 @@ export function attachmentIsImage(att: {
   contentType?: string;
   name?: string;
 }) {
-  const type = (att.contentType || "").toLowerCase();
+  const type = (att.contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  if (type.startsWith("video/") || type.startsWith("audio/") || type === "application/pdf") {
+    return false;
+  }
   if (type.startsWith("image/")) return true;
   const hay = `${att.url} ${att.name || ""}`.toLowerCase();
   return /\.(jpe?g|png|webp|gif)(\?|$)/i.test(hay);
+}
+
+export function attachmentIsVideo(att: {
+  url: string;
+  contentType?: string;
+  name?: string;
+}) {
+  const type = (att.contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
+  if (type.startsWith("video/")) return true;
+  const hay = `${att.url} ${att.name || ""}`.toLowerCase();
+  if (/\.(m4a|aac|mp3|ogg|wav)(\?|$)/i.test(hay)) return false;
+  return /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(hay);
 }
 
 export function postMatchesQuery(post: CommunityPost, query: string) {

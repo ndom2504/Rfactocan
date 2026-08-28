@@ -60,7 +60,7 @@ export default function ServicesScreen() {
             />
           }
           renderItem={({ item }) => (
-            <Pressable onPress={() => router.push("/(tabs)/messages")}>
+            <Pressable onPress={() => router.push(`/service/${item.id}`)}>
               <Card>
                 <Text style={{ fontWeight: "700", color: colors.foreground }}>
                   {item.title}

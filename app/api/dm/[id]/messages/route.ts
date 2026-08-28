@@ -5,6 +5,7 @@ import { assertThreadParticipant, conversationPath, dmChannel, otherUserId, user
 import { isUserOnline } from "@/lib/presence";
 import { notifyUser } from "@/lib/notifications";
 import { summarizeReactions, type ReactionSummary } from "@/lib/dm-reactions";
+import { persistTyping, readPeerTyping } from "@/lib/dm-typing";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -59,6 +60,15 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Conversation introuvable" }, { status: 404 });
   }
 
+  try {
+    await prisma.user.update({
+      where: { id: session.id },
+      data: { lastSeenAt: new Date() },
+    });
+  } catch {
+    /* presence is best-effort */
+  }
+
   await prisma.directMessage.updateMany({
     where: {
       threadId: id,
@@ -107,6 +117,8 @@ export async function GET(_request: Request, { params }: Params) {
     console.error("[dm] canInvoice", e);
   }
 
+  const peerTyping = await readPeerTyping(id, session.id);
+
   return NextResponse.json({
     thread: {
       id: thread.id,
@@ -119,6 +131,7 @@ export async function GET(_request: Request, { params }: Params) {
       reactions: reactionByMessage[m.id] ?? [],
     })),
     canInvoice,
+    peerTyping,
     peer: peer
       ? {
           ...peer,
@@ -156,6 +169,7 @@ export async function POST(request: Request, { params }: Params) {
         contextId: body.contextId ?? thread.lastContextId,
       },
     });
+    void persistTyping(id, session.id, false);
 
     const sameChannel =
       !body.contextType ||

@@ -3,16 +3,35 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { CallProvider } from "@/components/call-provider";
+import { GoogleReturnHandler } from "@/components/google-return-handler";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { LocaleProvider } from "@/lib/i18n";
+import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { setupLivekitGlobals } from "@/lib/calls";
+import { watchPushNotifications } from "@/lib/push";
 import { colors } from "@/lib/theme";
 
 export { ErrorBoundary } from "expo-router";
 
-setupLivekitGlobals();
+try {
+  setupLivekitGlobals();
+} catch {
+  /* Expo Go has no WebRTC */
+}
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => {});
+
+function PushBridge() {
+  const router = useRouter();
+  useEffect(() => {
+    return watchPushNotifications((href) => {
+      router.push(href);
+    });
+  }, [router]);
+  return null;
+}
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,11 +40,19 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
-    const inAuth = segments[0] === "(auth)";
-    if (!user && !inAuth) {
-      router.replace("/(auth)/login");
-    } else if (user && inAuth) {
+    const root = segments[0];
+    const inAuth = root === "(auth)";
+    const atWelcome = !root || root === "index";
+    const googleReturn =
+      root === "oauth" || root === "google-auth" || root === "+not-found";
+    if (googleReturn && !user) {
+      router.replace("/");
+      return;
+    }
+    if (user && (inAuth || atWelcome || googleReturn)) {
       router.replace("/(tabs)");
+    } else if (!user && !inAuth && !atWelcome) {
+      router.replace("/");
     }
   }, [user, loading, segments, router]);
 
@@ -53,12 +80,22 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ThemedStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? "light" : "dark"} />;
+}
+
 export default function RootLayout() {
   return (
+    <LocaleProvider>
+    <ThemeProvider>
     <AuthProvider>
-      <StatusBar style="dark" />
+      <ThemedStatusBar />
+      <GoogleReturnHandler />
       <AuthGate>
         <CallProvider>
+        <PushBridge />
+        <PresenceHeartbeat />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)" />
@@ -91,10 +128,18 @@ export default function RootLayout() {
             name="service/new"
             options={{ headerShown: true, title: "Publier un service" }}
           />
+          <Stack.Screen
+            name="service/[id]"
+            options={{ headerShown: true, title: "Service" }}
+          />
           <Stack.Screen name="in" options={{ headerShown: true, title: "In" }} />
           <Stack.Screen
             name="messages/[id]"
             options={{ headerShown: true, title: "Conversation" }}
+          />
+          <Stack.Screen
+            name="service-payments/[id]"
+            options={{ headerShown: true, title: "Paiement" }}
           />
           <Stack.Screen
             name="in-chat/[id]"
@@ -108,9 +153,15 @@ export default function RootLayout() {
             name="shops/[id]"
             options={{ headerShown: true, title: "Boutique" }}
           />
+          <Stack.Screen
+            name="meet"
+            options={{ headerShown: true, title: "Rencontre" }}
+          />
         </Stack>
         </CallProvider>
       </AuthGate>
     </AuthProvider>
+    </ThemeProvider>
+    </LocaleProvider>
   );
 }

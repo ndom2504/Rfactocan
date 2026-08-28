@@ -7,6 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "rfacto",
     "userInterfaceStyle": "light",
+    "updates": {
+      "enabled": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rfacto.app",
@@ -34,7 +37,9 @@
       "permissions": [
         "android.permission.READ_CONTACTS",
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE"
       ]
     },
     "web": {
@@ -76,7 +81,20 @@
         }
       ],
       "@livekit/react-native-expo-plugin",
-      "@config-plugins/react-native-webrtc"
+      "@config-plugins/react-native-webrtc",
+      "expo-status-bar",
+      "expo-font",
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#28541D",
+          "sounds": ["./assets/sounds/rfacto_notify.wav"],
+          "defaultChannel": "rfacto_alerts_v3",
+          "enableBackgroundRemoteNotifications": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -84,7 +102,8 @@
     "extra": {
       "eas": {
         "projectId": "d8977989-e19b-4dfa-92e3-25e47b779597"
-      }
+      },
+      "googleWebClientId": "719915776201-m06tnpccblacg8tro797tca4q0mi93rd.apps.googleusercontent.com"
     },
     "owner": "ndom2504"
   }

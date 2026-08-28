@@ -18,14 +18,20 @@ type Props = {
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   onLoggedIn: () => void;
+  tone?: "dark" | "light";
 };
 
 export function PhoneOtpAuth({
   displayName,
   onDisplayNameChange,
   onLoggedIn,
+  tone = "light",
 }: Props) {
   const { requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp } = useAuth();
+  const dark = tone === "dark";
+  const copyColor = dark ? "#ffffff" : colors.foreground;
+  const mutedColor = dark ? "rgba(255,255,255,0.92)" : colors.muted;
+  const labelStyle = dark ? { color: "#ffffff" as const } : undefined;
   const [countries, setCountries] = useState<PhoneCountry[]>([]);
   const [country, setCountry] = useState<PhoneCountry | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -104,12 +110,21 @@ export function PhoneOtpAuth({
   if (mfaToken) {
     return (
       <View>
-        <Text style={{ color: colors.muted, marginBottom: 12 }}>
+        <Text
+          style={{
+            color: mutedColor,
+            marginBottom: 12,
+            fontSize: 16,
+            lineHeight: 24,
+            fontWeight: "400",
+          }}
+        >
           Entrez le code à 6 chiffres envoyé au {phoneHint || "numéro"}.
         </Text>
         {isNew ? (
           <Field
             label="Nom affiché"
+            labelStyle={labelStyle}
             value={displayName}
             onChangeText={onDisplayNameChange}
             placeholder="Amina N."
@@ -117,6 +132,7 @@ export function PhoneOtpAuth({
         ) : null}
         <Field
           label="Code SMS"
+          labelStyle={labelStyle}
           keyboardType="number-pad"
           value={otpCode}
           onChangeText={(v) => setOtpCode(v.replace(/\D/g, "").slice(0, 6))}
@@ -124,7 +140,9 @@ export function PhoneOtpAuth({
           maxLength={6}
         />
         {!!info && !error ? (
-          <Text style={{ color: colors.accent, marginBottom: 8 }}>{info}</Text>
+          <Text style={{ color: dark ? "#C5E1A5" : colors.accent, marginBottom: 8, fontSize: 15 }}>
+            {info}
+          </Text>
         ) : null}
         <ErrorText>{error}</ErrorText>
         <Button label="Valider le code" onPress={verify} loading={loading} />
@@ -133,6 +151,7 @@ export function PhoneOtpAuth({
           onPress={resend}
           loading={resendLoading}
           variant="outline"
+          tone={tone}
         />
         <Pressable
           onPress={() => {
@@ -143,7 +162,7 @@ export function PhoneOtpAuth({
           }}
           style={{ marginTop: 16 }}
         >
-          <Text style={{ color: colors.muted, textAlign: "center" }}>
+          <Text style={{ color: copyColor, textAlign: "center", fontSize: 16 }}>
             Retour
           </Text>
         </Pressable>
@@ -153,7 +172,15 @@ export function PhoneOtpAuth({
 
   return (
     <View>
-      <Text style={{ color: colors.muted, marginBottom: 12 }}>
+      <Text
+        style={{
+          color: mutedColor,
+          marginBottom: 12,
+          fontSize: 16,
+          lineHeight: 24,
+          fontWeight: "400",
+        }}
+      >
         Un code SMS suffit. Email et mot de passe restent disponibles.
       </Text>
       <Pressable
@@ -168,15 +195,16 @@ export function PhoneOtpAuth({
           marginBottom: 12,
         }}
       >
-        <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginBottom: 4 }}>
+        <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}>
           Pays du numéro
         </Text>
-        <Text style={{ fontSize: 16, color: colors.foreground }}>
+        <Text style={{ fontSize: 16, color: colors.foreground, fontWeight: "400" }}>
           {country ? `${country.name} (${country.dial})` : "Choisir…"}
         </Text>
       </Pressable>
       <Field
         label="Numéro"
+        labelStyle={labelStyle}
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}

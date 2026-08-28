@@ -2,13 +2,22 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { REF_COOKIE } from "@/lib/ambassador";
 import { getAppUrl } from "@/lib/app-url";
-import { createSessionToken, setSessionCookie } from "@/lib/auth";
+import {
+  createSessionToken,
+  getSessionUserFromToken,
+  setSessionCookie,
+} from "@/lib/auth";
+import {
+  expoGoogleUserJson,
+  saveExpoGoogleLogin,
+} from "@/lib/expo-google-login";
 import { upsertUserFromGoogleProfile } from "@/lib/google-auth-user";
 import {
   looksLikeJwt,
   readGoogleMobileState,
   redirectToMobileDone,
   redirectToMobileTicket,
+  type GoogleMobileTicket,
 } from "@/lib/google-mobile-oauth";
 import {
   exchangeGoogleCode,
@@ -17,6 +26,49 @@ import {
 import { startEmailOtpChallenge } from "@/lib/login-otp";
 
 const STATE_COOKIE = "rfacto_oauth_state";
+
+async function finishMobile(
+  mobile: {
+    doneOrigin: string;
+    appReturnUrl?: string;
+    sid?: string;
+  },
+  ticket: GoogleMobileTicket
+) {
+  if (mobile.sid) {
+    if (ticket.error) {
+      await saveExpoGoogleLogin(mobile.sid, { error: ticket.error });
+      return redirectToMobileDone(mobile.doneOrigin, { error: ticket.error });
+    }
+    if (ticket.mfaToken) {
+      await saveExpoGoogleLogin(mobile.sid, {
+        mfaRequired: true,
+        mfaToken: ticket.mfaToken,
+        emailHint: ticket.emailHint || "",
+      });
+      return redirectToMobileDone(mobile.doneOrigin, { ok: "1", mfa: "1" });
+    }
+    if (ticket.token) {
+      const user = await getSessionUserFromToken(ticket.token);
+      if (!user) {
+        await saveExpoGoogleLogin(mobile.sid, { error: "google_auth_failed" });
+        return redirectToMobileDone(mobile.doneOrigin, {
+          error: "google_auth_failed",
+        });
+      }
+      await saveExpoGoogleLogin(mobile.sid, {
+        token: ticket.token,
+        user: expoGoogleUserJson(user),
+      });
+      return redirectToMobileDone(mobile.doneOrigin, { ok: "1" });
+    }
+    await saveExpoGoogleLogin(mobile.sid, { error: "google_auth_failed" });
+    return redirectToMobileDone(mobile.doneOrigin, {
+      error: "google_auth_failed",
+    });
+  }
+  return redirectToMobileTicket(mobile.doneOrigin, ticket, mobile.appReturnUrl);
+}
 
 export async function GET(request: Request) {
   const appUrl = getAppUrl();
@@ -29,6 +81,9 @@ export async function GET(request: Request) {
   const appReturn = mobile?.appReturnUrl;
 
   if (oauthError) {
+    if (mobile) {
+      return finishMobile(mobile, { error: oauthError });
+    }
     if (mobileOrigin) {
       return redirectToMobileDone(mobileOrigin, {
         error: oauthError,
@@ -42,6 +97,9 @@ export async function GET(request: Request) {
 
   if (mobileOrigin) {
     if (!code) {
+      if (mobile) {
+        return finishMobile(mobile, { error: "google_auth_failed" });
+      }
       return redirectToMobileDone(mobileOrigin, {
         error: "google_auth_failed",
         app: appReturn,
@@ -59,6 +117,9 @@ export async function GET(request: Request) {
           suspended: "account_suspended",
           failed: "google_auth_failed",
         } as const;
+        if (mobile) {
+          return finishMobile(mobile, { error: map[result.error] });
+        }
         return redirectToMobileDone(mobileOrigin, {
           error: map[result.error],
           app: appReturn,
@@ -72,6 +133,12 @@ export async function GET(request: Request) {
       });
 
       if (challenge.ok) {
+        if (mobile) {
+          return finishMobile(mobile, {
+            mfaToken: challenge.mfaToken,
+            emailHint: challenge.emailHint,
+          });
+        }
         return redirectToMobileTicket(
           mobileOrigin,
           {
@@ -83,11 +150,15 @@ export async function GET(request: Request) {
       }
 
       if (!challenge.skipped) {
+        const otpError =
+          challenge.error === "DOMAIN_NOT_VERIFIED"
+            ? "otp_domain_not_verified"
+            : "otp_send_failed";
+        if (mobile) {
+          return finishMobile(mobile, { error: otpError });
+        }
         return redirectToMobileDone(mobileOrigin, {
-          error:
-            challenge.error === "DOMAIN_NOT_VERIFIED"
-              ? "otp_domain_not_verified"
-              : "otp_send_failed",
+          error: otpError,
           app: appReturn,
         });
       }
@@ -97,9 +168,15 @@ export async function GET(request: Request) {
         email: result.user.email,
         role: result.user.role,
       });
+      if (mobile) {
+        return finishMobile(mobile, { token });
+      }
       return redirectToMobileTicket(mobileOrigin, { token }, appReturn);
     } catch (error) {
       console.error("Google OAuth mobile callback error:", error);
+      if (mobile) {
+        return finishMobile(mobile, { error: "google_auth_failed" });
+      }
       return redirectToMobileDone(mobileOrigin, {
         error: "google_auth_failed",
         app: appReturn,

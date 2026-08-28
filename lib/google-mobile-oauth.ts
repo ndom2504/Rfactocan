@@ -10,6 +10,13 @@ function getSecret() {
   return new TextEncoder().encode(secret);
 }
 
+export const EXPO_GOOGLE_SID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isExpoGoogleSid(sid: string) {
+  return EXPO_GOOGLE_SID_RE.test(sid.trim());
+}
+
 export function looksLikeJwt(value: string) {
   const parts = value.split(".");
   return parts.length === 3 && parts.every((part) => part.length > 4);
@@ -44,20 +51,31 @@ export function isAllowedAppReturnUrl(uri: string) {
   }
 }
 
+export type GoogleMobileStateOptions = {
+  appReturnUrl?: string;
+  sid?: string;
+};
+
 export async function signGoogleMobileState(
   doneOrigin: string,
-  appReturnUrl?: string
+  options?: string | GoogleMobileStateOptions
 ) {
+  const opts: GoogleMobileStateOptions =
+    typeof options === "string" ? { appReturnUrl: options } : options || {};
   if (!isAllowedDoneOrigin(doneOrigin)) {
     throw new Error("doneOrigin invalide");
   }
-  if (appReturnUrl && !isAllowedAppReturnUrl(appReturnUrl)) {
+  if (opts.appReturnUrl && !isAllowedAppReturnUrl(opts.appReturnUrl)) {
     throw new Error("returnUrl invalide");
+  }
+  if (opts.sid && !isExpoGoogleSid(opts.sid)) {
+    throw new Error("sid invalide");
   }
   return new SignJWT({
     mobile: true,
     doneOrigin,
-    ...(appReturnUrl ? { appReturnUrl } : {}),
+    ...(opts.appReturnUrl ? { appReturnUrl: opts.appReturnUrl } : {}),
+    ...(opts.sid ? { sid: opts.sid.trim().toLowerCase() } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -78,9 +96,14 @@ export async function readGoogleMobileState(state: string | null) {
       isAllowedAppReturnUrl(payload.appReturnUrl)
         ? payload.appReturnUrl
         : undefined;
+    const sid =
+      typeof payload.sid === "string" && isExpoGoogleSid(payload.sid)
+        ? payload.sid.trim().toLowerCase()
+        : undefined;
     return {
       doneOrigin: payload.doneOrigin.replace(/\/$/, ""),
       appReturnUrl,
+      sid,
     };
   } catch {
     return null;

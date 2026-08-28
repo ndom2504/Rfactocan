@@ -1,3 +1,4 @@
+import { File, UploadType } from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
 
 const TOKEN_KEY = "rfacto_token";
@@ -61,34 +62,80 @@ export function mediaUrl(url?: string | null) {
   return `${getApiUrl()}${path}`;
 }
 
+type LocalFile = { uri: string; name: string; type: string };
+
+function toNativeUri(uri: string) {
+  const clean = uri.split("?")[0];
+  if (
+    clean.startsWith("file:") ||
+    clean.startsWith("content:") ||
+    clean.startsWith("ph:") ||
+    clean.startsWith("assets-library:")
+  ) {
+    return clean;
+  }
+  if (clean.startsWith("/")) return `file://${clean}`;
+  return clean;
+}
+
+function parseJsonBody(body: string) {
+  try {
+    return JSON.parse(body) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+async function nativeMultipart(
+  path: string,
+  file: LocalFile,
+  fields?: Record<string, string>
+) {
+  const token = await getToken();
+  const uri = toNativeUri(file.uri);
+  const native = new File(uri);
+  const result = await native.upload(`${getApiUrl()}${path}`, {
+    httpMethod: "POST",
+    uploadType: UploadType.MULTIPART,
+    fieldName: "file",
+    mimeType: file.type || "application/octet-stream",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    parameters: fields,
+  });
+  const data = parseJsonBody(result.body);
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(
+      (typeof data.error === "string" && data.error) || `Erreur ${result.status}`
+    );
+  }
+  return data;
+}
+
 export async function uploadFile(
   path: string,
-  file: { uri: string; name: string; type: string }
+  file: LocalFile
 ): Promise<{ url: string; name?: string; contentType?: string }> {
-  const token = await getToken();
-  const form = new FormData();
-  form.append("file", {
-    uri: file.uri,
-    name: file.name,
-    type: file.type,
-  } as unknown as Blob);
-  const headers = new Headers();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  const res = await fetch(`${getApiUrl()}${path}`, {
-    method: "POST",
-    headers,
-    body: form,
-  });
-  const data = (await res.json().catch(() => ({}))) as {
-    url?: string;
-    name?: string;
-    contentType?: string;
-    error?: string;
-  };
-  if (!res.ok || !data.url) {
-    throw new Error(data.error || `Erreur ${res.status}`);
+  const data = await nativeMultipart(path, file);
+  const url = typeof data.url === "string" ? data.url : "";
+  if (!url) {
+    throw new Error(
+      (typeof data.error === "string" && data.error) || "Échec du téléversement."
+    );
   }
-  return { url: data.url, name: data.name, contentType: data.contentType };
+  return {
+    url,
+    name: typeof data.name === "string" ? data.name : file.name,
+    contentType:
+      typeof data.contentType === "string" ? data.contentType : file.type,
+  };
+}
+
+export async function postMultipart<T = Record<string, unknown>>(
+  path: string,
+  file: LocalFile,
+  fields?: Record<string, string>
+): Promise<T> {
+  return (await nativeMultipart(path, file, fields)) as T;
 }
 
 export function isImageAttachment(url?: string | null) {

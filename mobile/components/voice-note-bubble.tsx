@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useEffect, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -58,9 +59,11 @@ export function VoiceNoteBubble({
             backgroundColor: mine ? "rgba(255,255,255,0.2)" : colors.accent,
           }}
         >
-          <Text style={{ color: colors.white, fontSize: 16 }}>
-            {status.playing ? "❚❚" : "▶"}
-          </Text>
+          <Ionicons
+            name={status.playing ? "pause" : "play"}
+            size={18}
+            color={colors.white}
+          />
         </Pressable>
         <View style={{ flex: 1 }}>
           <View

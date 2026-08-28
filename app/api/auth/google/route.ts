@@ -25,12 +25,19 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
+    const returnUrl = searchParams.get("returnUrl")?.trim() || "";
+    const sid = searchParams.get("sid")?.trim() || "";
     let state: string;
     try {
-      const returnUrl = searchParams.get("returnUrl")?.trim() || "";
-      state = await signGoogleMobileState(doneOrigin, returnUrl || undefined);
+      state = await signGoogleMobileState(doneOrigin, {
+        ...(returnUrl ? { appReturnUrl: returnUrl } : {}),
+        ...(sid ? { sid } : {}),
+      });
     } catch {
-      state = await signGoogleMobileState(doneOrigin);
+      return NextResponse.json(
+        { error: "Paramètres Google Expo invalides." },
+        { status: 400 }
+      );
     }
     return NextResponse.redirect(getGoogleAuthUrl(state));
   }

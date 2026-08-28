@@ -11,13 +11,15 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://www.rfacto.com"
+        "EXPO_PUBLIC_API_URL": "https://www.rfacto.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "719915776201-m06tnpccblacg8tro797tca4q0mi93rd.apps.googleusercontent.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://www.rfacto.com"
+        "EXPO_PUBLIC_API_URL": "https://www.rfacto.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "719915776201-m06tnpccblacg8tro797tca4q0mi93rd.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -25,6 +27,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://www.rfacto.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "719915776201-m06tnpccblacg8tro797tca4q0mi93rd.apps.googleusercontent.com",
         "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
       }
     }

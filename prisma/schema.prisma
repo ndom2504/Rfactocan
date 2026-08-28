@@ -1009,6 +1009,8 @@ model DirectThread {
   lastContextType String?
   lastContextId   String?
   lastMessageAt   DateTime?
+  typingUserId    String?
+  typingAt        DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

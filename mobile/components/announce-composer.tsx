@@ -75,11 +75,11 @@ export function AnnounceComposer({
     }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      setError("Autorisez l’accès aux photos pour joindre une image.");
+      setError("Autorisez l’accès aux photos pour joindre une image ou une vidéo.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+      mediaTypes: ["images", "videos"],
       quality: 0.7,
       allowsMultipleSelection: true,
       selectionLimit: remaining,
@@ -90,8 +90,10 @@ export function AnnounceComposer({
     try {
       const next = [...attachments];
       for (const [index, asset] of (result.assets ?? []).entries()) {
-        const name = asset.fileName || `photo-${index + 1}.jpg`;
-        const type = asset.mimeType || "image/jpeg";
+        const name = asset.fileName || `media-${index + 1}.jpg`;
+        const type =
+          asset.mimeType ||
+          (/\.(mp4|mov|webm|m4v)$/i.test(name) ? "video/mp4" : "image/jpeg");
         const uploaded = await uploadFile("/api/community/upload", {
           uri: asset.uri,
           name,
@@ -178,7 +180,7 @@ export function AnnounceComposer({
           style={{ minHeight: 120, textAlignVertical: "top" }}
         />
         <Button
-          label={uploading ? "Envoi…" : "Joindre une image"}
+          label={uploading ? "Envoi…" : "Joindre une photo ou une vidéo"}
           variant="outline"
           disabled={uploading || busy || attachments.length >= 10}
           onPress={() => void pickAttachments()}

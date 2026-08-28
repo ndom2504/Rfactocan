@@ -82,6 +82,14 @@ export async function sendFcmToUsers(input: {
         android: {
           priority: "high",
           ttl: androidTtlMsForType(type),
+          notification: {
+            title: input.title,
+            body: input.body,
+            channelId: androidChannelId,
+            sound: "rfacto_notify",
+            color: "#28541D",
+            defaultSound: false,
+          },
         },
         apns: {
           headers: {

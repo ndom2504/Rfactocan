@@ -13,13 +13,17 @@ import {
   View,
 } from "react-native";
 import { Button, Card, ErrorText, Field, Muted, Screen } from "@/components/ui";
+import { CommunityVideoPlayer } from "@/components/community-video-player";
 import { api, getApiUrl, mediaUrl } from "@/lib/api";
 import {
   attachmentIsImage,
+  attachmentIsVideo,
   KIND_LABELS,
   type CommunityPost,
 } from "@/lib/community";
+import { startDirectChat } from "@/lib/dm";
 import { formatDate } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
 
 type Comment = {
@@ -33,6 +37,7 @@ type Comment = {
 export default function CommunityPostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t, locale } = useI18n();
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState("");
@@ -85,6 +90,29 @@ export default function CommunityPostScreen() {
     }
   }
 
+  async function contactAuthor() {
+    const authorId = post?.author?.id;
+    if (!authorId || !post) return;
+    setBusy(true);
+    setError("");
+    try {
+      const body =
+        locale === "en"
+          ? `Hello, I saw your post « ${post.title?.trim() || "Rfacto"} ».`
+          : `Bonjour, j’ai vu votre annonce « ${post.title?.trim() || "Rfacto"} ».`;
+      const threadId = await startDirectChat({
+        toUserId: authorId,
+        body,
+      });
+      if (threadId) router.push(`/messages/${threadId}`);
+      else router.push("/(tabs)/messages");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("retry"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function sharePost() {
     if (!id) return;
     try {
@@ -114,7 +142,10 @@ export default function CommunityPostScreen() {
   }
 
   const photos = (post.attachments ?? []).filter(attachmentIsImage);
-  const files = (post.attachments ?? []).filter((a) => !attachmentIsImage(a));
+  const videos = (post.attachments ?? []).filter(attachmentIsVideo);
+  const files = (post.attachments ?? []).filter(
+    (a) => !attachmentIsImage(a) && !attachmentIsVideo(a)
+  );
 
   return (
     <Screen style={{ paddingBottom: 8 }}>
@@ -154,19 +185,26 @@ export default function CommunityPostScreen() {
             <Pressable
               key={photo.url}
               onPress={() => void Linking.openURL(mediaUrl(photo.url))}
+              style={{ marginHorizontal: -16, marginTop: 12 }}
             >
               <Image
                 source={{ uri: mediaUrl(photo.url) }}
                 style={{
-                  marginTop: 12,
                   width: "100%",
-                  height: 220,
-                  borderRadius: 12,
+                  height: 240,
                   backgroundColor: colors.surface2,
                 }}
                 resizeMode="cover"
               />
             </Pressable>
+          ))}
+          {videos.map((video) => (
+            <View key={video.url} style={{ marginHorizontal: -16, marginTop: 12 }}>
+              <CommunityVideoPlayer
+                url={mediaUrl(video.url)}
+                edgeToEdge
+              />
+            </View>
           ))}
           {files.map((file) => (
             <Pressable
@@ -185,7 +223,14 @@ export default function CommunityPostScreen() {
               </Text>
             </Pressable>
           ))}
-          <View style={{ marginTop: 8 }}>
+          <View style={{ marginTop: 8, gap: 8 }}>
+            {!post.isOwner && post.author?.id ? (
+              <Button
+                label={t("community_contact")}
+                onPress={() => void contactAuthor()}
+                loading={busy}
+              />
+            ) : null}
             <Button label="Partager" variant="outline" onPress={() => void sharePost()} />
           </View>
           <Text

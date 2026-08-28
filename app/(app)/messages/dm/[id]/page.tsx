@@ -134,8 +134,12 @@ export default function DirectMessageChatPage() {
   const [forwardLoading, setForwardLoading] = useState(false);
   const [forwardBusyId, setForwardBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [peerTyping, setPeerTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const typingOnRef = useRef(false);
+  const typingPingAt = useRef(0);
+  const typingIdle = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function loadMessages() {
     if (!id) return;
@@ -149,6 +153,7 @@ export default function DirectMessageChatPage() {
     if (msgRes.ok) {
       setMessages(msgData.messages ?? []);
       setPeer(msgData.peer ?? null);
+      setPeerTyping(Boolean(msgData.peerTyping));
       setThread(msgData.thread ?? null);
       setCanInvoice(
         Boolean(msgData.canInvoice) && msgData.thread?.channel !== "IN"
@@ -188,6 +193,50 @@ export default function DirectMessageChatPage() {
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    return () => {
+      if (typingIdle.current) clearTimeout(typingIdle.current);
+      if (!id || !typingOnRef.current) return;
+      typingOnRef.current = false;
+      void fetch(`/api/dm/${id}/typing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ typing: false }),
+      });
+    };
+  }, [id]);
+
+  function notifyTyping(active: boolean) {
+    if (!id) return;
+    if (!active) {
+      if (typingIdle.current) {
+        clearTimeout(typingIdle.current);
+        typingIdle.current = null;
+      }
+      if (typingOnRef.current) {
+        typingOnRef.current = false;
+        void fetch(`/api/dm/${id}/typing`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ typing: false }),
+        });
+      }
+      return;
+    }
+    const now = Date.now();
+    if (!typingOnRef.current || now - typingPingAt.current > 2000) {
+      typingOnRef.current = true;
+      typingPingAt.current = now;
+      void fetch(`/api/dm/${id}/typing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ typing: true }),
+      });
+    }
+    if (typingIdle.current) clearTimeout(typingIdle.current);
+    typingIdle.current = setTimeout(() => notifyTyping(false), 4000);
+  }
 
   useEffect(() => {
     if (!id || !thread?.channel) return;
@@ -459,6 +508,7 @@ export default function DirectMessageChatPage() {
         }
       }
       setText("");
+      notifyTyping(false);
       clearAttachment();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("attach_failed"));
@@ -516,13 +566,24 @@ export default function DirectMessageChatPage() {
             name={peer?.displayName || "?"}
             avatarUrl={peer?.avatarUrl}
             size="lg"
+            online={peer?.online}
           />
           <div className="min-w-0">
             <h1 className="truncate font-[family-name:var(--font-display)] text-xl font-semibold">
               {peer?.displayName || t("messages_title")}
             </h1>
-            <p className="text-xs text-[var(--muted)]">
-              {peer?.online ? t("online") : t("dm_direct_chat")}
+            <p
+              className={`text-xs ${
+                peerTyping || peer?.online
+                  ? "text-emerald-600"
+                  : "text-[var(--muted)]"
+              }`}
+            >
+              {peerTyping
+                ? t("typing")
+                : peer?.online
+                  ? t("online")
+                  : t("offline")}
             </p>
           </div>
         </div>
@@ -827,6 +888,17 @@ export default function DirectMessageChatPage() {
             </DmBubble>
           );
         })}
+        {peerTyping ? (
+          <div className="flex justify-start">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
+              <span className="inline-flex gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--muted)] [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--muted)] [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--muted)]" />
+              </span>
+            </div>
+          </div>
+        ) : null}
         <div ref={bottomRef} />
       </div>
 
@@ -930,7 +1002,11 @@ export default function DirectMessageChatPage() {
           />
           <Textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setText(next);
+              notifyTyping(next.trim().length > 0);
+            }}
             rows={2}
             maxLength={4000}
             placeholder={t("type_message")}

@@ -19,11 +19,32 @@ export async function GET(_request: Request, { params }: Ctx) {
   const { id } = await params;
   const result = await issueCallLivekitToken(id, session.id);
   if (!result.ok) {
+    console.error("[calls/token] deny", {
+      callId: id,
+      userId: session.id,
+      status: result.status,
+      code: result.code,
+      error: result.error,
+    });
     return NextResponse.json(
       { error: result.error, code: result.code },
       { status: result.status }
     );
   }
+
+  let livekitHost = "";
+  try {
+    livekitHost = new URL(result.livekitUrl).host;
+  } catch {
+    livekitHost = "invalid-url";
+  }
+  console.info("[calls/token] ok", {
+    callId: id,
+    userId: session.id,
+    livekitHost,
+    roomName: result.roomName,
+    tokenChars: result.token.length,
+  });
 
   return NextResponse.json({
     livekitUrl: result.livekitUrl,

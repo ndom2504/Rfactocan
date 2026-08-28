@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { NativeModules } from "react-native";
 import { api } from "@/lib/api";
 
@@ -16,15 +17,27 @@ export type ActiveCall = {
   peer?: CallPeer;
 };
 
-export function isLivekitNativeAvailable() {
-  return Boolean(
-    (NativeModules as { WebRTCModule?: unknown }).WebRTCModule
+export function isExpoGo() {
+  return (
+    Constants.appOwnership === "expo" ||
+    Constants.executionEnvironment === "storeClient"
   );
 }
 
-export function setupLivekitGlobals() {
-  if (!isLivekitNativeAvailable()) return;
+export function isLivekitNativeAvailable() {
+  if (isExpoGo()) return false;
   try {
+    return Boolean(
+      (NativeModules as { WebRTCModule?: unknown }).WebRTCModule
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function setupLivekitGlobals() {
+  try {
+    if (!isLivekitNativeAvailable()) return;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require("@livekit/react-native").registerGlobals();
   } catch {
