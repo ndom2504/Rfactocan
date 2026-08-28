@@ -88,6 +88,12 @@ async function resolveSessionToken(): Promise<string | null> {
   return cookieStore.get(COOKIE_NAME)?.value ?? null;
 }
 
+export async function getSessionUserFromToken(
+  token: string
+): Promise<SessionUser | null> {
+  return sessionUserFromToken(token);
+}
+
 async function sessionUserFromToken(
   token: string
 ): Promise<SessionUser | null> {

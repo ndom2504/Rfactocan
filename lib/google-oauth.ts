@@ -29,23 +29,51 @@ export function getGoogleAuthUrl(state: string) {
   return `${GOOGLE_AUTH}?${params.toString()}`;
 }
 
-export async function exchangeGoogleCode(code: string) {
+/** Expo Go / EAS without a native iOS client use the AuthSession proxy. */
+export const EXPO_GOOGLE_PROXY_REDIRECT =
+  "https://auth.expo.io/@ndom2504/rfacto";
+
+function normalizeRedirect(uri: string) {
+  return uri.trim().replace(/\/$/, "");
+}
+
+/** Blocks open redirects on the mobile code-exchange path. */
+export function isAllowedGoogleMobileRedirect(uri: string) {
+  const value = normalizeRedirect(uri);
+  const allowed = new Set([
+    normalizeRedirect(getGoogleRedirectUri()),
+    EXPO_GOOGLE_PROXY_REDIRECT,
+    "https://auth.expo.io/ndom2504/rfacto",
+    "rfacto://oauthredirect",
+  ]);
+  return allowed.has(value);
+}
+
+export async function exchangeGoogleCode(
+  code: string,
+  options?: { redirectUri?: string; codeVerifier?: string }
+) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     throw new Error("Google OAuth is not configured");
   }
 
+  const body = new URLSearchParams({
+    code,
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: options?.redirectUri || getGoogleRedirectUri(),
+    grant_type: "authorization_code",
+  });
+  if (options?.codeVerifier) {
+    body.set("code_verifier", options.codeVerifier);
+  }
+
   const res = await fetch(GOOGLE_TOKEN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: getGoogleRedirectUri(),
-      grant_type: "authorization_code",
-    }),
+    body,
   });
 
   if (!res.ok) {
