@@ -55,7 +55,7 @@ type ContactsNav = Navigator & {
   };
 };
 
-const IN_AD_PATH = "/in/rfacto-in-ad.png";
+const IN_AD_PATH = "/images/in/rfacto-in-ad.png";
 const IN_CONTACTS_STORAGE = "rfacto-in-contacts-v1";
 
 function readStoredContacts(): LocalContact[] {

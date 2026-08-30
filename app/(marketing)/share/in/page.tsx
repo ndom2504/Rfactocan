@@ -11,9 +11,12 @@ type Props = { searchParams: Promise<{ ref?: string }> };
 const OG_TITLE = "Rfacto + In — bâtissez votre réseau d’affaires";
 const OG_DESC =
   "Inscris-toi sur Rfacto et rejoins In pour bâtir des relations et un réseau pro business.";
+/** Public path — must not live under `/in/` (that route redirects and hides static files). */
+const IN_AD_PATH = "/images/in/rfacto-in-ad.png";
 
 export async function generateMetadata(): Promise<Metadata> {
   const url = `${getAppUrl()}/share/in`;
+  const image = `${getAppUrl()}${IN_AD_PATH}`;
   return {
     title: OG_TITLE,
     description: OG_DESC,
@@ -25,11 +28,22 @@ export async function generateMetadata(): Promise<Metadata> {
       title: OG_TITLE,
       description: OG_DESC,
       locale: "fr_FR",
+      images: [
+        {
+          url: image,
+          secureUrl: image,
+          type: "image/png",
+          width: 1024,
+          height: 1024,
+          alt: OG_TITLE,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: OG_TITLE,
       description: OG_DESC,
+      images: [image],
     },
   };
 }
@@ -53,7 +67,7 @@ export default async function InSharePage({ searchParams }: Props) {
       <p className="mt-3 text-[var(--muted)]">{t(locale, "in_share_page_lead")}</p>
       <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[#10241F]">
         <Image
-          src="/in/rfacto-in-ad.png"
+          src={IN_AD_PATH}
           alt={t(locale, "in_share_page_title")}
           width={1024}
           height={1024}

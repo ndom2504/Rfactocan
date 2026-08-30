@@ -7,7 +7,7 @@ export const contentType = "image/png";
 export const size = { width: 1024, height: 1024 };
 
 export default async function Image() {
-  const bytes = await readFile(join(process.cwd(), "public/in/rfacto-in-ad.png"));
+  const bytes = await readFile(join(process.cwd(), "public/images/in/rfacto-in-ad.png"));
   return new Response(new Uint8Array(bytes), {
     headers: {
       "Content-Type": "image/png",
