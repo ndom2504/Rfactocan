@@ -13,6 +13,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:set-admin": "tsx scripts/set-admin.ts",
     "db:set-ambassador": "tsx scripts/set-ambassador.ts",
+    "db:set-review": "tsx scripts/set-review-account.ts",
     "postinstall": "prisma generate",
     "test:calls": "tsx --test lib/call-rules.test.ts lib/fcm-channels.test.ts lib/livekit.test.ts lib/phone-ga.test.ts lib/dm-reactions.test.ts lib/in-network.test.ts lib/google-oauth.test.ts lib/google-mobile-oauth.test.ts",
     "mobile": "npm --prefix mobile start",

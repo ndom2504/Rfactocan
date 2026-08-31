@@ -1,6 +1,7 @@
 import { createHash, randomInt } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { emailLoginOtp, getEmailFromAddress, isEmailConfigured, isUsingResendTestSender } from "@/lib/email";
+import { isAppleReviewAccount } from "@/lib/review-account";
 import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 
@@ -126,6 +127,10 @@ export async function startEmailOtpChallenge(
       from?: string;
     }
 > {
+  if (isAppleReviewAccount(user.email)) {
+    return { ok: false, skipped: true };
+  }
+
   if (!isEmailConfigured()) {
     return { ok: false, skipped: true };
   }
