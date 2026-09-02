@@ -88,10 +88,36 @@ export async function GET(_request: Request, { params }: Params) {
     console.error("Member connections query failed:", error);
   }
 
-  let trips: Awaited<ReturnType<typeof prisma.trip.findMany>> = [];
-  let services: Awaited<ReturnType<typeof prisma.serviceListing.findMany>> = [];
-  let shops: Awaited<ReturnType<typeof prisma.shop.findMany>> = [];
-  let parcels: Awaited<ReturnType<typeof prisma.parcelRequest.findMany>> = [];
+  let trips: {
+    id: string;
+    fromCity: string;
+    toCity: string;
+    fromCountry: string;
+    toCountry: string;
+    departAt: Date;
+    arriveAt: Date | null;
+  }[] = [];
+  let services: {
+    id: string;
+    title: string;
+    city: string;
+    country: string;
+  }[] = [];
+  let shops: {
+    id: string;
+    name: string;
+    city: string;
+    country: string;
+    category: string;
+  }[] = [];
+  let parcels: {
+    id: string;
+    fromCity: string;
+    toCity: string;
+    fromCountry: string;
+    toCountry: string;
+    desiredDate: Date | null;
+  }[] = [];
 
   try {
     [trips, services, shops, parcels] = await Promise.all([
