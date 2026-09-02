@@ -23,6 +23,41 @@ const dots = {
   xl: "h-3.5 w-3.5",
 };
 
+function displaySrc(url?: string | null) {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed) return "";
+  if (
+    trimmed.includes(".blob.vercel-storage.com") &&
+    !trimmed.includes("/api/media")
+  ) {
+    return `/api/media?url=${encodeURIComponent(trimmed)}`;
+  }
+  return trimmed;
+}
+
+type Props = {
+  name: string;
+  avatarUrl?: string | null;
+  size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
+  /** Show green online indicator */
+  online?: boolean;
+};
+
+const sizes = {
+  sm: "h-8 w-8 text-xs",
+  md: "h-10 w-10 text-sm",
+  lg: "h-14 w-14 text-lg",
+  xl: "h-20 w-20 text-xl",
+};
+
+const dots = {
+  sm: "h-2 w-2",
+  md: "h-2.5 w-2.5",
+  lg: "h-3 w-3",
+  xl: "h-3.5 w-3.5",
+};
+
 export function UserAvatar({
   name,
   avatarUrl,
@@ -40,10 +75,10 @@ export function UserAvatar({
         )}
         title={name}
       >
-        {avatarUrl ? (
+        {displaySrc(avatarUrl) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={avatarUrl}
+            src={displaySrc(avatarUrl)}
             alt={name}
             className="h-full w-full object-cover"
           />

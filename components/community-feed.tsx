@@ -45,6 +45,7 @@ type FeedPost = {
     id: string;
     displayName: string;
     avatarUrl: string | null;
+    bannerUrl?: string | null;
     bio: string | null;
     country: string | null;
     verified: boolean;
@@ -405,9 +406,22 @@ export function CommunityFeed() {
       ) : (
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
           {posts.map((post) => (
-            <li key={post.id} className="py-4">
+            <li key={post.id} className="overflow-hidden py-4">
+              {post.author.bannerUrl ? (
+                <Link href={`/member/${post.author.id}`} className="mb-3 block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.author.bannerUrl}
+                    alt=""
+                    className="h-28 w-full rounded-xl object-cover"
+                  />
+                </Link>
+              ) : null}
               <div className="flex gap-3">
-                <div className="flex shrink-0 flex-col items-center gap-1">
+                <Link
+                  href={`/member/${post.author.id}`}
+                  className="flex shrink-0 flex-col items-center gap-1"
+                >
                   <UserAvatar
                     name={post.author.displayName}
                     avatarUrl={post.author.avatarUrl}
@@ -423,10 +437,15 @@ export function CommunityFeed() {
                     <br />
                     {t("community_connections")}
                   </p>
-                </div>
+                </Link>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="font-semibold">{post.author.displayName}</span>
+                    <Link
+                      href={`/member/${post.author.id}`}
+                      className="font-semibold hover:underline"
+                    >
+                      {post.author.displayName}
+                    </Link>
                     {post.author.verified && (
                       <span className="text-xs font-medium text-[var(--accent)]">
                         {t("verified")}
@@ -482,12 +501,14 @@ export function CommunityFeed() {
                   type="button"
                   title={t("community_connect_hint")}
                   disabled={post.isOwner}
-                  onClick={() =>
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
                     void toggleConnect(
                       post.author.id,
                       Boolean(post.author.connectedByMe)
-                    )
-                  }
+                    );
+                  }}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
                     post.author.connectedByMe
                       ? "bg-[var(--accent-soft)] text-[var(--accent)]"
@@ -501,7 +522,11 @@ export function CommunityFeed() {
                 <button
                   type="button"
                   disabled={commentingId === post.id}
-                  onClick={() => void openComments(post)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void openComments(post);
+                  }}
                   className="rounded-md px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-40"
                 >
                   {t("community_comment_action")}

@@ -43,6 +43,15 @@ export function toAppMediaUrlFromBlob(blobUrl: string) {
   return toAppMediaUrl(blobUrl);
 }
 
+/** URL the browser / iOS Image can actually load (private Blob → /api/media). */
+export function toReadableMediaUrl(url: string | null | undefined): string | null {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed) return null;
+  if (trimmed.startsWith("/")) return trimmed;
+  if (isAllowedBlobUrl(trimmed)) return toAppMediaUrlFromBlob(trimmed);
+  return trimmed;
+}
+
 /**
  * Upload an image to Vercel Blob when configured.
  * Local disk fallback only outside Vercel (dev without a Blob token).

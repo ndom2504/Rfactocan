@@ -197,7 +197,10 @@ export function CommunityPostDetail() {
 
       <article className="space-y-3 border-b border-[var(--border)] pb-6">
         <div className="flex gap-3">
-          <div className="flex shrink-0 flex-col items-center gap-1">
+          <Link
+            href={`/member/${post.author.id}`}
+            className="flex shrink-0 flex-col items-center gap-1"
+          >
             <UserAvatar
               name={post.author.displayName}
               avatarUrl={post.author.avatarUrl}
@@ -210,9 +213,14 @@ export function CommunityPostDetail() {
               <br />
               {t("community_connections")}
             </p>
-          </div>
+          </Link>
           <div>
-            <p className="font-semibold">{post.author.displayName}</p>
+            <Link
+              href={`/member/${post.author.id}`}
+              className="font-semibold hover:underline"
+            >
+              {post.author.displayName}
+            </Link>
             <p className="text-xs text-[var(--muted)]">
               {t(kindLabelKey[post.kind] ?? "community_kind_community")} ·{" "}
               {formatDate(post.createdAt)}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { CommunityPostKind } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth";
+import { openRequestDateWhere, openTripDateWhere } from "@/lib/listing-freshness";
 import {
   attachmentFromImageUrl,
   COMMUNITY_MAX_ATTACHMENTS,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/community";
 import { loadAuthorConnections } from "@/lib/connections";
 import { prisma } from "@/lib/prisma";
+import { toReadableMediaUrl } from "@/lib/storage";
 import {
   communitySourceKey,
   parseCommunityFeedId,
@@ -36,6 +38,7 @@ type FeedAuthor = {
   id: string;
   displayName: string;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   bio: string | null;
   country: string | null;
   verified: boolean;
@@ -76,6 +79,7 @@ function serializePost(post: {
     id: string;
     displayName: string;
     avatarUrl: string | null;
+    bannerUrl?: string | null;
     bio: string | null;
     country: string | null;
     kycStatus: string;
@@ -96,7 +100,8 @@ function serializePost(post: {
     author: {
       id: post.author.id,
       displayName: post.author.displayName,
-      avatarUrl: post.author.avatarUrl,
+      avatarUrl: toReadableMediaUrl(post.author.avatarUrl),
+      bannerUrl: toReadableMediaUrl(post.author.bannerUrl ?? null),
       bio: post.author.bio,
       country: post.author.country,
       verified: post.author.kycStatus === "VERIFIED",
@@ -116,6 +121,7 @@ function toFeedAuthor(
     id: string;
     displayName: string;
     avatarUrl: string | null;
+    bannerUrl?: string | null;
     bio: string | null;
     country: string | null;
     kycStatus: string;
@@ -127,7 +133,8 @@ function toFeedAuthor(
   return {
     id: user.id,
     displayName: user.displayName,
-    avatarUrl: user.avatarUrl,
+    avatarUrl: toReadableMediaUrl(user.avatarUrl),
+    bannerUrl: toReadableMediaUrl(user.bannerUrl ?? null),
     bio: user.bio,
     country: user.country ?? country ?? null,
     verified: user.kycStatus === "VERIFIED",
@@ -142,6 +149,7 @@ const AUTHOR_SELECT = {
   id: true,
   displayName: true,
   avatarUrl: true,
+  bannerUrl: true,
   bio: true,
   country: true,
   kycStatus: true,
@@ -200,7 +208,7 @@ export async function GET(request: Request) {
   const [trips, parcels, services] = await Promise.all([
     wantTrip
       ? prisma.trip.findMany({
-          where: { status: "OPEN" },
+          where: { status: "OPEN", AND: [openTripDateWhere()] },
           include: { user: { select: AUTHOR_SELECT } },
           orderBy: { createdAt: "desc" },
           take: 40,
@@ -208,7 +216,11 @@ export async function GET(request: Request) {
       : Promise.resolve([]),
     wantParcel
       ? prisma.parcelRequest.findMany({
-          where: { status: "OPEN", needType: "PARCEL" },
+          where: {
+            status: "OPEN",
+            needType: "PARCEL",
+            AND: [openRequestDateWhere()],
+          },
           include: { user: { select: AUTHOR_SELECT } },
           orderBy: { createdAt: "desc" },
           take: 40,
@@ -412,16 +424,7 @@ export async function POST(request: Request) {
       },
       include: {
         author: {
-          select: {
-            id: true,
-            displayName: true,
-            avatarUrl: true,
-            bio: true,
-            country: true,
-            kycStatus: true,
-            ratingAvg: true,
-            ratingCount: true,
-          },
+          select: AUTHOR_SELECT,
         },
         _count: { select: { comments: true } },
       },
