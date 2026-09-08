@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
+import { openRequestDateWhere } from "@/lib/listing-freshness";
 import { rankRequestsForTrip } from "@/lib/matching";
 import { prisma } from "@/lib/prisma";
 
@@ -41,6 +42,7 @@ export async function GET(_request: Request, { params }: Params) {
       status: "OPEN",
       userId: { not: trip.userId },
       toCountry: trip.toCountry,
+      AND: [openRequestDateWhere()],
     },
     include: {
       user: {

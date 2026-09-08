@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text } from "react-native";
 import { Button, Card, ErrorText, Muted, Screen } from "@/components/ui";
@@ -60,7 +60,7 @@ export default function ServicesScreen() {
             />
           }
           renderItem={({ item }) => (
-            <Pressable onPress={() => router.push(`/service/${item.id}`)}>
+            <Pressable onPress={() => router.push(`/service/${item.id}` as Href)}>
               <Card>
                 <Text style={{ fontWeight: "700", color: colors.foreground }}>
                   {item.title}

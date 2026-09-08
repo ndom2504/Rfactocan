@@ -5,7 +5,10 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
-import { APPLE_REVIEW_EMAIL } from "../lib/review-account";
+import {
+  APPLE_REVIEW_EMAIL,
+  APPLE_REVIEW_PHONE_GA,
+} from "../lib/review-account";
 
 const prisma = new PrismaClient();
 const REVIEW_PASSWORD = process.env.REVIEW_PASSWORD?.trim() || "Test2026";
@@ -16,10 +19,20 @@ async function main() {
   }
 
   const passwordHash = await bcrypt.hash(REVIEW_PASSWORD, 10);
+
+  await prisma.user.updateMany({
+    where: {
+      phone: APPLE_REVIEW_PHONE_GA,
+      email: { not: APPLE_REVIEW_EMAIL },
+    },
+    data: { phone: null },
+  });
+
   const user = await prisma.user.upsert({
     where: { email: APPLE_REVIEW_EMAIL },
     update: {
       passwordHash,
+      phone: APPLE_REVIEW_PHONE_GA,
       role: "BOTH",
       status: "ACTIVE",
       verifiedAt: new Date(),
@@ -28,13 +41,14 @@ async function main() {
     create: {
       email: APPLE_REVIEW_EMAIL,
       passwordHash,
+      phone: APPLE_REVIEW_PHONE_GA,
       displayName: "Testeur Apple",
       role: "BOTH",
       status: "ACTIVE",
       verifiedAt: new Date(),
-      country: "Canada",
+      country: "Gabon",
       language: "fr",
-      preferredCurrency: "CAD",
+      preferredCurrency: "XAF",
       bio: "Compte de revue App Store / TestFlight.",
     },
   });
@@ -42,6 +56,7 @@ async function main() {
   console.log("Compte revue prêt :", {
     id: user.id,
     email: user.email,
+    phone: user.phone,
     role: user.role,
   });
 }

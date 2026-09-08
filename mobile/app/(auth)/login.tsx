@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PhoneOtpAuth } from "@/components/phone-otp-auth";
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { SocialAuthButtons } from "@/components/social-auth-buttons";
 import { Button, ErrorText, Field } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { colors } from "@/lib/theme";
@@ -169,7 +169,7 @@ export default function LoginScreen() {
               </>
             ) : mode === "phone" ? (
               <>
-                <GoogleSignInButton
+                <SocialAuthButtons
                   disabled={loading}
                   onMfa={(token, hint) => {
                     setMfaToken(token);
@@ -201,7 +201,7 @@ export default function LoginScreen() {
               </>
             ) : (
               <>
-                <GoogleSignInButton
+                <SocialAuthButtons
                   disabled={loading}
                   onMfa={(token, hint) => {
                     setMfaToken(token);
@@ -229,6 +229,11 @@ export default function LoginScreen() {
                 />
                 <ErrorText>{error}</ErrorText>
                 <Button label="Se connecter" onPress={onSubmit} loading={loading} />
+                <Link href="/(auth)/forgot-password" style={{ marginTop: 16, alignSelf: "center" }}>
+                  <Text style={{ color: "#8BC34A", fontWeight: "600", textAlign: "center" }}>
+                    Mot de passe oublié ?
+                  </Text>
+                </Link>
                 <Pressable onPress={() => setMode("phone")} style={{ marginTop: 16 }}>
                   <Text style={{ color: "#8BC34A", fontWeight: "600", textAlign: "center" }}>
                     Connexion par SMS

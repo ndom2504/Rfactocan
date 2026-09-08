@@ -3,15 +3,18 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
+  Image,
   Text,
   View,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
+import { Chip, ChipRow } from "@/components/chip";
+import { DisputePanel } from "@/components/dispute-panel";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoneyFromCents } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
+import { useKeyboardLift } from "@/lib/use-keyboard-lift";
 import {
   Badge,
   Button,
@@ -59,11 +62,26 @@ type BookingPayload = {
       amountCadCents: number;
       currency?: string;
     } | null;
+    reviews?: { fromUserId: string }[];
   };
   paymentQuote?: {
     amountCents: number;
     currency: string;
   } | null;
+};
+
+type Tracking = {
+  steps?: string[];
+  stepIndex?: number;
+  events?: { id: string; label: string; createdAt: string }[];
+};
+
+type Handover = {
+  canGenerate?: boolean;
+  canConfirmCode?: boolean;
+  code?: string | null;
+  qrDataUrl?: string | null;
+  expiresAt?: string | null;
 };
 
 function remainingLabel(expiresAt: string | null | undefined) {
@@ -78,24 +96,35 @@ function remainingLabel(expiresAt: string | null | undefined) {
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useI18n();
+  const keyboardLift = useKeyboardLift();
   const [data, setData] = useState<BookingPayload | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [tracking, setTracking] = useState<Tracking | null>(null);
+  const [handover, setHandover] = useState<Handover | null>(null);
   const [draft, setDraft] = useState("");
+  const [handoverCode, setHandoverCode] = useState("");
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!id) return;
-    setLoading(true);
+    if (!opts?.silent) setLoading(true);
     setError("");
     try {
-      const [bookingData, msgData] = await Promise.all([
+      const [bookingData, msgData, trackingData, handoverData] = await Promise.all([
         api<BookingPayload>(`/api/bookings/${id}`),
         api<{ messages: Message[] }>(`/api/bookings/${id}/messages`),
+        api<Tracking>(`/api/bookings/${id}/tracking`).catch(() => null),
+        api<Handover>(`/api/bookings/${id}/handover`).catch(() => null),
       ]);
       setData(bookingData);
       setMessages(msgData.messages ?? []);
+      setTracking(trackingData);
+      setHandover(handoverData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -117,7 +146,7 @@ export default function BookingDetailScreen() {
         body: JSON.stringify({ body: draft.trim() }),
       });
       setDraft("");
-      await load();
+      await load({ silent: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Envoi impossible");
     } finally {
@@ -138,7 +167,7 @@ export default function BookingDetailScreen() {
           customsAcknowledged: true,
         }),
       });
-      await load();
+      await load({ silent: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action impossible");
     } finally {
@@ -158,9 +187,73 @@ export default function BookingDetailScreen() {
       if (result.checkoutUrl) {
         await WebBrowser.openBrowserAsync(result.checkoutUrl);
       }
-      await load();
+      await load({ silent: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Paiement impossible");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function generateHandover() {
+    if (!id) return;
+    setBusy(true);
+    setError("");
+    try {
+      await api<Handover>(`/api/bookings/${id}/handover`, {
+        method: "POST",
+        body: JSON.stringify({ action: "generate" }),
+      });
+      await load({ silent: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("retry"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmHandoverCode() {
+    if (!id || !handoverCode.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/api/bookings/${id}/handover`, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "confirm_code",
+          code: handoverCode.trim(),
+        }),
+      });
+      setHandoverCode("");
+      await load({ silent: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("retry"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitReview() {
+    if (!id || !data) return;
+    const toUserId =
+      user?.id === data.booking.senderId
+        ? data.booking.trip.user.id
+        : data.booking.sender.id;
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/api/bookings/${id}/reviews`, {
+        method: "POST",
+        body: JSON.stringify({
+          rating,
+          comment: comment.trim() || undefined,
+          toUserId,
+        }),
+      });
+      setComment("");
+      await load({ silent: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("retry"));
     } finally {
       setBusy(false);
     }
@@ -185,6 +278,9 @@ export default function BookingDetailScreen() {
   const canDecide =
     booking.status === "PROPOSED" &&
     (proposedByTraveler ? isSender : isTraveler);
+  const alreadyReviewed = (booking.reviews ?? []).some(
+    (r) => r.fromUserId === user?.id
+  );
   const amountLabel = data.paymentQuote
     ? formatMoneyFromCents(
         data.paymentQuote.amountCents,
@@ -211,14 +307,16 @@ export default function BookingDetailScreen() {
             ? "Offre annulée par l'admin (charte)."
             : "Offre annulée."
       : null;
+  const lifecycle =
+    ["ACCEPTED", "HANDED_OVER", "IN_TRANSIT"].includes(booking.status) &&
+    (isSender || isTraveler);
+  const canGenerateHandover =
+    booking.status === "ACCEPTED" && (isSender || isTraveler);
+  const canConfirmHandover = booking.status === "ACCEPTED" && isTraveler;
 
   return (
     <Screen style={{ paddingBottom: 0 }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={80}
-      >
+      <View style={{ flex: 1 }}>
         <FlatList
           data={messages}
           keyExtractor={(m) => m.id}
@@ -247,6 +345,29 @@ export default function BookingDetailScreen() {
                   </Text>
                 ) : null}
               </Card>
+
+              {tracking?.steps?.length ? (
+                <Card>
+                  <Text
+                    style={{
+                      fontWeight: "700",
+                      color: colors.foreground,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {t("booking_tracking")}
+                  </Text>
+                  {(tracking.steps ?? []).map((step, i) => (
+                    <Muted key={step}>
+                      {i === tracking.stepIndex ? "● " : "○ "}
+                      {step}
+                    </Muted>
+                  ))}
+                  {(tracking.events ?? []).slice(-4).map((event) => (
+                    <Muted key={event.id}>{event.label}</Muted>
+                  ))}
+                </Card>
+              ) : null}
 
               {canDecide ? (
                 <View style={{ marginBottom: 12 }}>
@@ -292,6 +413,149 @@ export default function BookingDetailScreen() {
                 <ErrorText>{cancelledMsg}</ErrorText>
               ) : null}
 
+              {booking.status === "ACCEPTED" && (isSender || isTraveler) ? (
+                <Card>
+                  <Text
+                    style={{
+                      fontWeight: "700",
+                      color: colors.foreground,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {t("booking_handover")}
+                  </Text>
+                  {handover?.qrDataUrl ? (
+                    <Image
+                      source={{ uri: handover.qrDataUrl }}
+                      style={{
+                        width: 220,
+                        height: 220,
+                        alignSelf: "center",
+                        marginBottom: 8,
+                      }}
+                    />
+                  ) : null}
+                  {handover?.code ? (
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        fontSize: 22,
+                        fontWeight: "800",
+                        letterSpacing: 3,
+                        color: colors.foreground,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {handover.code}
+                    </Text>
+                  ) : null}
+                  {canGenerateHandover ? (
+                    <Button
+                      label={t("booking_generate_qr")}
+                      variant="outline"
+                      onPress={() => void generateHandover()}
+                      loading={busy}
+                    />
+                  ) : null}
+                  {canConfirmHandover ? (
+                    <>
+                      <Field
+                        label={t("booking_handover_code")}
+                        value={handoverCode}
+                        onChangeText={setHandoverCode}
+                        autoCapitalize="characters"
+                      />
+                      <Button
+                        label={t("booking_confirm_code")}
+                        onPress={() => void confirmHandoverCode()}
+                        loading={busy}
+                        disabled={!handoverCode.trim()}
+                      />
+                    </>
+                  ) : null}
+                </Card>
+              ) : null}
+
+              {lifecycle ? (
+                <View style={{ marginBottom: 12 }}>
+                  {booking.status === "ACCEPTED" ? (
+                    <Button
+                      label={t("booking_handover")}
+                      variant="outline"
+                      onPress={() => patchStatus("HANDED_OVER")}
+                      disabled={busy}
+                    />
+                  ) : null}
+                  {booking.status === "HANDED_OVER" ? (
+                    <Button
+                      label={t("booking_in_transit")}
+                      onPress={() => patchStatus("IN_TRANSIT")}
+                      loading={busy}
+                    />
+                  ) : null}
+                  {booking.status === "IN_TRANSIT" ? (
+                    <Button
+                      label={t("booking_delivered")}
+                      onPress={() => patchStatus("DELIVERED")}
+                      loading={busy}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
+
+              {booking.status === "DELIVERED" && !alreadyReviewed ? (
+                <Card>
+                  <Text
+                    style={{
+                      fontWeight: "700",
+                      color: colors.foreground,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {t("booking_review")}
+                  </Text>
+                  <Muted>{t("booking_rating")}</Muted>
+                  <ChipRow>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Chip
+                        key={n}
+                        label={String(n)}
+                        selected={rating === n}
+                        onPress={() => setRating(n)}
+                      />
+                    ))}
+                  </ChipRow>
+                  <Field
+                    label={t("booking_comment")}
+                    value={comment}
+                    onChangeText={setComment}
+                    multiline
+                  />
+                  <Button
+                    label={t("booking_send_review")}
+                    onPress={() => void submitReview()}
+                    loading={busy}
+                  />
+                </Card>
+              ) : null}
+              {alreadyReviewed ? (
+                <Muted>{t("booking_review_thanks")}</Muted>
+              ) : null}
+
+              {(isSender || isTraveler) &&
+              !["REFUSED", "PROPOSED", "AWAITING_PAYMENT"].includes(
+                booking.status
+              ) ? (
+                <DisputePanel
+                  bookingId={booking.id}
+                  canOpen={![
+                    "REFUSED",
+                    "PROPOSED",
+                    "AWAITING_PAYMENT",
+                  ].includes(booking.status)}
+                />
+              ) : null}
+
               <Text
                 style={{
                   fontWeight: "700",
@@ -322,7 +586,7 @@ export default function BookingDetailScreen() {
             borderTopWidth: 1,
             borderTopColor: colors.border,
             paddingTop: 8,
-            paddingBottom: 12,
+            paddingBottom: 12 + keyboardLift,
             backgroundColor: colors.background,
           }}
         >
@@ -339,7 +603,7 @@ export default function BookingDetailScreen() {
             disabled={!draft.trim()}
           />
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 }

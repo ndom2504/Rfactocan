@@ -13,19 +13,28 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rfacto.app",
+      "icon": "./assets/images/icon.png",
+      "usesAppleSignIn": true,
+      "entitlements": {
+        "aps-environment": "production",
+        "com.apple.developer.applesignin": ["Default"]
+      },
       "infoPlist": {
         "CFBundleDisplayName": "Rfacto",
         "CFBundleAllowMixedLocalizations": true,
         "NSContactsUsageDescription": "In retrouve vos proches déjà inscrits sur Rfacto.",
         "NSPhotoLibraryUsageDescription": "Rfacto joint des photos aux messages et aux annonces.",
         "NSCameraUsageDescription": "Rfacto joint des photos aux messages et aux annonces.",
-        "NSMicrophoneUsageDescription": "Rfacto enregistre des notes vocales et passe des appels dans Messages."
+        "NSMicrophoneUsageDescription": "Rfacto enregistre des notes vocales et passe des appels dans Messages.",
+        "NSLocationWhenInUseUsageDescription": "Rfacto utilise votre position pour vous alerter des colis et services proches.",
+        "UIBackgroundModes": ["remote-notification"]
       },
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.rfacto.app",
       "adaptiveIcon": {
         "backgroundColor": "#0f6b4c",
@@ -39,7 +48,9 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -49,6 +60,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       "expo-secure-store",
       "expo-web-browser",
       [
@@ -75,7 +87,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#0f6b4c"
         }
@@ -84,15 +96,29 @@
       "@config-plugins/react-native-webrtc",
       "expo-status-bar",
       "expo-font",
+      [
+        "expo-asset",
+        {
+          "assets": ["./assets/videos/intro.mp4"]
+        }
+      ],
       "expo-video",
       [
         "expo-notifications",
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#28541D",
-          "sounds": ["./assets/sounds/rfacto_notify.wav"],
+          "sounds": [
+            "./assets/sounds/rfacto_notify.wav"
+          ],
           "defaultChannel": "rfacto_alerts_v3",
           "enableBackgroundRemoteNotifications": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Rfacto utilise votre position pour vous alerter des colis et services proches."
         }
       ]
     ],

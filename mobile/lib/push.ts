@@ -123,7 +123,13 @@ export async function registerPushToken() {
     const current = await Notifications.getPermissionsAsync();
     let status = current.status;
     if (status !== "granted") {
-      const asked = await Notifications.requestPermissionsAsync();
+      const asked = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+        },
+      });
       status = asked.status;
     }
     if (status !== "granted") return;
@@ -171,7 +177,10 @@ export function hrefToExpoRoute(href?: string | null): Href | null {
   const community = /\/community\/([^/?#]+)/.exec(href);
   if (community) return `/community/${community[1]}`;
   const service = /\/services\/listing\/([^/?#]+)/.exec(href);
-  if (service) return `/service/${service[1]}`;
+  if (service) return `/service/${service[1]}` as Href;
+  if (href.includes("/ambassador") || href.includes("/herald")) {
+    return "/herald" as Href;
+  }
   if (href.includes("/messages")) return "/(tabs)/messages";
   if (href.includes("/community")) return "/(tabs)/community";
   if (href.includes("/profile")) return "/(tabs)/profile";

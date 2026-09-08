@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { openRequestDateWhere } from "@/lib/listing-freshness";
 import {
   normalizeOrderNeedType,
   normalizeParcelOrderSide,
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
   const requests = await prisma.parcelRequest.findMany({
     where: {
       status: "OPEN",
-      ...(mine && session ? { userId: session.id } : {}),
+      ...(mine && session ? { userId: session.id } : { AND: [openRequestDateWhere()] }),
       ...(needType &&
       ["PARCEL", "SERVICE", "PRODUCT", "JOB_SEEK", "JOB_OFFER"].includes(needType)
         ? { needType: needType as OrderNeedTypeId }

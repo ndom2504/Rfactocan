@@ -34,6 +34,9 @@ function hrefToRoute(href: string): Href | null {
   if (community) return `/community/${community[1]}`;
   if (href.includes("/messages")) return "/(tabs)/messages";
   if (href.includes("/community")) return "/(tabs)/community";
+  if (href.includes("/ambassador") || href.includes("/herald")) {
+    return "/herald" as Href;
+  }
   if (href.includes("/dashboard") || href.includes("/profile")) {
     return href.includes("/profile") ? "/(tabs)/profile" : "/(tabs)";
   }

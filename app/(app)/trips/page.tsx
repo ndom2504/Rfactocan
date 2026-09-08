@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
+import { openTripDateWhere } from "@/lib/listing-freshness";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
@@ -32,7 +33,7 @@ export default async function TripsPage({ searchParams }: Props) {
     where: {
       ...(mineOnly
         ? { userId: user.id, status: { not: "CANCELLED" as const } }
-        : { status: "OPEN" as const }),
+        : { status: "OPEN" as const, AND: [openTripDateWhere()] }),
       ...(mode ? { transportMode: mode as "AIR" | "SEA" | "RAIL" | "ROAD" } : {}),
     },
     include: {

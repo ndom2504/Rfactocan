@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { Chip, ChipRow } from "@/components/chip";
 import {
   PaymentSetupCard,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui";
 import { api, getApiUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { requestTourStart } from "@/lib/guided-tour";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -240,9 +241,29 @@ export default function SettingsScreen() {
         ) : null}
 
         <View style={{ height: 8 }} />
+        {sessionUser?.role === "ADMIN" ? (
+          <Button
+            label={t("admin_open_cta")}
+            onPress={() => router.push("/admin" as Href)}
+          />
+        ) : null}
         <Button
-          label={t("ambassador_become_cta")}
-          onPress={() => void Linking.openURL(`${site}/ambassador/apply`)}
+          label={t("tour_replay")}
+          variant="outline"
+          onPress={() => {
+            requestTourStart();
+            router.push("/(tabs)" as Href);
+          }}
+        />
+        <Button
+          label={
+            profile?.isAmbassador
+              ? t("ambassador_open_cta")
+              : profile?.ambassadorRequestStatus === "PENDING"
+                ? t("ambassador_apply_pending_cta")
+                : t("ambassador_become_cta")
+          }
+          onPress={() => router.push("/herald" as Href)}
         />
         <Button
           label={t("trust_program_cta")}

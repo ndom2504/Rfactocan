@@ -1,5 +1,5 @@
 import { type Href, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Share,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Button, ErrorText, Field, Muted, Screen } from "@/components/ui";
@@ -39,6 +40,8 @@ function listingHref(item: CommunityPost): Href | null {
   if (tripId) return `/trip/${tripId}`;
   const requestId = firstPathId(href, "/requests/");
   if (requestId) return `/request/${requestId}`;
+  const productId = firstPathId(href, "/shops/product/");
+  if (productId) return `/shops/product/${productId}`;
   const shopId = firstPathId(href, "/shops/");
   if (shopId && shopId !== "product" && shopId !== "category") {
     return `/shops/${shopId}`;
@@ -46,16 +49,21 @@ function listingHref(item: CommunityPost): Href | null {
   const communityId = firstPathId(href, "/community/");
   if (communityId) return `/community/${communityId}`;
   const serviceListingId = firstPathId(href, "/services/listing/");
-  if (serviceListingId) return `/service/${serviceListingId}`;
+  if (serviceListingId) return `/service/${serviceListingId}` as Href;
   if (href.startsWith("/services")) return "/services";
-  if (href.startsWith("/meet")) return "/meet";
+  const meetUserId = firstPathId(href, "/meet/");
+  if (meetUserId) return `/meet/${meetUserId}` as Href;
+  if (href.startsWith("/meet")) return "/meet" as Href;
+  if (href.includes("/ambassador") || href.startsWith("/herald")) {
+    return "/herald" as Href;
+  }
 
   if (item.id.startsWith("trip:")) return `/trip/${item.id.slice(5)}`;
   if (item.id.startsWith("parcel:")) return `/request/${item.id.slice(7)}`;
   if (item.id.startsWith("job:")) return `/request/${item.id.slice(4)}`;
   if (item.id.startsWith("shop:")) return `/shops/${item.id.slice(5)}`;
-  if (item.id.startsWith("svc:")) return `/service/${item.id.slice(4)}`;
-  if (item.id.startsWith("meet:")) return "/meet";
+  if (item.id.startsWith("svc:")) return `/service/${item.id.slice(4)}` as Href;
+  if (item.id.startsWith("meet:")) return `/meet/${item.id.slice(5)}` as Href;
   if (isNativeCommunityPostId(item.id)) return `/community/${item.id}`;
   return null;
 }
@@ -114,41 +122,55 @@ function Avatar({ name, url }: { name: string; url?: string | null }) {
   );
 }
 
-function Action({
+function ActionCell({
   label,
   onPress,
   disabled,
   active,
+  busy,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   active?: boolean;
+  busy?: boolean;
 }) {
   const colors = useOptionalTheme()?.colors ?? lightColors;
+  const locked = Boolean(disabled || busy);
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      hitSlop={6}
-      style={{
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        borderRadius: 8,
-        backgroundColor: active ? colors.accentSoft : "transparent",
-        opacity: disabled ? 0.4 : 1,
-      }}
-    >
-      <Text
+    <View style={{ flex: 1, padding: 4 }} collapsable={false}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        activeOpacity={0.65}
+        disabled={locked}
+        onPress={onPress}
         style={{
-          fontSize: 12,
-          fontWeight: "700",
-          color: active ? colors.accent : colors.muted,
+          minHeight: 44,
+          borderRadius: 8,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 6,
+          backgroundColor: active ? colors.accentSoft : colors.surface2,
+          opacity: locked ? 0.45 : 1,
         }}
       >
-        {label}
-      </Text>
-    </Pressable>
+        {busy ? (
+          <ActivityIndicator size="small" color={colors.accent} />
+        ) : (
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 13,
+              fontWeight: "700",
+              textAlign: "center",
+              color: active ? colors.accent : colors.foreground,
+            }}
+          >
+            {label}
+          </Text>
+        )}
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -163,7 +185,8 @@ export default function CommunityScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const actionLock = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -198,15 +221,31 @@ export default function CommunityScreen() {
     [posts, query]
   );
 
+  function runExclusive(key: string, run: () => void | Promise<void>) {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setBusyKey(key);
+    setError("");
+    void Promise.resolve()
+      .then(run)
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : t("retry"));
+      })
+      .finally(() => {
+        setBusyKey(null);
+        setTimeout(() => {
+          actionLock.current = false;
+        }, 400);
+      });
+  }
+
   function openListing(item: CommunityPost) {
     const dest = listingHref(item);
     if (dest) router.push(dest);
   }
 
-  async function openComments(item: CommunityPost) {
-    setBusyId(item.id);
-    setError("");
-    try {
+  function openComments(item: CommunityPost) {
+    runExclusive(`${item.id}:comments`, async () => {
       if (isNativeCommunityPostId(item.id) && (item.source === "post" || !item.source)) {
         router.push(`/community/${item.id}`);
         return;
@@ -222,19 +261,13 @@ export default function CommunityScreen() {
         throw new Error(data.error || "Impossible d'ouvrir les commentaires");
       }
       router.push(`/community/${data.post.id}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("retry"));
-    } finally {
-      setBusyId(null);
-    }
+    });
   }
 
-  async function toggleConnect(item: CommunityPost) {
+  function toggleConnect(item: CommunityPost) {
     const authorId = item.author?.id;
     if (!authorId || item.isOwner) return;
-    setBusyId(item.id);
-    setError("");
-    try {
+    runExclusive(`${item.id}:connect`, async () => {
       const connected = Boolean(item.author?.connectedByMe);
       const data = await api<{ connected?: boolean; connectionCount?: number }>(
         connected
@@ -264,11 +297,7 @@ export default function CommunityScreen() {
             : p
         )
       );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("retry"));
-    } finally {
-      setBusyId(null);
-    }
+    });
   }
 
   async function sharePost(item: CommunityPost) {
@@ -370,18 +399,38 @@ export default function CommunityScreen() {
             item.body.length > 280 || (item.body.match(/\n/g) || []).length >= 5;
           const isOpen = Boolean(expanded[item.id]);
           const name = item.author?.displayName || "Rfacto";
+          const authorId = item.author?.id;
+          const banner = item.author?.bannerUrl
+            ? mediaUrl(item.author.bannerUrl)
+            : "";
+          const openMember = () => {
+            if (authorId) router.push(`/member/${authorId}` as Href);
+          };
           return (
             <View style={{ backgroundColor: colors.background, width: "100%" }}>
+              {banner ? (
+                <Pressable onPress={openMember} disabled={!authorId}>
+                  <Image
+                    source={{ uri: banner }}
+                    style={{ width: "100%", height: 112, backgroundColor: colors.surface2 }}
+                    resizeMode="cover"
+                  />
+                </Pressable>
+              ) : null}
               <View
                 style={{
                   flexDirection: "row",
                   gap: 12,
                   paddingHorizontal: 16,
-                  paddingTop: 12,
+                  paddingTop: banner ? 8 : 12,
                   paddingBottom: 8,
                 }}
               >
-                <View style={{ alignItems: "center", width: 56 }}>
+                <Pressable
+                  onPress={openMember}
+                  disabled={!authorId}
+                  style={{ alignItems: "center", width: 56 }}
+                >
                   <Avatar name={name} url={item.author?.avatarUrl} />
                   <Text
                     style={{
@@ -402,8 +451,8 @@ export default function CommunityScreen() {
                   >
                     {t("community_connections")}
                   </Text>
-                </View>
-                <View style={{ flex: 1 }}>
+                </Pressable>
+                <Pressable onPress={openMember} disabled={!authorId} style={{ flex: 1 }}>
                   <Text
                     style={{
                       fontWeight: "700",
@@ -428,7 +477,7 @@ export default function CommunityScreen() {
                     {KIND_LABELS[item.kind] || item.kind}
                     {` · ${formatDate(item.createdAt)}`}
                   </Muted>
-                </View>
+                </Pressable>
               </View>
 
               {item.title?.trim() ? (
@@ -508,8 +557,6 @@ export default function CommunityScreen() {
 
               <View
                 style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
                   marginTop: 2,
                   paddingHorizontal: 8,
                   paddingBottom: 8,
@@ -517,29 +564,38 @@ export default function CommunityScreen() {
                   borderTopColor: colors.border,
                 }}
               >
-                <Action
-                  label={
-                    item.author?.connectedByMe
-                      ? t("community_connected")
-                      : t("community_connect")
-                  }
-                  active={Boolean(item.author?.connectedByMe)}
-                  disabled={item.isOwner || busyId === item.id}
-                  onPress={() => void toggleConnect(item)}
-                />
-                <Action
-                  label={`${t("community_comment_action")} (${item.commentCount ?? 0})`}
-                  disabled={busyId === item.id}
-                  onPress={() => void openComments(item)}
-                />
-                <Action
-                  label={t("community_see")}
-                  onPress={() => openListing(item)}
-                />
-                <Action
-                  label={t("community_share")}
-                  onPress={() => void sharePost(item)}
-                />
+                <View style={{ flexDirection: "row" }}>
+                  <ActionCell
+                    label={
+                      item.author?.connectedByMe
+                        ? t("community_connected")
+                        : t("community_connect")
+                    }
+                    active={Boolean(item.author?.connectedByMe)}
+                    disabled={item.isOwner}
+                    busy={busyKey === `${item.id}:connect`}
+                    onPress={() => toggleConnect(item)}
+                  />
+                  <ActionCell
+                    label={t("community_comment_action")}
+                    busy={busyKey === `${item.id}:comments`}
+                    onPress={() => openComments(item)}
+                  />
+                </View>
+                <View style={{ flexDirection: "row" }}>
+                  <ActionCell
+                    label={t("community_see")}
+                    onPress={() =>
+                      runExclusive(`${item.id}:see`, () => openListing(item))
+                    }
+                  />
+                  <ActionCell
+                    label={t("community_share")}
+                    onPress={() =>
+                      runExclusive(`${item.id}:share`, () => sharePost(item))
+                    }
+                  />
+                </View>
               </View>
             </View>
           );

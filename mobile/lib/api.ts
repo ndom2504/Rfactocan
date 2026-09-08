@@ -55,10 +55,36 @@ export async function api<T = unknown>(
   return data;
 }
 
+function isPrivateBlobHost(hostname: string) {
+  return (
+    hostname.endsWith(".blob.vercel-storage.com") ||
+    hostname.endsWith(".public.blob.vercel-storage.com")
+  );
+}
+
+/** Absolute URL the native Image component can load (iOS cannot fetch private Blob URLs). */
 export function mediaUrl(url?: string | null) {
   if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
-  const path = url.startsWith("/") ? url : `/${url}`;
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  try {
+    if (/^https?:\/\//i.test(trimmed)) {
+      const parsed = new URL(trimmed);
+      if (isPrivateBlobHost(parsed.hostname)) {
+        return `${getApiUrl()}/api/media?url=${encodeURIComponent(trimmed)}`;
+      }
+      if (parsed.protocol === "http:") {
+        parsed.protocol = "https:";
+        return parsed.toString();
+      }
+      return trimmed;
+    }
+  } catch {
+    /* fall through */
+  }
+
+  const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   return `${getApiUrl()}${path}`;
 }
 
@@ -145,8 +171,17 @@ export function isImageAttachment(url?: string | null) {
     if (/\.(m4a|aac|mp3|ogg|oga|wav|amr|3gpp|weba|mp4|webm|mov|pdf)(\?|#|$)/i.test(hay)) {
       return false;
     }
-    return /\.(jpe?g|png|gif|webp)(\?|#|$)/i.test(hay);
+    return /\.(jpe?g|png|gif|webp|heic|heif)(\?|#|$)/i.test(hay);
   } catch {
-    return /\.(jpe?g|png|gif|webp)(\?|#|$)/i.test(url);
+    return /\.(jpe?g|png|gif|webp|heic|heif)(\?|#|$)/i.test(url);
+  }
+}
+
+export function isPdfAttachment(url?: string | null) {
+  if (!url) return false;
+  try {
+    return /\.pdf(\?|#|$)/i.test(decodeURIComponent(url));
+  } catch {
+    return /\.pdf(\?|#|$)/i.test(url);
   }
 }

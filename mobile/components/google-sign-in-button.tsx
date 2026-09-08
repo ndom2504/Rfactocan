@@ -1,11 +1,43 @@
 import * as Crypto from "expo-crypto";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, AppState, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  AppState,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { useAuth } from "@/lib/auth-context";
 import { googleAuthSessionUrls } from "@/lib/google-auth-url";
+import {
+  GoogleNativeCancelled,
+  GoogleNativeUnavailable,
+  canUseNativeGoogle,
+  signInWithGoogleNative,
+} from "@/lib/google-native";
 
-WebBrowser.maybeCompleteAuthSession();
+async function dismissAuthBrowser() {
+  try {
+    const result = WebBrowser.dismissBrowser();
+    if (result && typeof result.then === "function") {
+      await result;
+    }
+  } catch {
+    // already dismissed / unavailable on this iOS runtime
+  }
+}
+
+async function settle(promise: unknown) {
+  try {
+    if (promise && typeof (promise as Promise<unknown>).then === "function") {
+      await promise;
+    }
+  } catch {
+    // user closed Safari or the native browser is gone
+  }
+}
 
 export function GoogleSignInButton({
   disabled,
@@ -18,63 +50,89 @@ export function GoogleSignInButton({
   onError: (message: string) => void;
   tone?: "dark" | "light";
 }) {
-  const { applyGooglePoll } = useAuth();
+  const { applyGooglePoll, loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
+  const native = canUseNativeGoogle();
 
   useEffect(() => {
-    void WebBrowser.warmUpAsync();
+    if (Platform.OS !== "android") return;
+    void settle(WebBrowser.warmUpAsync());
     return () => {
-      void WebBrowser.coolDownAsync();
+      void settle(WebBrowser.coolDownAsync());
     };
   }, []);
 
   async function onPress() {
     setBusy(true);
-    const sid = Crypto.randomUUID();
-    const { start } = googleAuthSessionUrls();
-    const startUrl = `${start}&sid=${encodeURIComponent(sid)}`;
-    const browser = WebBrowser.openBrowserAsync(startUrl, {
-      dismissButtonStyle: "close",
-      enableBarCollapsing: true,
-    });
     try {
-      const deadline = Date.now() + 3 * 60 * 1000;
-      while (Date.now() < deadline) {
-        if (AppState.currentState === "active") {
-          const outcome = await applyGooglePoll(sid);
-          if (!outcome.pending) {
-            await WebBrowser.dismissBrowser().catch(() => {});
-            if ("error" in outcome) {
-              onError(outcome.error);
-              return;
-            }
-            if (outcome.mfaRequired) {
-              onMfa(outcome.mfaToken, outcome.emailHint);
-            }
+      if (native) {
+        try {
+          const idToken = await signInWithGoogleNative();
+          const result = await loginWithGoogle({ idToken });
+          if (result.mfaRequired) {
+            onMfa(result.mfaToken, result.emailHint);
+          }
+          return;
+        } catch (e) {
+          if (e instanceof GoogleNativeCancelled) return;
+          if (!(e instanceof GoogleNativeUnavailable)) {
+            onError(e instanceof Error ? e.message : "Connexion Google impossible");
             return;
           }
+          // Native SDK unavailable (no iOS scheme / SHA-1): Safari poll
         }
-        await new Promise<void>((resolve) => {
-          const sub = AppState.addEventListener("change", (state) => {
-            if (state !== "active") return;
-            clearTimeout(timer);
-            sub.remove();
-            resolve();
-          });
-          const timer = setTimeout(() => {
-            sub.remove();
-            resolve();
-          }, 1500);
-        });
       }
-      onError(
-        "Délai dépassé. Après Google, revenez dans Expo Go — la connexion se termine toute seule."
-      );
+
+      const sid = Crypto.randomUUID();
+      const { start } = googleAuthSessionUrls();
+      const startUrl = `${start}&sid=${encodeURIComponent(sid)}`;
+      const browser = WebBrowser.openBrowserAsync(startUrl, {
+        dismissButtonStyle: "close",
+        enableBarCollapsing: true,
+      });
+      try {
+        const deadline = Date.now() + 3 * 60 * 1000;
+        while (Date.now() < deadline) {
+          try {
+            const outcome = await applyGooglePoll(sid);
+            if (!outcome.pending) {
+              await dismissAuthBrowser();
+              if ("error" in outcome) {
+                onError(outcome.error);
+                return;
+              }
+              if (outcome.mfaRequired) {
+                onMfa(outcome.mfaToken, outcome.emailHint);
+              }
+              return;
+            }
+          } catch {
+            // transient network while Safari is open
+          }
+          await new Promise<void>((resolve) => {
+            const sub = AppState.addEventListener("change", () => {
+              clearTimeout(timer);
+              sub.remove();
+              resolve();
+            });
+            const timer = setTimeout(() => {
+              sub.remove();
+              resolve();
+            }, 1500);
+          });
+        }
+        onError(
+          Platform.OS === "ios"
+            ? "Délai dépassé. Après Google, touchez OK pour revenir dans Rfacto."
+            : "Délai dépassé. Après Google, revenez dans Expo Go — la connexion se termine toute seule."
+        );
+      } finally {
+        await dismissAuthBrowser();
+        await settle(browser);
+      }
     } catch (e) {
       onError(e instanceof Error ? e.message : "Connexion Google impossible");
     } finally {
-      await WebBrowser.dismissBrowser().catch(() => {});
-      await browser.catch(() => {});
       setBusy(false);
     }
   }
@@ -116,7 +174,11 @@ export function GoogleSignInButton({
             marginTop: 10,
           }}
         >
-          Terminez Google, puis revenez ici. La connexion se termine toute seule.
+          {native
+            ? "Choisissez un compte Google pour continuer."
+            : Platform.OS === "ios"
+              ? "Terminez Google, puis touchez OK pour revenir ici."
+              : "Terminez Google, puis revenez ici. La connexion se termine toute seule."}
         </Text>
       ) : null}
       <View

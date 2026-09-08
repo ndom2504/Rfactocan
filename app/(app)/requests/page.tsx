@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
+import { openRequestDateWhere } from "@/lib/listing-freshness";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t, urgencyLabel } from "@/lib/i18n";
@@ -23,7 +24,7 @@ export default async function RequestsPage({ searchParams }: Props) {
   const requests = await prisma.parcelRequest.findMany({
     where: mineOnly
       ? { userId: user.id, status: { not: "CANCELLED" } }
-      : { status: "OPEN" },
+      : { status: "OPEN", AND: [openRequestDateWhere()] },
     include: {
       user: {
         select: {

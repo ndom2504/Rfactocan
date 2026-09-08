@@ -99,8 +99,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
   }
 
-  const type = (file.type || "").toLowerCase().split(";")[0]?.trim() ?? "";
-  if (!isAllowedServiceImageType(type)) {
+  const type = file.type;
+  if (!isAllowedServiceImageType(type, file.name)) {
     return NextResponse.json(
       {
         error: "Type de fichier non autorisé (jpeg, png, webp, gif).",

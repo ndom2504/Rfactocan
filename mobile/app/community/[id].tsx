@@ -1,11 +1,9 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { type Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -24,6 +22,7 @@ import {
 import { startDirectChat } from "@/lib/dm";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import { useKeyboardLift } from "@/lib/use-keyboard-lift";
 import { colors } from "@/lib/theme";
 
 type Comment = {
@@ -38,6 +37,7 @@ export default function CommunityPostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t, locale } = useI18n();
+  const keyboardLift = useKeyboardLift();
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState("");
@@ -148,18 +148,28 @@ export default function CommunityPostScreen() {
   );
 
   return (
-    <Screen style={{ paddingBottom: 8 }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+    <Screen style={{ paddingBottom: 8 + keyboardLift }}>
+      <View style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled">
           <ErrorText>{error}</ErrorText>
           <Muted>
             {KIND_LABELS[post.kind] || post.kind}
-            {post.author?.displayName ? ` · ${post.author.displayName}` : ""}
             {` · ${formatDate(post.createdAt)}`}
           </Muted>
+          {post.author?.id ? (
+            <Pressable
+              onPress={() => router.push(`/member/${post.author!.id}` as Href)}
+              style={{ marginTop: 8, flexDirection: "row", alignItems: "center" }}
+            >
+              <Text style={{ fontWeight: "700", color: colors.accent }}>
+                {post.author.displayName}
+              </Text>
+            </Pressable>
+          ) : post.author?.displayName ? (
+            <Text style={{ fontWeight: "700", color: colors.foreground, marginTop: 8 }}>
+              {post.author.displayName}
+            </Text>
+          ) : null}
           {post.title?.trim() ? (
             <Text
               style={{
@@ -267,7 +277,7 @@ export default function CommunityPostScreen() {
           />
           <Button label="Commenter" onPress={() => void sendComment()} loading={busy} />
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 }

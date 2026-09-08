@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { api } from "@/lib/api";
+import { CorridorFields } from "@/components/geo-fields";
 import {
   Button,
   ErrorText,
@@ -56,10 +57,16 @@ export default function NewRequestScreen() {
         <ScrollView keyboardShouldPersistTaps="handled">
           <Title>Nouvelle demande</Title>
           <Muted>Décrivez le colis à envoyer.</Muted>
-          <Field label="Pays départ" value={fromCountry} onChangeText={setFromCountry} />
-          <Field label="Ville départ" value={fromCity} onChangeText={setFromCity} />
-          <Field label="Pays arrivée" value={toCountry} onChangeText={setToCountry} />
-          <Field label="Ville arrivée" value={toCity} onChangeText={setToCity} />
+          <CorridorFields
+            fromCountry={fromCountry}
+            fromCity={fromCity}
+            toCountry={toCountry}
+            toCity={toCity}
+            onFromCountry={setFromCountry}
+            onFromCity={setFromCity}
+            onToCountry={setToCountry}
+            onToCity={setToCity}
+          />
           <Field
             label="Poids (kg)"
             keyboardType="decimal-pad"

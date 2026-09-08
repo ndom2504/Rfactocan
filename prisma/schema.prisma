@@ -201,6 +201,7 @@ model User {
   email                       String     @unique
   passwordHash                String?
   googleId                    String?    @unique
+  appleId                     String?    @unique
   displayName                 String
   avatarUrl                   String?
   /// Profile cover / banner image

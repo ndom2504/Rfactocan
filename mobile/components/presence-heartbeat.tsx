@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { sendLocationIfAllowed } from "@/lib/device-permissions";
 
 /** Marks the signed-in user as online while the app is in the foreground. */
 export function PresenceHeartbeat() {
@@ -15,6 +16,7 @@ export function PresenceHeartbeat() {
       if (cancelled || AppState.currentState !== "active") return;
       try {
         await api("/api/presence", { method: "POST" });
+        await sendLocationIfAllowed();
       } catch {
         /* ignore network blips */
       }

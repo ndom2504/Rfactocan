@@ -1,3 +1,4 @@
+import { openTripDateWhere } from "@/lib/listing-freshness";
 import { rankMatches, type MatchTripInput } from "@/lib/matching";
 import { prisma } from "@/lib/prisma";
 
@@ -73,6 +74,7 @@ export async function findDeliveryCarriers(input: {
       userId: { not: input.viewerId },
       fromCountry,
       toCountry,
+      AND: [openTripDateWhere()],
     },
     include: {
       user: {

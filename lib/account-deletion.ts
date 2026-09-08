@@ -66,6 +66,7 @@ export async function deleteUserAccount(userId: string) {
         email: anonymizedEmail,
         passwordHash: null,
         googleId: null,
+        appleId: null,
         displayName: "Compte supprimé",
         avatarUrl: null,
         bannerUrl: null,

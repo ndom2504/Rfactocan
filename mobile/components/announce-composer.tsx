@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Button, ErrorText, Field, Muted, Title } from "@/components/ui";
 import { api, mediaUrl, uploadFile } from "@/lib/api";
+import { prepareImageUpload } from "@/lib/prepare-image";
 import {
   PUBLISH_KINDS,
   type CommunityAttachment,
@@ -91,18 +92,19 @@ export function AnnounceComposer({
       const next = [...attachments];
       for (const [index, asset] of (result.assets ?? []).entries()) {
         const name = asset.fileName || `media-${index + 1}.jpg`;
-        const type =
-          asset.mimeType ||
-          (/\.(mp4|mov|webm|m4v)$/i.test(name) ? "video/mp4" : "image/jpeg");
-        const uploaded = await uploadFile("/api/community/upload", {
-          uri: asset.uri,
-          name,
-          type,
-        });
+        const isVideo = /\.(mp4|mov|webm|m4v)$/i.test(name) || (asset.mimeType || "").startsWith("video/");
+        const file = isVideo
+          ? {
+              uri: asset.uri,
+              name,
+              type: asset.mimeType || "video/mp4",
+            }
+          : await prepareImageUpload(asset);
+        const uploaded = await uploadFile("/api/community/upload", file);
         next.push({
           url: uploaded.url,
           name: uploaded.name || name,
-          contentType: uploaded.contentType || type,
+          contentType: uploaded.contentType || file.type,
           size: 0,
         });
       }

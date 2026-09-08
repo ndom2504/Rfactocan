@@ -12,6 +12,7 @@ export type CommunityAuthor = {
   id: string;
   displayName: string;
   avatarUrl?: string | null;
+  bannerUrl?: string | null;
   country?: string | null;
   verified?: boolean;
   bio?: string | null;

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { Chip, ChipRow } from "@/components/chip";
+import { CountryCityFields } from "@/components/geo-fields";
 import {
   Button,
   ErrorText,
@@ -20,6 +21,7 @@ import {
   Title,
 } from "@/components/ui";
 import { api, mediaUrl, uploadFile } from "@/lib/api";
+import { IOS_IMAGE_PICKER, prepareImageUpload } from "@/lib/prepare-image";
 import { useI18n } from "@/lib/i18n";
 import {
   catalogLabel,
@@ -88,8 +90,7 @@ export default function NewServiceScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.8,
+      ...IOS_IMAGE_PICKER,
       allowsMultipleSelection: true,
       selectionLimit: 5 - photos.length,
     });
@@ -99,13 +100,9 @@ export default function NewServiceScreen() {
     try {
       const uploaded: string[] = [];
       for (const asset of result.assets ?? []) {
-        const name = asset.fileName || `photo-${Date.now()}.jpg`;
-        const file = await uploadFile("/api/services/upload", {
-          uri: asset.uri,
-          name,
-          type: asset.mimeType || "image/jpeg",
-        });
-        uploaded.push(file.url);
+        const file = await prepareImageUpload(asset);
+        const sent = await uploadFile("/api/services/upload", file);
+        uploaded.push(sent.url);
       }
       setPhotos((prev) => [...prev, ...uploaded].slice(0, 5));
     } catch (e) {
@@ -292,25 +289,12 @@ export default function NewServiceScreen() {
             placeholder="Décrivez le service (au moins 10 caractères)…"
           />
 
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <Field
-                label={t("country")}
-                value={country}
-                onChangeText={setCountry}
-                autoCapitalize="characters"
-                placeholder="GA"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Field
-                label={t("city")}
-                value={city}
-                onChangeText={setCity}
-                placeholder="Libreville"
-              />
-            </View>
-          </View>
+          <CountryCityFields
+            country={country}
+            city={city}
+            onCountry={setCountry}
+            onCity={setCity}
+          />
 
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>

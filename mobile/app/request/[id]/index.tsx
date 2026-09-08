@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
 import { formatDate } from "@/lib/format";
 import {
   Badge,
@@ -42,6 +43,7 @@ type MyTrip = {
 export default function RequestDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useI18n();
   const router = useRouter();
   const [request, setRequest] = useState<RequestDetail | null>(null);
   const [trips, setTrips] = useState<MyTrip[]>([]);
@@ -169,6 +171,11 @@ export default function RequestDetailScreen() {
         ) : (
           <View>
             <Muted>C&apos;est votre demande. Attendez les candidatures.</Muted>
+            <Button
+              label={t("edit")}
+              variant="outline"
+              onPress={() => router.push(`/request/${id}/edit`)}
+            />
             <ErrorText>{error}</ErrorText>
           </View>
         )}

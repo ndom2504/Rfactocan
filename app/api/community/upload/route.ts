@@ -133,7 +133,7 @@ export async function POST(request: Request) {
   }
 
   const type = (file.type || "").toLowerCase().split(";")[0]?.trim() ?? "";
-  if (!isAllowedCommunityContentType(type)) {
+  if (!isAllowedCommunityContentType(type, file.name)) {
     return NextResponse.json(
       {
         error:
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: isImage
-          ? "Image trop volumineuse (max 2 Mo)."
+          ? `Image trop volumineuse (max ${Math.floor(max / (1024 * 1024))} Mo).`
           : isVideo
             ? `Vidéo trop volumineuse (max ${Math.floor(max / (1024 * 1024))} Mo).`
             : "PDF trop volumineux (max 5 Mo).",

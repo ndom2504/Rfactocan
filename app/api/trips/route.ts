@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { openTripDateWhere } from "@/lib/listing-freshness";
 import { prisma } from "@/lib/prisma";
 import {
   maxWeightForMode,
@@ -92,7 +93,7 @@ export async function GET(request: Request) {
   const trips = await prisma.trip.findMany({
     where: {
       status: "OPEN",
-      ...(mine && session ? { userId: session.id } : {}),
+      ...(mine && session ? { userId: session.id } : { AND: [openTripDateWhere()] }),
       ...(toCountry ? { toCountry } : {}),
       ...(toCity ? { toCity } : {}),
       ...(transportMode ? { transportMode } : {}),

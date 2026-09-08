@@ -31,12 +31,18 @@ export function VoiceNoteBubble({
     });
   }, [player]);
 
-  function toggle() {
+  async function toggle() {
     if (status.playing) {
       player.pause();
       return;
     }
     stopAllVoicePlayback();
+    const ended =
+      status.didJustFinish ||
+      (status.duration > 0 && status.currentTime >= status.duration - 0.2);
+    if (ended) {
+      await player.seekTo(0);
+    }
     player.play();
   }
 

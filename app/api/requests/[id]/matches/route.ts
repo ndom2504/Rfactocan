@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
+import { openTripDateWhere } from "@/lib/listing-freshness";
 import { prisma } from "@/lib/prisma";
 import { rankMatches } from "@/lib/matching";
 import { normalizeOrderNeedType } from "@/lib/order-need";
@@ -260,6 +261,7 @@ export async function GET(_request: Request, { params }: Params) {
       status: "OPEN",
       userId: { not: parcel.userId },
       toCountry: parcel.toCountry,
+      AND: [openTripDateWhere()],
     },
     include: {
       user: {

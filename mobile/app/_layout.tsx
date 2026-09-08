@@ -1,11 +1,13 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
+import { VideoSplash } from "@/components/video-splash";
 import { CallProvider } from "@/components/call-provider";
 import { GoogleReturnHandler } from "@/components/google-return-handler";
+import { GuidedTour } from "@/components/guided-tour";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { LocaleProvider } from "@/lib/i18n";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
@@ -33,15 +35,25 @@ function PushBridge() {
   return null;
 }
 
-function AuthGate({ children }: { children: React.ReactNode }) {
+function AuthGate({
+  children,
+  holdSplash,
+}: {
+  children: React.ReactNode;
+  holdSplash: boolean;
+}) {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
-    const root = segments[0];
-    const inAuth = root === "(auth)";
+    const root = String(segments[0] ?? "");
+    const inAuth =
+      root === "(auth)" ||
+      root === "login" ||
+      root === "register" ||
+      root === "forgot-password";
     const atWelcome = !root || root === "index";
     const googleReturn =
       root === "oauth" || root === "google-auth" || root === "+not-found";
@@ -57,10 +69,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }, [user, loading, segments, router]);
 
   useEffect(() => {
-    if (!loading) {
-      SplashScreen.hideAsync();
+    if (!loading && !holdSplash) {
+      void SplashScreen.hideAsync().catch(() => {});
     }
-  }, [loading]);
+  }, [loading, holdSplash]);
 
   if (loading) {
     return (
@@ -86,13 +98,20 @@ function ThemedStatusBar() {
 }
 
 export default function RootLayout() {
+  const [introDone, setIntroDone] = useState(false);
+  const finishIntro = useCallback(() => setIntroDone(true), []);
+
   return (
     <LocaleProvider>
     <ThemeProvider>
     <AuthProvider>
+      <View style={{ flex: 1 }}>
       <ThemedStatusBar />
       <GoogleReturnHandler />
-      <AuthGate>
+      {!introDone ? (
+        <VideoSplash onFinished={finishIntro} />
+      ) : null}
+      <AuthGate holdSplash={!introDone}>
         <CallProvider>
         <PushBridge />
         <PresenceHeartbeat />
@@ -150,16 +169,70 @@ export default function RootLayout() {
             options={{ headerShown: true, title: "Publication" }}
           />
           <Stack.Screen
+            name="member/[id]"
+            options={{ headerShown: true, title: "Profil" }}
+          />
+          <Stack.Screen
             name="shops/[id]"
             options={{ headerShown: true, title: "Boutique" }}
           />
           <Stack.Screen
-            name="meet"
+            name="meet/index"
             options={{ headerShown: true, title: "Rencontre" }}
           />
+          <Stack.Screen
+            name="meet/[userId]"
+            options={{ headerShown: true, title: "Profil" }}
+          />
+          <Stack.Screen
+            name="shops/product/[id]"
+            options={{ headerShown: true, title: "Produit" }}
+          />
+          <Stack.Screen
+            name="shops/orders/index"
+            options={{ headerShown: true, title: "Commandes" }}
+          />
+          <Stack.Screen
+            name="shops/orders/[id]"
+            options={{ headerShown: true, title: "Commande" }}
+          />
+          <Stack.Screen
+            name="trip/[id]/edit"
+            options={{ headerShown: true, title: "Modifier" }}
+          />
+          <Stack.Screen
+            name="request/[id]/edit"
+            options={{ headerShown: true, title: "Modifier" }}
+          />
+          <Stack.Screen
+            name="service/[id]/edit"
+            options={{ headerShown: true, title: "Modifier" }}
+          />
+          <Stack.Screen
+            name="herald/index"
+            options={{ headerShown: true, title: "Héraut Réseau" }}
+          />
+          <Stack.Screen
+            name="shops/new"
+            options={{ headerShown: true, title: "Boutique" }}
+          />
+          <Stack.Screen
+            name="shops/[id]/manage"
+            options={{ headerShown: true, title: "Gérer" }}
+          />
+          <Stack.Screen
+            name="projects/index"
+            options={{ headerShown: true, title: "Mes projets" }}
+          />
+          <Stack.Screen
+            name="admin/index"
+            options={{ headerShown: true, title: "Admin" }}
+          />
         </Stack>
+        <GuidedTour />
         </CallProvider>
       </AuthGate>
+      </View>
     </AuthProvider>
     </ThemeProvider>
     </LocaleProvider>

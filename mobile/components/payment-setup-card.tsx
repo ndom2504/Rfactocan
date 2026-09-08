@@ -35,6 +35,7 @@ export type ProfileUser = {
   publicationCharterAcceptedAt?: string | null;
   isAmbassador?: boolean;
   agentCode?: string | null;
+  ambassadorRequestStatus?: string;
   ratingAvg?: number;
   ratingCount?: number;
 };

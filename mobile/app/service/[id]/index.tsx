@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -240,7 +240,14 @@ export default function ServiceListingScreen() {
             </>
           )
         ) : (
-          <Muted>{t("services_own_listing")}</Muted>
+          <>
+            <Muted>{t("services_own_listing")}</Muted>
+            <Button
+              label={t("edit")}
+              variant="outline"
+              onPress={() => router.push(`/service/${id}/edit` as Href)}
+            />
+          </>
         )}
       </ScrollView>
     </Screen>

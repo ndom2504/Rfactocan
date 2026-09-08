@@ -9,7 +9,9 @@ import React, {
 } from "react";
 import { api, getToken, setToken } from "@/lib/api";
 import { googleAuthSessionUrls } from "@/lib/google-auth-url";
-import { registerPushToken, unregisterPushToken } from "@/lib/push";
+import { markTourPendingIfNeeded } from "@/lib/guided-tour";
+import { requestSignedInDeviceAccess } from "@/lib/device-permissions";
+import { unregisterPushToken } from "@/lib/push";
 
 export type AuthUser = {
   id: string;
@@ -23,11 +25,24 @@ export type AuthUser = {
   kycRequired?: boolean;
   ratingAvg?: number;
   ratingCount?: number;
+  isAmbassador?: boolean;
+  agentCode?: string | null;
 };
 
 export type GoogleAuthPayload =
   | { idToken: string }
   | { code: string; codeVerifier: string; redirectUri: string };
+
+export type AppleAuthPayload = {
+  identityToken: string;
+  nonce?: string;
+  email?: string;
+  fullName?: {
+    givenName?: string | null;
+    familyName?: string | null;
+  };
+  ref?: string;
+};
 
 type PhoneOtpStart = {
   mfaToken: string;
@@ -51,7 +66,8 @@ type AuthContextValue = {
   verifyPhoneOtp: (
     mfaToken: string,
     code: string,
-    displayName?: string
+    displayName?: string,
+    ref?: string
   ) => Promise<void>;
   resendPhoneOtp: (
     mfaToken: string
@@ -62,11 +78,13 @@ type AuthContextValue = {
     displayName: string;
     role?: string;
     country?: string;
+    ref?: string;
   }) => Promise<void>;
   loginWithGoogle: (payload: GoogleAuthPayload) => Promise<
     | { mfaRequired: false }
     | { mfaRequired: true; mfaToken: string; emailHint: string }
   >;
+  loginWithApple: (payload: AppleAuthPayload) => Promise<void>;
   finishGoogleTicket: (ticket: string) => Promise<
     | { mfaRequired: false }
     | { mfaRequired: true; mfaToken: string; emailHint: string }
@@ -93,6 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const applySession = useCallback(async (token: string, nextUser: AuthUser) => {
     const gen = sessionGen.current;
     await setToken(token);
+    if (gen !== sessionGen.current) return;
+    await markTourPendingIfNeeded();
     if (gen !== sessionGen.current) return;
     setUser(nextUser);
   }, []);
@@ -125,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
-    if (user) void registerPushToken();
+    if (user) void requestSignedInDeviceAccess();
   }, [user]);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -197,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const verifyPhoneOtp = useCallback(
-    async (mfaToken: string, code: string, displayName?: string) => {
+    async (mfaToken: string, code: string, displayName?: string, ref?: string) => {
       const data = await api<{ token: string; user: AuthUser }>(
         "/api/auth/phone/verify",
         {
@@ -207,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             code,
             displayName: displayName || undefined,
             role: "BOTH",
+            ref: ref?.trim() || undefined,
           }),
         }
       );
@@ -232,6 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       displayName: string;
       role?: string;
       country?: string;
+      ref?: string;
     }) => {
       const data = await api<{ token: string; user: AuthUser }>(
         "/api/auth/register",
@@ -244,6 +266,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [applySession]
   );
+
+  const loginWithApple = useCallback(async (payload: AppleAuthPayload) => {
+    const data = await api<{ token?: string; user?: AuthUser }>(
+      "/api/auth/apple",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+    if (!data.token || !data.user) {
+      throw new Error("Connexion Apple impossible");
+    }
+    await applySession(data.token, data.user);
+  }, [applySession]);
 
   const loginWithGoogle = useCallback(async (payload: GoogleAuthPayload) => {
     const data = await api<{
@@ -363,12 +399,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resendPhoneOtp,
       register,
       loginWithGoogle,
+      loginWithApple,
       finishGoogleTicket,
       applyGooglePoll,
       logout,
       refresh,
     }),
-    [user, loading, login, verifyLoginOtp, resendLoginOtp, requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp, register, loginWithGoogle, finishGoogleTicket, applyGooglePoll, logout, refresh]
+    [user, loading, login, verifyLoginOtp, resendLoginOtp, requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp, register, loginWithGoogle, loginWithApple, finishGoogleTicket, applyGooglePoll, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

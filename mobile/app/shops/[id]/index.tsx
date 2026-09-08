@@ -1,9 +1,10 @@
-import { useLocalSearchParams } from "expo-router";
+import { type Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text } from "react-native";
-import { Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
+import { ActivityIndicator, Pressable, ScrollView, Text } from "react-native";
+import { Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatMoneyFromCents } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
 
 type Product = {
@@ -19,12 +20,15 @@ type Shop = {
   country?: string | null;
   currency?: string | null;
   description?: string | null;
+  isOwner?: boolean;
   user?: { displayName?: string | null };
   products?: Product[];
 };
 
 export default function ShopDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { t } = useI18n();
   const [shop, setShop] = useState<Shop | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -71,26 +75,39 @@ export default function ShopDetailScreen() {
           {shop.user?.displayName ? ` · ${shop.user.displayName}` : ""}
         </Muted>
         <ErrorText>{error}</ErrorText>
+        <Button
+          label={t("shops_orders")}
+          variant="outline"
+          onPress={() => router.push("/shops/orders")}
+        />
+        {shop.isOwner ? (
+          <Button
+            label={t("shops_manage")}
+            onPress={() => router.push(`/shops/${id}/manage` as Href)}
+          />
+        ) : null}
         {shop.description ? (
           <Card>
             <Text style={{ color: colors.foreground }}>{shop.description}</Text>
           </Card>
         ) : null}
         {(shop.products ?? []).map((p) => (
-          <Card key={p.id}>
-            <Text style={{ fontWeight: "700", color: colors.foreground }}>
-              {p.title}
-            </Text>
-            <Muted>
-              {formatMoneyFromCents(
-                p.effectivePriceCents ?? p.priceCents ?? 0,
-                shop.currency || "CAD"
-              )}
-            </Muted>
-          </Card>
+          <Pressable key={p.id} onPress={() => router.push(`/shops/product/${p.id}`)}>
+            <Card>
+              <Text style={{ fontWeight: "700", color: colors.foreground }}>
+                {p.title}
+              </Text>
+              <Muted>
+                {formatMoneyFromCents(
+                  p.effectivePriceCents ?? p.priceCents ?? 0,
+                  shop.currency || "CAD"
+                )}
+              </Muted>
+            </Card>
+          </Pressable>
         ))}
         {!(shop.products ?? []).length ? (
-          <Muted>Aucun produit actif.</Muted>
+          <Muted>{t("shop_no_products")}</Muted>
         ) : null}
       </ScrollView>
     </Screen>

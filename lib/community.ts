@@ -1,3 +1,5 @@
+import { normalizeImageContentType } from "@/lib/image-mime";
+
 export const COMMUNITY_POST_KINDS = [
   "BUSINESS",
   "OPPORTUNITY",
@@ -155,6 +157,10 @@ export const COMMUNITY_ALLOWED_IMAGES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "image/jpg",
+  "image/pjpeg",
+  "image/heic",
+  "image/heif",
 ]);
 
 export const COMMUNITY_ALLOWED_DOCS = new Set(["application/pdf"]);
@@ -188,13 +194,21 @@ export const COMMUNITY_MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 /** Photos / files per community post or DM album. */
 export const COMMUNITY_MAX_ATTACHMENTS = 10;
 
-export function isAllowedCommunityContentType(contentType: string) {
-  const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
-  return (
+export function isAllowedCommunityContentType(contentType: string, fileName = "") {
+  const type = normalizeImageContentType(contentType, fileName);
+  if (
     COMMUNITY_ALLOWED_IMAGES.has(type) ||
     COMMUNITY_ALLOWED_DOCS.has(type) ||
     COMMUNITY_ALLOWED_VIDEOS.has(type) ||
     COMMUNITY_ALLOWED_AUDIOS.has(type)
+  ) {
+    return true;
+  }
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+  return (
+    ext === "pdf" ||
+    ["mp4", "webm", "mov", "m4v"].includes(ext) ||
+    ["m4a", "aac", "mp3", "ogg", "wav", "amr"].includes(ext)
   );
 }
 

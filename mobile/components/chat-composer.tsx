@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { VoiceNoteBubble } from "@/components/voice-note-bubble";
 import { useVoiceNote, type VoicePickedFile } from "@/components/voice-note-button";
 import { useI18n } from "@/lib/i18n";
+import { useKeyboardLift } from "@/lib/use-keyboard-lift";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 
@@ -56,12 +57,13 @@ export function ChatComposer({
 }) {
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
+  const keyboardLift = useKeyboardLift();
   const voice = useVoiceNote({ sending, onRecorded });
   const locked = sending || voice.recording || Boolean(voice.previewUri);
   const canSend = !locked && draft.trim().length > 0;
 
   return (
-    <View>
+    <View style={{ paddingBottom: keyboardLift }}>
       {voice.recording ? (
         <View
           style={{

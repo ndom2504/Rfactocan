@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { generateOtpCode, hashOtpCode, MFA_MINUTES } from "@/lib/login-otp";
 import { maskAuthPhone } from "@/lib/phone-auth";
 import {
+  APPLE_REVIEW_SMS_OTP,
+  isAppleReviewPhone,
+} from "@/lib/review-account";
+import {
   checkPhoneVerification,
   isSmsConfigured,
   startPhoneVerification,
@@ -73,6 +77,22 @@ export async function issuePhoneOtp(phone: string): Promise<
     data: { usedAt: new Date() },
   });
 
+  if (isAppleReviewPhone(phone)) {
+    const expiresAt = new Date(Date.now() + MFA_MINUTES * 60 * 1000);
+    await prisma.phoneOtp.create({
+      data: {
+        phone,
+        codeHash: hashOtpCode(APPLE_REVIEW_SMS_OTP),
+        expiresAt,
+      },
+    });
+    return {
+      ok: true,
+      mfaToken: await createPhoneOtpToken(phone),
+      phoneHint: maskAuthPhone(phone),
+    };
+  }
+
   const useVerify = isSmsConfigured();
   if (!useVerify && process.env.NODE_ENV === "production") {
     return { ok: false, error: "SMS_NOT_CONFIGURED" };
@@ -141,6 +161,17 @@ export async function consumePhoneOtp(
   });
 
   if (!otp) return { ok: false, error: "CODE_EXPIRED" };
+
+  if (
+    isAppleReviewPhone(phone) &&
+    hashOtpCode(normalized) === hashOtpCode(APPLE_REVIEW_SMS_OTP)
+  ) {
+    await prisma.phoneOtp.update({
+      where: { id: otp.id },
+      data: { usedAt: new Date() },
+    });
+    return { ok: true };
+  }
 
   if (otp.attempts >= OTP_MAX_ATTEMPTS) {
     await prisma.phoneOtp.update({

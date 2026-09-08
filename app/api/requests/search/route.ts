@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
+import { openRequestDateWhere } from "@/lib/listing-freshness";
 import { countryCodesForRegion } from "@/lib/regions";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
@@ -68,6 +69,7 @@ export async function GET(request: Request) {
     where: {
       status: "OPEN",
       userId: { not: session.id },
+      AND: [openRequestDateWhere()],
       ...(needTypeFilter ? { needType: needTypeFilter } : {}),
       ...(dateFilter ? { desiredDate: dateFilter } : {}),
       ...(country

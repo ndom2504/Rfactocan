@@ -8,16 +8,15 @@ import {
   Alert,
   FlatList,
   Image,
-  KeyboardAvoidingView,
   Linking,
   Modal,
-  Platform,
   Pressable,
   Share,
   Text,
   View,
 } from "react-native";
 import { useCallActions } from "@/components/call-provider";
+import { AttachmentPreview } from "@/components/attachment-preview";
 import { ChatComposer } from "@/components/chat-composer";
 import { Chip, ChipRow } from "@/components/chip";
 import {
@@ -28,7 +27,8 @@ import { TypingBubble } from "@/components/typing-dots";
 import { VoiceNoteBubble } from "@/components/voice-note-bubble";
 import type { VoicePickedFile } from "@/components/voice-note-button";
 import { Button, ErrorText, Field, Muted, Screen } from "@/components/ui";
-import { api, isImageAttachment, mediaUrl, uploadFile } from "@/lib/api";
+import { api, mediaUrl, uploadFile } from "@/lib/api";
+import { prepareImageUpload } from "@/lib/prepare-image";
 import { useAuth } from "@/lib/auth-context";
 import { createOutgoingCall } from "@/lib/calls";
 import {
@@ -500,22 +500,21 @@ export default function DirectChatScreen() {
 
   async function pickAttachments() {
     const result = await DocumentPicker.getDocumentAsync({
-      type: [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-        "application/pdf",
-      ],
+      type: ["image/*", "application/pdf"],
       copyToCacheDirectory: true,
       multiple: true,
     });
     if (result.canceled) return;
-    const files = (result.assets ?? []).slice(0, 10).map((asset) => ({
-      uri: asset.uri,
-      name: asset.name || fileNameFromUri(asset.uri, "fichier.pdf"),
-      type: guessMime(asset.name || "fichier.pdf", asset.mimeType),
-    }));
+    const files: VoicePickedFile[] = [];
+    for (const asset of (result.assets ?? []).slice(0, 10)) {
+      const name = asset.name || fileNameFromUri(asset.uri, "fichier.pdf");
+      const type = guessMime(name, asset.mimeType);
+      if (type.startsWith("image/")) {
+        files.push(await prepareImageUpload({ uri: asset.uri, fileName: name, mimeType: type }));
+      } else {
+        files.push({ uri: asset.uri, name, type });
+      }
+    }
     await sendFiles(files);
   }
 
@@ -609,10 +608,7 @@ export default function DirectChatScreen() {
         <Text style={{ color: "#047857", fontSize: 13, marginBottom: 6 }}>{payOk}</Text>
       ) : null}
       {sending ? <Muted>{t("uploading")}</Muted> : null}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+      <View style={{ flex: 1 }}>
         <FlatList
           ref={listRef}
           data={messages}
@@ -765,40 +761,11 @@ export default function DirectChatScreen() {
                   <VoiceNoteBubble url={url} mine={mine} />
                 ) : url ? (
                   <View>
-                    <Pressable onPress={() => void Linking.openURL(url)}>
-                      {isImageAttachment(item.attachmentUrl) ? (
-                        <Image
-                          source={{ uri: url }}
-                          style={{ width: 220, height: 160, borderRadius: 10 }}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 8,
-                            padding: 10,
-                            borderRadius: 8,
-                            backgroundColor: mine
-                              ? "rgba(255,255,255,0.15)"
-                              : colors.surface,
-                          }}
-                        >
-                          <Ionicons
-                            name="document"
-                            size={22}
-                            color={mine ? "#fff" : colors.accent}
-                          />
-                          <Text
-                            style={{ color: labelColor, fontSize: 13, flex: 1 }}
-                            numberOfLines={2}
-                          >
-                            {fileName}
-                          </Text>
-                        </View>
-                      )}
-                    </Pressable>
+                    <AttachmentPreview
+                      url={url}
+                      fileName={fileName}
+                      mine={mine}
+                    />
                     <Pressable
                       onPress={() => void downloadAttachment(url)}
                       accessibilityLabel={t("download_attachment")}
@@ -932,7 +899,7 @@ export default function DirectChatScreen() {
           onAttach={() => void pickAttachments()}
           onRecorded={sendVoice}
         />
-      </KeyboardAvoidingView>
+      </View>
       <Modal
         visible={Boolean(forwardMessage)}
         transparent

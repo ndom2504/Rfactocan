@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { api, mediaUrl } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Button, Card, Field } from "@/components/ui";
+import { CountryCityFields, RegionField } from "@/components/geo-fields";
 import { colors } from "@/lib/theme";
 
 type Mode = "voyageurs" | "colis" | "services";
@@ -106,6 +107,7 @@ export function DashboardSearchHub() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("voyageurs");
   const [q, setQ] = useState("");
+  const [region, setRegion] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [travelDate, setTravelDate] = useState("");
@@ -137,6 +139,7 @@ export function DashboardSearchHub() {
         const data = await api<{ travelers?: TravelerHit[] }>(
           `/api/travelers/search${query({
             q,
+            region,
             country: country.toUpperCase(),
             city,
             date: travelDate,
@@ -149,6 +152,7 @@ export function DashboardSearchHub() {
         const data = await api<{ requests?: RequestHit[] }>(
           `/api/requests/search${query({
             q,
+            region,
             country: country.toUpperCase(),
             city,
             date: travelDate,
@@ -257,17 +261,24 @@ export function DashboardSearchHub() {
           })}
         </View>
         <Field label={t("search")} value={q} onChangeText={setQ} placeholder={placeholder} />
-        <Field
-          label={t("country")}
-          autoCapitalize="characters"
-          value={country}
-          onChangeText={setCountry}
-          placeholder="GA"
-        />
-        <Field
-          label={mode === "services" ? t("city") : t("city_from")}
-          value={city}
-          onChangeText={setCity}
+        {mode !== "services" ? (
+          <RegionField
+            label={t("region")}
+            value={region}
+            onChange={(id) => {
+              setRegion(id);
+              setCountry("");
+              setCity("");
+            }}
+          />
+        ) : null}
+        <CountryCityFields
+          country={country}
+          city={city}
+          onCountry={setCountry}
+          onCity={setCity}
+          allowEmpty
+          regionId={mode !== "services" ? region : undefined}
         />
         {mode !== "services" ? (
           <Field
@@ -287,6 +298,7 @@ export function DashboardSearchHub() {
               variant="outline"
               onPress={() => {
                 setQ("");
+                setRegion("");
                 setCountry("");
                 setCity("");
                 setTravelDate("");
@@ -382,7 +394,7 @@ export function DashboardSearchHub() {
                     .filter(Boolean)
                     .join(" · ")}
                   imageUrl={hit.photos?.[0]}
-                  onPress={() => router.push("/services")}
+                  onPress={() => router.push(`/service/${hit.id}` as Href)}
                 />
               ))
             )}

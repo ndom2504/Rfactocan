@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { Chip, ChipRow } from "@/components/chip";
+import { CountryField } from "@/components/geo-fields";
 import type { ProfileUser } from "@/components/payment-setup-card";
 import {
   Button,
@@ -13,6 +14,7 @@ import {
   Title,
 } from "@/components/ui";
 import { api, mediaUrl, uploadFile } from "@/lib/api";
+import { IOS_IMAGE_PICKER, prepareImageUpload } from "@/lib/prepare-image";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
@@ -30,15 +32,11 @@ import {
 async function pickImage() {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) throw new Error("Permission photos refusée");
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    quality: 0.85,
-  });
+  const result = await ImagePicker.launchImageLibraryAsync(IOS_IMAGE_PICKER);
   if (result.canceled) return null;
   const asset = result.assets[0];
-  const name = asset.fileName || `photo-${Date.now()}.jpg`;
-  const type = asset.mimeType || "image/jpeg";
-  return uploadFile("/api/upload", { uri: asset.uri, name, type });
+  const file = await prepareImageUpload(asset);
+  return uploadFile("/api/upload", file);
 }
 
 export default function ProfileScreen() {
@@ -59,7 +57,10 @@ export default function ProfileScreen() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingKind, setUploadingKind] = useState<"avatar" | "banner" | null>(
+    null
+  );
+  const pickingRef = useRef(false);
 
   async function load() {
     try {
@@ -102,7 +103,9 @@ export default function ProfileScreen() {
   }
 
   async function onPick(kind: "avatar" | "banner") {
-    setUploading(true);
+    if (pickingRef.current) return;
+    pickingRef.current = true;
+    setUploadingKind(kind);
     setError("");
     try {
       const uploaded = await pickImage();
@@ -111,7 +114,8 @@ export default function ProfileScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : t("retry"));
     } finally {
-      setUploading(false);
+      pickingRef.current = false;
+      setUploadingKind(null);
     }
   }
 
@@ -196,12 +200,17 @@ export default function ProfileScreen() {
           )}
         </View>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flex: 1 }}>
+          <View
+            style={{ flex: 1 }}
+            onStartShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => false}
+          >
             <Button
               label={bannerUrl ? t("profile_banner_change") : t("profile_banner_add")}
               variant="outline"
               onPress={() => void onPick("banner")}
-              loading={uploading}
+              loading={uploadingKind === "banner"}
+              disabled={uploadingKind === "avatar"}
             />
           </View>
           {bannerUrl ? (
@@ -242,12 +251,17 @@ export default function ProfileScreen() {
           )}
         </View>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flex: 1 }}>
+          <View
+            style={{ flex: 1 }}
+            onStartShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => false}
+          >
             <Button
               label={avatarUrl ? t("change_photo") : t("add_photo")}
               variant="outline"
               onPress={() => void onPick("avatar")}
-              loading={uploading}
+              loading={uploadingKind === "avatar"}
+              disabled={uploadingKind === "banner"}
             />
           </View>
           {avatarUrl ? (
@@ -264,7 +278,7 @@ export default function ProfileScreen() {
 
         <View style={{ height: 12 }} />
         <Field label={t("display_name")} value={displayName} onChangeText={setDisplayName} />
-        <Field label={t("country")} value={country} onChangeText={setCountry} placeholder="GA" />
+        <CountryField label={t("country")} value={country} onChange={setCountry} />
         <Field
           label={t("bio")}
           value={bio}
@@ -354,11 +368,50 @@ export default function ProfileScreen() {
         {message ? (
           <Text style={{ color: colors.accent, marginTop: 8 }}>{message}</Text>
         ) : null}
-        {uploading ? <Muted>{t("uploading")}</Muted> : null}
-        <Button label={t("save")} onPress={() => void save()} loading={saving} />
+        {uploadingKind ? <Muted>{t("uploading")}</Muted> : null}
+        <Button
+          label={t("save")}
+          onPress={() => void save()}
+          loading={saving}
+          disabled={Boolean(uploadingKind)}
+        />
 
-        <View style={{ marginTop: 12 }}>
-          <Button label={t("meet_edit_profile")} onPress={() => router.push("/meet")} />
+        <View style={{ marginTop: 12, gap: 8 }}>
+          <Button label={t("meet_edit_profile")} onPress={() => router.push("/meet" as Href)} />
+          <Button
+            label={t("browse_trips")}
+            variant="outline"
+            onPress={() => router.push("/(tabs)/trips")}
+          />
+          <Button
+            label={t("browse_requests")}
+            variant="outline"
+            onPress={() => router.push("/(tabs)/requests")}
+          />
+          <Button
+            label={t("browse_shops")}
+            variant="outline"
+            onPress={() => router.push("/(tabs)/shops")}
+          />
+          <Button
+            label={t("shops_orders")}
+            variant="outline"
+            onPress={() => router.push("/shops/orders")}
+          />
+          <Button
+            label={t("my_projects_title")}
+            variant="outline"
+            onPress={() => router.push("/projects" as Href)}
+          />
+          <Button
+            label={
+              profile?.isAmbassador
+                ? t("ambassador_open_cta")
+                : t("ambassador_become_cta")
+            }
+            variant="outline"
+            onPress={() => router.push("/herald" as Href)}
+          />
         </View>
       </ScrollView>
     </Screen>

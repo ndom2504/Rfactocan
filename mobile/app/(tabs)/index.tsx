@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { CoverBanner } from "@/components/cover-banner";
 import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { Button, Card, ErrorText } from "@/components/ui";
@@ -167,6 +167,39 @@ export default function HomeScreen() {
 
       <DashboardSearchHub />
 
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {(
+          [
+            ["/(tabs)/trips", t("browse_trips")],
+            ["/(tabs)/requests", t("browse_requests")],
+            ["/services", t("browse_services")],
+            ["/(tabs)/shops", t("browse_shops")],
+            ["/meet", t("browse_meet")],
+            ["/herald", t("ambassador_become_cta")],
+            ...(user?.role === "ADMIN"
+              ? [["/admin", t("admin_open_cta")] as [string, string]]
+              : []),
+          ] as [string, string][]
+        ).map(([href, label]) => (
+          <Pressable
+            key={href}
+            onPress={() => router.push(href as Href)}
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
+          >
+            <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
+              {label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       {error ? <ErrorText>{error}</ErrorText> : null}
       {loading ? (
         <View style={{ alignItems: "center", paddingVertical: 16 }}>
@@ -175,8 +208,16 @@ export default function HomeScreen() {
         </View>
       ) : (
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <KpiCard label={t("open_trips")} value={String(tripsCount)} />
-          <KpiCard label={t("open_requests")} value={String(requestsCount)} />
+          <KpiCard
+            label={t("open_trips")}
+            value={String(tripsCount)}
+            onPress={() => router.push("/(tabs)/trips")}
+          />
+          <KpiCard
+            label={t("open_requests")}
+            value={String(requestsCount)}
+            onPress={() => router.push("/(tabs)/requests")}
+          />
           <KpiCard label={t("avg_rating")} value={rating} />
         </View>
       )}
@@ -254,9 +295,17 @@ export default function HomeScreen() {
   );
 }
 
-function KpiCard({ label, value }: { label: string; value: string }) {
+function KpiCard({
+  label,
+  value,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  onPress?: () => void;
+}) {
   const colors = useOptionalTheme()?.colors ?? lightColors;
-  return (
+  const inner = (
     <View
       style={{
         flex: 1,
@@ -279,5 +328,11 @@ function KpiCard({ label, value }: { label: string; value: string }) {
         {value}
       </Text>
     </View>
+  );
+  if (!onPress) return inner;
+  return (
+    <Pressable onPress={onPress} style={{ flex: 1 }}>
+      {inner}
+    </Pressable>
   );
 }

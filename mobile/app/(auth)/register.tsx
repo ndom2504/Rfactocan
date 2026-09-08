@@ -1,19 +1,26 @@
-import { Link } from "expo-router";
-import { useState } from "react";
+import { Link, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text } from "react-native";
 import { PhoneOtpAuth } from "@/components/phone-otp-auth";
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { SocialAuthButtons } from "@/components/social-auth-buttons";
+import { CountryField } from "@/components/geo-fields";
 import { Button, ErrorText, Field, Muted, Screen, Title } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
 
 export default function RegisterScreen() {
   const { register, verifyLoginOtp, resendLoginOtp } = useAuth();
+  const { t } = useI18n();
+  const params = useLocalSearchParams<{ ref?: string }>();
   const [mode, setMode] = useState<"email" | "phone">("email");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [country, setCountry] = useState("CA");
+  const [agentRef, setAgentRef] = useState(
+    Array.isArray(params.ref) ? params.ref[0] ?? "" : params.ref ?? ""
+  );
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,6 +28,11 @@ export default function RegisterScreen() {
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [emailHint, setEmailHint] = useState("");
   const [otpCode, setOtpCode] = useState("");
+
+  useEffect(() => {
+    const r = Array.isArray(params.ref) ? params.ref[0] : params.ref;
+    if (r) setAgentRef(r);
+  }, [params.ref]);
 
   function onGoogleMfa(token: string, hint: string) {
     setMfaToken(token);
@@ -39,6 +51,7 @@ export default function RegisterScreen() {
         displayName: displayName.trim(),
         role: "BOTH",
         country: country.trim() || undefined,
+        ref: agentRef.trim() || undefined,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Inscription impossible");
@@ -83,7 +96,7 @@ export default function RegisterScreen() {
       >
         <ScrollView keyboardShouldPersistTaps="handled">
           <Title>Créer un compte</Title>
-          <Muted>Email, Google ou SMS — expéditeur, voyageur, ou les deux.</Muted>
+          <Muted>Email, Apple, Google ou SMS — expéditeur, voyageur, ou les deux.</Muted>
           {mfaToken ? (
             <>
               <Muted>
@@ -111,16 +124,23 @@ export default function RegisterScreen() {
             </>
           ) : mode === "phone" ? (
             <>
-              <GoogleSignInButton
+              <SocialAuthButtons
                 tone="light"
                 disabled={loading}
                 onMfa={onGoogleMfa}
                 onError={setError}
               />
+              <Field
+                label={t("herald_ref_code")}
+                autoCapitalize="characters"
+                value={agentRef}
+                onChangeText={setAgentRef}
+              />
               <PhoneOtpAuth
                 displayName={displayName}
                 onDisplayNameChange={setDisplayName}
                 onLoggedIn={() => {}}
+                agentRef={agentRef.trim() || undefined}
               />
               <Pressable onPress={() => setMode("email")} style={{ marginTop: 16 }}>
                 <Text style={{ color: colors.accent, fontWeight: "600", textAlign: "center" }}>
@@ -130,7 +150,7 @@ export default function RegisterScreen() {
             </>
           ) : (
             <>
-              <GoogleSignInButton
+              <SocialAuthButtons
                 tone="light"
                 disabled={loading}
                 onMfa={onGoogleMfa}
@@ -155,12 +175,18 @@ export default function RegisterScreen() {
                 value={password}
                 onChangeText={setPassword}
               />
-              <Field
-                label="Pays (code ISO, ex. CA, FR, GA)"
-                autoCapitalize="characters"
+              <CountryField
+                label={t("country")}
                 value={country}
-                onChangeText={setCountry}
+                onChange={setCountry}
               />
+              <Field
+                label={t("herald_ref_code")}
+                autoCapitalize="characters"
+                value={agentRef}
+                onChangeText={setAgentRef}
+              />
+              <Muted>{t("herald_ref_hint")}</Muted>
               <ErrorText>{error}</ErrorText>
               <Button label="S'inscrire" onPress={onSubmit} loading={loading} />
               <Pressable onPress={() => setMode("phone")} style={{ marginTop: 16 }}>

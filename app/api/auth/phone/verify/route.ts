@@ -14,6 +14,7 @@ import {
   phonePlaceholderEmail,
   profileCountryName,
 } from "@/lib/phone-auth";
+import { APPLE_REVIEW_EMAIL, isAppleReviewPhone } from "@/lib/review-account";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -66,6 +67,11 @@ export async function POST(request: Request) {
     let user = await prisma.user.findFirst({
       where: { phone: { in: phoneLookupValues(phone) } },
     });
+    if (!user && isAppleReviewPhone(phone)) {
+      user = await prisma.user.findUnique({
+        where: { email: APPLE_REVIEW_EMAIL },
+      });
+    }
     if (!user && (body.displayName?.trim().length ?? 0) < 2) {
       return NextResponse.json(
         {

@@ -19,6 +19,7 @@ type Props = {
   onDisplayNameChange: (value: string) => void;
   onLoggedIn: () => void;
   tone?: "dark" | "light";
+  agentRef?: string;
 };
 
 export function PhoneOtpAuth({
@@ -26,6 +27,7 @@ export function PhoneOtpAuth({
   onDisplayNameChange,
   onLoggedIn,
   tone = "light",
+  agentRef,
 }: Props) {
   const { requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp } = useAuth();
   const dark = tone === "dark";
@@ -82,7 +84,12 @@ export function PhoneOtpAuth({
     setError("");
     setInfo("");
     try {
-      await verifyPhoneOtp(mfaToken, otpCode.trim(), displayName.trim() || undefined);
+      await verifyPhoneOtp(
+        mfaToken,
+        otpCode.trim(),
+        displayName.trim() || undefined,
+        agentRef
+      );
       onLoggedIn();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Code incorrect.");
