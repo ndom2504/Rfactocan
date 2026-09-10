@@ -16,7 +16,7 @@ import {
 } from "@/components/community-share-button";
 import { communitySharePath } from "@/lib/community-share";
 import { UserAvatar } from "@/components/user-avatar";
-import { NewServiceForm } from "@/app/(app)/services/new/page";
+import { NewServiceForm } from "@/components/new-service-form";
 import NewTripPage from "@/app/(app)/trips/new/page";
 import { useI18n } from "@/components/locale-provider";
 import {
