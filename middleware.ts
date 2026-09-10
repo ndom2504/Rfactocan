@@ -54,7 +54,7 @@ function corsHeaders(request: NextRequest) {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Headers":
-      "Authorization, Content-Type, Accept, X-Requested-With",
+      "Authorization, Content-Type, Accept, X-Requested-With, X-Rfacto-Authorization",
     "Access-Control-Max-Age": "86400",
   };
 }
@@ -76,6 +76,14 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);
+  }
+  const path = request.nextUrl.pathname;
+  const cacheablePublicApi =
+    path.startsWith("/api/media") ||
+    path.startsWith("/api/corridors") ||
+    path.startsWith("/api/public/");
+  if (!cacheablePublicApi) {
+    response.headers.set("Cache-Control", "private, no-store, max-age=0");
   }
   return response;
 }

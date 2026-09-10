@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { AUTH_API_HEADERS, getSessionUser } from "@/lib/auth";
 
-export async function GET() {
-  const user = await getSessionUser();
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  const user = await getSessionUser(request);
   if (!user) {
-    return NextResponse.json({ user: null }, { status: 401 });
+    return NextResponse.json(
+      { user: null },
+      { status: 401, headers: AUTH_API_HEADERS }
+    );
   }
-  return NextResponse.json({ user });
+  return NextResponse.json({ user }, { headers: AUTH_API_HEADERS });
 }

@@ -84,7 +84,7 @@ export async function GET(request: Request) {
   const transportMode = modeParam
     ? normalizeTransportMode(modeParam)
     : undefined;
-  const session = await getSessionUser();
+  const session = await getSessionUser(request);
 
   if (mine && !session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { deleteUserAccount } from "@/lib/account-deletion";
-import { clearSessionCookie, getSessionUser } from "@/lib/auth";
+import {
+  AUTH_API_HEADERS,
+  clearSessionCookie,
+  getSessionUser,
+} from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const mediaUrl = z
@@ -28,10 +32,15 @@ const schema = z.object({
   acceptPublicationCharter: z.boolean().optional(),
 });
 
-export async function GET() {
-  const session = await getSessionUser();
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  const session = await getSessionUser(request);
   if (!session) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Non authentifié" },
+      { status: 401, headers: AUTH_API_HEADERS }
+    );
   }
   const user = await prisma.user.findUnique({
     where: { id: session.id },
@@ -44,12 +53,15 @@ export async function GET() {
   }
   // Never expose the raw private blob URL in JSON; use /api/kyc/manual-id to stream.
   const { manualIdDocUrl, ...safe } = user;
-  return NextResponse.json({
-    user: {
-      ...safe,
-      hasManualIdDoc: Boolean(manualIdDocUrl),
+  return NextResponse.json(
+    {
+      user: {
+        ...safe,
+        hasManualIdDoc: Boolean(manualIdDocUrl),
+      },
     },
-  });
+    { headers: AUTH_API_HEADERS }
+  );
 }
 
 export async function PATCH(request: Request) {

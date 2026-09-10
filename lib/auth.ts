@@ -70,18 +70,37 @@ export async function clearSessionCookie() {
   cookieStore.delete(COOKIE_NAME);
 }
 
-/** Extract Bearer token from an Authorization header value. */
+/** Extract a JWT from Authorization / X-Rfacto-Authorization (Bearer optional). */
 export function getBearerTokenFromHeader(
   authorization?: string | null
 ): string | null {
   if (!authorization) return null;
-  const match = /^Bearer\s+(.+)$/i.exec(authorization.trim());
-  return match?.[1]?.trim() || null;
+  let value = authorization.trim().replace(/^"+|"+$/g, "");
+  while (/^Bearer\s+/i.test(value)) {
+    value = value.replace(/^Bearer\s+/i, "").trim();
+  }
+  return value || null;
 }
 
-async function resolveSessionToken(): Promise<string | null> {
+function bearerFromHeaderMap(getHeader: (name: string) => string | null) {
+  return (
+    getBearerTokenFromHeader(getHeader("authorization")) ||
+    getBearerTokenFromHeader(getHeader("x-rfacto-authorization"))
+  );
+}
+
+async function resolveSessionToken(
+  request?: Request
+): Promise<string | null> {
+  if (request) {
+    const fromRequest = bearerFromHeaderMap((name) =>
+      request.headers.get(name)
+    );
+    if (fromRequest) return fromRequest;
+  }
+
   const headerStore = await headers();
-  const bearer = getBearerTokenFromHeader(headerStore.get("authorization"));
+  const bearer = bearerFromHeaderMap((name) => headerStore.get(name));
   if (bearer) return bearer;
 
   const cookieStore = await cookies();
@@ -128,11 +147,19 @@ async function sessionUserFromToken(
   }
 }
 
+/** Avoid CDN caching of 401/session JSON (Android GET /api/profile). */
+export const AUTH_API_HEADERS = {
+  "Cache-Control": "private, no-store, max-age=0",
+} as const;
+
 /**
  * Resolve the current user from Bearer token (mobile) or session cookie (web).
+ * Pass the Route Handler `Request` so Authorization is read even if `headers()` omits it.
  */
-export async function getSessionUser(): Promise<SessionUser | null> {
-  const token = await resolveSessionToken();
+export async function getSessionUser(
+  request?: Request
+): Promise<SessionUser | null> {
+  const token = await resolveSessionToken(request);
   if (!token) return null;
   return sessionUserFromToken(token);
 }

@@ -78,7 +78,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mine = searchParams.get("mine") === "1";
   const needType = searchParams.get("needType");
-  const session = await getSessionUser();
+  const session = await getSessionUser(request);
 
   const requests = await prisma.parcelRequest.findMany({
     where: {

@@ -22,7 +22,7 @@ const createSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const session = await getSessionUser();
+  const session = await getSessionUser(request);
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
