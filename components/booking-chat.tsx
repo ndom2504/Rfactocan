@@ -260,7 +260,7 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
                         download
                         className={cn(
                           "inline-flex text-xs font-medium underline",
-                          mine ? "text-white/90" : "text-[var(--accent)]"
+                          mine ? "text-white/90" : "text-[var(--foreground)]"
                         )}
                       >
                         {t("download_attachment")}

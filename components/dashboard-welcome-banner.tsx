@@ -62,11 +62,11 @@ export function DashboardWelcomeBanner({
           />
         </div>
 
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--rfacto-green)] sm:text-3xl">
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
           {t("hello")}, {displayName}
         </h1>
         {kycVerified ? (
-          <p className="mt-1 text-xs font-medium text-[var(--rfacto-green-light)]">
+          <p className="mt-1 text-xs font-medium text-[var(--muted)]">
             {t("verified")}
           </p>
         ) : null}

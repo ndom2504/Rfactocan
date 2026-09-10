@@ -333,7 +333,7 @@ export default function ManageShopPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <Link href="/shops" className="text-sm text-[var(--accent)]">
+        <Link href="/shops" className="text-sm text-[var(--foreground)]">
           ← {t("shops_title")}
         </Link>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
@@ -671,7 +671,7 @@ export default function ManageShopPage() {
                       {formatMoneyFromCents(p.priceCents, shop.currency, loc)}
                     </span>
                   )}
-                  <span className="font-semibold text-[var(--accent)]">
+                  <span className="font-semibold text-[var(--foreground)]">
                     {formatMoneyFromCents(
                       p.effectivePriceCents,
                       shop.currency,
@@ -763,7 +763,7 @@ export default function ManageShopPage() {
       </section>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {message && <p className="mt-0 text-sm text-[var(--accent)]">{message}</p>}
+      {message && <p className="mt-0 text-sm text-[var(--foreground)]">{message}</p>}
     </div>
   );
 }

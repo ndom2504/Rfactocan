@@ -73,7 +73,7 @@ export default async function TripDetailPage({ params }: Props) {
                 {trip.fromCity} → {trip.toCity}
               </CardTitle>
               {isOwner && (
-                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                   {t(locale, "my_listing")}
                 </Badge>
               )}
@@ -83,7 +83,7 @@ export default async function TripDetailPage({ params }: Props) {
               {getCountryName(trip.toCountry)}
             </CardDescription>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                 {transportModeLabel(trip.transportMode, locale)}
               </Badge>
               {trip.transportType && (
@@ -112,7 +112,7 @@ export default async function TripDetailPage({ params }: Props) {
                   trip.priceNegotiable && discussionCount > 0
                     ? "bg-[var(--accent)] text-white"
                     : trip.priceNegotiable
-                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                       : undefined
                 }
               >

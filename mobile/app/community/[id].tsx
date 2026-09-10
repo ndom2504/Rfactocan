@@ -161,7 +161,7 @@ export default function CommunityPostScreen() {
               onPress={() => router.push(`/member/${post.author!.id}` as Href)}
               style={{ marginTop: 8, flexDirection: "row", alignItems: "center" }}
             >
-              <Text style={{ fontWeight: "700", color: colors.accent }}>
+              <Text style={{ fontWeight: "700", color: colors.foreground }}>
                 {post.author.displayName}
               </Text>
             </Pressable>
@@ -224,7 +224,7 @@ export default function CommunityPostScreen() {
             >
               <Text
                 style={{
-                  color: colors.accent,
+                  color: colors.foreground,
                   fontWeight: "600",
                   textDecorationLine: "underline",
                 }}

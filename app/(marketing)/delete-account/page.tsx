@@ -51,7 +51,7 @@ export default async function DeleteAccountPage() {
               ? "Rfacto account deletion request"
               : "Demande de suppression de compte Rfacto"
           )}`}
-          className="mt-4 inline-block text-base font-semibold text-[var(--accent)] underline"
+          className="mt-4 inline-block text-base font-semibold text-[var(--foreground)] underline"
         >
           contact@rfacto.com
         </a>

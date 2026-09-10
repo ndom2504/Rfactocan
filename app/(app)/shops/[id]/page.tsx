@@ -96,7 +96,7 @@ export default function ShopDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link href="/shops" className="text-sm text-[var(--accent)]">
+        <Link href="/shops" className="text-sm text-[var(--foreground)]">
           ← {t("shops_title")}
         </Link>
         {shop.isOwner && (
@@ -210,7 +210,7 @@ export default function ShopDetailPage() {
                         {formatMoneyFromCents(p.priceCents, shop.currency, loc)}
                       </span>
                     )}
-                    <span className="font-semibold text-[var(--accent)]">
+                    <span className="font-semibold text-[var(--foreground)]">
                       {formatMoneyFromCents(
                         p.effectivePriceCents,
                         shop.currency,

@@ -237,7 +237,7 @@ export default function SettingsScreen() {
 
         <ErrorText>{error}</ErrorText>
         {message ? (
-          <Text style={{ color: colors.accent, marginTop: 8 }}>{message}</Text>
+          <Text style={{ color: colors.foreground, marginTop: 8 }}>{message}</Text>
         ) : null}
 
         <View style={{ height: 8 }} />
@@ -282,7 +282,7 @@ export default function SettingsScreen() {
             onPress={() => void Linking.openURL(`${site}/publication-charter`)}
           />
           {profile?.publicationCharterAcceptedAt ? (
-            <Text style={{ color: colors.accent, marginTop: 8 }}>{t("pub_charter_accepted")}</Text>
+            <Text style={{ color: colors.foreground, marginTop: 8 }}>{t("pub_charter_accepted")}</Text>
           ) : (
             <Button
               label={t("pub_charter_accept")}
@@ -340,12 +340,12 @@ export default function SettingsScreen() {
 
       <Modal visible={showLiability} animationType="slide" onRequestClose={() => setShowLiability(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 48, paddingHorizontal: 20 }}>
-          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.accent, marginBottom: 12 }}>
+          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
             {t("liability_title")}
           </Text>
           <ScrollView>
             <Text style={{ color: colors.foreground, marginBottom: 12 }}>{t("liability_intro")}</Text>
-            <Text style={{ fontWeight: "700", color: colors.accent }}>{t("liability_we_do")}</Text>
+            <Text style={{ fontWeight: "700", color: colors.foreground }}>{t("liability_we_do")}</Text>
             <Text style={{ color: colors.foreground }}>· {t("liability_we_do_1")}</Text>
             <Text style={{ color: colors.foreground }}>· {t("liability_we_do_2")}</Text>
             <Text style={{ color: colors.foreground, marginBottom: 12 }}>· {t("liability_we_do_3")}</Text>
@@ -361,7 +361,7 @@ export default function SettingsScreen() {
               onPress={() => void Linking.openURL(`${site}/responsibility`)}
               style={{ marginTop: 16 }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "700" }}>{t("trust_program_cta")}</Text>
+              <Text style={{ color: colors.foreground, fontWeight: "700" }}>{t("trust_program_cta")}</Text>
             </Pressable>
           </ScrollView>
           <Button label={t("close")} onPress={() => setShowLiability(false)} />

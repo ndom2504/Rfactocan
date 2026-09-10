@@ -89,7 +89,7 @@ export default async function CommunitySharePage({ params }: Params) {
       <div>
         <p className="font-semibold">{post.author.displayName}</p>
         {title && (
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--accent)]">
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
             {title}
           </h1>
         )}

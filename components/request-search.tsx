@@ -279,7 +279,7 @@ export function RequestSearch({
                           <Badge>{formatDate(hit.desiredDate)}</Badge>
                         )}
                         {hit.user.kycStatus === "VERIFIED" && (
-                          <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                             {t("verified")}
                           </Badge>
                         )}

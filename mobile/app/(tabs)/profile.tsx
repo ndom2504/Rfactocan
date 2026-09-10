@@ -244,7 +244,7 @@ export default function ProfileScreen() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 28 }}>
+              <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 28 }}>
                 {(displayName || "R").slice(0, 1).toUpperCase()}
               </Text>
             </View>
@@ -366,7 +366,7 @@ export default function ProfileScreen() {
 
         <ErrorText>{error}</ErrorText>
         {message ? (
-          <Text style={{ color: colors.accent, marginTop: 8 }}>{message}</Text>
+          <Text style={{ color: colors.foreground, marginTop: 8 }}>{message}</Text>
         ) : null}
         {uploadingKind ? <Muted>{t("uploading")}</Muted> : null}
         <Button

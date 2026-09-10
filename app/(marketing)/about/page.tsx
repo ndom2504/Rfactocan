@@ -58,7 +58,7 @@ export default async function AboutPage() {
       <p className="text-sm font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
         RapidFacto
       </p>
-      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold text-[var(--accent)] md:text-5xl">
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold text-[var(--foreground)] md:text-5xl">
         {t(locale, "about_title")}
       </h1>
 

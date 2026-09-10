@@ -216,7 +216,7 @@ export default function ManageShopScreen() {
           </Badge>
           <ErrorText>{error}</ErrorText>
           {message ? (
-            <Text style={{ color: colors.accent, marginTop: 8 }}>{message}</Text>
+            <Text style={{ color: colors.foreground, marginTop: 8 }}>{message}</Text>
           ) : null}
 
           <Field label={t("shops_name")} value={name} onChangeText={setName} />

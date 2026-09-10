@@ -125,7 +125,7 @@ export default async function MessagesPage() {
         <p className="text-[var(--muted)]">{t(locale, "messages_subtitle")}</p>
         <Link
           href="/service-payments"
-          className="mt-2 inline-block text-sm font-medium text-[var(--accent)] underline underline-offset-2"
+          className="mt-2 inline-block text-sm font-medium text-[var(--foreground)] underline underline-offset-2"
         >
           {t(locale, "svc_pay_inbox")}
         </Link>

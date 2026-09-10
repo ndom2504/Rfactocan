@@ -85,7 +85,7 @@ export default function ShopOrdersPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <Link href="/shops" className="text-sm text-[var(--accent)]">
+        <Link href="/shops" className="text-sm text-[var(--foreground)]">
           ← {t("shops_title")}
         </Link>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">

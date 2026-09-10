@@ -86,7 +86,7 @@ export function HandoverQrPanel({ bookingId, onConfirmed }: Props) {
   if (data.status === "HANDED_OVER" || data.handedOverAt) {
     return (
       <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <p className="text-sm font-medium text-[var(--accent)]">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           {t("handover_done")}
         </p>
         {data.handedOverAt && (

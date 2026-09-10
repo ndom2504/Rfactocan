@@ -307,7 +307,7 @@ export function NewServiceForm() {
                     }
                     className={`rounded-md border px-3 py-1.5 text-sm ${
                       selected
-                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--foreground)]"
                         : "border-[var(--border)] text-[var(--foreground)]"
                     }`}
                   >
@@ -372,7 +372,7 @@ export function NewServiceForm() {
                     }
                     className={`rounded-md border px-3 py-1.5 text-sm ${
                       selected
-                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--foreground)]"
                         : "border-[var(--border)] text-[var(--foreground)]"
                     }`}
                   >

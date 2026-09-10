@@ -121,7 +121,7 @@ export function NotificationBell({ locale }: { locale: Locale }) {
                     <button
                       type="button"
                       onClick={() => void markAllRead()}
-                      className="text-xs text-[var(--accent)] underline"
+                      className="text-xs text-[var(--foreground)] underline"
                     >
                       {t(locale, "mark_all_read")}
                     </button>
@@ -180,7 +180,7 @@ export function NotificationBell({ locale }: { locale: Locale }) {
           setOpen((v) => !v);
           if (!open) void load();
         }}
-        className="relative rounded-md border border-[var(--border)] px-2 py-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+        className="relative rounded-md border border-[var(--border)] px-2 py-1 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)]"
         aria-label={t(locale, "notifications")}
         aria-expanded={open}
       >

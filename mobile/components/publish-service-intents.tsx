@@ -46,7 +46,7 @@ export function PublishServiceIntents() {
             padding: 12,
           }}
         >
-          <Text style={{ fontWeight: "700", color: colors.accent }}>
+          <Text style={{ fontWeight: "700", color: colors.foreground }}>
             {t(item.titleKey)}
           </Text>
           <Text style={{ color: colors.muted, marginTop: 4, fontSize: 13 }}>

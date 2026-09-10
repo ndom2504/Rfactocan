@@ -198,7 +198,7 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
           rel="noreferrer"
           className={cn(
             "text-[11px] underline",
-            mine ? "text-white/90" : "text-[var(--accent)]"
+            mine ? "text-white/90" : "text-[var(--foreground)]"
           )}
         >
           Ouvrir l’audio

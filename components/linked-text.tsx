@@ -4,7 +4,7 @@ import Link from "next/link";
 import { splitLinkify } from "@/lib/linkify";
 
 const defaultLinkClass =
-  "break-all font-medium text-[var(--accent)] underline underline-offset-2 hover:opacity-80";
+  "break-all font-medium text-[var(--foreground)] underline underline-offset-2 hover:opacity-80";
 
 type Props = {
   text: string;

@@ -190,7 +190,7 @@ export function CommunityPostDetail() {
     <div className="mx-auto max-w-2xl space-y-6">
       <Link
         href="/community"
-        className="text-sm text-[var(--accent)] hover:underline"
+        className="text-sm text-[var(--foreground)] hover:underline"
       >
         ← {t("community_title")}
       </Link>
@@ -228,7 +228,7 @@ export function CommunityPostDetail() {
           </div>
         </div>
         {post.title && (
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--accent)]">
+          <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
             {post.title}
           </h1>
         )}
@@ -251,7 +251,7 @@ export function CommunityPostDetail() {
             onClick={() => void toggleConnect()}
             className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
               post.author.connectedByMe
-                ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                 : "bg-[var(--surface-2)]"
             }`}
           >
@@ -350,7 +350,7 @@ export function CommunityPostDetail() {
                     <FormattedDescription text={c.body} className="mt-1" />
                     <button
                       type="button"
-                      className="mt-2 text-xs font-medium text-[var(--accent)]"
+                      className="mt-2 text-xs font-medium text-[var(--foreground)]"
                       onClick={() => setReplyTo(c.id)}
                     >
                       {t("community_reply")}

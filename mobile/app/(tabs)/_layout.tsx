@@ -22,7 +22,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         header: () => <AppHeader />,
-        tabBarActiveTintColor: colors.accent,
+        tabBarActiveTintColor: colors.foreground,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
           backgroundColor: colors.surface,
@@ -34,8 +34,11 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("nav_home"),
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="home" color={String(color)} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name="home"
+              color={focused ? colors.accent : colors.muted}
+            />
           ),
         }}
       />
@@ -43,8 +46,11 @@ export default function TabLayout() {
         name="community"
         options={{
           title: t("nav_community"),
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="group" color={String(color)} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name="group"
+              color={focused ? colors.accent : colors.muted}
+            />
           ),
         }}
       />
@@ -56,8 +62,11 @@ export default function TabLayout() {
         name="messages"
         options={{
           title: t("nav_messages"),
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="comments" color={String(color)} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name="comments"
+              color={focused ? colors.accent : colors.muted}
+            />
           ),
         }}
       />

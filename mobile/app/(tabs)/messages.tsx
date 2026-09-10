@@ -90,7 +90,7 @@ function Avatar({ name, url }: { name: string; url?: string | null }) {
         justifyContent: "center",
       }}
     >
-      <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 18 }}>
+      <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 18 }}>
         {(name || "R").slice(0, 1).toUpperCase()}
       </Text>
     </View>
@@ -303,7 +303,7 @@ export default function MessagesScreen() {
                   </Text>
                 </View>
                 <Text
-                  style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}
+                  style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}
                 >
                   {t("open")}
                 </Text>

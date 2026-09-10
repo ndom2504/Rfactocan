@@ -332,7 +332,7 @@ export function PayoutChannelPicker({ bankSlot, countryCode }: Props) {
           {saving ? t("loading") : t("wallet_save_link")}
         </Button>
         {savedMsg && (
-          <p className="text-xs text-[var(--accent)]">{savedMsg}</p>
+          <p className="text-xs text-[var(--foreground)]">{savedMsg}</p>
         )}
         {error && <p className="text-xs text-red-600">{error}</p>}
       </div>

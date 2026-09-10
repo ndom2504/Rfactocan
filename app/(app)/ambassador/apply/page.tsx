@@ -66,7 +66,7 @@ export default function BecomeAmbassadorPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <Link href="/dashboard" className="text-sm text-[var(--accent)]">
+      <Link href="/dashboard" className="text-sm text-[var(--foreground)]">
         ← {t("nav_dashboard")}
       </Link>
       <Card>
@@ -82,12 +82,12 @@ export default function BecomeAmbassadorPage() {
         </ol>
 
         {isAmb ? (
-          <p className="mt-6 text-sm text-[var(--accent)]">
+          <p className="mt-6 text-sm text-[var(--foreground)]">
             {t("ambassador_apply_already")}
           </p>
         ) : pending ? (
           <div className="mt-6 space-y-2">
-            <p className="text-sm font-medium text-[var(--accent)]">
+            <p className="text-sm font-medium text-[var(--foreground)]">
               {t("ambassador_apply_pending")}
             </p>
             {state?.ambassadorWhatsapp && (
@@ -125,7 +125,7 @@ export default function BecomeAmbassadorPage() {
         )}
 
         {message && (
-          <p className="mt-3 text-sm text-[var(--accent)]">{message}</p>
+          <p className="mt-3 text-sm text-[var(--foreground)]">{message}</p>
         )}
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </Card>

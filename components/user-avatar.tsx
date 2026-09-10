@@ -57,7 +57,7 @@ export function UserAvatar({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={src} alt={name} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center font-medium text-[var(--accent)]">
+          <div className="flex h-full w-full items-center justify-center font-medium text-[var(--foreground)]">
             {initial}
           </div>
         )}

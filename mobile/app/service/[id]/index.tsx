@@ -186,7 +186,7 @@ export default function ServiceListingScreen() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 20 }}>
+              <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 20 }}>
                 {(listing.user?.displayName || "R").slice(0, 1).toUpperCase()}
               </Text>
             </View>
@@ -212,7 +212,7 @@ export default function ServiceListingScreen() {
             onPress={() => void Linking.openURL(listing.websiteUrl!)}
             style={{ marginBottom: 16 }}
           >
-            <Text style={{ color: colors.accent, fontWeight: "700" }}>
+            <Text style={{ color: colors.foreground, fontWeight: "700" }}>
               {listing.websiteUrl}
             </Text>
           </Pressable>

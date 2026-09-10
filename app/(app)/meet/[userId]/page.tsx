@@ -186,7 +186,7 @@ export default function MeetPublicProfilePage() {
 
       {data.threadId || data.contactStatus === "ACCEPTED" ? (
         <div className="space-y-2">
-          <p className="text-sm text-[var(--accent)]">{t("meet_mutual_ok")}</p>
+          <p className="text-sm text-[var(--foreground)]">{t("meet_mutual_ok")}</p>
           {data.threadId ? (
             <Link href={`/messages/dm/${data.threadId}`} className={buttonVariants()}>
               {t("meet_open_chat")}
@@ -224,7 +224,7 @@ export default function MeetPublicProfilePage() {
         </div>
       )}
 
-      <Link href="/community" className="text-sm text-[var(--accent)] hover:underline">
+      <Link href="/community" className="text-sm text-[var(--foreground)] hover:underline">
         {t("community_title")}
       </Link>
     </div>

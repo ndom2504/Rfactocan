@@ -124,7 +124,7 @@ function ProductBuyForm() {
     <div className="mx-auto max-w-xl space-y-4">
       <Link
         href={`/shops/${product.shop.id}`}
-        className="text-sm text-[var(--accent)]"
+        className="text-sm text-[var(--foreground)]"
       >
         ← {product.shop.name}
       </Link>
@@ -193,7 +193,7 @@ function ProductBuyForm() {
               )}
             </span>
           )}
-          <span className="font-semibold text-[var(--accent)]">
+          <span className="font-semibold text-[var(--foreground)]">
             {formatMoneyFromCents(
               product.effectivePriceCents,
               product.shop.currency,

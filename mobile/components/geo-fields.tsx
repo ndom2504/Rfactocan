@@ -118,7 +118,7 @@ function SearchModal({
             alignItems: "center",
           }}
         >
-          <Text style={{ color: colors.accent, fontWeight: "700" }}>{t("close")}</Text>
+          <Text style={{ color: colors.foreground, fontWeight: "700" }}>{t("close")}</Text>
         </Pressable>
       </View>
     </Modal>
@@ -188,7 +188,7 @@ export function CountryField({
                 }}
                 style={{ paddingVertical: 12 }}
               >
-                <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                <Text style={{ color: colors.foreground, fontWeight: "700" }}>
                   {t("all_f")}
                 </Text>
               </Pressable>
@@ -293,7 +293,7 @@ export function CityField({
                   }}
                   style={{ paddingVertical: 12 }}
                 >
-                  <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>
                     {t("all_f")}
                   </Text>
                 </Pressable>
@@ -306,7 +306,7 @@ export function CityField({
                   }}
                   style={{ paddingVertical: 12 }}
                 >
-                  <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>
                     {t("geo_use_typed").replace("{value}", custom)}
                   </Text>
                 </Pressable>

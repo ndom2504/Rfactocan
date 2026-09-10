@@ -48,7 +48,7 @@ export default function ShopCategoryPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href="/shops" className="text-sm text-[var(--accent)]">
+          <Link href="/shops" className="text-sm text-[var(--foreground)]">
             ← {t("shops_title")}
           </Link>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">

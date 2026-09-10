@@ -140,7 +140,7 @@ export default function ServicePaymentScreen() {
         <Title>{payment?.title || t("svc_pay_request")}</Title>
         <Text
           style={{
-            color: colors.accent,
+            color: colors.foreground,
             fontSize: 18,
             fontWeight: "700",
           }}
@@ -256,7 +256,7 @@ export default function ServicePaymentScreen() {
         ) : null}
 
         {payment?.status === "FULFILLED" && payment.stripeTransferId ? (
-          <Text style={{ fontWeight: "700", color: colors.accent }}>
+          <Text style={{ fontWeight: "700", color: colors.foreground }}>
             {t("svc_pay_released")}
           </Text>
         ) : null}

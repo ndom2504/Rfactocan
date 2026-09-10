@@ -1,7 +1,7 @@
 export const lightColors = {
   background: "#f3f5ef",
-  foreground: "#1b3b14",
-  muted: "#5a6754",
+  foreground: "#1c1b1f",
+  muted: "#5f6368",
   surface: "#ffffff",
   surface2: "#e8ede3",
   border: "#c5cebc",
@@ -17,8 +17,8 @@ export const lightColors = {
 
 export const darkColors: typeof lightColors = {
   background: "#121510",
-  foreground: "#f3f5ef",
-  muted: "#b7c2ad",
+  foreground: "#f5f5f5",
+  muted: "#c4c7c5",
   surface: "#1c2218",
   surface2: "#262e22",
   border: "#3d4a34",

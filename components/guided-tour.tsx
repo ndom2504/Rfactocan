@@ -228,7 +228,7 @@ export function GuidedTour() {
           className="absolute z-[101] w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl"
           style={{ top: tooltipTop, left: tooltipLeft }}
         >
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--accent)]">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]">
             {t("tour_label")} · {index + 1}/{TOUR_STEPS.length}
           </p>
           <h3 className="mt-1 font-[family-name:var(--font-display)] text-lg font-semibold">

@@ -61,7 +61,7 @@ export function PaymentReadinessCard({
             <Badge
               className={
                 s.ok
-                  ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                  ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                   : undefined
               }
             >

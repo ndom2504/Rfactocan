@@ -834,7 +834,7 @@ export default function DirectChatScreen() {
               disabled={payBusy || !peerId}
               style={{ paddingVertical: 8, opacity: payBusy || !peerId ? 0.5 : 1 }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 14 }}>
+              <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 14 }}>
                 {showPayForm ? t("cancel") : t("svc_pay_request")}
               </Text>
             </Pressable>
@@ -953,7 +953,7 @@ export default function DirectChatScreen() {
                 hitSlop={8}
                 disabled={forwardBusy}
               >
-                <Ionicons name="close" size={22} color={colors.foreground} />
+                <Ionicons name="close" size={22} color={colors.accent} />
               </Pressable>
             </View>
             {forwardLoading ? (
@@ -1005,7 +1005,7 @@ export default function DirectChatScreen() {
                         >
                           <Text
                             style={{
-                              color: colors.accent,
+                              color: colors.foreground,
                               fontWeight: "700",
                               fontSize: 14,
                             }}

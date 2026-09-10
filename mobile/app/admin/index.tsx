@@ -494,7 +494,7 @@ export default function AdminScreen() {
         <Muted>{t("admin_subtitle")}</Muted>
         <ErrorText>{error}</ErrorText>
         {info ? (
-          <Text style={{ color: colors.accent, marginBottom: 8 }}>{info}</Text>
+          <Text style={{ color: colors.foreground, marginBottom: 8 }}>{info}</Text>
         ) : null}
         {loading ? <Muted>{t("loading")}</Muted> : null}
 
@@ -656,7 +656,7 @@ export default function AdminScreen() {
                   )
                 }
               >
-                <Text style={{ color: colors.accent, fontWeight: "700", marginTop: 4 }}>
+                <Text style={{ color: colors.foreground, fontWeight: "700", marginTop: 4 }}>
                   WhatsApp {row.ambassadorWhatsapp}
                 </Text>
               </Pressable>

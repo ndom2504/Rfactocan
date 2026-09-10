@@ -254,7 +254,7 @@ export default function MeetProfilePage() {
               <div className="min-w-0 text-sm">
                 <Link
                   href={`/meet/${c.fromUser.id}`}
-                  className="font-medium text-[var(--accent)] hover:underline"
+                  className="font-medium text-[var(--foreground)] hover:underline"
                 >
                   {c.fromUser.displayName}
                 </Link>
@@ -538,7 +538,7 @@ export default function MeetProfilePage() {
         </p>
       )}
       {saved && (
-        <p className="text-sm text-[var(--accent)]">
+        <p className="text-sm text-[var(--foreground)]">
           {hasProfile ? t("meet_saved") : t("meet_deleted")}
         </p>
       )}

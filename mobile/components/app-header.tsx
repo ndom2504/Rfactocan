@@ -61,14 +61,14 @@ export function AppHeader() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "700" }}>{initial}</Text>
+              <Text style={{ color: colors.foreground, fontWeight: "700" }}>{initial}</Text>
             </View>
           )}
           <Text
             style={{
               fontSize: 20,
               fontWeight: "700",
-              color: colors.accent,
+              color: colors.foreground,
             }}
           >
             Rfacto

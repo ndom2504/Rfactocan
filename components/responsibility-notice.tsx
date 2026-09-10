@@ -14,7 +14,7 @@ export function ResponsibilityNotice({ locale, compact }: Props) {
         {t(locale, "liability_compact")}{" "}
         <Link
           href="/responsibility"
-          className="font-medium text-[var(--accent)] underline"
+          className="font-medium text-[var(--foreground)] underline"
         >
           {t(locale, "liability_learn_more")}
         </Link>
@@ -30,7 +30,7 @@ export function ResponsibilityNotice({ locale, compact }: Props) {
       </CardDescription>
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]">
             {t(locale, "liability_we_do")}
           </p>
           <ul className="mt-2 space-y-1.5 text-sm text-[var(--muted)]">
@@ -63,7 +63,7 @@ export function ResponsibilityNotice({ locale, compact }: Props) {
       <p className="mt-4 text-sm">
         <Link
           href="/responsibility"
-          className="font-medium text-[var(--accent)] underline"
+          className="font-medium text-[var(--foreground)] underline"
         >
           {t(locale, "liability_learn_more")}
         </Link>

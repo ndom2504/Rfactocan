@@ -158,13 +158,13 @@ export function NotificationBell() {
             </Text>
             {unread > 0 ? (
               <Pressable onPress={() => void markRead()}>
-                <Text style={{ color: colors.accent, fontWeight: "600" }}>
+                <Text style={{ color: colors.foreground, fontWeight: "600" }}>
                   {t("mark_all_read")}
                 </Text>
               </Pressable>
             ) : (
               <Pressable onPress={() => setOpen(false)}>
-                <Text style={{ color: colors.accent, fontWeight: "600" }}>
+                <Text style={{ color: colors.foreground, fontWeight: "600" }}>
                   {t("close")}
                 </Text>
               </Pressable>
@@ -224,7 +224,7 @@ export function NotificationBell() {
               onPress={() => setOpen(false)}
               style={{ padding: 16, alignItems: "center" }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "600" }}>
+              <Text style={{ color: colors.foreground, fontWeight: "600" }}>
                 {t("close")}
               </Text>
             </Pressable>

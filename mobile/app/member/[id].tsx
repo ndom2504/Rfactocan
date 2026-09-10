@@ -134,7 +134,7 @@ function MiniAvatar({
     >
       <Text
         style={{
-          color: colors.accent,
+          color: colors.foreground,
           fontWeight: "700",
           fontSize: size > 56 ? 28 : 18,
         }}
@@ -274,7 +274,7 @@ export default function MemberProfileScreen() {
             <MiniAvatar name={user?.displayName || "R"} url={user?.avatarUrl} size={80} />
             <Title>{user?.displayName || t("member_profile_title")}</Title>
             {user?.verified ? (
-              <Text style={{ color: colors.accent, fontWeight: "700", marginBottom: 4 }}>
+              <Text style={{ color: colors.foreground, fontWeight: "700", marginBottom: 4 }}>
                 {t("verified")}
               </Text>
             ) : null}

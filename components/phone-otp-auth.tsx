@@ -159,7 +159,7 @@ export function PhoneOtpAuth({
           />
         </div>
         {info && !error && (
-          <p className="text-sm text-[var(--accent)]">{info}</p>
+          <p className="text-sm text-[var(--foreground)]">{info}</p>
         )}
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
@@ -202,7 +202,7 @@ export function PhoneOtpAuth({
         onPhoneChange={setPhone}
       />
       {info && !error && (
-        <p className="text-sm text-[var(--accent)]">{info}</p>
+        <p className="text-sm text-[var(--foreground)]">{info}</p>
       )}
       {error && <p className="text-sm text-red-700">{error}</p>}
       <Button type="submit" className="w-full" disabled={loading}>

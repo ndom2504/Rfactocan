@@ -663,7 +663,7 @@ export function InHome({
                   </div>
                   <a
                     href={`sms:${encodeURIComponent(c.phone)}?body=${encodeURIComponent(inviteText)}`}
-                    className="text-sm font-medium text-[var(--accent)]"
+                    className="text-sm font-medium text-[var(--foreground)]"
                   >
                     SMS
                   </a>

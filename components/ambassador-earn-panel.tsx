@@ -108,7 +108,7 @@ export function AmbassadorEarnPanel({
         <Button
           type="button"
           variant="outline"
-          className="border-[var(--accent)]/40 bg-[var(--accent-soft)]/50 text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+          className="border-[var(--accent)]/40 bg-[var(--accent-soft)]/50 text-[var(--foreground)] hover:bg-[var(--accent-soft)]"
           onClick={() => setOpen(true)}
         >
           {t("ambassador_open_cta")}
@@ -124,7 +124,7 @@ export function AmbassadorEarnPanel({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]">
             {t("ambassador_badge")}
           </p>
           <CardTitle className="mt-1 text-xl">
@@ -180,7 +180,7 @@ export function AmbassadorEarnPanel({
           <p className="text-xs text-[var(--muted)]">
             {t("ambassador_kpi_accrued")}
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--accent)]">
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--foreground)]">
             {kpis ? formatCad(kpis.accruedRewardCents ?? 0, locale) : "…"}
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">
@@ -210,7 +210,7 @@ export function AmbassadorEarnPanel({
 
       <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
         <p className="text-xs text-[var(--muted)]">{t("ambassador_code_label")}</p>
-        <p className="mt-1 font-mono text-lg font-semibold tracking-wider text-[var(--accent)]">
+        <p className="mt-1 font-mono text-lg font-semibold tracking-wider text-[var(--foreground)]">
           {agentCode}
         </p>
         <p className="mt-3 break-all text-sm text-[var(--muted)]">{inviteUrl}</p>

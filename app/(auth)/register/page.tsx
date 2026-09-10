@@ -253,11 +253,11 @@ function RegisterForm() {
             {error && <p className="text-sm text-red-700">{error}</p>}
             <p className="text-xs leading-relaxed text-[var(--muted)]">
               {t("terms_accept_register")}{" "}
-              <Link href="/terms" className="text-[var(--accent)] underline">
+              <Link href="/terms" className="text-[var(--foreground)] underline">
                 {t("nav_terms")}
               </Link>
               {" · "}
-              <Link href="/privacy" className="text-[var(--accent)] underline">
+              <Link href="/privacy" className="text-[var(--foreground)] underline">
                 {t("nav_privacy")}
               </Link>
             </p>
@@ -267,7 +267,7 @@ function RegisterForm() {
             {phoneAllowed && !phoneOnly && (
               <button
                 type="button"
-                className="w-full text-sm text-[var(--accent)] underline"
+                className="w-full text-sm text-[var(--foreground)] underline"
                 onClick={() => setRegisterAuth("phone")}
               >
                 {t("phone_register_sms")}
@@ -280,7 +280,7 @@ function RegisterForm() {
             {phoneAllowed && !phoneOnly && (
               <button
                 type="button"
-                className="w-full text-sm text-[var(--accent)] underline"
+                className="w-full text-sm text-[var(--foreground)] underline"
                 onClick={() => setRegisterAuth("email")}
               >
                 {t("phone_use_email")}
@@ -288,11 +288,11 @@ function RegisterForm() {
             )}
           <p className="text-xs leading-relaxed text-[var(--muted)]">
             {t("terms_accept_register")}{" "}
-            <Link href="/terms" className="text-[var(--accent)] underline">
+            <Link href="/terms" className="text-[var(--foreground)] underline">
               {t("nav_terms")}
             </Link>
             {" · "}
-            <Link href="/privacy" className="text-[var(--accent)] underline">
+            <Link href="/privacy" className="text-[var(--foreground)] underline">
               {t("nav_privacy")}
             </Link>
           </p>
@@ -307,7 +307,7 @@ function RegisterForm() {
               ? `/login?next=${encodeURIComponent(params.get("next")!)}`
               : "/login"
           }
-          className="text-[var(--accent)] underline"
+          className="text-[var(--foreground)] underline"
         >
           {t("sign_in")}
         </Link>

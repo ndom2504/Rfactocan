@@ -71,7 +71,7 @@ export default async function AppLayout({
               <LocaleToggle locale={locale} />
               <NotificationBell locale={locale} />
               {user.kycStatus === "VERIFIED" && (
-                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                   {t(locale, "verified")}
                 </Badge>
               )}

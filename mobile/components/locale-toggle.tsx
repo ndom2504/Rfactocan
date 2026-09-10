@@ -25,7 +25,7 @@ function Chip({
     >
       <Text
         style={{
-          color: selected ? colors.white : colors.accent,
+          color: selected ? colors.white : colors.foreground,
           fontSize: 11,
           fontWeight: selected ? "700" : "600",
         }}

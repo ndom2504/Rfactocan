@@ -135,7 +135,7 @@ export default async function TripsPage({ searchParams }: Props) {
                       {trip.fromCity} → {trip.toCity}
                     </CardTitle>
                     {isOwner && (
-                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "my_listing")}
                       </Badge>
                     )}
@@ -146,7 +146,7 @@ export default async function TripsPage({ searchParams }: Props) {
                     {formatDate(trip.departAt)}
                   </CardDescription>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                       {transportModeLabel(trip.transportMode, locale)}
                     </Badge>
                     <Badge>
@@ -162,14 +162,14 @@ export default async function TripsPage({ searchParams }: Props) {
                         trip.priceNegotiable && discussionCount > 0
                           ? "bg-[var(--accent)] text-white"
                           : trip.priceNegotiable
-                            ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                            ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                             : undefined
                       }
                     >
                       {nego}
                     </Badge>
                     {trip.user.kycStatus === "VERIFIED" && (
-                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "traveler_verified")}
                       </Badge>
                     )}

@@ -167,7 +167,7 @@ export function GoogleSignInButton({
       {busy ? (
         <Text
           style={{
-            color: tone === "dark" ? "rgba(255,255,255,0.8)" : "#5a6754",
+            color: tone === "dark" ? "rgba(255,255,255,0.8)" : "#5f6368",
             fontSize: 13,
             lineHeight: 18,
             textAlign: "center",
@@ -190,7 +190,7 @@ export function GoogleSignInButton({
         }}
       >
         <View style={{ flex: 1, height: 1, backgroundColor: tone === "dark" ? "rgba(255,255,255,0.25)" : "#c5cebc" }} />
-        <Text style={{ color: tone === "dark" ? "rgba(255,255,255,0.65)" : "#5a6754", fontSize: 12 }}>ou</Text>
+        <Text style={{ color: tone === "dark" ? "rgba(255,255,255,0.65)" : "#5f6368", fontSize: 12 }}>ou</Text>
         <View style={{ flex: 1, height: 1, backgroundColor: tone === "dark" ? "rgba(255,255,255,0.25)" : "#c5cebc" }} />
       </View>
     </View>

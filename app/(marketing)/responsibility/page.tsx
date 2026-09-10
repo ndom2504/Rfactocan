@@ -29,7 +29,7 @@ export default async function ResponsibilityPage() {
 
       <section className="mt-10 grid gap-6 sm:grid-cols-3">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]">
             {t(locale, "liability_we_do")}
           </p>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--muted)]">

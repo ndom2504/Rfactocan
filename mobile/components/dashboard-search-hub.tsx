@@ -86,7 +86,7 @@ function ResultCard({
         <Text style={{ fontWeight: "700", fontSize: 15, color: colors.foreground }}>
           {title}
         </Text>
-        <Text style={{ color: colors.accent, fontSize: 13, marginTop: 2 }}>
+        <Text style={{ color: colors.foreground, fontSize: 13, marginTop: 2 }}>
           {subtitle}
         </Text>
         {meta ? (
@@ -205,7 +205,7 @@ export function DashboardSearchHub() {
         style={{
           fontSize: 20,
           fontWeight: "700",
-          color: colors.accent,
+          color: colors.foreground,
           marginBottom: 4,
         }}
       >

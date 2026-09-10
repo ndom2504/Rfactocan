@@ -146,7 +146,7 @@ function statusLabel(locale: "fr" | "en", status: Status) {
 
 function statusClass(status: Status) {
   if (status === "live") {
-    return "bg-[var(--accent-soft)] text-[var(--accent)]";
+    return "bg-[var(--accent-soft)] text-[var(--foreground)]";
   }
   if (status === "partial") {
     return "bg-[var(--surface-2)] text-[var(--foreground)]";

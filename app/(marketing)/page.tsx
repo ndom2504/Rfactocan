@@ -58,7 +58,7 @@ export default async function HomePage() {
               key={pillar.title}
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/80 p-5 shadow-sm backdrop-blur-sm"
             >
-              <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--accent)]">
+              <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
                 {pillar.title}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">

@@ -284,7 +284,7 @@ export default function ServiceCategoryPage() {
                         </CardDescription>
                       </div>
                       {item.priceAmount != null && (
-                        <p className="shrink-0 text-sm font-medium text-[var(--accent)]">
+                        <p className="shrink-0 text-sm font-medium text-[var(--foreground)]">
                           {formatMoney(
                             item.priceAmount,
                             (item.currency as MoneyCurrency) || "CAD",
@@ -326,7 +326,7 @@ export default function ServiceCategoryPage() {
                           : ""}
                       </p>
                       {item.websiteUrl ? (
-                        <span className="text-xs font-medium text-[var(--accent)]">
+                        <span className="text-xs font-medium text-[var(--foreground)]">
                           · {displayWebsiteHost(item.websiteUrl)}
                         </span>
                       ) : null}

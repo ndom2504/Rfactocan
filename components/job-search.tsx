@@ -284,7 +284,7 @@ export function JobSearch({
                           </Badge>
                         )}
                         {hit.user.kycStatus === "VERIFIED" && (
-                          <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                             {t("verified")}
                           </Badge>
                         )}

@@ -405,7 +405,7 @@ function ProfileForm() {
           <Badge
             className={
               !kycRequired || user.kycStatus === "VERIFIED"
-                ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                 : undefined
             }
           >
@@ -414,7 +414,7 @@ function ProfileForm() {
           <Badge
             className={
               bankReady
-                ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                 : undefined
             }
           >
@@ -467,7 +467,7 @@ function ProfileForm() {
               </div>
 
               {user.manualIdDocStatus === "SUBMITTED" && (
-                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                   {t("manual_id_sent")}
                 </Badge>
               )}
@@ -482,7 +482,7 @@ function ProfileForm() {
                 </div>
               )}
               {user.manualIdDocStatus === "APPROVED" && (
-                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                   {t("manual_id_approved")}
                 </Badge>
               )}
@@ -495,7 +495,7 @@ function ProfileForm() {
                   href="/api/kyc/manual-id"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sm text-[var(--accent)] underline"
+                  className="text-sm text-[var(--foreground)] underline"
                 >
                   {t("manual_id_preview")}
                 </a>
@@ -572,7 +572,7 @@ function ProfileForm() {
                     </>
                   )}
                   {bankReady && (
-                    <p className="text-sm text-[var(--accent)]">
+                    <p className="text-sm text-[var(--foreground)]">
                       {t("bank_ready")}
                     </p>
                   )}
@@ -614,7 +614,7 @@ function ProfileForm() {
             </Button>
           </Link>
           {charterAccepted ? (
-            <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
               {t("pub_charter_accepted")}
             </Badge>
           ) : (
@@ -709,7 +709,7 @@ function ProfileForm() {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {user.kycStatus === "VERIFIED" && (
-            <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
               {t("account_verified")}
             </Badge>
           )}
@@ -854,7 +854,7 @@ function ProfileForm() {
             )}
           </div>
           {error && <p className="text-sm text-red-700">{error}</p>}
-          {message && <p className="text-sm text-[var(--accent)]">{message}</p>}
+          {message && <p className="text-sm text-[var(--foreground)]">{message}</p>}
           <Button type="submit" disabled={uploading}>
             {t("save")}
           </Button>

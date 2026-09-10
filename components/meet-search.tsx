@@ -247,12 +247,12 @@ export function MeetSearch({
                       <div className="mt-2 flex flex-wrap gap-2">
                         <Badge>{kindLabel}</Badge>
                         {typeof hit.matchScore === "number" && (
-                          <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                             Match {Math.round(hit.matchScore)}
                           </Badge>
                         )}
                         {hit.user.kycStatus === "VERIFIED" && (
-                          <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                          <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                             {t("verified")}
                           </Badge>
                         )}

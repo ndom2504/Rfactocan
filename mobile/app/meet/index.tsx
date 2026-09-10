@@ -216,7 +216,7 @@ export default function MeetScreen() {
                             justifyContent: "center",
                           }}
                         >
-                          <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                          <Text style={{ color: colors.foreground, fontWeight: "700" }}>
                             {(hit.user?.displayName || "?").slice(0, 1).toUpperCase()}
                           </Text>
                         </View>
@@ -225,7 +225,7 @@ export default function MeetScreen() {
                         <Text style={{ fontWeight: "700", color: colors.foreground }}>
                           {hit.user?.displayName || "—"}
                         </Text>
-                        <Text style={{ color: colors.accent, marginTop: 2 }}>
+                        <Text style={{ color: colors.foreground, marginTop: 2 }}>
                           {hit.headline}
                         </Text>
                         <Muted>
@@ -295,7 +295,7 @@ export default function MeetScreen() {
             </View>
             <ErrorText>{error}</ErrorText>
             {message ? (
-              <Text style={{ color: colors.accent, marginBottom: 8 }}>{message}</Text>
+              <Text style={{ color: colors.foreground, marginBottom: 8 }}>{message}</Text>
             ) : null}
             <Button label={t("save")} onPress={() => void save()} loading={saving} />
             <Button

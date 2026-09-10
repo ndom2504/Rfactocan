@@ -765,7 +765,7 @@ export default function AdminPage() {
           </Button>
         </form>
         {whatsappInfo && (
-          <p className="mt-2 text-xs text-[var(--accent)]">{whatsappInfo}</p>
+          <p className="mt-2 text-xs text-[var(--foreground)]">{whatsappInfo}</p>
         )}
       </Card>
 
@@ -834,7 +834,7 @@ export default function AdminPage() {
               <span className="text-xs text-[var(--muted)]">Upload…</span>
             )}
             {broadcastFile && (
-              <span className="flex items-center gap-2 text-xs text-[var(--accent)]">
+              <span className="flex items-center gap-2 text-xs text-[var(--foreground)]">
                 {broadcastFile.name}
                 <Button
                   type="button"
@@ -1145,7 +1145,7 @@ export default function AdminPage() {
                         href={`https://wa.me/${waDigits}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-[var(--accent)] underline"
+                        className="font-medium text-[var(--foreground)] underline"
                       >
                         {u.ambassadorWhatsapp}
                       </a>
@@ -1445,7 +1445,7 @@ export default function AdminPage() {
                       </Badge>
                     )}
                   {u.manualIdDocStatus === "APPROVED" && (
-                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                       Pièce manuelle OK
                     </Badge>
                   )}
@@ -1454,12 +1454,12 @@ export default function AdminPage() {
                     <Badge>Pièce manuelle refusée</Badge>
                   )}
                   {u.stripeConnectChargesEnabled && (
-                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                       Connect OK
                     </Badge>
                   )}
                   {u.isAmbassador && (
-                    <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                       Héraut Réseau
                     </Badge>
                   )}
@@ -1482,7 +1482,7 @@ export default function AdminPage() {
                         href={`https://wa.me/${u.ambassadorWhatsapp.replace(/\D/g, "")}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[var(--accent)] underline"
+                        className="text-[var(--foreground)] underline"
                       >
                         {u.ambassadorWhatsapp}
                       </a>

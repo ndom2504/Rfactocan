@@ -175,7 +175,7 @@ export function CommunityPostActions({ post, onUpdated, onDeleted }: Props) {
         )}
       </div>
 
-      {info && <p className="text-xs text-[var(--accent)]">{info}</p>}
+      {info && <p className="text-xs text-[var(--foreground)]">{info}</p>}
       {error && <p className="text-xs text-red-700">{error}</p>}
 
       {editing && (

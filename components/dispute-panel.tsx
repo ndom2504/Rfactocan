@@ -153,7 +153,7 @@ export function DisputePanel({ bookingId, canOpen }: Props) {
         </div>
       )}
 
-      {ok && <p className="text-sm text-[var(--accent)]">{ok}</p>}
+      {ok && <p className="text-sm text-[var(--foreground)]">{ok}</p>}
       {error && <p className="text-sm text-red-700">{error}</p>}
 
       {disputes.length > 0 && (
@@ -177,7 +177,7 @@ export function DisputePanel({ bookingId, canOpen }: Props) {
               </p>
               {d.details && <p className="mt-1">{d.details}</p>}
               {d.adminNote && (
-                <p className="mt-1 text-xs text-[var(--accent)]">
+                <p className="mt-1 text-xs text-[var(--foreground)]">
                   {t("dispute_admin_note")}: {d.adminNote}
                 </p>
               )}

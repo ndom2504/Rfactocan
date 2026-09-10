@@ -150,7 +150,7 @@ export default function MeetPublicProfileScreen() {
           />
         ) : null}
         <Title>{data.user.displayName}</Title>
-        <Text style={{ color: colors.accent, fontWeight: "700", marginBottom: 8 }}>
+        <Text style={{ color: colors.foreground, fontWeight: "700", marginBottom: 8 }}>
           {data.profile.headline}
         </Text>
         <Muted>

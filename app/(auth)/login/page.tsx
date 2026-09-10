@@ -221,7 +221,7 @@ function LoginForm() {
             />
           </div>
           {info && !error && (
-            <p className="text-sm text-[var(--accent)]">{info}</p>
+            <p className="text-sm text-[var(--foreground)]">{info}</p>
           )}
           {error && <p className="text-sm text-red-700">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
@@ -286,7 +286,7 @@ function LoginForm() {
           {!smsOnly && (
           <button
             type="button"
-            className="mt-4 w-full text-sm text-[var(--accent)] underline"
+            className="mt-4 w-full text-sm text-[var(--foreground)] underline"
             onClick={() => setAuthMode("email")}
           >
             {t("phone_use_email")}
@@ -310,7 +310,7 @@ function LoginForm() {
             <Label htmlFor="password">{t("password")}</Label>
             <Link
               href="/forgot-password"
-              className="text-xs text-[var(--accent)] underline"
+              className="text-xs text-[var(--foreground)] underline"
             >
               {t("forgot_password")}
             </Link>
@@ -325,7 +325,7 @@ function LoginForm() {
           />
         </div>
         {params.get("reset") === "1" && !error && (
-          <p className="text-sm text-[var(--accent)]">{t("reset_success")}</p>
+          <p className="text-sm text-[var(--foreground)]">{t("reset_success")}</p>
         )}
         {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
@@ -333,7 +333,7 @@ function LoginForm() {
         </Button>
         <button
           type="button"
-          className="w-full text-sm text-[var(--accent)] underline"
+          className="w-full text-sm text-[var(--foreground)] underline"
           onClick={() => setAuthMode("phone")}
         >
           {t("phone_use_sms")}
@@ -348,7 +348,7 @@ function LoginForm() {
               ? `/register?next=${encodeURIComponent(params.get("next")!)}`
               : "/register"
           }
-          className="text-[var(--accent)] underline"
+          className="text-[var(--foreground)] underline"
         >
           {t("nav_signup")}
         </Link>

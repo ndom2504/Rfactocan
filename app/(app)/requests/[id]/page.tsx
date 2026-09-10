@@ -307,7 +307,7 @@ export default function RequestDetailPage({
                 {needBadge}
               </Badge>
               {isOwner && (
-                <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                   {t("my_listing")}
                 </Badge>
               )}
@@ -344,7 +344,7 @@ export default function RequestDetailPage({
                   href={request.jobCvUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sm font-medium text-[var(--accent)] underline"
+                  className="text-sm font-medium text-[var(--foreground)] underline"
                 >
                   {t("job_cv_uploaded")}
                 </a>

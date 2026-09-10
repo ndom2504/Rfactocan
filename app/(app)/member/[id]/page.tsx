@@ -174,7 +174,7 @@ export default function MemberProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <Link href="/community" className="text-sm text-[var(--accent)] hover:underline">
+      <Link href="/community" className="text-sm text-[var(--foreground)] hover:underline">
         ← {t("community_title")}
       </Link>
 
@@ -206,7 +206,7 @@ export default function MemberProfilePage() {
               {user.displayName}
             </h1>
             {user.verified ? (
-              <p className="text-sm font-medium text-[var(--accent)]">{t("verified")}</p>
+              <p className="text-sm font-medium text-[var(--foreground)]">{t("verified")}</p>
             ) : null}
             {user.country ? (
               <p className="text-sm text-[var(--muted)]">{user.country}</p>

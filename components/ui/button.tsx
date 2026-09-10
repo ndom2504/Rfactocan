@@ -15,7 +15,7 @@ export const buttonVariants = cva(
           "border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--surface-2)]",
         ghost: "text-[var(--foreground)] hover:bg-[var(--surface-2)]",
         danger: "bg-red-700 !text-white hover:bg-red-800 hover:!text-white",
-        gold: "bg-[var(--rfacto-gold)] text-[var(--rfacto-green-dark)] hover:brightness-105",
+        gold: "bg-[var(--rfacto-gold)] text-[#1c1b1f] hover:brightness-105",
       },
       size: {
         default: "h-10 px-4 py-2",

@@ -106,7 +106,7 @@ export function Button({
         <Text
           style={[
             styles.buttonText,
-            variant === "outline" && { color: theme.accent },
+            variant === "outline" && { color: theme.foreground },
             outlineOnDark && styles.buttonTextOutlineOnDark,
           ]}
         >
@@ -153,7 +153,7 @@ export function Field({
             style={styles.eyeBtn}
             accessibilityLabel={visible ? "Masquer" : "Afficher"}
           >
-            <Text style={[styles.eyeText, { color: colors.accent }]}>
+            <Text style={[styles.eyeText, { color: colors.foreground }]}>
               {visible ? "Masquer" : "Voir"}
             </Text>
           </Pressable>
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   eyeText: {
-    color: colors.accent,
+    color: colors.foreground,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   badgeText: {
-    color: colors.accent,
+    color: colors.foreground,
     fontSize: 12,
     fontWeight: "600",
   },

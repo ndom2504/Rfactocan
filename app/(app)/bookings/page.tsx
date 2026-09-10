@@ -59,17 +59,17 @@ export default async function BookingsPage() {
                     <Badge>{bookingStatusLabel(locale, b.status)}</Badge>
                     {b.status === "AWAITING_PAYMENT" &&
                       b.senderId === user.id && (
-                        <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                        <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                           {t(locale, "to_pay")}
                         </Badge>
                       )}
                     {b.payment?.status === "AUTHORIZED" && (
-                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "funds_held")}
                       </Badge>
                     )}
                     {b.payment?.status === "CAPTURED" && (
-                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "paid")}
                       </Badge>
                     )}

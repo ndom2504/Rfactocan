@@ -323,7 +323,7 @@ export function PaymentSetupCard({
             : `Identité : ${t("kyc_not_required")} · ${kycLabel(user.kycStatus)}`}
         </Text>
         {user.kycStatus === "VERIFIED" ? (
-          <Text style={{ color: colors.accent, fontWeight: "700" }}>
+          <Text style={{ color: colors.foreground, fontWeight: "700" }}>
             {t("verified")}
           </Text>
         ) : (
@@ -344,10 +344,10 @@ export function PaymentSetupCard({
             {t("manual_id_lead")}
           </Text>
           {user.manualIdDocStatus === "SUBMITTED" ? (
-            <Text style={{ color: colors.accent, marginBottom: 8 }}>{t("manual_id_sent")}</Text>
+            <Text style={{ color: colors.foreground, marginBottom: 8 }}>{t("manual_id_sent")}</Text>
           ) : null}
           {user.manualIdDocStatus === "APPROVED" ? (
-            <Text style={{ color: colors.accent, marginBottom: 8 }}>{t("manual_id_approved")}</Text>
+            <Text style={{ color: colors.foreground, marginBottom: 8 }}>{t("manual_id_approved")}</Text>
           ) : null}
           {user.manualIdDocStatus === "REJECTED" ? (
             <Text style={{ color: colors.danger, marginBottom: 8 }}>{t("manual_id_rejected")}</Text>
@@ -410,7 +410,7 @@ export function PaymentSetupCard({
           />
         </View>
       ) : (
-        <Text style={{ color: colors.accent, marginBottom: 12 }}>{t("bank_ready")}</Text>
+        <Text style={{ color: colors.foreground, marginBottom: 12 }}>{t("bank_ready")}</Text>
       )}
 
       <Text style={{ fontWeight: "700", marginBottom: 8, color: colors.foreground }}>
@@ -480,7 +480,7 @@ export function PaymentSetupCard({
           />
           <Field label={t("wallet_bank_iban")} value={bankIban} onChangeText={setBankIban} />
           {stripeDone ? (
-            <Text style={{ color: colors.accent, marginBottom: 8 }}>{t("bank_ready")}</Text>
+            <Text style={{ color: colors.foreground, marginBottom: 8 }}>{t("bank_ready")}</Text>
           ) : (
             <Text style={{ color: colors.muted, fontSize: 12, marginBottom: 8 }}>
               {t("receive_earnings_hint")}
@@ -493,7 +493,7 @@ export function PaymentSetupCard({
 
       <ErrorText>{error}</ErrorText>
       {message ? (
-        <Text style={{ color: colors.accent, marginTop: 8 }}>{message}</Text>
+        <Text style={{ color: colors.foreground, marginTop: 8 }}>{message}</Text>
       ) : null}
     </View>
   );

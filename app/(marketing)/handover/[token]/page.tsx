@@ -128,7 +128,7 @@ export default function HandoverConfirmPage({
       </dl>
 
       {info.alreadyDone && (
-        <p className="mt-4 text-sm text-[var(--accent)]">{t("handover_done")}</p>
+        <p className="mt-4 text-sm text-[var(--foreground)]">{t("handover_done")}</p>
       )}
       {info.expired && !info.alreadyDone && (
         <p className="mt-4 text-sm text-red-700">{t("handover_expired")}</p>

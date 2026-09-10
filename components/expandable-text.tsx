@@ -45,7 +45,7 @@ export function ExpandableText({
       {needsToggle && (
         <button
           type="button"
-          className="mt-1 text-sm font-medium text-[var(--accent)] hover:underline"
+          className="mt-1 text-sm font-medium text-[var(--foreground)] hover:underline"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >

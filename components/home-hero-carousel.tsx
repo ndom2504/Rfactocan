@@ -71,7 +71,7 @@ export function HomeHeroCarousel({ startHref, whatsappUrl = null }: Props) {
               <Link href={startHref} className="sm:flex-1">
                 <Button
                   size="lg"
-                  className="h-11 w-full bg-white text-sm font-semibold !text-[var(--rfacto-green-dark)] shadow-lg shadow-black/20 hover:bg-white/90 hover:!text-[var(--rfacto-green-dark)]"
+                  className="h-11 w-full bg-white text-sm font-semibold !text-[#1c1b1f] shadow-lg shadow-black/20 hover:bg-white/90 hover:!text-[#1c1b1f]"
                 >
                   {t("cta_start_here")}
                 </Button>

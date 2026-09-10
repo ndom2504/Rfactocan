@@ -92,7 +92,7 @@ export default async function RequestsPage({ searchParams }: Props) {
         </p>
         <Link
           href="/meet"
-          className="mt-2 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
+          className="mt-2 inline-block text-sm font-medium text-[var(--foreground)] hover:underline"
         >
           {t(locale, "meet_create_cta")} →
         </Link>
@@ -132,7 +132,7 @@ export default async function RequestsPage({ searchParams }: Props) {
                               : t(locale, "order_need_parcel")}
                     </Badge>
                     {isOwner && (
-                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "my_listing")}
                       </Badge>
                     )}
@@ -152,7 +152,7 @@ export default async function RequestsPage({ searchParams }: Props) {
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {req.user.kycStatus === "VERIFIED" && (
-                      <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "verified")}
                       </Badge>
                     )}

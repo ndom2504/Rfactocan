@@ -11,8 +11,8 @@
 
   /* Semantic tokens (site-wide) */
   --background: #f3f5ef;
-  --foreground: #1b3b14;
-  --muted: #5a6754;
+  --foreground: #1c1b1f;
+  --muted: #5f6368;
   --surface: #ffffff;
   --surface-2: #e8ede3;
   --surface-3: #d5ddcf;
@@ -42,7 +42,7 @@
 
   ::selection {
     background: var(--accent-soft);
-    color: var(--rfacto-green-dark);
+    color: var(--foreground);
   }
 }
 

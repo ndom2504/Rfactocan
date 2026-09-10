@@ -301,12 +301,12 @@ export default function BookingDetailPage({
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge>{bookingStatus(booking.status)}</Badge>
             {payment && (
-              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                 {paymentStatus(payment.status)}
               </Badge>
             )}
             {booking.trip.user.kycStatus === "VERIFIED" && (
-              <Badge className="bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                 {t("traveler_verified")}
               </Badge>
             )}
@@ -333,7 +333,7 @@ export default function BookingDetailPage({
                 : ` · ${t("price_fixed")}`}
             </p>
             {booking.offeredPricePerKg != null && (
-              <p className="text-[var(--accent)]">
+              <p className="text-[var(--foreground)]">
                 {t("current_offer")}:{" "}
                 <strong>
                   {formatMoney(
@@ -347,7 +347,7 @@ export default function BookingDetailPage({
             )}
           </div>
           {message && (
-            <p className="mt-3 text-sm text-[var(--accent)]">{message}</p>
+            <p className="mt-3 text-sm text-[var(--foreground)]">{message}</p>
           )}
           {error && (
             <p className="mt-3 text-sm text-red-700">
@@ -496,7 +496,7 @@ export default function BookingDetailPage({
                 </p>
               )}
               {awaitingConfirm && (
-                <p className="text-sm text-[var(--accent)]">
+                <p className="text-sm text-[var(--foreground)]">
                   {t("payment_confirming")}
                 </p>
               )}
@@ -639,7 +639,7 @@ export default function BookingDetailPage({
             </div>
           )}
           {alreadyReviewed && (
-            <p className="mt-4 text-sm text-[var(--accent)]">
+            <p className="mt-4 text-sm text-[var(--foreground)]">
               {t("review_thanks")}
             </p>
           )}

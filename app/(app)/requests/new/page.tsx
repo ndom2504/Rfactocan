@@ -691,7 +691,7 @@ function NewRequestForm() {
                       href={jobCvUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-[var(--accent)] underline"
+                      className="font-medium text-[var(--foreground)] underline"
                     >
                       {t("job_cv_uploaded")}
                     </a>

@@ -726,7 +726,7 @@ export default function DirectMessageChatPage() {
                 {open || followUp ? (
                   <Link
                     href={`/service-payments/${p.id}`}
-                    className="text-xs font-semibold text-[var(--accent)] underline"
+                    className="text-xs font-semibold text-[var(--foreground)] underline"
                   >
                     {open && iPay
                       ? t("svc_pay_pay")
@@ -826,7 +826,7 @@ export default function DirectMessageChatPage() {
                     download
                     className={cn(
                       "inline-flex text-xs font-medium underline",
-                      mine ? "text-white/90" : "text-[var(--accent)]"
+                      mine ? "text-white/90" : "text-[var(--foreground)]"
                     )}
                   >
                     {t("download_attachment")}
@@ -851,7 +851,7 @@ export default function DirectMessageChatPage() {
                 <Link
                   href={`/service-payments/${paymentId}`}
                   className={`mt-2 inline-block text-xs font-semibold underline ${
-                    mine ? "text-white" : "text-[var(--accent)]"
+                    mine ? "text-white" : "text-[var(--foreground)]"
                   }`}
                 >
                   {invoice?.status === "DELIVERED" && iPay

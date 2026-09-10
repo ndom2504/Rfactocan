@@ -58,7 +58,7 @@ export function AppleSignInButton({
       {busy ? (
         <Text
           style={{
-            color: tone === "dark" ? "rgba(255,255,255,0.8)" : "#5a6754",
+            color: tone === "dark" ? "rgba(255,255,255,0.8)" : "#5f6368",
             fontSize: 13,
             textAlign: "center",
             marginTop: 8,

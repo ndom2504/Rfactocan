@@ -74,7 +74,7 @@ export function CommunityMediaGrid({
           href={a.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-3 flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--accent)] hover:bg-[var(--surface-2)] sm:mx-0"
+          className="mx-3 flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)] sm:mx-0"
         >
           PDF · {a.name}
         </a>

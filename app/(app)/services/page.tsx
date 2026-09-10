@@ -42,7 +42,7 @@ export default function ServicesHubPage() {
               <Card className="h-full transition hover:border-[var(--accent)]">
                 <CardTitle className="text-lg">{label}</CardTitle>
                 <CardDescription className="mt-2">{hint}</CardDescription>
-                <p className="mt-3 text-sm text-[var(--accent)]">
+                <p className="mt-3 text-sm text-[var(--foreground)]">
                   {t("services_see_list")} →
                 </p>
               </Card>

@@ -166,7 +166,7 @@ export function BookingTracker({ bookingId, className }: Props) {
                     {bookingStatus(step)}
                   </p>
                   {current && (
-                    <Badge className="mt-1 bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <Badge className="mt-1 bg-[var(--accent-soft)] text-[var(--foreground)]">
                       {t("tracking_current")}
                     </Badge>
                   )}
@@ -236,7 +236,7 @@ export function BookingTracker({ bookingId, className }: Props) {
               href={data.latestLocation.mapsUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-block text-sm text-[var(--accent)] underline"
+              className="mt-2 inline-block text-sm text-[var(--foreground)] underline"
             >
               {t("open_map")}
             </a>

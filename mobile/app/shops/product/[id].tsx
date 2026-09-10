@@ -114,7 +114,7 @@ export default function ShopProductScreen() {
         {product.shop?.name ? <Muted>{product.shop.name}</Muted> : null}
         <Text
           style={{
-            color: colors.accent,
+            color: colors.foreground,
             fontWeight: "800",
             fontSize: 20,
             marginVertical: 12,

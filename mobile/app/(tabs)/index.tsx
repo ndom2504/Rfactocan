@@ -100,7 +100,7 @@ export default function HomeScreen() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 22 }}>
+              <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 22 }}>
                 {initial}
               </Text>
             </View>
@@ -111,14 +111,14 @@ export default function HomeScreen() {
             marginTop: 12,
             fontSize: 24,
             fontWeight: "800",
-            color: colors.accent,
+            color: colors.foreground,
             textAlign: "center",
           }}
         >
           {t("hello")}, {user?.displayName ?? ""}
         </Text>
         {user?.kycStatus === "VERIFIED" ? (
-          <Text style={{ marginTop: 4, color: colors.accentHover, fontWeight: "600" }}>
+          <Text style={{ marginTop: 4, color: colors.muted, fontWeight: "600" }}>
             {t("verified")}
           </Text>
         ) : null}
@@ -188,7 +188,7 @@ export default function HomeScreen() {
               paddingVertical: 8,
             }}
           >
-            <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
+            <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}>
               {label}
             </Text>
           </Pressable>
@@ -222,7 +222,7 @@ export default function HomeScreen() {
           style={{
             fontSize: 20,
             fontWeight: "700",
-            color: colors.accent,
+            color: colors.foreground,
             marginBottom: 12,
           }}
         >
@@ -316,7 +316,7 @@ function KpiCard({
         style={{
           fontSize: 24,
           fontWeight: "800",
-          color: colors.accent,
+          color: colors.foreground,
           marginTop: 4,
         }}
       >

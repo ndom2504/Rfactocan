@@ -24,8 +24,8 @@ export default async function PublicationCharterPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-6 py-12">
       <div>
-        <p className="text-sm font-medium text-[var(--accent)]">Rfacto</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--accent)]">
+        <p className="text-sm font-medium text-[var(--foreground)]">Rfacto</p>
+        <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--foreground)]">
           {t(locale, "pub_charter_title")}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
@@ -48,7 +48,7 @@ export default async function PublicationCharterPage() {
 
       <Link
         href="/profile"
-        className="inline-flex text-sm font-medium text-[var(--accent)] hover:underline"
+        className="inline-flex text-sm font-medium text-[var(--foreground)] hover:underline"
       >
         ← {t(locale, "profile_title")}
       </Link>

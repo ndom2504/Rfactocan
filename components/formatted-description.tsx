@@ -46,7 +46,7 @@ export function FormattedDescription({
           return (
             <ul
               key={i}
-              className="list-disc space-y-1.5 pl-5 marker:text-[var(--accent)]"
+              className="list-disc space-y-1.5 pl-5 marker:text-[var(--foreground)]"
             >
               {block.items.map((item, j) => (
                 <li key={j} className="pl-0.5">
@@ -61,7 +61,7 @@ export function FormattedDescription({
         return (
           <ol
             key={i}
-            className="list-decimal space-y-1.5 pl-5 marker:text-[var(--accent)]"
+            className="list-decimal space-y-1.5 pl-5 marker:text-[var(--foreground)]"
           >
             {block.items.map((item, j) => (
               <li key={j} className="pl-0.5">

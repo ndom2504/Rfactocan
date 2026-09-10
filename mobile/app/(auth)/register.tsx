@@ -111,7 +111,7 @@ export default function RegisterScreen() {
                 maxLength={6}
               />
               {!!info && !error ? (
-                <Text style={{ color: colors.accent, marginBottom: 8 }}>{info}</Text>
+                <Text style={{ color: colors.foreground, marginBottom: 8 }}>{info}</Text>
               ) : null}
               <ErrorText>{error}</ErrorText>
               <Button label="Valider le code" onPress={onVerifyGoogle} loading={loading} />
@@ -143,7 +143,7 @@ export default function RegisterScreen() {
                 agentRef={agentRef.trim() || undefined}
               />
               <Pressable onPress={() => setMode("email")} style={{ marginTop: 16 }}>
-                <Text style={{ color: colors.accent, fontWeight: "600", textAlign: "center" }}>
+                <Text style={{ color: colors.foreground, fontWeight: "600", textAlign: "center" }}>
                   J’ai un email
                 </Text>
               </Pressable>
@@ -190,14 +190,14 @@ export default function RegisterScreen() {
               <ErrorText>{error}</ErrorText>
               <Button label="S'inscrire" onPress={onSubmit} loading={loading} />
               <Pressable onPress={() => setMode("phone")} style={{ marginTop: 16 }}>
-                <Text style={{ color: colors.accent, fontWeight: "600", textAlign: "center" }}>
+                <Text style={{ color: colors.foreground, fontWeight: "600", textAlign: "center" }}>
                   Créer le compte par SMS
                 </Text>
               </Pressable>
             </>
           )}
           <Link href="/(auth)/login" style={{ marginTop: 16 }}>
-            <Text style={{ color: colors.accent, fontWeight: "600" }}>
+            <Text style={{ color: colors.foreground, fontWeight: "600" }}>
               Déjà un compte ? Connexion
             </Text>
           </Link>

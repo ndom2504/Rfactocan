@@ -107,7 +107,7 @@ export function WelcomeHome() {
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 16 }}>
+            <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 16 }}>
               Commencer ici
             </Text>
           </Pressable>
@@ -167,7 +167,7 @@ export function WelcomeHome() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "600" }}>
+              <Text style={{ color: colors.foreground, fontWeight: "600" }}>
                 Voir le programme de confiance
               </Text>
             </Pressable>

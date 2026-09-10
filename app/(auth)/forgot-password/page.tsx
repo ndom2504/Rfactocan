@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
 
       {done ? (
         <div className="mt-6 space-y-3">
-          <p className="text-sm text-[var(--accent)]">{t("forgot_sent")}</p>
+          <p className="text-sm text-[var(--foreground)]">{t("forgot_sent")}</p>
           <Link href="/login" className="text-sm underline">
             {t("back_to_login")}
           </Link>

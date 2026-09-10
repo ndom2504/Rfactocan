@@ -115,7 +115,7 @@ function Avatar({ name, url }: { name: string; url?: string | null }) {
         justifyContent: "center",
       }}
     >
-      <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 18 }}>
+      <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 18 }}>
         {(name || "R").slice(0, 1).toUpperCase()}
       </Text>
     </View>
@@ -465,7 +465,7 @@ export default function CommunityScreen() {
                   {item.author?.verified ? (
                     <Text
                       style={{
-                        color: colors.accent,
+                        color: colors.foreground,
                         fontSize: 12,
                         fontWeight: "600",
                       }}
@@ -489,7 +489,7 @@ export default function CommunityScreen() {
                     style={{
                       fontWeight: "700",
                       fontSize: 16,
-                      color: colors.accent,
+                      color: colors.foreground,
                       marginBottom: 4,
                     }}
                   >
@@ -523,7 +523,7 @@ export default function CommunityScreen() {
                 >
                   <Text
                     style={{
-                      color: colors.accent,
+                      color: colors.foreground,
                       fontWeight: "700",
                       marginTop: 4,
                     }}

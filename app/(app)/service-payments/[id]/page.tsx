@@ -186,7 +186,7 @@ export default function ServicePaymentPage() {
           </p>
         </div>
 
-        <p className="text-2xl font-semibold text-[var(--accent)]">
+        <p className="text-2xl font-semibold text-[var(--foreground)]">
           {amountLabel}
         </p>
         {payment.description ? (
@@ -351,7 +351,7 @@ export default function ServicePaymentPage() {
         )}
 
         {payment.status === "FULFILLED" && payment.stripeTransferId && (
-          <p className="text-sm font-medium text-[var(--accent)]">
+          <p className="text-sm font-medium text-[var(--foreground)]">
             {t("svc_pay_released")}
           </p>
         )}

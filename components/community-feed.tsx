@@ -469,7 +469,7 @@ export function CommunityFeed() {
                       {post.author.displayName}
                     </Link>
                     {post.author.verified && (
-                      <span className="text-xs font-medium text-[var(--accent)]">
+                      <span className="text-xs font-medium text-[var(--foreground)]">
                         {t("verified")}
                       </span>
                     )}
@@ -489,7 +489,7 @@ export function CommunityFeed() {
               </div>
 
               {post.title && (
-                <h2 className="mt-3 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--accent)]">
+                <h2 className="mt-3 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
                   {post.href ? (
                     <Link href={post.href} className="hover:underline">
                       {post.title}
@@ -514,7 +514,7 @@ export function CommunityFeed() {
                 {post.href ? (
                   <Link
                     href={post.href}
-                    className="rounded-md bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
+                    className="rounded-md bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:underline"
                   >
                     {t("community_see")}
                   </Link>
@@ -533,7 +533,7 @@ export function CommunityFeed() {
                   }}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-40 ${
                     post.author.connectedByMe
-                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
                       : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
                   }`}
                 >

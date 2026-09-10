@@ -204,7 +204,7 @@ export default function MyProjectsPage() {
                           · {s.city}, {s.country}
                         </CardDescription>
                         {s.priceAmount != null && (
-                          <p className="mt-1 text-sm font-medium text-[var(--accent)]">
+                          <p className="mt-1 text-sm font-medium text-[var(--foreground)]">
                             {formatMoney(
                               s.priceAmount,
                               (normalizeCurrency(s.currency) as MoneyCurrency) ??

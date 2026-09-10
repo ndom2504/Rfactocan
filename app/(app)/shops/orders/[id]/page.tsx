@@ -216,7 +216,7 @@ function OrderDetail() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <Link href="/shops/orders" className="text-sm text-[var(--accent)]">
+      <Link href="/shops/orders" className="text-sm text-[var(--foreground)]">
         ← {t("shops_orders")}
       </Link>
       <Card>
@@ -311,7 +311,7 @@ function OrderDetail() {
           )}
         </div>
         {message && (
-          <p className="mt-3 text-sm text-[var(--accent)]">{message}</p>
+          <p className="mt-3 text-sm text-[var(--foreground)]">{message}</p>
         )}
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </Card>

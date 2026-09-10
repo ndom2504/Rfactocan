@@ -218,7 +218,7 @@ export function PhoneOtpAuth({
         placeholder={country?.placeholder || "077 00 00 00"}
       />
       {!!info && !error ? (
-        <Text style={{ color: colors.accent, marginBottom: 8 }}>{info}</Text>
+        <Text style={{ color: colors.foreground, marginBottom: 8 }}>{info}</Text>
       ) : null}
       <ErrorText>{error}</ErrorText>
       <Button label="Recevoir le code SMS" onPress={sendCode} loading={loading} />
@@ -226,7 +226,7 @@ export function PhoneOtpAuth({
       <Modal visible={pickerOpen} animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 48 }}>
           <Pressable onPress={() => setPickerOpen(false)} style={{ padding: 16 }}>
-            <Text style={{ color: colors.accent, fontWeight: "600" }}>Fermer</Text>
+            <Text style={{ color: colors.foreground, fontWeight: "600" }}>Fermer</Text>
           </Pressable>
           <FlatList
             data={countries}

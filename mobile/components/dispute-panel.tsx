@@ -141,7 +141,7 @@ export function DisputePanel({
         </View>
       ) : null}
       {ok ? (
-        <Text style={{ color: colors.accent, marginTop: 8 }}>{ok}</Text>
+        <Text style={{ color: colors.foreground, marginTop: 8 }}>{ok}</Text>
       ) : null}
       <ErrorText>{error}</ErrorText>
       {disputes.map((d) => (

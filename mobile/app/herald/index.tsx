@@ -179,7 +179,7 @@ export default function HeraldScreen() {
         </Muted>
         <ErrorText>{error}</ErrorText>
         {message ? (
-          <Text style={{ color: colors.accent, marginTop: 8 }}>{message}</Text>
+          <Text style={{ color: colors.foreground, marginTop: 8 }}>{message}</Text>
         ) : null}
 
         {isHerald ? (
@@ -250,7 +250,7 @@ export default function HeraldScreen() {
                   fontSize: 22,
                   fontWeight: "800",
                   letterSpacing: 2,
-                  color: colors.accent,
+                  color: colors.foreground,
                   marginTop: 4,
                 }}
               >
@@ -307,7 +307,7 @@ export default function HeraldScreen() {
 
             {pending ? (
               <Card>
-                <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                <Text style={{ color: colors.foreground, fontWeight: "700" }}>
                   {t("ambassador_apply_pending")}
                 </Text>
                 {state?.ambassadorWhatsapp ? (

@@ -229,7 +229,7 @@ export default function ServiceListingDetailPage() {
               href={listing.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:underline"
+              className="text-sm font-medium text-[var(--foreground)] underline-offset-2 hover:underline"
             >
               {t("services_website_open")} ·{" "}
               {displayWebsiteHost(listing.websiteUrl)}

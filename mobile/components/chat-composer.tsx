@@ -77,7 +77,7 @@ export function ChatComposer({
             ● {voice.formatElapsed()}
           </Text>
           <Pressable onPress={() => void voice.stop(false)} hitSlop={8}>
-            <Text style={{ color: colors.accent, fontWeight: "600" }}>{t("cancel")}</Text>
+            <Text style={{ color: colors.foreground, fontWeight: "600" }}>{t("cancel")}</Text>
           </Pressable>
           <IconBtn
             name="stop-circle"
@@ -101,7 +101,7 @@ export function ChatComposer({
               hitSlop={8}
               style={{ paddingHorizontal: 8 }}
             >
-              <Text style={{ color: colors.accent, fontWeight: "600" }}>{t("cancel")}</Text>
+              <Text style={{ color: colors.foreground, fontWeight: "600" }}>{t("cancel")}</Text>
             </Pressable>
             <Pressable
               onPress={() => void voice.sendPreview()}

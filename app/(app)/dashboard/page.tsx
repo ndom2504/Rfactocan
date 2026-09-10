@@ -88,7 +88,7 @@ export default async function DashboardPage() {
         <Link href="/services/new" className="w-full">
           <Button
             variant="outline"
-            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--accent)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
             {t(locale, "dashboard_publish_service")}
           </Button>
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
         <Link href="/services" className="w-full" data-tour="search">
           <Button
             variant="outline"
-            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--accent)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
             {t(locale, "dashboard_search_service")}
           </Button>
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
         <Link href="/projects" className="w-full">
           <Button
             variant="outline"
-            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--accent)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
             {t(locale, "my_projects_title")}
           </Button>
