@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { CountryCodeSelect } from "@/components/country-select";
 import { useI18n } from "@/components/locale-provider";
 import { PromoImagesDialog } from "@/components/promo-images-dialog";
+import { PublishServiceIntents } from "@/components/publish-service-intents";
 import { Button } from "@/components/ui/button";
 import { uploadServicePhoto } from "@/lib/service-upload-client";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -39,7 +40,7 @@ import {
   transportModeLabel,
 } from "@/lib/transport";
 
-function NewServiceForm() {
+export function NewServiceForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { t, locale } = useI18n();
@@ -203,7 +204,11 @@ function NewServiceForm() {
         {t("services_publish_hint")}
       </CardDescription>
 
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <div className="mt-6">
+        <PublishServiceIntents />
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>{t("services_category")}</Label>

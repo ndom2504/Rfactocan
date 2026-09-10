@@ -6,67 +6,37 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { Chip, ChipRow } from "@/components/chip";
+import { PublishServiceIntents } from "@/components/publish-service-intents";
 import { Button, ErrorText, Field, Muted, Title } from "@/components/ui";
+import { TripForm } from "@/components/trip-form";
 import { api, mediaUrl, uploadFile } from "@/lib/api";
 import { prepareImageUpload } from "@/lib/prepare-image";
-import {
-  PUBLISH_KINDS,
-  type CommunityAttachment,
-  type CommunityKind,
-} from "@/lib/community";
+import { type CommunityAttachment, type CommunityKind } from "@/lib/community";
+import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
 
-function Chip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 999,
-        backgroundColor: selected ? colors.accent : colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginRight: 8,
-        marginBottom: 8,
-      }}
-    >
-      <Text
-        style={{
-          fontWeight: "700",
-          fontSize: 13,
-          color: selected ? "#fff" : colors.foreground,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
+type AnnounceMode = "event" | "trip" | "service";
 
 export function AnnounceComposer({
   onPublished,
 }: {
   onPublished: () => void;
 }) {
-  const [kind, setKind] = useState<CommunityKind>("COMMUNITY");
+  const router = useRouter();
+  const { t } = useI18n();
+  const [mode, setMode] = useState<AnnounceMode>("event");
+  const [kind] = useState<CommunityKind>("OPPORTUNITY");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [attachments, setAttachments] = useState<CommunityAttachment[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [tripLoading, setTripLoading] = useState(false);
 
   async function pickAttachments() {
     const remaining = 10 - attachments.length;
@@ -92,7 +62,9 @@ export function AnnounceComposer({
       const next = [...attachments];
       for (const [index, asset] of (result.assets ?? []).entries()) {
         const name = asset.fileName || `media-${index + 1}.jpg`;
-        const isVideo = /\.(mp4|mov|webm|m4v)$/i.test(name) || (asset.mimeType || "").startsWith("video/");
+        const isVideo =
+          /\.(mp4|mov|webm|m4v)$/i.test(name) ||
+          (asset.mimeType || "").startsWith("video/");
         const file = isVideo
           ? {
               uri: asset.uri,
@@ -137,7 +109,6 @@ export function AnnounceComposer({
       setTitle("");
       setBody("");
       setAttachments([]);
-      setKind("COMMUNITY");
       onPublished();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Publication impossible");
@@ -153,70 +124,112 @@ export function AnnounceComposer({
     >
       <ScrollView keyboardShouldPersistTaps="handled">
         <Title>Annoncer</Title>
-        <Muted>
-          Annonce, événement ou communiqué — publié automatiquement dans le fil
-          Communauté.
-        </Muted>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 16 }}>
-          {PUBLISH_KINDS.map((item) => (
+        <Muted>{t("community_announce_prompt")}</Muted>
+        <View style={{ marginTop: 16 }}>
+          <ChipRow>
             <Chip
-              key={item.id}
-              label={item.label}
-              selected={kind === item.id}
-              onPress={() => setKind(item.id)}
+              label={t("announce_mode_event")}
+              selected={mode === "event"}
+              onPress={() => setMode("event")}
             />
-          ))}
+            <Chip
+              label={t("announce_mode_trip")}
+              selected={mode === "trip"}
+              onPress={() => setMode("trip")}
+            />
+            <Chip
+              label={t("announce_mode_service")}
+              selected={mode === "service"}
+              onPress={() => setMode("service")}
+            />
+          </ChipRow>
         </View>
-        <Field
-          label="Titre (optionnel)"
-          value={title}
-          onChangeText={(v) => setTitle(v.slice(0, 120))}
-          placeholder="Titre"
-        />
-        <Field
-          label="Texte"
-          value={body}
-          onChangeText={(v) => setBody(v.slice(0, 4000))}
-          placeholder="Décrivez l’annonce (au moins 10 caractères)…"
-          multiline
-          style={{ minHeight: 120, textAlignVertical: "top" }}
-        />
-        <Button
-          label={uploading ? "Envoi…" : "Joindre une photo ou une vidéo"}
-          variant="outline"
-          disabled={uploading || busy || attachments.length >= 10}
-          onPress={() => void pickAttachments()}
-        />
-        {attachments.length > 0 ? (
-          <ScrollView horizontal style={{ marginBottom: 12 }}>
-            {attachments.map((att, index) => (
-              <Pressable
-                key={`${att.url}-${index}`}
-                onPress={() =>
-                  setAttachments((prev) => prev.filter((_, i) => i !== index))
+        {mode === "trip" ? (
+          <>
+            <ErrorText>{error}</ErrorText>
+            <TripForm
+              mode="create"
+              submitting={tripLoading}
+              onSubmit={async (payload) => {
+                setTripLoading(true);
+                setError("");
+                try {
+                  await api("/api/trips", {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                  });
+                  onPublished();
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : t("retry"));
+                } finally {
+                  setTripLoading(false);
                 }
-              >
-                <Image
-                  source={{ uri: mediaUrl(att.url) }}
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 8,
-                    marginRight: 8,
-                    backgroundColor: colors.surface2,
-                  }}
-                />
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
-        <ErrorText>{error}</ErrorText>
-        <Button
-          label="Publier l'annonce"
-          disabled={busy || uploading || body.trim().length < 10}
-          loading={busy}
-          onPress={() => void publish()}
-        />
+              }}
+            />
+          </>
+        ) : mode === "service" ? (
+          <>
+            <PublishServiceIntents />
+            <Button
+              label={t("dashboard_publish_service")}
+              variant="outline"
+              onPress={() => router.push("/service/new")}
+            />
+          </>
+        ) : (
+          <>
+            <Field
+              label="Titre (optionnel)"
+              value={title}
+              onChangeText={(v) => setTitle(v.slice(0, 120))}
+              placeholder="Titre"
+            />
+            <Field
+              label="Texte"
+              value={body}
+              onChangeText={(v) => setBody(v.slice(0, 4000))}
+              placeholder="Décrivez l’annonce (au moins 10 caractères)…"
+              multiline
+              style={{ minHeight: 120, textAlignVertical: "top" }}
+            />
+            <Button
+              label={uploading ? "Envoi…" : "Joindre une photo ou une vidéo"}
+              variant="outline"
+              disabled={uploading || busy || attachments.length >= 10}
+              onPress={() => void pickAttachments()}
+            />
+            {attachments.length > 0 ? (
+              <ScrollView horizontal style={{ marginBottom: 12 }}>
+                {attachments.map((att, index) => (
+                  <Pressable
+                    key={`${att.url}-${index}`}
+                    onPress={() =>
+                      setAttachments((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    <Image
+                      source={{ uri: mediaUrl(att.url) }}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 8,
+                        marginRight: 8,
+                        backgroundColor: colors.surface2,
+                      }}
+                    />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : null}
+            <ErrorText>{error}</ErrorText>
+            <Button
+              label="Publier l'annonce"
+              disabled={busy || uploading || body.trim().length < 10}
+              loading={busy}
+              onPress={() => void publish()}
+            />
+          </>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

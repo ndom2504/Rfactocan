@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { CorridorFields, DateField } from "@/components/corridor-fields";
 import { TransportFields } from "@/components/transport-fields";
 import { CountryCodeSelect } from "@/components/country-select";
@@ -34,7 +34,16 @@ import { getCities } from "@/lib/corridors";
 const SERVICE_NEED_CATEGORIES = SERVICE_CATALOG.filter((c) => !c.isParcel);
 
 export default function NewRequestPage() {
+  return (
+    <Suspense>
+      <NewRequestForm />
+    </Suspense>
+  );
+}
+
+function NewRequestForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const { t, locale, urgency } = useI18n();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,7 +51,20 @@ export default function NewRequestPage() {
   const [uploadingCv, setUploadingCv] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [jobCvUrl, setJobCvUrl] = useState<string | null>(null);
-  const [needType, setNeedType] = useState<OrderNeedTypeId | "MEET">("PARCEL");
+  const [needType, setNeedType] = useState<OrderNeedTypeId | "MEET">(() => {
+    const need = params.get("need")?.toUpperCase();
+    if (
+      need === "JOB_OFFER" ||
+      need === "JOB_SEEK" ||
+      need === "PARCEL" ||
+      need === "SERVICE" ||
+      need === "PRODUCT"
+    ) {
+      return need;
+    }
+    if (need === "MEET") return "MEET";
+    return "PARCEL";
+  });
   const [orderIntent, setOrderIntent] = useState<OrderIntent>("envoyer");
   const [transportMode, setTransportMode] = useState<TransportMode>("AIR");
   const [serviceCategory, setServiceCategory] = useState<string>(
@@ -87,6 +109,21 @@ export default function NewRequestPage() {
   useEffect(() => {
     setOrderIntent(loadUserIntent().orderIntent);
   }, []);
+
+  useEffect(() => {
+    const need = params.get("need")?.toUpperCase();
+    if (
+      need === "JOB_OFFER" ||
+      need === "JOB_SEEK" ||
+      need === "PARCEL" ||
+      need === "SERVICE" ||
+      need === "PRODUCT"
+    ) {
+      setNeedType(need);
+    } else if (need === "MEET") {
+      setNeedType("MEET");
+    }
+  }, [params]);
 
   useEffect(() => {
     const first = serviceTypes[0]?.id ?? "";
@@ -255,7 +292,13 @@ export default function NewRequestPage() {
 
   return (
     <Card className="max-w-2xl">
-      <CardTitle>{t("new_request_title")}</CardTitle>
+      <CardTitle>
+        {needType === "JOB_OFFER"
+          ? t("order_need_job_offer")
+          : needType === "JOB_SEEK"
+            ? t("order_need_job_seek")
+            : t("new_request_title")}
+      </CardTitle>
       <CardDescription>{subtitle}</CardDescription>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <div className="space-y-2">

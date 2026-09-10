@@ -84,7 +84,7 @@ export function Button({
         { backgroundColor: theme.accent },
         variant === "outline" && [
           styles.buttonOutline,
-          { borderColor: theme.border, backgroundColor: "transparent" },
+          { borderColor: theme.accent, backgroundColor: "transparent" },
         ],
         outlineOnDark && styles.buttonOutlineOnDark,
         variant === "danger" && { backgroundColor: theme.danger },
@@ -106,7 +106,7 @@ export function Button({
         <Text
           style={[
             styles.buttonText,
-            variant === "outline" && { color: theme.foreground },
+            variant === "outline" && { color: theme.accent },
             outlineOnDark && styles.buttonTextOutlineOnDark,
           ]}
         >
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   buttonOutline: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.accent,
   },
   buttonOutlineOnDark: {
     borderColor: "rgba(255,255,255,0.85)",

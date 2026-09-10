@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useI18n } from "@/components/locale-provider";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PublishServiceIntents } from "@/components/publish-service-intents";
+import { ServiceSearch } from "@/components/service-search";
 import { SERVICE_CATALOG } from "@/lib/services-catalog";
 
 export default function ServicesHubPage() {
@@ -23,6 +25,12 @@ export default function ServicesHubPage() {
         <Link href="/services/new">
           <Button>{t("services_publish")}</Button>
         </Link>
+      </div>
+
+      <PublishServiceIntents />
+
+      <div id="search">
+        <ServiceSearch />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -7,9 +7,9 @@ import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 
 const PUBLISH_LINKS = [
-  { href: "/trips/new", labelKey: "publish_transport_cta" as const },
-  { href: "/requests/new?need=PARCEL", labelKey: "publish_ship_cta" as const },
-  { href: "/services/new", labelKey: "publish_listing_cta" as const },
+  { href: "/services/new", labelKey: "dashboard_publish_service" as const },
+  { href: "/services", labelKey: "dashboard_search_service" as const },
+  { href: "/projects", labelKey: "my_projects_title" as const },
 ];
 
 export function PublishMenu() {

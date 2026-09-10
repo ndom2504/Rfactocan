@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Chip, ChipRow } from "@/components/chip";
 import { CountryCityFields } from "@/components/geo-fields";
+import { PublishServiceIntents } from "@/components/publish-service-intents";
 import {
   Button,
   ErrorText,
@@ -180,6 +181,7 @@ export default function NewServiceScreen() {
         >
           <Title>{t("services_publish")}</Title>
           <Muted>{t("services_publish_hint")}</Muted>
+          <PublishServiceIntents />
 
           <Text
             style={{

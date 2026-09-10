@@ -22,10 +22,13 @@ const dict = {
     community_subtitle:
       "Voyages, colis, services — et les annonces, événements et communiqués de la communauté.",
     community_guidelines:
-      "Publiez un voyage, un colis, un service, ou une annonce (événement, communiqué). Elle apparaît tout de suite dans le fil.",
+      "Précisez votre annonce : événement, voyage ou service. Elle apparaît dans la communauté.",
     community_announce: "Annoncer",
     community_announce_prompt:
-      "Annoncez un événement ou un communiqué : il est publié automatiquement dans la communauté.",
+      "Annoncez un événement, un voyage ou un service : il est publié dans la communauté.",
+    announce_mode_event: "Événement",
+    announce_mode_trip: "Voyage",
+    announce_mode_service: "Service",
     community_announce_modal_title: "Nouvelle annonce",
     community_kind_business: "Communiqué",
     community_kind_opportunity: "Événement",
@@ -503,6 +506,13 @@ const dict = {
     publish_ship_cta: "Expédier",
     publish_listing_cta: "Publier",
     publish_service_cta: "Créer un service",
+    dashboard_publish_service: "Publier un service",
+    dashboard_search_service: "Rechercher un service",
+    publish_intent_transport: "Transporteur",
+    publish_intent_job: "Emploi",
+    publish_intent_shop: "Boutique",
+    publish_intents_hint:
+      "Employeurs, commerçants et transporteurs : choisissez un type pour ouvrir le formulaire.",
     publish_shop_cta: "Créer ma boutique",
     shops_title: "Boutiques",
     shops_subtitle:
@@ -1324,12 +1334,12 @@ const dict = {
     tour_publish_title: "Publier en un clic",
     tour_publish_body:
       "Le bouton Publier ouvre voyage, service ou commande — disponible partout dans l’app.",
-    tour_ctas_title: "Trois actions principales",
+    tour_ctas_title: "Publier ou rechercher",
     tour_ctas_body:
-      "Publier un voyage (je livre), un service (je suis pro), un colis (j’envoie), ou annoncer un événement dans le fil.",
+      "Publiez un service (y compris transporteur, emploi, boutique) ou recherchez un service. Mes projets liste ce que vous avez déjà créé.",
     tour_search_title: "Rechercher",
     tour_search_body:
-      "Cherchez un voyage, un colis ou un service, ou annoncez un événement dans le fil.",
+      "Recherchez un service déjà publié : métiers, transporteurs, emplois et boutiques.",
     tour_stats_title: "Votre activité",
     tour_stats_body:
       "Suivez vos livraisons ouvertes, commandes ouvertes et votre note moyenne.",
@@ -1747,10 +1757,13 @@ const dict = {
     community_subtitle:
       "Trips, parcels, services — plus community announcements, events and notices.",
     community_guidelines:
-      "Publish a trip, a parcel, a service, or an announcement (event, notice). It appears in the feed right away.",
+      "Choose the type of announcement: event, trip or service. It appears in the community.",
     community_announce: "Announce",
     community_announce_prompt:
-      "Announce an event or a notice: it is published automatically in the community.",
+      "Announce an event, a trip or a service: it is published in the community.",
+    announce_mode_event: "Event",
+    announce_mode_trip: "Trip",
+    announce_mode_service: "Service",
     community_announce_modal_title: "New announcement",
     community_kind_business: "Notice",
     community_kind_opportunity: "Event",
@@ -2221,6 +2234,13 @@ const dict = {
     publish_ship_cta: "Ship",
     publish_listing_cta: "Publish",
     publish_service_cta: "Create a service",
+    dashboard_publish_service: "Publish a service",
+    dashboard_search_service: "Search for a service",
+    publish_intent_transport: "Carrier",
+    publish_intent_job: "Job",
+    publish_intent_shop: "Shop",
+    publish_intents_hint:
+      "Employers, merchants and carriers: pick a type to open the form.",
     publish_shop_cta: "Create my shop",
     shops_title: "Shops",
     shops_subtitle:
@@ -3039,12 +3059,12 @@ const dict = {
     tour_publish_title: "Publish in one tap",
     tour_publish_body:
       "The Publish button opens trip, service, or order — available anywhere in the app.",
-    tour_ctas_title: "Three main actions",
+    tour_ctas_title: "Publish or search",
     tour_ctas_body:
-      "Publish a trip (I deliver), a service (I’m a pro), a parcel (I send), or announce an event in the feed.",
+      "Publish a service (including carrier, job or shop) or search for a service. My projects lists what you already created.",
     tour_search_title: "Search",
     tour_search_body:
-      "Find a trip, a parcel or a service, or announce an event in the feed.",
+      "Search published services: trades, carriers, jobs and shops.",
     tour_stats_title: "Your activity",
     tour_stats_body:
       "Track open deliveries, open orders, and your average rating.",

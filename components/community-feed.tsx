@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import {
 } from "@/components/community-share-button";
 import { communitySharePath } from "@/lib/community-share";
 import { UserAvatar } from "@/components/user-avatar";
+import { NewServiceForm } from "@/app/(app)/services/new/page";
+import NewTripPage from "@/app/(app)/trips/new/page";
 import { useI18n } from "@/components/locale-provider";
 import {
   COMMUNITY_FEED_FILTERS,
@@ -68,10 +70,10 @@ const kindLabelKey: Record<string, DictKey> = {
   MEET: "community_kind_meet",
 };
 
-const ANNOUNCE_KINDS: { id: CommunityPostKindId; labelKey: DictKey }[] = [
-  { id: "COMMUNITY", labelKey: "community_kind_community" },
-  { id: "OPPORTUNITY", labelKey: "community_kind_opportunity" },
-  { id: "BUSINESS", labelKey: "community_kind_business" },
+const ANNOUNCE_MODES: { id: "event" | "trip" | "service"; labelKey: DictKey }[] = [
+  { id: "event", labelKey: "announce_mode_event" },
+  { id: "trip", labelKey: "announce_mode_trip" },
+  { id: "service", labelKey: "announce_mode_service" },
 ];
 
 export function CommunityFeed() {
@@ -83,7 +85,10 @@ export function CommunityFeed() {
   const [error, setError] = useState<string | null>(null);
   const [commentingId, setCommentingId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
-  const [kind, setKind] = useState<CommunityPostKindId>("COMMUNITY");
+  const [kind, setKind] = useState<CommunityPostKindId>("OPPORTUNITY");
+  const [announceMode, setAnnounceMode] = useState<"event" | "trip" | "service">(
+    "event"
+  );
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [attachments, setAttachments] = useState<CommunityAttachment[]>([]);
@@ -293,7 +298,7 @@ export function CommunityFeed() {
             role="dialog"
             aria-modal="true"
             aria-label={t("community_announce_modal_title")}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xl"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xl"
           >
             <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold">
               {t("community_announce_modal_title")}
@@ -302,15 +307,29 @@ export function CommunityFeed() {
               {t("community_guidelines")}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {ANNOUNCE_KINDS.map((item) => (
+              {ANNOUNCE_MODES.map((item) => (
                 <FilterChip
                   key={item.id}
-                  active={kind === item.id}
+                  active={announceMode === item.id}
                   label={t(item.labelKey)}
-                  onClick={() => setKind(item.id)}
+                  onClick={() => {
+                    setAnnounceMode(item.id);
+                    if (item.id === "event") setKind("OPPORTUNITY");
+                  }}
                 />
               ))}
             </div>
+            {announceMode === "trip" ? (
+              <div className="mt-4">
+                <NewTripPage />
+              </div>
+            ) : announceMode === "service" ? (
+              <div className="mt-4">
+                <Suspense fallback={<p className="text-sm text-[var(--muted)]">{t("loading")}</p>}>
+                  <NewServiceForm />
+                </Suspense>
+              </div>
+            ) : (
             <div className="mt-4 space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="announce-title">{t("community_title_placeholder")}</Label>
@@ -351,7 +370,8 @@ export function CommunityFeed() {
                 )}
               </div>
             </div>
-            {error && (
+            )}
+            {error && announceMode === "event" && (
               <p className="mt-3 text-sm text-red-600" role="alert">
                 {error}
               </p>
@@ -365,6 +385,7 @@ export function CommunityFeed() {
               >
                 {t("cancel")}
               </Button>
+              {announceMode === "event" ? (
               <Button
                 type="button"
                 disabled={busy || uploading}
@@ -372,6 +393,7 @@ export function CommunityFeed() {
               >
                 {busy ? t("loading") : t("community_publish")}
               </Button>
+              ) : null}
             </div>
           </div>
         </div>

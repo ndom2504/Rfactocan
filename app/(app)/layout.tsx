@@ -27,7 +27,6 @@ export default async function AppLayout({
   const links = [
     { href: "/dashboard", label: t(locale, "nav_dashboard"), id: "dashboard" },
     { href: "/community", label: t(locale, "nav_community"), id: "community" },
-    { href: "/community?annoncer=1", label: t(locale, "nav_announce"), id: "announce" },
     { href: "/messages", label: t(locale, "nav_messages"), id: "messages" },
   ];
 

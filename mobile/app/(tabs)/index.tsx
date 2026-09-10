@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { CoverBanner } from "@/components/cover-banner";
-import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { Button, Card, ErrorText } from "@/components/ui";
 import { api, mediaUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -147,25 +146,21 @@ export default function HomeScreen() {
 
       <View style={{ gap: 10 }}>
         <Button
-          label={t("publish_transport_cta")}
-          onPress={() => router.push("/trip/new")}
-        />
-        <Button
-          label={t("publish_ship_cta")}
-          onPress={() => router.push("/request/new")}
-        />
-        <Button
-          label={t("publish_listing_cta")}
+          label={t("dashboard_publish_service")}
           variant="outline"
           onPress={() => router.push("/service/new")}
         />
         <Button
-          label={t("nav_announce_cta")}
-          onPress={() => router.push("/(tabs)/announce")}
+          label={t("dashboard_search_service")}
+          variant="outline"
+          onPress={() => router.push("/services")}
+        />
+        <Button
+          label={t("my_projects_title")}
+          variant="outline"
+          onPress={() => router.push("/projects")}
         />
       </View>
-
-      <DashboardSearchHub />
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {(

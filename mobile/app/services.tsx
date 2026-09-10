@@ -1,7 +1,8 @@
 import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { Button, Card, ErrorText, Muted, Screen } from "@/components/ui";
+import { PublishServiceIntents } from "@/components/publish-service-intents";
 import { api } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import { colors } from "@/lib/theme";
@@ -54,10 +55,14 @@ export default function ServicesScreen() {
           onRefresh={load}
           ListEmptyComponent={<Muted>Aucun service publié.</Muted>}
           ListHeaderComponent={
-            <Button
-              label="Publier un service"
-              onPress={() => router.push("/service/new")}
-            />
+            <View style={{ marginBottom: 12 }}>
+              <PublishServiceIntents />
+              <Button
+                label="Publier un service"
+                variant="outline"
+                onPress={() => router.push("/service/new")}
+              />
+            </View>
           }
           renderItem={({ item }) => (
             <Pressable onPress={() => router.push(`/service/${item.id}` as Href)}>

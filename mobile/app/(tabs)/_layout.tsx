@@ -50,12 +50,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="announce"
-        options={{
-          title: t("nav_announce"),
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="bullhorn" color={String(color)} />
-          ),
-        }}
+        options={{ href: null, title: t("nav_announce") }}
       />
       <Tabs.Screen
         name="messages"

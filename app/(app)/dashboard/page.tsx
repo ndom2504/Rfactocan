@@ -6,7 +6,6 @@ import { getRequestLocale } from "@/lib/locale";
 import { t, bookingStatusLabel } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DashboardSearchHub } from "@/components/dashboard-search-hub";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { DashboardWelcomeBanner } from "@/components/dashboard-welcome-banner";
 import { getAmbassadorKpis } from "@/lib/ambassador-stats";
@@ -17,11 +16,6 @@ export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) return null;
   const locale = await getRequestLocale();
-
-  const canSearchLivreurs =
-    user.role === "SENDER" || user.role === "BOTH" || user.role === "ADMIN";
-  const canSearchCommandes =
-    user.role === "TRAVELER" || user.role === "BOTH" || user.role === "ADMIN";
 
   const showAmbassadorEarn =
     user.isAmbassador && Boolean(user.agentCode);
@@ -91,33 +85,30 @@ export default async function DashboardPage() {
         className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3"
         data-tour="publish-ctas"
       >
-        <Link href="/trips/new" className="w-full">
-          <Button className="h-12 w-full text-base">
-            {t(locale, "publish_transport_cta")}
-          </Button>
-        </Link>
-        <Link href="/requests/new?need=PARCEL" className="w-full">
-          <Button className="h-12 w-full text-base">
-            {t(locale, "publish_ship_cta")}
-          </Button>
-        </Link>
         <Link href="/services/new" className="w-full">
-          <Button className="h-12 w-full text-base">
-            {t(locale, "publish_listing_cta")}
+          <Button
+            variant="outline"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--accent)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+          >
+            {t(locale, "dashboard_publish_service")}
           </Button>
         </Link>
-        <Link href="/community?annoncer=1" className="w-full">
-          <Button className="h-14 w-full rounded-full bg-[var(--rfacto-green)] text-lg font-semibold text-white shadow-md shadow-[rgba(40,84,29,0.28)] hover:bg-[var(--rfacto-green-light)]">
-            {t(locale, "nav_announce")}
+        <Link href="/services" className="w-full" data-tour="search">
+          <Button
+            variant="outline"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--accent)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+          >
+            {t(locale, "dashboard_search_service")}
           </Button>
         </Link>
-      </div>
-
-      <div data-tour="search">
-        <DashboardSearchHub
-          canSearchLivreurs={canSearchLivreurs}
-          canSearchCommandes={canSearchCommandes}
-        />
+        <Link href="/projects" className="w-full">
+          <Button
+            variant="outline"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--accent)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+          >
+            {t(locale, "my_projects_title")}
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3" data-tour="stats">
