@@ -1,5 +1,81 @@
 # Notes de version
 
+## 1.0.19 — 2026-09-24
+
+### Android (Play — Child Safety)
+- `versionName` **1.0.19** · `versionCode` **24**
+- Signalement in-app (Communauté, profil membre) via `POST /api/reports`
+- Motif dédié « Sécurité des enfants / CSAE »
+- Profil : liens Normes de sécurité des enfants + Aide et signalement (contact@rfacto.com)
+- Page publique : https://www.rfacto.com/child-safety
+
+### Play Store — texte à coller
+
+**FR**
+```
+Nouveautés Rfacto 1.0.19
+
+• Signalement in-app dans Communauté et sur les profils
+• Motif Sécurité des enfants (CSAE)
+• Accès aux normes enfant et à l’aide depuis le Profil
+```
+
+**EN**
+```
+What's new in Rfacto 1.0.19
+
+• In-app reporting in Community and on member profiles
+• Dedicated child safety (CSAE) report reason
+• Child safety standards and help from Profile
+```
+
+---
+
+## 1.0.18 — 2026-09-10
+
+### iOS / TestFlight
+- `version` **1.0.18** (buildNumber auto-incrémenté par EAS)
+- Accueil : publier un service, rechercher, mes projets
+- Annoncer : événement, voyage ou service
+- Police noir / gris / blanc ; vert sur boutons et cloche
+- App Review 2.5.4 : retirer `audio` de `UIBackgroundModes` (notes vocales / appels au premier plan seulement)
+
+### Android
+- `versionName` **1.0.18** · `versionCode` **23**
+- Onglet Mes projets (entre Accueil et Communauté)
+- Accueil : publier un service + rechercher un service
+- Profil membre au clic sur l’avatar (Communauté / services)
+- Annoncer : événement, voyage ou service
+- Police noir / gris / blanc ; vert sur boutons et cloche
+- Bouton Commencer ici lisible (vert marque sur blanc)
+- Build AAB à uploader sur Play (test fermé / production)
+
+### Play Store — texte à coller
+
+**FR**
+```
+Nouveautés Rfacto 1.0.18
+
+• Onglet Mes projets entre Accueil et Communauté
+• Accueil : publier un service et rechercher un service
+• Profil membre au clic sur la photo dans Communauté
+• Annoncer : événement, voyage ou service
+• Texte noir / gris / blanc ; vert sur boutons et cloche
+```
+
+**EN**
+```
+What's new in Rfacto 1.0.18
+
+• My projects tab between Home and Community
+• Home: publish a service and search services
+• Member profile opens from Community avatars
+• Announce: event, trip or service
+• Black / gray / white type; green on buttons and the bell
+```
+
+---
+
 ## 1.0.17 — 2026-08-26
 
 ### Android

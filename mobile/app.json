@@ -2,7 +2,7 @@
   "expo": {
     "name": "Rfacto",
     "slug": "rfacto",
-    "version": "1.0.0",
+    "version": "1.0.18",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rfacto",
@@ -81,7 +81,9 @@
         "expo-audio",
         {
           "microphonePermission": "Rfacto enregistre des notes vocales et passe des appels dans Messages.",
-          "recordAudioAndroid": true
+          "recordAudioAndroid": true,
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
         }
       ],
       [
@@ -102,7 +104,13 @@
           "assets": ["./assets/videos/intro.mp4"]
         }
       ],
-      "expo-video",
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
+      ],
       [
         "expo-notifications",
         {
@@ -120,7 +128,8 @@
         {
           "locationWhenInUsePermission": "Rfacto utilise votre position pour vous alerter des colis et services proches."
         }
-      ]
+      ],
+      "./plugins/with-ios-background-modes.js"
     ],
     "experiments": {
       "typedRoutes": true
