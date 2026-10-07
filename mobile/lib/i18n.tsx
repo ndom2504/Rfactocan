@@ -36,8 +36,14 @@ const FR = {
   publish_intent_transport: "Transporteur",
   publish_intent_job: "Emploi",
   publish_intent_shop: "Boutique",
+  publish_intent_service: "Service",
   publish_intents_hint:
     "Employeurs, commerçants et transporteurs : choisissez un type pour ouvrir le formulaire.",
+  search_intents_hint:
+    "Choisissez un type pour rechercher : transporteurs, offres d'emploi, boutiques ou services.",
+  services_title: "Colis & services",
+  services_subtitle:
+    "Parcourez les catégories ou publiez une offre : formation, sport, vente, informatique, hébergement…",
   announce_mode_event: "Événement",
   announce_mode_trip: "Voyage",
   announce_mode_service: "Service",
@@ -713,6 +719,11 @@ const EN: Record<keyof typeof FR, string> = {
   publish_intent_service: "Service",
   publish_intents_hint:
     "Employers, merchants and carriers: pick a type to open the form.",
+  search_intents_hint:
+    "Pick a type to search: carriers, job offers, shops or services.",
+  services_title: "Parcels & services",
+  services_subtitle:
+    "Browse categories or publish an offer: training, sport, sales, IT, lodging…",
   announce_mode_event: "Event",
   announce_mode_trip: "Trip",
   announce_mode_service: "Service",

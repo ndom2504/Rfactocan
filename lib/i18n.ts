@@ -511,8 +511,11 @@ const dict = {
     publish_intent_transport: "Transporteur",
     publish_intent_job: "Emploi",
     publish_intent_shop: "Boutique",
+    publish_intent_service: "Service",
     publish_intents_hint:
       "Employeurs, commerçants et transporteurs : choisissez un type pour ouvrir le formulaire.",
+    search_intents_hint:
+      "Choisissez un type pour rechercher : transporteurs, offres d'emploi, boutiques ou services.",
     publish_shop_cta: "Créer ma boutique",
     shops_title: "Boutiques",
     shops_subtitle:
@@ -2242,6 +2245,8 @@ const dict = {
     publish_intent_service: "Service",
     publish_intents_hint:
       "Employers, merchants and carriers: pick a type to open the form.",
+    search_intents_hint:
+      "Pick a type to search: carriers, job offers, shops or services.",
     publish_shop_cta: "Create my shop",
     shops_title: "Shops",
     shops_subtitle:

@@ -4,12 +4,10 @@ import Link from "next/link";
 import { useI18n } from "@/components/locale-provider";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PublishServiceIntents } from "@/components/publish-service-intents";
-import { ServiceSearch } from "@/components/service-search";
-import { SERVICE_CATALOG } from "@/lib/services-catalog";
+import { SearchServiceIntents } from "@/components/search-service-intents";
 
 export default function ServicesHubPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
 
   return (
     <div className="space-y-8">
@@ -27,29 +25,7 @@ export default function ServicesHubPage() {
         </Link>
       </div>
 
-      <PublishServiceIntents />
-
-      <div id="search">
-        <ServiceSearch />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {SERVICE_CATALOG.map((cat) => {
-          const label = locale === "en" ? cat.labelEn : cat.labelFr;
-          const hint = locale === "en" ? cat.hintEn : cat.hintFr;
-          return (
-            <Link key={cat.id} href={`/services/${cat.id}`}>
-              <Card className="h-full transition hover:border-[var(--accent)]">
-                <CardTitle className="text-lg">{label}</CardTitle>
-                <CardDescription className="mt-2">{hint}</CardDescription>
-                <p className="mt-3 text-sm text-[var(--foreground)]">
-                  {t("services_see_list")} →
-                </p>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+      <SearchServiceIntents />
     </div>
   );
 }
