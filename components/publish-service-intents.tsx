@@ -23,6 +23,12 @@ const INTENTS = [
     hint: "Boutique en ligne pour vendre.",
     hintEn: "Online shop to sell.",
   },
+  {
+    href: "/services/new/form",
+    titleKey: "publish_intent_service" as const,
+    hint: "Services: hébergement, ménage, cours, etc.",
+    hintEn: "Services: lodging, cleaning, lessons, etc.",
+  },
 ];
 
 export function PublishServiceIntents() {

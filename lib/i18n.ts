@@ -2239,6 +2239,7 @@ const dict = {
     publish_intent_transport: "Carrier",
     publish_intent_job: "Job",
     publish_intent_shop: "Shop",
+    publish_intent_service: "Service",
     publish_intents_hint:
       "Employers, merchants and carriers: pick a type to open the form.",
     publish_shop_cta: "Create my shop",
