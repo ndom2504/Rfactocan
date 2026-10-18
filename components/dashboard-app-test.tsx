@@ -1,13 +1,9 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Package,
-  Smartphone,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Smartphone } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
+import { DashboardPreviewPhones } from "@/components/dashboard-preview-phones";
 
 type Props = {
   locale: Locale;
@@ -73,118 +69,6 @@ function StorePhone({
             </span>
           ))}
         </p>
-      </div>
-    </PhoneShell>
-  );
-}
-
-function PreviewPhoneTrack({ locale }: { locale: Locale }) {
-  return (
-    <PhoneShell className="h-[210px] w-[108px] bg-white sm:h-[230px] sm:w-[118px]">
-      <div className="h-full bg-[#f3f7fb] px-2 pt-5 text-[8px] text-[#1f3b6d]">
-        <p className="font-semibold">{t(locale, "dashboard_preview_track")}</p>
-        <p className="mt-1 font-bold text-[#0b3d8c]">RF2026-4587</p>
-        <p className="mt-0.5 text-[7px] text-emerald-600">
-          {t(locale, "dashboard_preview_in_delivery")}
-        </p>
-        <div className="mt-2 space-y-1.5">
-          {(
-            [
-              "dash_preview_step_shipped",
-              "dash_preview_step_transit",
-              "dash_preview_step_delivery",
-            ] as const
-          ).map((key) => (
-            <div
-              key={key}
-              className="rounded-md bg-white px-1.5 py-1 shadow-sm"
-            >
-              <p className="text-[7px] font-semibold leading-tight">
-                {t(locale, key)}
-              </p>
-              <div className="mt-1 h-1 w-full rounded bg-slate-200" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </PhoneShell>
-  );
-}
-
-function PreviewPhoneHome({ tagline }: { tagline: string }) {
-  const lines = tagline.split(". ").map((part) => part.replace(/\.$/, ""));
-  return (
-    <PhoneShell className="-mt-4 h-[230px] w-[118px] sm:h-[250px] sm:w-[128px]">
-      <div className="flex h-full flex-col bg-gradient-to-b from-[#0b4db8] to-[#0b3d8c] px-3 pt-8 text-center text-white">
-        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-white">
-          <Image
-            src="/logo-rfacto.webp"
-            alt=""
-            width={32}
-            height={32}
-            className="h-7 w-7 object-contain"
-          />
-        </div>
-        <p className="mt-2 text-base font-bold">Rfacto</p>
-        <p className="mt-1 text-[10px] leading-tight text-white/90">
-          {lines.map((line) => (
-            <span key={line} className="block">
-              {line}.
-            </span>
-          ))}
-        </p>
-        <div className="mt-auto grid grid-cols-2 gap-1 pb-3 text-[7px]">
-          <div className="rounded bg-white/15 py-1">Colis</div>
-          <div className="rounded bg-white/15 py-1">Services</div>
-          <div className="rounded bg-white/15 py-1">Boutiques</div>
-          <div className="rounded bg-white/15 py-1">Réseau</div>
-        </div>
-      </div>
-    </PhoneShell>
-  );
-}
-
-function PreviewPhoneServices({ locale }: { locale: Locale }) {
-  return (
-    <PhoneShell className="h-[210px] w-[108px] bg-white sm:h-[230px] sm:w-[118px]">
-      <div className="h-full bg-white px-2 pt-5 text-[8px]">
-        <p className="font-semibold text-[#0b3d8c]">
-          {t(locale, "nav_services")}
-        </p>
-        <div className="mt-2 space-y-1.5">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="flex items-center gap-1.5 rounded-md bg-[#f3f7fb] px-1.5 py-1"
-            >
-              <Package className="h-3 w-3 text-[#0b3d8c]" />
-              <div className="flex-1">
-                <div className="h-1.5 w-12 rounded bg-[#0b3d8c]/40" />
-                <div className="mt-1 h-1 w-8 rounded bg-slate-200" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </PhoneShell>
-  );
-}
-
-function PreviewPhoneShops({ locale }: { locale: Locale }) {
-  return (
-    <PhoneShell className="hidden h-[210px] w-[108px] bg-white sm:block sm:h-[230px] sm:w-[118px]">
-      <div className="h-full bg-white px-2 pt-5 text-[8px]">
-        <p className="font-semibold text-[#0b3d8c]">
-          {t(locale, "shops_title")}
-        </p>
-        <div className="mt-2 grid grid-cols-2 gap-1.5">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="aspect-square rounded-md bg-gradient-to-br from-slate-100 to-slate-200"
-            />
-          ))}
-        </div>
       </div>
     </PhoneShell>
   );
@@ -266,7 +150,7 @@ export function DashboardAppTest({ locale, iosUrl, androidUrl }: Props) {
         </a>
       </div>
 
-      <div className="overflow-hidden rounded-3xl border border-[#d6e4f5] bg-white px-6 py-8 shadow-sm sm:px-8">
+      <div className="overflow-hidden rounded-3xl border border-[#d6e4f5] bg-white px-5 py-8 shadow-sm sm:px-8">
         <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div>
             <div className="flex items-center gap-2 text-[#0b3d8c]">
@@ -287,12 +171,7 @@ export function DashboardAppTest({ locale, iosUrl, androidUrl }: Props) {
               ))}
             </ul>
           </div>
-          <div className="flex items-end justify-center gap-2 sm:gap-3">
-            <PreviewPhoneTrack locale={locale} />
-            <PreviewPhoneHome tagline={tagline} />
-            <PreviewPhoneServices locale={locale} />
-            <PreviewPhoneShops locale={locale} />
-          </div>
+          <DashboardPreviewPhones locale={locale} tagline={tagline} />
         </div>
         <p className="mt-8 text-center text-xs text-[#6b7280]">
           Rfacto — {t(locale, "app_tagline")}

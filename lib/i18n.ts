@@ -517,6 +517,7 @@ const dict = {
     dashboard_preview_title: "Aperçu de l’application",
     dashboard_preview_lead:
       "Voici un exemple de l’interface que vous allez découvrir sur votre téléphone.",
+    dashboard_preview_swipe: "Glissez pour voir les écrans",
     dashboard_preview_b1: "Interface moderne et intuitive",
     dashboard_preview_b2: "Accès rapide à tous les services",
     dashboard_preview_b3: "Suivi en temps réel de vos colis et commandes",
@@ -2279,6 +2280,7 @@ const dict = {
     dashboard_preview_title: "App preview",
     dashboard_preview_lead:
       "Here is an example of the interface you will see on your phone.",
+    dashboard_preview_swipe: "Swipe to browse the screens",
     dashboard_preview_b1: "Modern and intuitive interface",
     dashboard_preview_b2: "Quick access to every service",
     dashboard_preview_b3: "Real-time tracking of parcels and orders",
