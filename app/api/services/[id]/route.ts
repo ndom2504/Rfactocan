@@ -83,12 +83,11 @@ export async function GET(_request: Request, ctx: Ctx) {
     }
   }
 
-  const listingJson = serialize(listing);
   return NextResponse.json({
     listing: {
-      ...listingJson,
+      ...serialize(listing),
       user: {
-        ...listingJson.user,
+        ...listing.user,
         identityVerified: identityDocumentsAccepted(listing.user),
       },
     },
