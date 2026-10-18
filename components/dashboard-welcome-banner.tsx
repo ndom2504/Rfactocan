@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, CheckCircle2, Plane, Users } from "lucide-react";
+import { ProfileMenu } from "@/components/profile-menu";
 import { useI18n } from "@/components/locale-provider";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 
 export function DashboardWelcomeBanner({
   displayName,
+  avatarUrl,
   bannerUrl,
   kycVerified,
 }: Props) {
@@ -50,8 +52,16 @@ export function DashboardWelcomeBanner({
         />
       )}
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 pb-10 pt-10 text-center sm:pt-12">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[#0b3d8c] sm:text-4xl">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 pb-10 pt-8 text-center sm:pt-10">
+        <div className="flex justify-center" data-tour="profile-menu">
+          <ProfileMenu
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            size="lg"
+            showName={false}
+          />
+        </div>
+        <h1 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[#0b3d8c] sm:text-4xl">
           {t("hello")}, {displayName}
         </h1>
         {kycVerified ? (
