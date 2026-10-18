@@ -1,14 +1,6 @@
-"use client";
-
 import Image from "next/image";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import { ChevronsLeftRight, Package } from "lucide-react";
+import type { ReactNode } from "react";
+import { Package } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 
@@ -140,145 +132,11 @@ type Props = {
 };
 
 export function DashboardPreviewPhones({ locale, tagline }: Props) {
-  const slides = [
-    {
-      key: "track",
-      node: <PreviewPhoneTrack locale={locale} />,
-    },
-    {
-      key: "home",
-      node: <PreviewPhoneHome tagline={tagline} />,
-    },
-    {
-      key: "services",
-      node: <PreviewPhoneServices locale={locale} />,
-    },
-    {
-      key: "shops",
-      node: <PreviewPhoneShops locale={locale} />,
-    },
-  ];
-
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const indexRef = useRef(0);
-  const pausedUntilRef = useRef(0);
-  const [index, setIndex] = useState(0);
-
-  const goTo = useCallback((next: number) => {
-    const clamped = (next + slides.length) % slides.length;
-    const item = itemRefs.current[clamped];
-    const scroller = scrollerRef.current;
-    indexRef.current = clamped;
-    setIndex(clamped);
-    if (!item || !scroller) return;
-    const left = item.offsetLeft - (scroller.clientWidth - item.offsetWidth) / 2;
-    scroller.scrollTo({ left, behavior: "smooth" });
-  }, [slides.length]);
-
-  const pauseAuto = useCallback(() => {
-    pausedUntilRef.current = Date.now() + 6000;
-  }, []);
-
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    const onScroll = () => {
-      const mid = el.scrollLeft + el.clientWidth / 2;
-      let closest = 0;
-      let best = Number.POSITIVE_INFINITY;
-      itemRefs.current.forEach((item, i) => {
-        if (!item) return;
-        const center = item.offsetLeft + item.offsetWidth / 2;
-        const dist = Math.abs(center - mid);
-        if (dist < best) {
-          best = dist;
-          closest = i;
-        }
-      });
-      if (closest !== indexRef.current) {
-        indexRef.current = closest;
-        setIndex(closest);
-      }
-    };
-
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      if (Date.now() < pausedUntilRef.current) return;
-      if (window.matchMedia("(min-width: 1024px)").matches) return;
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      goTo(indexRef.current + 1);
-    }, 3200);
-    return () => window.clearInterval(id);
-  }, [goTo]);
-
   return (
     <>
-      <div className="lg:hidden">
-        <p className="mb-3 flex items-center justify-center gap-1.5 text-xs text-[#6b7280]">
-          <ChevronsLeftRight className="h-3.5 w-3.5" aria-hidden />
-          {t(locale, "dashboard_preview_swipe")}
-        </p>
-        <div className="relative">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-white to-transparent"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white to-transparent"
-          />
-          <div
-            ref={scrollerRef}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden scroll-smooth px-[calc(50%-80px)] pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{
-              scrollSnapType: "x mandatory",
-              WebkitOverflowScrolling: "touch",
-            }}
-            role="region"
-            aria-roledescription="carousel"
-            aria-label={t(locale, "dashboard_preview_title")}
-            onPointerDown={pauseAuto}
-            onTouchStart={pauseAuto}
-            onWheel={pauseAuto}
-          >
-            {slides.map((slide, i) => (
-              <div
-                key={slide.key}
-                ref={(node) => {
-                  itemRefs.current[i] = node;
-                }}
-                data-preview-index={i}
-                className="h-[300px] w-[160px] shrink-0 snap-center"
-                style={{ scrollSnapAlign: "center" }}
-                aria-hidden={i !== index}
-              >
-                {slide.node}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-1 flex justify-center gap-2">
-          {slides.map((slide, i) => (
-            <button
-              key={slide.key}
-              type="button"
-              aria-label={`${t(locale, "dashboard_preview_title")} ${i + 1}`}
-              aria-current={i === index}
-              onClick={() => {
-                pauseAuto();
-                goTo(i);
-              }}
-              className={`h-2 rounded-full transition-all ${
-                i === index ? "w-6 bg-[#0b3d8c]" : "w-2 bg-[#0b3d8c]/25"
-              }`}
-            />
-          ))}
+      <div className="flex justify-center lg:hidden">
+        <div className="h-[300px] w-[160px]">
+          <PreviewPhoneHome tagline={tagline} />
         </div>
       </div>
 
