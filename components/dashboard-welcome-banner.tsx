@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import { ProfileMenu } from "@/components/profile-menu";
+import { Building2, CheckCircle2, Plane, Users } from "lucide-react";
 import { useI18n } from "@/components/locale-provider";
-import { RFACTO_SLIDES, rfactoSlideSrc } from "@/lib/rfacto-slides";
 
 type Props = {
   displayName: string;
@@ -14,68 +12,71 @@ type Props = {
 
 export function DashboardWelcomeBanner({
   displayName,
-  avatarUrl,
   bannerUrl,
   kycVerified,
 }: Props) {
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
   const customBanner = Boolean(bannerUrl);
+
+  const actors = [
+    { icon: Plane, label: t("dashboard_actor_traveler") },
+    { icon: Building2, label: t("dashboard_actor_commercial") },
+    { icon: Users, label: t("dashboard_actor_client") },
+  ];
 
   return (
     <section
       data-tour="welcome"
-      className="relative z-20 w-full border-b border-[var(--border)] bg-[var(--surface)]"
+      className="relative overflow-hidden border-b border-[var(--border)] bg-gradient-to-b from-[#e8f3fb] via-white to-white"
     >
-      <div className="relative overflow-hidden bg-[var(--rfacto-green-dark)]">
-        {customBanner ? (
-          <div className="relative h-40 w-full sm:h-48 md:h-[min(42vw,420px)] lg:h-[min(38vw,480px)]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- user uploads /api/media URLs */}
-            <img
-              src={bannerUrl!}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover object-center"
-            />
-          </div>
-        ) : (
-          <Image
-            key={locale}
-            src={rfactoSlideSrc(RFACTO_SLIDES[0]!, locale)}
-            alt={t("home_slide_communaute_alt")}
-            width={1024}
-            height={576}
-            priority
-            sizes="100vw"
-            className="h-auto w-full"
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#d62828] via-[var(--rfacto-green)] to-[#0b5cab]"
+        aria-hidden
+      />
+      {customBanner ? (
+        <div className="relative h-24 w-full overflow-hidden sm:h-32">
+          {/* eslint-disable-next-line @next/next/no-img-element -- user uploads /api/media URLs */}
+          <img
+            src={bannerUrl!}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-70"
           />
-        )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--surface)] to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--rfacto-gold)] to-transparent opacity-90" />
-      </div>
-
-      <div className="relative z-30 mx-auto flex max-w-6xl flex-col items-center px-6 pb-6 pt-0 text-center">
-        <div className="relative z-30 -mt-14 sm:-mt-16" data-tour="profile-menu">
-          <ProfileMenu
-            displayName={displayName}
-            avatarUrl={avatarUrl}
-            size="lg"
-            showName={false}
-          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" />
         </div>
+      ) : (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_80%_0%,rgba(11,92,171,0.18),transparent_55%),radial-gradient(ellipse_at_10%_20%,rgba(40,84,29,0.08),transparent_45%)]"
+          aria-hidden
+        />
+      )}
 
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 pb-10 pt-10 text-center sm:pt-12">
+        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[#0b3d8c] sm:text-4xl">
           {t("hello")}, {displayName}
         </h1>
         {kycVerified ? (
-          <p className="mt-1 text-xs font-medium text-[var(--muted)]">
+          <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--rfacto-green)]">
+            <CheckCircle2 className="h-4 w-4" aria-hidden />
             {t("verified")}
           </p>
         ) : null}
-        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--muted)] sm:text-base">
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-[#4b5568] sm:text-base">
           {t("dashboard_subtitle")}
         </p>
-        <p className="mx-auto mt-1 max-w-xl text-xs text-[var(--muted)] sm:text-sm">
-          {t("dashboard_actors_hint")}
-        </p>
+
+        <div className="mx-auto mt-6 flex max-w-3xl flex-col items-center justify-center gap-3 text-sm text-[#1f3b6d] sm:flex-row sm:gap-8">
+          {actors.map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="inline-flex items-center gap-2 font-medium"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0b3d8c]/8 text-[#0b3d8c]">
+                <Icon className="h-4 w-4" aria-hidden />
+              </span>
+              {label}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -8,6 +8,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { DashboardWelcomeBanner } from "@/components/dashboard-welcome-banner";
+import { DashboardAppTest } from "@/components/dashboard-app-test";
 import { getAmbassadorKpis } from "@/lib/ambassador-stats";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
@@ -63,6 +64,12 @@ export default async function DashboardPage() {
       />
 
       <div className="mx-auto max-w-6xl space-y-8 px-6 py-8">
+      <DashboardAppTest
+        locale={locale}
+        iosUrl={iosTesterUrl()}
+        androidUrl={androidTesterUrl()}
+      />
+
       {showAmbassadorEarn && user.agentCode ? (
         <AmbassadorEarnPanel
           agentCode={user.agentCode}
@@ -81,32 +88,6 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : null}
-
-      <div className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3">
-        <p className="text-center text-sm font-semibold text-[var(--foreground)]">
-          {t(locale, "tester_apps_title")}
-        </p>
-        <a
-          href={iosTesterUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full"
-        >
-          <Button className="h-12 w-full text-base">
-            {t(locale, "tester_ios_cta")}
-          </Button>
-        </a>
-        <a
-          href={androidTesterUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full"
-        >
-          <Button variant="outline" className="h-12 w-full text-base">
-            {t(locale, "tester_android_cta")}
-          </Button>
-        </a>
-      </div>
 
       <div
         className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3"
