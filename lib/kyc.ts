@@ -2,6 +2,31 @@ import { getAppUrl } from "@/lib/app-url";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
+/** Keep Stripe KYC and admin/manual ID approval on the same trusted flag. */
+export async function healVerifiedIdentity(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      kycStatus: true,
+      manualIdDocStatus: true,
+      kycVerifiedAt: true,
+      verifiedAt: true,
+    },
+  });
+  if (!user) return null;
+  if (user.manualIdDocStatus !== "APPROVED" || user.kycStatus === "VERIFIED") {
+    return user;
+  }
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      kycStatus: "VERIFIED",
+      kycVerifiedAt: user.kycVerifiedAt ?? new Date(),
+      verifiedAt: user.verifiedAt ?? new Date(),
+    },
+  });
+}
+
 const KYC_ERROR_HINTS: Record<string, string> = {
   device_not_supported:
     "Caméra inaccessible ou permission refusée. Autorisez la caméra pour verify.stripe.com dans Chrome (Paramètres → Confidentialité → Caméra), ou utilisez Edge / votre téléphone.",

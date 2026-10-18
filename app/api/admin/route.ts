@@ -4,8 +4,9 @@ import {
   generateAgentCode,
   inviteUrlForCode,
 } from "@/lib/ambassador";
+import { restoreUserPassword } from "@/lib/admin-password";
 import { getSessionUser } from "@/lib/auth";
-import { emailAmbassadorInvite } from "@/lib/email";
+import { emailAdminPasswordRestored, emailAmbassadorInvite, isEmailConfigured } from "@/lib/email";
 import { expireBookingPayment, deletePendingBookingOffer } from "@/lib/payments/expiry";
 import { prisma } from "@/lib/prisma";
 
@@ -569,6 +570,7 @@ const userPatchSchema = z.object({
     "payout_herald_commissions",
     "complete_wallet_withdrawal",
     "unlink_in",
+    "reset_password",
   ]),
   userId: z.string().optional(),
   withdrawalId: z.string().optional(),
@@ -861,6 +863,56 @@ export async function PATCH(request: Request) {
         },
       });
       return NextResponse.json({ user, unlinked: true });
+    }
+
+    if (body.action === "reset_password") {
+      const target = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          role: true,
+          status: true,
+        },
+      });
+      if (!target) {
+        return NextResponse.json(
+          { error: "Utilisateur introuvable" },
+          { status: 404 }
+        );
+      }
+      if (target.role === "ADMIN" && target.id !== session.id) {
+        return NextResponse.json(
+          { error: "Impossible de restaurer le mot de passe d'un autre admin." },
+          { status: 403 }
+        );
+      }
+      if (target.status === "SUSPENDED") {
+        return NextResponse.json(
+          { error: "Réactivez le compte avant de restaurer le mot de passe." },
+          { status: 400 }
+        );
+      }
+
+      const temporaryPassword = await restoreUserPassword(target.id);
+      let emailed = false;
+      if (isEmailConfigured()) {
+        const result = await emailAdminPasswordRestored({
+          email: target.email,
+          displayName: target.displayName,
+          temporaryPassword,
+        });
+        emailed = Boolean(result.ok);
+      }
+
+      return NextResponse.json({
+        ok: true,
+        temporaryPassword,
+        emailed,
+        email: target.email,
+        displayName: target.displayName,
+      });
     }
 
     if (body.action === "reject_manual_id") {

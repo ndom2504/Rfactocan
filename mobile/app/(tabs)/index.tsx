@@ -117,7 +117,7 @@ export default function HomeScreen() {
         >
           {t("hello")}, {user?.displayName ?? ""}
         </Text>
-        {user?.kycStatus === "VERIFIED" ? (
+        {user?.identityVerified || user?.kycStatus === "VERIFIED" ? (
           <Text style={{ marginTop: 4, color: colors.muted, fontWeight: "600" }}>
             {t("verified")}
           </Text>

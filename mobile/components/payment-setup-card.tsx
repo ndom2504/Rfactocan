@@ -28,6 +28,7 @@ export type ProfileUser = {
   preferredCurrency?: string;
   kycStatus?: string | null;
   kycRequired?: boolean;
+  identityVerified?: boolean;
   manualIdDocStatus?: string | null;
   manualIdDocNote?: string | null;
   stripeConnectChargesEnabled?: boolean;
@@ -59,7 +60,11 @@ function kycRequiredFor(user: ProfileUser) {
 }
 
 export function userPassesKyc(user: ProfileUser) {
-  if (user.kycStatus === "VERIFIED" || user.manualIdDocStatus === "APPROVED") {
+  if (
+    user.identityVerified === true ||
+    user.kycStatus === "VERIFIED" ||
+    user.manualIdDocStatus === "APPROVED"
+  ) {
     return true;
   }
   return !kycRequiredFor(user);

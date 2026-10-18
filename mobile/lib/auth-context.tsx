@@ -23,6 +23,9 @@ export type AuthUser = {
   bannerUrl?: string | null;
   kycStatus?: string;
   kycRequired?: boolean;
+  country?: string | null;
+  manualIdDocStatus?: string | null;
+  identityVerified?: boolean;
   ratingAvg?: number;
   ratingCount?: number;
   isAmbassador?: boolean;

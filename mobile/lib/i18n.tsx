@@ -44,6 +44,29 @@ const FR = {
   services_title: "Colis & services",
   services_subtitle:
     "Parcourez les catégories ou publiez une offre : formation, sport, vente, informatique, hébergement…",
+  trips_title: "Voyager",
+  trips_subtitle:
+    "Voyageurs et transporteurs (avion, mer, rail, route) sur tous les corridors.",
+  requests_title: "Commander",
+  requests_subtitle: "Besoins publiés : colis, services et produits.",
+  shops_title: "Boutiques",
+  shops_subtitle:
+    "Achetez auprès de fournisseurs du réseau Rfacto — ou créez votre boutique virtuelle.",
+  search_travelers: "Trouver un livreur",
+  search_travelers_hint:
+    "Filtrez par nom, pays, ville ou région (départ ou arrivée).",
+  search_requests: "Trouver une commande",
+  search_requests_hint:
+    "Filtrez par nom, pays, ville ou région (départ ou arrivée).",
+  search_services: "Trouver un service",
+  search_services_hint:
+    "Filtrez les offres commerciales par mot-clé, pays ou ville.",
+  search_shops: "Trouver une boutique",
+  search_shops_hint:
+    "Recherchez par nom, produit, catégorie, ville ou vendeur.",
+  search_shops_placeholder: "Nom, produit, vendeur…",
+  shops_found: "boutique(s) trouvée(s)",
+  no_shops_found: "Aucune boutique trouvée",
   announce_mode_event: "Événement",
   announce_mode_trip: "Voyage",
   announce_mode_service: "Service",
@@ -638,6 +661,14 @@ const FR = {
   admin_reject_id: "Refuser la pièce",
   admin_suspend: "Suspendre",
   admin_activate: "Réactiver",
+  admin_reset_password: "Restaurer mot de passe",
+  admin_reset_password_confirm:
+    "Générer un mot de passe temporaire ? L’ancien ne fonctionnera plus. Un e-mail sera envoyé si possible.",
+  admin_reset_password_ok:
+    "Mot de passe temporaire : {password}\n\nCompte : {email}\n{emailNote}",
+  admin_reset_password_emailed: "Un e-mail a aussi été envoyé.",
+  admin_reset_password_no_email:
+    "E-mail non envoyé — communiquez ce mot de passe au membre.",
   admin_open_booking: "Ouvrir la réservation",
   admin_herald_badge: "Héraut",
   admin_wd_sent: "Marquer envoyé",
@@ -724,6 +755,13 @@ const EN: Record<keyof typeof FR, string> = {
   services_title: "Parcels & services",
   services_subtitle:
     "Browse categories or publish an offer: training, sport, sales, IT, lodging…",
+  trips_title: "Travel",
+  trips_subtitle: "Travelers and carriers (air, sea, rail, road) on all corridors.",
+  requests_title: "Order",
+  requests_subtitle: "Published needs: parcels, services and products.",
+  shops_title: "Shops",
+  shops_subtitle:
+    "Buy from suppliers in the Rfacto network — or create your virtual shop.",
   announce_mode_event: "Event",
   announce_mode_trip: "Trip",
   announce_mode_service: "Service",
@@ -1313,6 +1351,14 @@ const EN: Record<keyof typeof FR, string> = {
   admin_reject_id: "Reject document",
   admin_suspend: "Suspend",
   admin_activate: "Reactivate",
+  admin_reset_password: "Restore password",
+  admin_reset_password_confirm:
+    "Generate a temporary password? The old one will stop working. An email will be sent if possible.",
+  admin_reset_password_ok:
+    "Temporary password: {password}\n\nAccount: {email}\n{emailNote}",
+  admin_reset_password_emailed: "An email was also sent.",
+  admin_reset_password_no_email:
+    "Email not sent — give this password to the member.",
   admin_open_booking: "Open booking",
   admin_herald_badge: "Herald",
   admin_wd_sent: "Mark sent",
@@ -1359,13 +1405,28 @@ const EN: Record<keyof typeof FR, string> = {
   to_city: "Destination city",
   region: "Region",
   all_f: "All",
-  geo_pick_country: "Search a country…",
+  geo_pick_country: "Search for a country…",
   geo_pick_city: "City or airport",
   geo_search_placeholder: "Filter…",
   geo_no_country: "No country found",
-  geo_no_city: "No city in the list — type to enter one.",
-  geo_use_typed: "Use “{value}”",
-};
+  geo_no_city: "No city in list — type to enter one.",
+  geo_use_typed: "Use « {value} »",
+  search_travelers: "Find a carrier",
+  search_travelers_hint:
+    "Filter by name, country, city or region (origin or destination).",
+  search_requests: "Find an order",
+  search_requests_hint:
+    "Filter by name, country, city or region (origin or destination).",
+  search_services: "Find a service",
+  search_services_hint:
+    "Filter commercial offers by keyword, country or city.",
+  search_shops: "Find a shop",
+  search_shops_hint:
+    "Search by name, product, category, city or seller.",
+  search_shops_placeholder: "Name, product, seller…",
+  shops_found: "shop(s) found",
+  no_shops_found: "No shops found",
+} as const;
 
 export type DictKey = keyof typeof FR;
 

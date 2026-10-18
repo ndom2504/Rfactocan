@@ -13,6 +13,7 @@ import { Button, ErrorText, Muted, Screen, Title } from "@/components/ui";
 import { api, mediaUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { startDirectChat } from "@/lib/dm";
+import { userSatisfiesKyc } from "@/lib/kyc";
 import { formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { PRICE_UNITS, catalogLabel } from "@/lib/services-catalog";
@@ -39,6 +40,8 @@ type Listing = {
     ratingAvg?: number;
     ratingCount?: number;
     kycStatus?: string | null;
+    manualIdDocStatus?: string | null;
+    identityVerified?: boolean | null;
     avatarUrl?: string | null;
     country?: string | null;
   };
@@ -47,7 +50,7 @@ type Listing = {
 export default function ServiceListingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { t, locale } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const [listing, setListing] = useState<Listing | null>(null);
@@ -70,8 +73,22 @@ export default function ServiceListingScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load])
+      let cancelled = false;
+      void (async () => {
+        try {
+          await api("/api/kyc");
+        } catch {
+          /* Stripe sync is best-effort */
+        }
+        if (cancelled) return;
+        await refresh();
+        if (cancelled) return;
+        await load();
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [load, refresh])
   );
 
   async function contact() {
@@ -118,11 +135,8 @@ export default function ServiceListingScreen() {
   }
 
   const isOwner = Boolean(user?.id) && user?.id === listing.userId;
-  const meVerified = user?.kycStatus === "VERIFIED" || user?.kycRequired === false;
-  const peerVerified =
-    listing.user?.kycStatus === "VERIFIED" ||
-    listing.country === "GA" ||
-    listing.user?.country === "GA";
+  const meVerified = user ? userSatisfiesKyc(user, listing.country) : false;
+  const peerVerified = userSatisfiesKyc(listing.user, listing.country);
   const canContact = !isOwner && Boolean(user?.id) && meVerified && peerVerified;
   const unit = PRICE_UNITS.find((u) => u.id === listing.priceUnit);
   const photos = listing.photos ?? [];
@@ -227,11 +241,19 @@ export default function ServiceListingScreen() {
             />
           ) : (
             <>
-              <Button
-                label={t("verify_identity")}
-                variant="outline"
-                onPress={() => router.push("/(tabs)/settings")}
-              />
+              {user?.id && !meVerified ? (
+                <Button
+                  label={t("verify_identity")}
+                  variant="outline"
+                  onPress={() => router.push("/(tabs)/settings")}
+                />
+              ) : (
+                <Button
+                  label={t("services_contact")}
+                  disabled
+                  onPress={() => undefined}
+                />
+              )}
               <Muted>
                 {user?.id && !meVerified
                   ? t("services_verify_to_contact")

@@ -7,6 +7,7 @@ import {
   getSessionUser,
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { healVerifiedIdentity } from "@/lib/kyc";
 
 const mediaUrl = z
   .string()
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
       { status: 401, headers: AUTH_API_HEADERS }
     );
   }
+  await healVerifiedIdentity(session.id);
   const user = await prisma.user.findUnique({
     where: { id: session.id },
     include: {

@@ -15,6 +15,7 @@ import {
   serviceTypeLabel,
 } from "@/lib/services-catalog";
 import { displayWebsiteHost } from "@/lib/service-website";
+import { identityDocumentsAccepted, userSatisfiesKyc } from "@/lib/kyc-policy";
 
 type Listing = {
   id: string;
@@ -41,6 +42,8 @@ type Listing = {
     verifiedAt: string | null;
     country?: string | null;
     kycStatus?: string;
+    manualIdDocStatus?: string;
+    identityVerified?: boolean;
     avatarUrl?: string | null;
   };
 };
@@ -53,8 +56,13 @@ export default function ServiceListingDetailPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [meId, setMeId] = useState("");
-  const [meKyc, setMeKyc] = useState("");
-  const [meKycRequired, setMeKycRequired] = useState(true);
+  const [meIdentity, setMeIdentity] = useState<{
+    kycStatus?: string | null;
+    manualIdDocStatus?: string | null;
+    country?: string | null;
+    kycRequired?: boolean | null;
+    identityVerified?: boolean | null;
+  }>({});
 
   useEffect(() => {
     fetch(`/api/services/${id}`)
@@ -69,8 +77,13 @@ export default function ServiceListingDetailPage() {
         if (!res.ok) return;
         const data = await res.json();
         setMeId(data.user?.id ?? "");
-        setMeKyc(data.user?.kycStatus ?? "");
-        setMeKycRequired(data.user?.kycRequired !== false);
+        setMeIdentity({
+          kycStatus: data.user?.kycStatus,
+          manualIdDocStatus: data.user?.manualIdDocStatus,
+          country: data.user?.country,
+          kycRequired: data.user?.kycRequired,
+          identityVerified: data.user?.identityVerified,
+        });
       })
       .catch(() => {});
   }, [id]);
@@ -124,11 +137,8 @@ export default function ServiceListingDetailPage() {
 
   const category = listing.category;
   const isOwner = Boolean(meId) && meId === listing.userId;
-  const meVerified = meKyc === "VERIFIED" || !meKycRequired;
-  const peerVerified =
-    listing.user.kycStatus === "VERIFIED" ||
-    listing.country === "GA" ||
-    listing.user.country === "GA";
+  const meVerified = userSatisfiesKyc(meIdentity, listing.country);
+  const peerVerified = userSatisfiesKyc(listing.user, listing.country);
   const canContact =
     !isOwner && Boolean(meId) && meVerified && peerVerified;
 
@@ -264,7 +274,7 @@ export default function ServiceListingDetailPage() {
             {listing.user.ratingCount
               ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
               : t("services_no_rating")}
-            {listing.user.kycStatus === "VERIFIED"
+            {identityDocumentsAccepted(listing.user)
               ? ` · ${t("verified")}`
               : ""}
           </p>

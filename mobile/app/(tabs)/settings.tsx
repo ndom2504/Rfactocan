@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Linking,
@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { type Href, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { Chip, ChipRow } from "@/components/chip";
 import {
   PaymentSetupCard,
@@ -61,10 +61,19 @@ export default function SettingsScreen() {
     }
   }
 
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      void (async () => {
+        try {
+          await api("/api/kyc");
+        } catch {
+          /* Stripe sync is best-effort */
+        }
+        await refresh();
+        await load();
+      })();
+    }, [refresh])
+  );
 
   async function patchAccount(partial: Record<string, unknown>) {
     const data = await api<{ user: ProfileUser }>("/api/profile", {
@@ -180,7 +189,10 @@ export default function SettingsScreen() {
         {profile ? (
           <PaymentSetupCard
             user={{ ...profile }}
-            onUserUpdated={(next) => setProfile(next)}
+            onUserUpdated={(next) => {
+              setProfile(next);
+              void refresh();
+            }}
           />
         ) : null}
 

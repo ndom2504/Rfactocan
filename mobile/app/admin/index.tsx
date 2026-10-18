@@ -122,7 +122,8 @@ type UserAction =
   | "mark_kyc_verified"
   | "reject_manual_id"
   | "promote_ambassador"
-  | "reject_ambassador_request";
+  | "reject_ambassador_request"
+  | "reset_password";
 
 const DISPUTE_REASON: Record<string, DictKey> = {
   DAMAGE: "dispute_reason_damage",
@@ -252,11 +253,35 @@ export default function AdminScreen() {
     setBusy(`${action}:${userId}`);
     setError("");
     try {
-      await api("/api/admin", {
+      const json = await api<{
+        temporaryPassword?: string;
+        emailed?: boolean;
+        email?: string;
+      }>("/api/admin", {
         method: "PATCH",
         body: JSON.stringify({ action, userId }),
       });
       await load(query);
+      if (action === "reset_password" && json.temporaryPassword) {
+        const message = t("admin_reset_password_ok")
+          .replace("{password}", json.temporaryPassword)
+          .replace("{email}", json.email ?? "")
+          .replace(
+            "{emailNote}",
+            json.emailed
+              ? t("admin_reset_password_emailed")
+              : t("admin_reset_password_no_email")
+          );
+        Alert.alert(t("admin_reset_password"), message, [
+          { text: t("close") },
+          {
+            text: t("community_share"),
+            onPress: () => {
+              void Share.share({ message: json.temporaryPassword! });
+            },
+          },
+        ]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : t("retry"));
     } finally {
@@ -878,6 +903,19 @@ export default function AdminScreen() {
                   disabled={busy !== null}
                   onPress={() =>
                     confirmUser(row.id, "mark_kyc_verified", t("admin_approve_kyc"))
+                  }
+                />
+              ) : null}
+              {row.role !== "ADMIN" && row.status !== "SUSPENDED" ? (
+                <ActionBtn
+                  label={t("admin_reset_password")}
+                  disabled={busy !== null}
+                  onPress={() =>
+                    confirmUser(
+                      row.id,
+                      "reset_password",
+                      t("admin_reset_password_confirm")
+                    )
                   }
                 />
               ) : null}

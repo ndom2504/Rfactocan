@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import {
   createIdentitySession,
+  healVerifiedIdentity,
   refreshUserKycFromStripe,
 } from "@/lib/kyc";
+import { identityDocumentsAccepted, userSatisfiesKyc } from "@/lib/kyc-policy";
 import { isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
@@ -26,10 +28,11 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
-  if (user.kycStatus === "VERIFIED") {
+  if (userSatisfiesKyc(user)) {
+    await healVerifiedIdentity(user.id);
     return NextResponse.json({
       alreadyVerified: true,
-      kycStatus: user.kycStatus,
+      kycStatus: "VERIFIED",
     });
   }
 
@@ -65,19 +68,24 @@ export async function GET() {
     console.error("KYC refresh error:", error);
   }
 
+  await healVerifiedIdentity(session.id);
+
   const user = await prisma.user.findUnique({
     where: { id: session.id },
     select: {
       kycStatus: true,
       kycVerifiedAt: true,
       verifiedAt: true,
+      manualIdDocStatus: true,
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
       stripeConnectPayoutsEnabled: true,
     },
   });
   return NextResponse.json({
-    user,
+    user: user
+      ? { ...user, identityVerified: identityDocumentsAccepted(user) }
+      : user,
     kycHint: stripeSync?.hint ?? null,
     kycLastErrorCode: stripeSync?.lastErrorCode ?? null,
   });

@@ -1,5 +1,35 @@
 # Notes de version
 
+## 1.0.0 (8) — 2026-10-17
+
+### iOS / TestFlight
+- `version` **1.0.0** · build **8** (après 1.0.0 (7) du 6 oct. 2026)
+- Contacter un service : l’identité validée (Stripe ou pièce manuelle) est bien reconnue
+- Plus de bouton « Vérifier mon identité » si le compte est déjà vérifié
+- Message distinct si c’est le prestataire qui n’est pas encore vérifié
+
+### TestFlight — texte à coller (What to Test)
+
+**FR**
+```
+Build 8 — contact service / identité
+
+• Contacter un service si votre identité est déjà vérifiée
+• Pièce d’identité validée reconnue comme vérification
+• Message clair si le prestataire n’est pas encore vérifié
+```
+
+**EN**
+```
+Build 8 — service contact / identity
+
+• Contact a service when your identity is already verified
+• Admin-approved ID counts as verification
+• Clear message if the provider is not verified yet
+```
+
+---
+
 ## 1.0.19 — 2026-09-24
 
 ### Android (Play — Child Safety)

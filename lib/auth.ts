@@ -2,8 +2,11 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import type { User, UserRole, UserStatus } from "@prisma/client";
-import { isKycRequiredForCountry } from "@/lib/kyc-policy";
+import type { ManualIdDocStatus, User, UserRole, UserStatus } from "@prisma/client";
+import {
+  identityDocumentsAccepted,
+  isKycRequiredForCountry,
+} from "@/lib/kyc-policy";
 
 const COOKIE_NAME = "rfacto_session";
 const SESSION_DAYS = 14;
@@ -25,6 +28,8 @@ export type SessionUser = {
   preferredCurrency: string;
   country: string | null;
   kycRequired: boolean;
+  manualIdDocStatus: ManualIdDocStatus;
+  identityVerified: boolean;
 };
 
 function getSecret() {
@@ -141,6 +146,8 @@ async function sessionUserFromToken(
       preferredCurrency: user.preferredCurrency || "CAD",
       country: user.country,
       kycRequired: isKycRequiredForCountry(user.country),
+      manualIdDocStatus: user.manualIdDocStatus,
+      identityVerified: identityDocumentsAccepted(user),
     };
   } catch {
     return null;

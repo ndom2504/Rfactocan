@@ -266,6 +266,9 @@ export default function AdminPage() {
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const [savingWhatsapp, setSavingWhatsapp] = useState(false);
   const [whatsappInfo, setWhatsappInfo] = useState<string | null>(null);
+  const [restoredPasswords, setRestoredPasswords] = useState<
+    Record<string, string>
+  >({});
 
   async function load(opts?: {
     letter?: string;
@@ -425,6 +428,22 @@ export default function AdminPage() {
     }
     if (actionName === "complete_wallet_withdrawal") {
       window.alert(`Retrait marqué : ${json.status ?? "OK"}`);
+    }
+    if (actionName === "reset_password" && json.temporaryPassword) {
+      const pwd = String(json.temporaryPassword);
+      setRestoredPasswords((prev) => ({ ...prev, [userId]: pwd }));
+      try {
+        await navigator.clipboard.writeText(pwd);
+      } catch {
+        /* ignore */
+      }
+      window.alert(
+        `Mot de passe temporaire pour ${json.displayName ?? "ce membre"} (${json.email ?? ""}) :\n\n${pwd}\n\n` +
+          (json.emailed
+            ? "Un e-mail a aussi été envoyé à l'utilisateur."
+            : "E-mail non envoyé — communiquez ce mot de passe au membre.") +
+          "\n\nCopié dans le presse-papiers si possible. Il n'est plus visible après rechargement."
+      );
     }
     await load();
   }
@@ -1499,6 +1518,12 @@ export default function AdminPage() {
                     Note utilisateur : {u.manualIdDocNote}
                   </p>
                 ) : null}
+                {restoredPasswords[u.id] ? (
+                  <p className="mt-2 rounded-md bg-[var(--surface-2)] px-2 py-1.5 font-mono text-sm">
+                    Mot de passe temporaire :{" "}
+                    <strong>{restoredPasswords[u.id]}</strong>
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 {hasViewableManualId(u) && (
@@ -1617,6 +1642,24 @@ export default function AdminPage() {
                     }}
                   >
                     Retirer In
+                  </Button>
+                ) : null}
+                {u.role !== "ADMIN" && u.status !== "SUSPENDED" ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (
+                        !window.confirm(
+                          `Restaurer le mot de passe de ${u.displayName} (${u.email}) ?\n\nUn mot de passe temporaire sera généré. Communiquez-le au membre (et un e-mail sera envoyé s'il est configuré). L'ancien mot de passe ne fonctionnera plus.`
+                        )
+                      ) {
+                        return;
+                      }
+                      void action(u.id, "reset_password");
+                    }}
+                  >
+                    Restaurer mot de passe
                   </Button>
                 ) : null}
                 {u.status !== "SUSPENDED" ? (

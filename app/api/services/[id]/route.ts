@@ -10,6 +10,7 @@ import {
   parseProductsJson,
 } from "@/lib/services-catalog";
 import { normalizeWebsiteUrl } from "@/lib/service-website";
+import { identityDocumentsAccepted } from "@/lib/kyc-policy";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -61,6 +62,7 @@ export async function GET(_request: Request, ctx: Ctx) {
           ratingCount: true,
           verifiedAt: true,
           kycStatus: true,
+          manualIdDocStatus: true,
           avatarUrl: true,
           country: true,
         },
@@ -81,7 +83,16 @@ export async function GET(_request: Request, ctx: Ctx) {
     }
   }
 
-  return NextResponse.json({ listing: serialize(listing) });
+  const listingJson = serialize(listing);
+  return NextResponse.json({
+    listing: {
+      ...listingJson,
+      user: {
+        ...listingJson.user,
+        identityVerified: identityDocumentsAccepted(listing.user),
+      },
+    },
+  });
 }
 
 export async function PATCH(request: Request, ctx: Ctx) {

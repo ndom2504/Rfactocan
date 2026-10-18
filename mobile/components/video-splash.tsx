@@ -118,7 +118,7 @@ function IntroPlayer({
 
 const styles = StyleSheet.create({
   hold: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "#0f6b4c",
   },
   wrap: {

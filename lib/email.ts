@@ -297,6 +297,28 @@ export async function emailDelivered(input: {
   ]);
 }
 
+export async function emailAdminPasswordRestored(input: {
+  email: string;
+  displayName: string;
+  temporaryPassword: string;
+}) {
+  const loginUrl = `${getAppUrl()}/login`;
+  return sendEmail({
+    to: input.email,
+    subject: "Votre mot de passe Rfacto a été restauré",
+    html: layout(
+      "Mot de passe restauré",
+      `<p>Bonjour ${input.displayName},</p>
+       <p>Un administrateur Rfacto a restauré l'accès à votre compte.</p>
+       <p>Mot de passe temporaire :</p>
+       <p style="font-size:18px;letter-spacing:0.04em;"><strong>${input.temporaryPassword}</strong></p>
+       <p>Connectez-vous avec votre e-mail, puis changez ce mot de passe dès que possible.</p>
+       <p><a href="${loginUrl}" style="display:inline-block;background:#28541D;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Se connecter</a></p>
+       <p style="font-size:13px;color:#5f6f68;">Si vous n'êtes pas à l'origine de cette demande, contactez contact@rfacto.com.</p>`
+    ),
+  });
+}
+
 export async function emailPasswordReset(input: {
   email: string;
   displayName: string;
