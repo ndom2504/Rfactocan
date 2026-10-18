@@ -522,39 +522,48 @@ export async function emailServicePaymentReleased(input: {
   ]);
 }
 
-/** Temporary bulk invite for Google Play closed testing. */
+/** Invite a member to test the iOS (TestFlight) and Android (Play) apps. */
+export async function emailAppTesterInvite(input: {
+  email: string;
+  displayName: string;
+  testingUrl: string;
+  storeUrl: string;
+  iosUrl: string;
+}) {
+  const name = escapeHtml(input.displayName || "membre Rfacto");
+  return sendEmail({
+    to: input.email,
+    subject: "Rfacto — devenez testeur iPhone et Android",
+    html: layout(
+      "Invitation testeur",
+      `<p>Bonjour ${name},</p>
+       <p>Bienvenue sur Rfacto. Installez l'application sur <strong>iPhone</strong> (TestFlight) et <strong>Android</strong> (Google Play) avec le même e-mail que votre compte.</p>
+       <p style="margin:20px 0 10px;">
+         <a href="${escapeHtml(input.iosUrl)}" style="display:inline-block;background:#28541D;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Tester sur iPhone (TestFlight)</a>
+       </p>
+       <p style="margin:0 0 16px;">
+         <a href="${escapeHtml(input.storeUrl)}" style="display:inline-block;background:#14201c;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Installer sur Android (Play Store)</a>
+       </p>
+       <p style="font-size:13px;color:#5f6f68;word-break:break-all;">
+         iPhone : ${escapeHtml(input.iosUrl)}<br/>
+         Android : ${escapeHtml(input.storeUrl)}
+       </p>
+       <p style="font-size:13px;color:#5f6f68;">iPhone : ouvrez le lien dans Safari, installez TestFlight si besoin, puis Rfacto. Android : installez depuis Google Play.</p>`
+    ),
+  });
+}
+
+/** @deprecated Prefer emailAppTesterInvite */
 export async function emailPlayStoreTestInvite(input: {
   email: string;
   displayName: string;
   testingUrl: string;
   storeUrl: string;
+  iosUrl?: string;
 }) {
-  const name = escapeHtml(input.displayName || "membre Rfacto");
-  return sendEmail({
-    to: input.email,
-    subject: "Rfacto — testez l'application Android (Google Play)",
-    html: layout(
-      "Invitation de test Android",
-      `<p>Bonjour ${name},</p>
-       <p>L'application mobile <strong>Rfacto</strong> est disponible en <strong>test interne</strong> sur Google Play. Votre adresse doit déjà être sur la liste des testeurs.</p>
-       <p><strong>Étapes (sur un téléphone Android) :</strong></p>
-       <ol style="padding-left:20px;margin:12px 0;">
-         <li>Ouvrez le lien d'adhésion au programme de test et acceptez.</li>
-         <li>Installez Rfacto depuis Google Play.</li>
-         <li>Connectez-vous avec le même compte e-mail que sur rfacto.com.</li>
-       </ol>
-       <p style="margin:20px 0 10px;">
-         <a href="${escapeHtml(input.testingUrl)}" style="display:inline-block;background:#28541D;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">1 — Devenir testeur</a>
-       </p>
-       <p style="margin:0 0 16px;">
-         <a href="${escapeHtml(input.storeUrl)}" style="display:inline-block;background:#14201c;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">2 — Ouvrir sur Play Store</a>
-       </p>
-       <p style="font-size:13px;color:#5f6f68;word-break:break-all;">
-         Test : ${escapeHtml(input.testingUrl)}<br/>
-         Store : ${escapeHtml(input.storeUrl)}
-       </p>
-       <p style="font-size:13px;color:#5f6f68;">Si le Play Store indique que l'app n'est pas disponible, assurez-vous d'avoir accepté le lien testeur avec le compte Google de votre téléphone.</p>`
-    ),
+  return emailAppTesterInvite({
+    ...input,
+    iosUrl: input.iosUrl || input.storeUrl,
   });
 }
 

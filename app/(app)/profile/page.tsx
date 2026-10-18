@@ -24,6 +24,7 @@ import { isPhonePlaceholderEmail } from "@/lib/phone-ga";
 import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
 import { safeNextPath } from "@/lib/app-url";
+import { androidTesterUrl, iosTesterUrl } from "@/lib/store-testing";
 import {
   apiRoleToIntent,
   intentToApiRole,
@@ -580,6 +581,32 @@ function ProfileForm() {
               }
             />
           </div>
+        </div>
+      </Card>
+
+      <Card>
+        <CardTitle>{t("tester_apps_title")}</CardTitle>
+        <CardDescription>{t("tester_apps_desc")}</CardDescription>
+        <div className="mt-4 space-y-2">
+          <a
+            href={iosTesterUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <Button className="w-full">{t("tester_ios_cta")}</Button>
+          </a>
+          <a
+            href={androidTesterUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <Button variant="outline" className="w-full">
+              {t("tester_android_cta")}
+            </Button>
+          </a>
+          <p className="text-xs text-[var(--muted)]">{t("tester_apps_hint")}</p>
         </div>
       </Card>
 

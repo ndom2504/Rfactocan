@@ -9,6 +9,7 @@ import {
 import { currencyForCountry } from "@/lib/currency";
 import { resolveCountryCode } from "@/lib/detect-country";
 import { prisma } from "@/lib/prisma";
+import { queueTesterInvite } from "@/lib/store-testing";
 
 const schema = z.object({
   email: z.string().email(),
@@ -47,6 +48,8 @@ export async function POST(request: Request) {
         ...(referredById ? { referredById } : {}),
       },
     });
+
+    queueTesterInvite(user);
 
     const token = await createSessionToken(user);
     await setSessionCookie(token);

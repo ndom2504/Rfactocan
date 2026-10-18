@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { emailPlayStoreTestInvite, isEmailConfigured } from "@/lib/email";
+import { emailAppTesterInvite, isEmailConfigured } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import {
+  PLAY_STORE_URL,
+  androidTesterUrl,
+  iosTesterUrl,
+} from "@/lib/store-testing";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
-
-const TESTING_URL = "https://play.google.com/apps/testing/com.rfacto.app";
-const STORE_URL = "https://play.google.com/store/apps/details?id=com.rfacto.app";
 
 /** Pause between sends to stay under Resend rate limits. */
 function sleep(ms: number) {
@@ -77,11 +79,12 @@ export async function POST(req: Request) {
   const errors: string[] = [];
 
   for (const recipient of recipients) {
-    const result = await emailPlayStoreTestInvite({
+    const result = await emailAppTesterInvite({
       email: recipient.email,
       displayName: recipient.displayName,
-      testingUrl: TESTING_URL,
-      storeUrl: STORE_URL,
+      testingUrl: androidTesterUrl(),
+      storeUrl: PLAY_STORE_URL,
+      iosUrl: iosTesterUrl(),
     });
 
     if (result.ok) {
@@ -107,8 +110,9 @@ export async function POST(req: Request) {
     total: recipients.length,
     sent,
     failed,
-    testingUrl: TESTING_URL,
-    storeUrl: STORE_URL,
+    testingUrl: androidTesterUrl(),
+    storeUrl: PLAY_STORE_URL,
+    iosUrl: iosTesterUrl(),
     errors: errors.length ? errors : undefined,
   });
 }

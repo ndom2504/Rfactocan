@@ -29,6 +29,7 @@ import { requestTourStart } from "@/lib/guided-tour";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
+import { IOS_TESTER_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
 const CURRENCIES = ["CAD", "USD", "EUR", "XOF", "XAF"] as const;
 
@@ -320,6 +321,28 @@ export default function SettingsScreen() {
           variant="outline"
           onPress={() => void Linking.openURL(`${site}/about`)}
         />
+
+        <Text
+          style={{
+            fontWeight: "700",
+            color: colors.foreground,
+            marginTop: 16,
+            marginBottom: 6,
+          }}
+        >
+          {t("tester_apps_title")}
+        </Text>
+        <Muted>{t("tester_apps_desc")}</Muted>
+        <Button
+          label={t("tester_ios_cta")}
+          onPress={() => void Linking.openURL(IOS_TESTER_URL)}
+        />
+        <Button
+          label={t("tester_android_cta")}
+          variant="outline"
+          onPress={() => void Linking.openURL(PLAY_STORE_URL)}
+        />
+        <Muted>{t("tester_apps_hint")}</Muted>
 
         <Text style={{ color: colors.muted, fontSize: 12, marginTop: 16 }}>
           {t("copyright_line").replace("{year}", year)}

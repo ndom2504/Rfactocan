@@ -16,6 +16,7 @@ import {
 } from "@/lib/phone-auth";
 import { APPLE_REVIEW_EMAIL, isAppleReviewPhone } from "@/lib/review-account";
 import { prisma } from "@/lib/prisma";
+import { queueTesterInvite } from "@/lib/store-testing";
 
 const schema = z.object({
   mfaToken: z.string().min(1),
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
           ...(referredById ? { referredById } : {}),
         },
       });
+      queueTesterInvite(user);
     } else if (user.status === "SUSPENDED") {
       return NextResponse.json(
         { error: "Ce compte est suspendu." },

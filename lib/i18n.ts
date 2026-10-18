@@ -1178,6 +1178,13 @@ const dict = {
       "Emploi, vente en ligne et sourcing fournisseurs — boostez votre activité avec Rfacto.",
     cta_start_here: "Commencer ici",
     cta_about_us: "Qui sommes-nous",
+    tester_apps_title: "Tester l’application",
+    tester_apps_desc:
+      "Installez Rfacto en version test sur iPhone (TestFlight) et Android (Google Play).",
+    tester_android_cta: "Tester l’application Android",
+    tester_ios_cta: "Tester l’application iPhone",
+    tester_apps_hint:
+      "iPhone : ouvrez TestFlight dans Safari. Android : installez depuis Google Play.",
     cta_join_whatsapp: "Rejoindre la communauté WhatsApp",
     cta_send: "Commander",
     cta_travel: "Livrer",
@@ -2907,6 +2914,13 @@ const dict = {
       "Jobs, online selling and supplier sourcing — grow with Rfacto.",
     cta_start_here: "Start here",
     cta_about_us: "About us",
+    tester_apps_title: "Test the app",
+    tester_apps_desc:
+      "Install the Rfacto beta on iPhone (TestFlight) and Android (Google Play).",
+    tester_android_cta: "Test the Android app",
+    tester_ios_cta: "Test the iPhone app",
+    tester_apps_hint:
+      "iPhone: open TestFlight in Safari. Android: install from Google Play.",
     cta_join_whatsapp: "Join the WhatsApp community",
     cta_send: "Order",
     cta_travel: "Deliver",

@@ -2,6 +2,7 @@ import type { GoogleProfile } from "@/lib/google-oauth";
 import { resolveActiveAmbassador } from "@/lib/ambassador";
 import { currencyForCountry } from "@/lib/currency";
 import { prisma } from "@/lib/prisma";
+import { queueTesterInvite } from "@/lib/store-testing";
 
 export type GoogleAuthUserRow = {
   id: string;
@@ -82,6 +83,7 @@ export async function upsertUserFromGoogleProfile(
       FROM "User" WHERE id = ${id} LIMIT 1
     `;
     user = created[0];
+    if (user) queueTesterInvite(user);
   } else {
     await prisma.$executeRaw`
       UPDATE "User"

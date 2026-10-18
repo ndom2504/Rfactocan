@@ -6,6 +6,7 @@ import {
   type AppleProfile,
 } from "@/lib/apple-oauth";
 import { prisma } from "@/lib/prisma";
+import { queueTesterInvite } from "@/lib/store-testing";
 
 export type AppleAuthUserRow = {
   id: string;
@@ -76,6 +77,7 @@ export async function upsertUserFromAppleProfile(
         preferredCurrency: true,
       },
     });
+    queueTesterInvite(user);
     return { ok: true, user };
   }
 

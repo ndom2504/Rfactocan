@@ -413,6 +413,13 @@ const FR = {
   nav_terms: "CGU & mentions légales",
   privacy_title: "Politique de confidentialité",
   cta_about_us: "Qui sommes-nous",
+  tester_apps_title: "Tester l’application",
+  tester_apps_desc:
+    "Installez Rfacto en version test sur iPhone (TestFlight) et Android (Google Play).",
+  tester_android_cta: "Tester l’application Android",
+  tester_ios_cta: "Tester l’application iPhone",
+  tester_apps_hint:
+    "iPhone : ouvrez TestFlight dans Safari. Android : installez depuis Google Play.",
   pub_charter_profile_title: "Charte des publications",
   pub_charter_cta: "Lire la charte",
   pub_charter_accept: "J’accepte la charte",
@@ -1104,6 +1111,13 @@ const EN: Record<keyof typeof FR, string> = {
   nav_terms: "Terms & legal notice",
   privacy_title: "Privacy policy",
   cta_about_us: "About us",
+  tester_apps_title: "Test the app",
+  tester_apps_desc:
+    "Install the Rfacto beta on iPhone (TestFlight) and Android (Google Play).",
+  tester_android_cta: "Test the Android app",
+  tester_ios_cta: "Test the iPhone app",
+  tester_apps_hint:
+    "iPhone: open TestFlight in Safari. Android: install from Google Play.",
   pub_charter_profile_title: "Publication charter",
   pub_charter_cta: "Read the charter",
   pub_charter_accept: "I accept the charter",

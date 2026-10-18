@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -15,6 +16,7 @@ import { useAuth } from "@/lib/auth-context";
 import { bookingStatusLabel, useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
+import { IOS_TESTER_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
 type Booking = {
   id: string;
@@ -193,6 +195,28 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
         ))}
+      </View>
+
+      <View style={{ gap: 10 }}>
+        <Text
+          style={{
+            color: colors.foreground,
+            fontWeight: "700",
+            fontSize: 15,
+            textAlign: "center",
+          }}
+        >
+          {t("tester_apps_title")}
+        </Text>
+        <Button
+          label={t("tester_ios_cta")}
+          onPress={() => void Linking.openURL(IOS_TESTER_URL)}
+        />
+        <Button
+          label={t("tester_android_cta")}
+          variant="outline"
+          onPress={() => void Linking.openURL(PLAY_STORE_URL)}
+        />
       </View>
 
       {error ? <ErrorText>{error}</ErrorText> : null}
