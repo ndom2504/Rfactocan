@@ -44,6 +44,18 @@ export default async function ChildSafetyPage() {
       <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
         {t(locale, "child_safety_scope")}
       </p>
+      <p className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm leading-relaxed">
+        <span className="font-semibold text-[var(--foreground)]">
+          {t(locale, "child_safety_poc_label")}
+        </span>
+        {": "}
+        <a
+          href={`mailto:${t(locale, "child_safety_poc_email")}`}
+          className="font-medium text-[var(--accent)] underline"
+        >
+          {t(locale, "child_safety_poc_email")}
+        </a>
+      </p>
 
       {SECTIONS.map((s) => (
         <section key={s.title} className="mt-10 space-y-3">
