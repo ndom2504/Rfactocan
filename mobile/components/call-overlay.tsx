@@ -104,7 +104,7 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
       ? `${mins}:${secs}`
       : native
         ? "Connexion…"
-        : "Signalisation OK — le média LiveKit demande un build Rfacto.";
+        : "Appel signalé — le son LiveKit n’est pas dans Expo Go. Décrocher / raccrocher fonctionne.";
 
   return (
     <Modal visible animationType="fade" presentationStyle="fullScreen">

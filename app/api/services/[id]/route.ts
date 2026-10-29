@@ -10,7 +10,10 @@ import {
   parseProductsJson,
 } from "@/lib/services-catalog";
 import { normalizeWebsiteUrl } from "@/lib/service-website";
-import { identityDocumentsAccepted } from "@/lib/kyc-policy";
+import {
+  identityDocumentsAccepted,
+  KYC_ENFORCEMENT_SUSPENDED,
+} from "@/lib/kyc-policy";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -88,7 +91,9 @@ export async function GET(_request: Request, ctx: Ctx) {
       ...serialize(listing),
       user: {
         ...listing.user,
-        identityVerified: identityDocumentsAccepted(listing.user),
+        identityVerified:
+          KYC_ENFORCEMENT_SUSPENDED ||
+          identityDocumentsAccepted(listing.user),
       },
     },
   });

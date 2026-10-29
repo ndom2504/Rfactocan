@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { toPublicMeetProfile } from "@/lib/meet";
 import { prisma } from "@/lib/prisma";
-import { showIdentityVerified } from "@/lib/kyc-policy";
+import { publicContactVerified } from "@/lib/kyc-policy";
 
 type Params = { params: Promise<{ userId: string }> };
 
@@ -98,7 +98,7 @@ export async function GET(_request: Request, { params }: Params) {
         id: profile.user.id,
         displayName: profile.user.displayName,
         avatarUrl: showUserAvatar,
-        verified: showIdentityVerified(profile.user.kycStatus === "VERIFIED"),
+        verified: publicContactVerified(profile.user.kycStatus === "VERIFIED"),
         ratingAvg: profile.user.ratingAvg,
         ratingCount: profile.user.ratingCount,
       },

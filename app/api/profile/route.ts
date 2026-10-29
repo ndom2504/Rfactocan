@@ -8,6 +8,12 @@ import {
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { healVerifiedIdentity } from "@/lib/kyc";
+import {
+  identityDocumentsAccepted,
+  isKycRequiredForCountry,
+  KYC_ENFORCEMENT_SUSPENDED,
+} from "@/lib/kyc-policy";
+import { countryFromE164 } from "@/lib/phone-auth";
 
 const mediaUrl = z
   .string()
@@ -60,6 +66,11 @@ export async function GET(request: Request) {
       user: {
         ...safe,
         hasManualIdDoc: Boolean(manualIdDocUrl),
+        kycRequired: isKycRequiredForCountry(
+          user.country ?? (user.phone ? countryFromE164(user.phone) : null)
+        ),
+        identityVerified:
+          KYC_ENFORCEMENT_SUSPENDED || identityDocumentsAccepted(user),
       },
     },
     { headers: AUTH_API_HEADERS }

@@ -6,7 +6,9 @@ import type { ManualIdDocStatus, User, UserRole, UserStatus } from "@prisma/clie
 import {
   identityDocumentsAccepted,
   isKycRequiredForCountry,
+  KYC_ENFORCEMENT_SUSPENDED,
 } from "@/lib/kyc-policy";
+import { countryFromE164 } from "@/lib/phone-auth";
 
 const COOKIE_NAME = "rfacto_session";
 const SESSION_DAYS = 14;
@@ -145,9 +147,12 @@ async function sessionUserFromToken(
       ratingCount: user.ratingCount,
       preferredCurrency: user.preferredCurrency || "CAD",
       country: user.country,
-      kycRequired: isKycRequiredForCountry(user.country),
+      kycRequired: isKycRequiredForCountry(
+        user.country ?? (user.phone ? countryFromE164(user.phone) : null)
+      ),
       manualIdDocStatus: user.manualIdDocStatus,
-      identityVerified: identityDocumentsAccepted(user),
+      identityVerified:
+        KYC_ENFORCEMENT_SUSPENDED || identityDocumentsAccepted(user),
     };
   } catch {
     return null;

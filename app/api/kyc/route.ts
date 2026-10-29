@@ -5,7 +5,11 @@ import {
   healVerifiedIdentity,
   refreshUserKycFromStripe,
 } from "@/lib/kyc";
-import { identityDocumentsAccepted, userSatisfiesKyc } from "@/lib/kyc-policy";
+import {
+  identityDocumentsAccepted,
+  KYC_ENFORCEMENT_SUSPENDED,
+  userSatisfiesKyc,
+} from "@/lib/kyc-policy";
 import { isStripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
@@ -84,7 +88,11 @@ export async function GET() {
   });
   return NextResponse.json({
     user: user
-      ? { ...user, identityVerified: identityDocumentsAccepted(user) }
+      ? {
+          ...user,
+          identityVerified:
+            KYC_ENFORCEMENT_SUSPENDED || identityDocumentsAccepted(user),
+        }
       : user,
     kycHint: stripeSync?.hint ?? null,
     kycLastErrorCode: stripeSync?.lastErrorCode ?? null,

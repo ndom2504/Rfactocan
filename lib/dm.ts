@@ -3,6 +3,7 @@ import {
   isIdentityVerificationEnabled,
   userSatisfiesKyc,
 } from "@/lib/kyc-policy";
+import { countryFromE164 } from "@/lib/phone-auth";
 
 export type DmContextType = "SERVICE" | "JOB" | "MEET" | "IN";
 export type DmChannel = "APP" | "IN";
@@ -42,6 +43,7 @@ export async function assertBothVerified(
       kycStatus: true,
       manualIdDocStatus: true,
       country: true,
+      phone: true,
       displayName: true,
       status: true,
     },
@@ -53,7 +55,16 @@ export async function assertBothVerified(
     if (u.status === "SUSPENDED") {
       return { ok: false as const, error: "Compte indisponible.", status: 403 };
     }
-    if (isIdentityVerificationEnabled() && !userSatisfiesKyc(u, contextCountry)) {
+    if (
+      isIdentityVerificationEnabled() &&
+      !userSatisfiesKyc(
+        {
+          ...u,
+          country: u.country ?? (u.phone ? countryFromE164(u.phone) : null),
+        },
+        contextCountry
+      )
+    ) {
       return {
         ok: false as const,
         error:

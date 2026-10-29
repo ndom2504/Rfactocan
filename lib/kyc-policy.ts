@@ -13,6 +13,16 @@ export function showIdentityVerified(verified?: boolean | null) {
   return isIdentityVerificationEnabled() && Boolean(verified);
 }
 
+/**
+ * JSON `verified` for Play / old Expo, which still gate messaging on this field.
+ * While KYC is suspended this is true so members can contact each other.
+ * New clients hide the badge with `showIdentityVerified` locally.
+ */
+export function publicContactVerified(documentsOk?: boolean | null) {
+  if (KYC_ENFORCEMENT_SUSPENDED) return true;
+  return Boolean(documentsOk);
+}
+
 export function isKycRequiredForCountry(country?: string | null): boolean {
   if (KYC_ENFORCEMENT_SUSPENDED) return false;
   const code = resolveCountryCode(country) ?? country;
