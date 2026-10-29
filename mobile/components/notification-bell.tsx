@@ -113,15 +113,17 @@ export function NotificationBell() {
             <View
               style={{
                 position: "absolute",
-                top: -6,
-                right: -8,
-                minWidth: 16,
-                height: 16,
+                top: -3,
+                right: -4,
+                minWidth: 15,
+                height: 15,
                 borderRadius: 8,
                 backgroundColor: "#E65100",
                 alignItems: "center",
                 justifyContent: "center",
                 paddingHorizontal: 3,
+                borderWidth: 1.5,
+                borderColor: colors.surface,
               }}
             >
               <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700" }}>

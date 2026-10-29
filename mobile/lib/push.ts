@@ -16,7 +16,15 @@ const ACCENT = "#28541D";
 
 type NotificationsModule = typeof import("expo-notifications");
 
+export type PushPayload = {
+  href?: string;
+  type?: string;
+  callId?: string;
+  threadId?: string;
+};
+
 const pushListeners = new Set<() => void>();
+const incomingCallListeners = new Set<(payload: PushPayload) => void>();
 
 export function onPushReceived(listener: () => void) {
   pushListeners.add(listener);
@@ -25,10 +33,38 @@ export function onPushReceived(listener: () => void) {
   };
 }
 
+export function onIncomingCallPush(listener: (payload: PushPayload) => void) {
+  incomingCallListeners.add(listener);
+  return () => {
+    incomingCallListeners.delete(listener);
+  };
+}
+
 function emitPushReceived() {
   for (const listener of [...pushListeners]) {
     try {
       listener();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+function readPushData(data: unknown): PushPayload {
+  const raw = (data ?? {}) as Record<string, unknown>;
+  return {
+    href: typeof raw.href === "string" ? raw.href : undefined,
+    type: typeof raw.type === "string" ? raw.type : undefined,
+    callId: typeof raw.callId === "string" ? raw.callId : undefined,
+    threadId: typeof raw.threadId === "string" ? raw.threadId : undefined,
+  };
+}
+
+function emitIncomingCallIfNeeded(payload: PushPayload) {
+  if ((payload.type ?? "").toUpperCase() !== "INCOMING_CALL") return;
+  for (const listener of [...incomingCallListeners]) {
+    try {
+      listener(payload);
     } catch {
       /* ignore */
     }
@@ -57,6 +93,21 @@ async function loadNotifications(): Promise<NotificationsModule | null> {
     console.warn("[push] expo-notifications unavailable", error);
     return null;
   }
+}
+
+async function readPushToken(Notifications: NotificationsModule) {
+  if (Platform.OS === "ios") {
+    const projectId =
+      Constants.easConfig?.projectId ??
+      (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)
+        ?.eas?.projectId;
+    const expo = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined
+    );
+    return typeof expo.data === "string" ? expo.data.trim() : "";
+  }
+  const device = await Notifications.getDevicePushTokenAsync();
+  return typeof device.data === "string" ? device.data.trim() : "";
 }
 
 async function ensureAndroidChannels(Notifications: NotificationsModule) {
@@ -134,8 +185,7 @@ export async function registerPushToken() {
     }
     if (status !== "granted") return;
     await ensureAndroidChannels(Notifications);
-    const device = await Notifications.getDevicePushTokenAsync();
-    const token = typeof device.data === "string" ? device.data.trim() : "";
+    const token = await readPushToken(Notifications);
     if (token.length < 20) return;
     await api("/api/devices/fcm", {
       method: "POST",
@@ -154,8 +204,7 @@ export async function unregisterPushToken() {
   const Notifications = await loadNotifications();
   if (!Notifications) return;
   try {
-    const device = await Notifications.getDevicePushTokenAsync();
-    const token = typeof device.data === "string" ? device.data.trim() : "";
+    const token = await readPushToken(Notifications);
     if (token.length < 20) return;
     await api("/api/devices/fcm", {
       method: "DELETE",
@@ -194,22 +243,22 @@ export function watchPushNotifications(onOpenHref: (href: Href) => void) {
   let unsub = () => {};
   void loadNotifications().then((Notifications) => {
     if (!Notifications || cancelled) return;
-    const received = Notifications.addNotificationReceivedListener(() => {
+    const received = Notifications.addNotificationReceivedListener((event) => {
       emitPushReceived();
+      const payload = readPushData(event.request.content.data);
+      emitIncomingCallIfNeeded(payload);
     });
     const response = Notifications.addNotificationResponseReceivedListener(
       (event) => {
         emitPushReceived();
-        const data = event.notification.request.content.data as {
-          href?: string;
-          type?: string;
-        };
-        const route = hrefToExpoRoute(data?.href);
+        const payload = readPushData(event.notification.request.content.data);
+        emitIncomingCallIfNeeded(payload);
+        const route = hrefToExpoRoute(payload.href);
         if (route) {
           onOpenHref(route);
           return;
         }
-        if ((data?.type ?? "").toUpperCase().includes("MESSAGE")) {
+        if ((payload.type ?? "").toUpperCase().includes("MESSAGE")) {
           onOpenHref("/(tabs)/messages");
         }
       }

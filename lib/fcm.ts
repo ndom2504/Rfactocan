@@ -1,4 +1,9 @@
-import { androidChannelIdForType, androidTtlMsForType } from "@/lib/fcm-channels";
+import {
+  androidChannelIdForType,
+  androidTtlMsForType,
+  isIncomingCallType,
+} from "@/lib/fcm-channels";
+import { isExpoPushToken, sendExpoPushToTokens } from "@/lib/expo-push";
 import { prisma } from "@/lib/prisma";
 
 let initialized = false;
@@ -50,50 +55,83 @@ export async function sendFcmToUsers(input: {
   const uniqueIds = [...new Set(input.userIds)].filter(Boolean);
   if (uniqueIds.length === 0) return { sent: 0, skipped: true as const };
 
-  const messaging = await ensureFirebaseMessaging();
-  if (!messaging) {
-    console.warn("[fcm] FIREBASE_* not configured — push skipped");
-    return { sent: 0, skipped: true as const };
-  }
-
   const tokens = await prisma.deviceToken.findMany({
     where: { userId: { in: uniqueIds } },
-    select: { id: true, token: true },
+    select: { id: true, token: true, platform: true },
   });
   if (tokens.length === 0) return { sent: 0, skipped: false as const };
 
-  const invalidTokenIds: string[] = [];
-  let sent = 0;
-  const chunkSize = 500;
   const type = input.data?.type ?? "";
+  const incomingCall = isIncomingCallType(type);
   const androidChannelId = androidChannelIdForType(type);
+  const ttlMs = androidTtlMsForType(type);
+  const dataPayload = {
+    title: input.title,
+    body: input.body,
+    channelId: androidChannelId,
+    ...(input.data ?? {}),
+  };
 
-  for (let i = 0; i < tokens.length; i += chunkSize) {
-    const chunk = tokens.slice(i, i + chunkSize);
+  const expoTokens = tokens.filter((t) => isExpoPushToken(t.token));
+  const fcmTokens = tokens.filter(
+    (t) => !isExpoPushToken(t.token) && t.platform.toUpperCase() !== "IOS"
+  );
+
+  let sent = 0;
+  const expo = await sendExpoPushToTokens({
+    tokens: expoTokens.map((t) => t.token),
+    title: input.title,
+    body: input.body,
+    data: dataPayload,
+    channelId: androidChannelId,
+    ttlSeconds: Math.max(1, Math.round(ttlMs / 1000)),
+    incomingCall,
+  });
+  sent += expo.sent;
+
+  const messaging = await ensureFirebaseMessaging();
+  if (!messaging) {
+    if (fcmTokens.length > 0) {
+      console.warn("[fcm] FIREBASE_* not configured — Android push skipped");
+    }
+    return { sent, skipped: expoTokens.length === 0 && fcmTokens.length > 0 };
+  }
+
+  if (fcmTokens.length === 0) {
+    return { sent, skipped: false as const };
+  }
+
+  const invalidTokenIds: string[] = [];
+  const chunkSize = 500;
+
+  for (let i = 0; i < fcmTokens.length; i += chunkSize) {
+    const chunk = fcmTokens.slice(i, i + chunkSize);
     try {
       const res = await messaging.sendEachForMulticast({
         tokens: chunk.map((t) => t.token),
-        data: {
-          title: input.title,
-          body: input.body,
-          channelId: androidChannelId,
-          ...(input.data ?? {}),
-        },
+        data: dataPayload,
         android: {
           priority: "high",
-          ttl: androidTtlMsForType(type),
-          notification: {
-            title: input.title,
-            body: input.body,
-            channelId: androidChannelId,
-            sound: "rfacto_notify",
-            color: "#28541D",
-            defaultSound: false,
-          },
+          ttl: ttlMs,
+          // Data-only for incoming calls so the app can show a WhatsApp-style
+          // full-screen UI. A system `notification` payload would swallow it.
+          ...(incomingCall
+            ? {}
+            : {
+                notification: {
+                  title: input.title,
+                  body: input.body,
+                  channelId: androidChannelId,
+                  sound: "rfacto_notify",
+                  color: "#28541D",
+                  defaultSound: false,
+                },
+              }),
         },
         apns: {
           headers: {
             "apns-priority": "10",
+            "apns-push-type": "alert",
           },
           payload: {
             aps: {
@@ -103,6 +141,10 @@ export async function sendFcmToUsers(input: {
               },
               sound: "default",
               badge: 1,
+              "interruption-level": incomingCall
+                ? "time-sensitive"
+                : "active",
+              "content-available": 1,
             },
           },
         },

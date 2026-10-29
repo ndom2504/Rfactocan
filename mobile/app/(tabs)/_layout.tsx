@@ -1,6 +1,7 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
 import { AppHeader } from "@/components/app-header";
+import { useInboxUnread } from "@/lib/inbox-unread";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -18,6 +19,7 @@ function TabIcon({
 export default function TabLayout() {
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
+  const messageUnread = useInboxUnread();
   return (
     <Tabs
       screenOptions={{
@@ -74,6 +76,16 @@ export default function TabLayout() {
         name="messages"
         options={{
           title: t("nav_messages"),
+          tabBarBadge: messageUnread > 0 ? (messageUnread > 9 ? "9+" : messageUnread) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: "#E65100",
+            color: "#fff",
+            fontSize: 10,
+            fontWeight: "800",
+            minWidth: 16,
+            height: 16,
+            lineHeight: 16,
+          },
           tabBarIcon: ({ focused }) => (
             <TabIcon
               name="comments"

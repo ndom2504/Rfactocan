@@ -27,6 +27,7 @@ type DmThread = {
   lastMessageAt?: string | null;
   lastContextType?: string | null;
   updatedAt?: string | null;
+  unreadCount?: number;
   peer?: Peer;
   lastMessage?: { body?: string | null; attachmentUrl?: string | null } | null;
 };
@@ -64,6 +65,7 @@ type InboxRow = {
   title: string;
   preview: string;
   date: string | null;
+  unreadCount: number;
 };
 
 function Avatar({ name, url }: { name: string; url?: string | null }) {
@@ -163,6 +165,7 @@ export default function MessagesScreen() {
           title: p.title || t("svc_pay_inbox"),
           preview: `${iPay ? t("svc_pay_you_pay") : t("svc_pay_you_receive")} · ${other?.displayName || "—"} · ${amount} ${(p.currency || "CAD").toUpperCase()}`,
           date: p.createdAt ?? null,
+          unreadCount: 0,
         });
       }
 
@@ -179,6 +182,7 @@ export default function MessagesScreen() {
             t("no_messages")
           ),
           date: th.lastMessageAt ?? th.updatedAt ?? null,
+          unreadCount: th.unreadCount ?? 0,
         });
       }
 
@@ -195,6 +199,7 @@ export default function MessagesScreen() {
           title: `${peer?.displayName || "—"} · ${b.request?.fromCity || "?"} → ${b.request?.toCity || "?"}`,
           preview: previewOf(last?.body, last?.attachmentUrl, t("order_need_parcel")),
           date: last?.createdAt ?? b.updatedAt ?? null,
+          unreadCount: 0,
         });
       }
 
@@ -279,9 +284,17 @@ export default function MessagesScreen() {
             <Muted>{t("no_messages")}</Muted>
           )
         }
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          const unread = item.unreadCount > 0;
+          return (
           <Pressable onPress={() => router.push(item.href)}>
-            <Card>
+            <Card
+              style={
+                unread
+                  ? { backgroundColor: colors.accentSoft, borderColor: colors.accent }
+                  : undefined
+              }
+            >
               <View
                 style={{
                   flexDirection: "row",
@@ -293,7 +306,7 @@ export default function MessagesScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontWeight: "700",
+                      fontWeight: unread ? "800" : "700",
                       fontSize: 15,
                       color: colors.foreground,
                     }}
@@ -302,22 +315,46 @@ export default function MessagesScreen() {
                     {item.title}
                   </Text>
                   <Text
-                    style={{ color: colors.muted, fontSize: 13, marginTop: 2 }}
+                    style={{
+                      color: unread ? colors.foreground : colors.muted,
+                      fontSize: 13,
+                      marginTop: 2,
+                      fontWeight: unread ? "600" : "400",
+                    }}
                     numberOfLines={2}
                   >
                     {item.preview}
                     {item.date ? ` · ${formatDate(item.date)}` : ""}
                   </Text>
                 </View>
-                <Text
-                  style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}
-                >
-                  {t("open")}
-                </Text>
+                {unread ? (
+                  <View
+                    style={{
+                      minWidth: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: colors.accent,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 6,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>
+                      {item.unreadCount > 9 ? "9+" : item.unreadCount}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text
+                    style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}
+                  >
+                    {t("open")}
+                  </Text>
+                )}
               </View>
             </Card>
           </Pressable>
-        )}
+          );
+        }}
       />
     </Screen>
   );

@@ -62,9 +62,26 @@ export async function GET(request: Request) {
     take: 50,
   });
 
+  const unreadByThread = new Map<string, number>();
+  if (threads.length > 0) {
+    const unreadRows = await prisma.directMessage.groupBy({
+      by: ["threadId"],
+      where: {
+        threadId: { in: threads.map((t) => t.id) },
+        senderId: { not: session.id },
+        readAt: null,
+      },
+      _count: { _all: true },
+    });
+    for (const row of unreadRows) {
+      unreadByThread.set(row.threadId, row._count._all);
+    }
+  }
+
   const items = threads.map((t) => {
     const peer = t.userLowId === session.id ? t.userHigh : t.userLow;
     const last = t.messages[0] ?? null;
+    const unreadCount = unreadByThread.get(t.id) ?? 0;
     return {
       id: t.id,
       kind: "dm" as const,
@@ -75,10 +92,12 @@ export async function GET(request: Request) {
       updatedAt: t.updatedAt,
       peer,
       lastMessage: last,
+      unreadCount,
     };
   });
 
-  return NextResponse.json({ threads: items });
+  const unreadTotal = items.reduce((sum, t) => sum + t.unreadCount, 0);
+  return NextResponse.json({ threads: items, unreadTotal });
 }
 
 /**

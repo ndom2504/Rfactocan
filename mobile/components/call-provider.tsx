@@ -8,7 +8,12 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { type ActiveCall, fetchInboundRinging } from "@/lib/calls";
+import {
+  type ActiveCall,
+  fetchCall,
+  fetchInboundRinging,
+} from "@/lib/calls";
+import { onIncomingCallPush } from "@/lib/push";
 
 const CallContext = createContext<{
   startOutgoing: (call: ActiveCall) => void;
@@ -44,9 +49,21 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }
     void poll();
     const timer = setInterval(() => void poll(), 2500);
+    const stopPush = onIncomingCallPush((payload) => {
+      if (activeRef.current) return;
+      void (async () => {
+        const fromId = payload.callId
+          ? await fetchCall(payload.callId)
+          : await fetchInboundRinging();
+        if (fromId && fromId.status === "RINGING" && !activeRef.current) {
+          setActive({ ...fromId, direction: "inbound" });
+        }
+      })();
+    });
     return () => {
       cancelled = true;
       clearInterval(timer);
+      stopPush();
     };
   }, [user]);
 

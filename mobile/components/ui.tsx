@@ -41,7 +41,13 @@ export function Muted({ children }: { children: React.ReactNode }) {
   return <Text style={[styles.muted, { color: colors.muted }]}>{children}</Text>;
 }
 
-export function Card({ children }: { children: React.ReactNode }) {
+export function Card({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+}) {
   const colors = useColors();
   return (
     <View
@@ -51,6 +57,7 @@ export function Card({ children }: { children: React.ReactNode }) {
           backgroundColor: colors.surface,
           borderColor: colors.border,
         },
+        style,
       ]}
     >
       {children}
