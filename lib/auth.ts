@@ -163,6 +163,12 @@ export const AUTH_API_HEADERS = {
  * Resolve the current user from Bearer token (mobile) or session cookie (web).
  * Pass the Route Handler `Request` so Authorization is read even if `headers()` omits it.
  */
+export async function getSessionToken(
+  request?: Request
+): Promise<string | null> {
+  return resolveSessionToken(request);
+}
+
 export async function getSessionUser(
   request?: Request
 ): Promise<SessionUser | null> {

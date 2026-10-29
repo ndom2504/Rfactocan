@@ -13,9 +13,11 @@ import {
 export function VoiceNoteBubble({
   url,
   mine = false,
+  durationHintSec = 0,
 }: {
   url: string;
   mine?: boolean;
+  durationHintSec?: number;
 }) {
   const player = useAudioPlayer(url, { updateInterval: 200 });
   const status = useAudioPlayerStatus(player);
@@ -103,7 +105,9 @@ export function VoiceNoteBubble({
             {formatVoiceTime(
               status.playing || progress > 0
                 ? status.currentTime
-                : status.duration
+                : status.duration > 0
+                  ? status.duration
+                  : durationHintSec
             )}
           </Text>
         </View>

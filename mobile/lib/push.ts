@@ -183,7 +183,7 @@ export function hrefToExpoRoute(href?: string | null): Href | null {
   }
   if (href.includes("/messages")) return "/(tabs)/messages";
   if (href.includes("/community")) return "/(tabs)/community";
-  if (href.includes("/profile")) return "/(tabs)/profile";
+  if (href.includes("/profile")) return "/profile";
   if (href.includes("/dashboard")) return "/(tabs)";
   return null;
 }

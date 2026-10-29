@@ -112,6 +112,26 @@ export function isAudioAttachment(
   return /\.(m4a|aac|mp3|ogg|oga|wav|amr|3gpp|weba)(\?|#|$)/i.test(hay);
 }
 
+export const VOICE_MAX_MS = 300_000;
+
+export function isVoiceNoteCaption(body?: string | null) {
+  const text = (body || "").trim();
+  return /^Note vocale\b/i.test(text) || /^Voice note\b/i.test(text);
+}
+
+export function voiceNoteCaption(durationMs: number) {
+  const sec = Math.max(1, Math.round(durationMs / 1000));
+  return `Note vocale ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
+
+export function parseVoiceDurationSec(body?: string | null) {
+  const match = /(?:Note vocale|Voice note)\s+(\d+):(\d{2})/i.exec(
+    (body || "").trim()
+  );
+  if (!match) return 0;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
 /** MIME the browser <audio> element can use (Android notes are AAC in MP4). */
 export function guessVoiceNoteMime(
   nameOrUrl?: string | null,

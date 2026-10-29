@@ -5,11 +5,18 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "@/components/locale-provider";
 import { requestTourStart } from "@/lib/guided-tour";
+import {
+  listSavedAccounts,
+  rememberSavedAccount,
+  removeSavedAccount,
+  type SavedAccount,
+} from "@/lib/saved-accounts";
 import { cn } from "@/lib/utils";
 
-const MENU_WIDTH = 192;
+const MENU_WIDTH = 240;
 
 type Props = {
+  userId?: string;
   displayName: string;
   avatarUrl?: string | null;
   /** sm = header compact · lg = dashboard banner bubble */
@@ -19,6 +26,7 @@ type Props = {
 };
 
 export function ProfileMenu({
+  userId,
   displayName,
   avatarUrl,
   size = "sm",
@@ -29,6 +37,7 @@ export function ProfileMenu({
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [accounts, setAccounts] = useState<SavedAccount[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -37,7 +46,41 @@ export function ProfileMenu({
 
   useEffect(() => {
     setMounted(true);
+    setAccounts(listSavedAccounts());
+    void snapshotCurrent();
   }, []);
+
+  async function snapshotCurrent() {
+    const res = await fetch("/api/auth/accounts", { credentials: "include" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.token || !data.user?.id) return;
+    rememberSavedAccount({
+      id: data.user.id,
+      displayName: data.user.displayName,
+      avatarUrl: data.user.avatarUrl,
+      token: data.token,
+    });
+    setAccounts(listSavedAccounts());
+  }
+
+  async function switchTo(account: SavedAccount) {
+    setOpen(false);
+    await snapshotCurrent();
+    const res = await fetch("/api/auth/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token: account.token }),
+    });
+    if (!res.ok) return;
+    window.location.assign("/dashboard");
+  }
+
+  async function addAccount() {
+    setOpen(false);
+    await snapshotCurrent();
+    window.location.assign("/login?add=1");
+  }
 
   function placeMenu() {
     const rect = buttonRef.current?.getBoundingClientRect();
@@ -86,6 +129,22 @@ export function ProfileMenu({
 
   async function logout() {
     setOpen(false);
+    await snapshotCurrent();
+    const currentId = userId || listSavedAccounts()[0]?.id;
+    const other = listSavedAccounts().find((a) => a.id !== currentId);
+    if (currentId) removeSavedAccount(currentId);
+    if (other) {
+      const res = await fetch("/api/auth/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ token: other.token }),
+      });
+      if (res.ok) {
+        window.location.assign("/dashboard");
+        return;
+      }
+    }
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     window.location.assign("/login");
   }
@@ -103,6 +162,31 @@ export function ProfileMenu({
               width: MENU_WIDTH,
             }}
           >
+            {accounts.map((acc) => {
+              const current = acc.id === userId;
+              return (
+                <button
+                  key={acc.id}
+                  type="button"
+                  role="menuitem"
+                  disabled={current}
+                  className="block w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] disabled:opacity-60"
+                  onClick={() => void switchTo(acc)}
+                >
+                  {current ? `${acc.displayName} ✓` : acc.displayName}
+                </button>
+              );
+            })}
+            {accounts.length < 2 ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="block w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)]"
+                onClick={() => void addAccount()}
+              >
+                {t("account_add")}
+              </button>
+            ) : null}
             <Link
               href="/profile"
               role="menuitem"

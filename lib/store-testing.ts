@@ -9,6 +9,10 @@ export const PLAY_STORE_URL =
   process.env.NEXT_PUBLIC_PLAY_STORE_URL?.trim() ||
   "https://play.google.com/store/apps/details?id=com.rfacto.app";
 
+export const APP_STORE_URL =
+  process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() ||
+  "https://apps.apple.com/ca/app/rfacto/id6805710784?l=fr-CA";
+
 export const PLAY_TESTING_URL =
   process.env.NEXT_PUBLIC_PLAY_TESTING_URL?.trim() || PLAY_STORE_URL;
 

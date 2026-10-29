@@ -17,6 +17,7 @@ import { getCountryName } from "@/lib/corridors";
 import { transportModeLabel, transportTypeLabel } from "@/lib/transport";
 import { parseCarrierFromNotes } from "@/lib/vehicle-notes";
 import { negotiationLabel } from "@/lib/negotiation";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -236,7 +237,8 @@ export default async function TripDetailPage({ params }: Props) {
           <div className="min-w-0">
             <p className="font-medium">
               {trip.user.displayName}
-              {trip.user.kycStatus === "VERIFIED"
+              {isIdentityVerificationEnabled() &&
+              trip.user.kycStatus === "VERIFIED"
                 ? ` · ${t(locale, "verified")}`
                 : ""}
             </p>

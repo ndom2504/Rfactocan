@@ -19,7 +19,10 @@ import { IntentPicker } from "@/components/intent-picker";
 import { PayoutChannelPicker } from "@/components/payout-channel-picker";
 import { AmbassadorEarnPanel } from "@/components/ambassador-earn-panel";
 import { KYC_STATUS_LABELS } from "@/lib/corridors";
-import { isKycRequiredForCountry } from "@/lib/kyc-policy";
+import {
+  isIdentityVerificationEnabled,
+  isKycRequiredForCountry,
+} from "@/lib/kyc-policy";
 import { isPhonePlaceholderEmail } from "@/lib/phone-ga";
 import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { useI18n } from "@/components/locale-provider";
@@ -403,6 +406,7 @@ function ProfileForm() {
         <CardTitle>{t("trust_payments")}</CardTitle>
         <CardDescription>{t("trust_hint")}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-2">
+          {isIdentityVerificationEnabled() ? (
           <Badge
             className={
               !kycRequired || user.kycStatus === "VERIFIED"
@@ -412,6 +416,7 @@ function ProfileForm() {
           >
             KYC : {kycRequired ? kycLabel : t("kyc_not_required")}
           </Badge>
+          ) : null}
           <Badge
             className={
               bankReady
@@ -425,6 +430,7 @@ function ProfileForm() {
         </div>
 
         <div className="mt-4 space-y-6">
+          {isIdentityVerificationEnabled() ? (
           <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
             <p className="text-sm font-medium">{t("identity_section_title")}</p>
             {!kycRequired ? (
@@ -552,6 +558,7 @@ function ProfileForm() {
               </>
             )}
           </div>
+          ) : null}
 
           <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
             <p className="text-sm font-medium">{t("bank_section_title")}</p>
@@ -735,7 +742,7 @@ function ProfileForm() {
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
-          {user.kycStatus === "VERIFIED" && (
+          {isIdentityVerificationEnabled() && user.kycStatus === "VERIFIED" && (
             <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
               {t("account_verified")}
             </Badge>

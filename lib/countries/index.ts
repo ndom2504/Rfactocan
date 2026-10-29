@@ -6,6 +6,7 @@ import {
   SERVICE_LABELS_EN,
   SERVICE_LABELS_FR,
 } from "@/lib/countries/defaults";
+import { isAfricanCountry } from "@/lib/countries/africa";
 import {
   COUNTRY_CONFIGS,
   PILOT_COUNTRY_CODES,

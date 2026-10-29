@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useI18n } from "@/components/locale-provider";
 import { formatDate } from "@/lib/utils";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 
 type MemberUser = {
   id: string;
@@ -205,7 +206,7 @@ export default function MemberProfilePage() {
             <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
               {user.displayName}
             </h1>
-            {user.verified ? (
+            {showIdentityVerified(user.verified) ? (
               <p className="text-sm font-medium text-[var(--foreground)]">{t("verified")}</p>
             ) : null}
             {user.country ? (

@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
 import { notifyUser } from "@/lib/notifications";
+import { readBookingPeerTyping } from "@/lib/dm-typing";
 
 type Params = { params: Promise<{ id: string }> };
 

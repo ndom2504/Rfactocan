@@ -38,7 +38,7 @@ function hrefToRoute(href: string): Href | null {
     return "/herald" as Href;
   }
   if (href.includes("/dashboard") || href.includes("/profile")) {
-    return href.includes("/profile") ? "/(tabs)/profile" : "/(tabs)";
+    return href.includes("/profile") ? "/profile" : "/(tabs)";
   }
   return null;
 }

@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/components/locale-provider";
+import { VOICE_MAX_MS } from "@/lib/community";
 import { stopAllVoicePlayback } from "@/lib/voice-audio";
-
-const MAX_MS = 120_000;
 
 function pickMime() {
   if (typeof MediaRecorder === "undefined") return "";
@@ -24,7 +23,7 @@ function formatSecs(ms: number) {
 
 type Props = {
   disabled?: boolean;
-  onRecorded: (file: File) => Promise<void>;
+  onRecorded: (file: File, durationMs: number) => Promise<void>;
 };
 
 export function VoiceNoteButton({ disabled, onRecorded }: Props) {
@@ -53,7 +52,7 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
     const id = window.setInterval(() => {
       const ms = Date.now() - startedAt.current;
       setElapsed(ms);
-      if (ms >= MAX_MS) stop(true);
+      if (ms >= VOICE_MAX_MS) stop(true);
     }, 250);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,6 +108,8 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
       streamRef.current = null;
       recRef.current = null;
       setRecording(false);
+      const durationMs = Date.now() - startedAt.current;
+      setElapsed(durationMs);
       if (!keep) {
         chunksRef.current = [];
         return;
@@ -131,7 +132,7 @@ export function VoiceNoteButton({ disabled, onRecorded }: Props) {
     setBusy(true);
     setError("");
     try {
-      await onRecorded(preview.file);
+      await onRecorded(preview.file, elapsed);
       clearPreview();
     } catch {
       setError(t("voice_failed"));

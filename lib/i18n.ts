@@ -164,6 +164,8 @@ const dict = {
     nav_signup: "Créer un compte",
     verified: "Vérifié",
     logout: "Déconnexion",
+    account_add: "Ajouter un compte",
+    account_switch: "Changer de compte",
     open: "Ouvrir",
     save: "Enregistrer",
     cancel: "Annuler",
@@ -1728,6 +1730,11 @@ const dict = {
     in_invite_hint:
       "Ils recevront le lien Rfacto. Quand ils activeront In, ils apparaîtront ici.",
     in_share_invite: "Partager le lien d’invitation",
+    invite_share_pick_title: "Quel téléphone ?",
+    invite_share_pick_hint:
+      "Le lien envoyé ouvre la fiche de l’app sur le store choisi.",
+    invite_share_android: "Android · Play Store",
+    invite_share_iphone: "iPhone · App Store",
     in_invite_share:
       "Inscris-toi sur Rfacto et rejoins-moi sur In pour bâtir des relations et un réseau pro business.\n\nIn — le réseau des opportunités.\n{url}",
     in_invite_share_signed:
@@ -1933,6 +1940,8 @@ const dict = {
     services_close: "Remove offer",
     services_close_confirm: "Remove this offer from the list?",
     logout: "Log out",
+    account_add: "Add an account",
+    account_switch: "Switch account",
     open: "Open",
     save: "Save",
     cancel: "Cancel",
@@ -3480,6 +3489,11 @@ const dict = {
     in_invite_hint:
       "They get the Rfacto link. When they turn on In, they appear here.",
     in_share_invite: "Share invite link",
+    invite_share_pick_title: "Which phone?",
+    invite_share_pick_hint:
+      "The link opens the app listing on the store you pick.",
+    invite_share_android: "Android · Play Store",
+    invite_share_iphone: "iPhone · App Store",
     in_invite_share:
       "Sign up on Rfacto and join me on In to build relationships and a professional business network.\n\nIn — the network of opportunities.\n{url}",
     in_invite_share_signed:

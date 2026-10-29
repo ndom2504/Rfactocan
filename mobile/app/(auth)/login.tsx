@@ -18,7 +18,7 @@ import { colors } from "@/lib/theme";
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ mfaToken?: string; emailHint?: string }>();
-  const { login, verifyLoginOtp, resendLoginOtp } = useAuth();
+  const { login, verifyLoginOtp, resendLoginOtp, addingAccount, cancelAddAccount } = useAuth();
   const [mode, setMode] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,6 +112,18 @@ export default function LoginScreen() {
               padding: 24,
             }}
           >
+            {addingAccount ? (
+              <Pressable
+                onPress={() => {
+                  void cancelAddAccount().then(() => router.replace("/(tabs)"));
+                }}
+                style={{ marginBottom: 12 }}
+              >
+                <Text style={{ color: "rgba(255,255,255,0.9)", fontWeight: "600" }}>
+                  ← Retour au compte
+                </Text>
+              </Pressable>
+            ) : null}
             <Text
               style={{
                 color: "#fff",

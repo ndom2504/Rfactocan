@@ -5,6 +5,7 @@ import { Button, ErrorText, Field, Muted, Screen, Title } from "@/components/ui"
 import { api, mediaUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
+import { showIdentityVerified } from "@/lib/kyc";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 
@@ -160,7 +161,7 @@ export default function MeetPublicProfileScreen() {
               : t("meet_kind_business"),
             data.profile.city,
             data.profile.country,
-            data.user.verified ? t("verified") : null,
+            showIdentityVerified(data.user.verified) ? t("verified") : null,
           ]
             .filter(Boolean)
             .join(" · ")}

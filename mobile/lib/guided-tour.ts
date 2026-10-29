@@ -63,13 +63,13 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: "profile",
-    href: "/(tabs)/settings" as Href,
+    href: "/settings" as Href,
     titleKey: "tour_profile_title",
     bodyKey: "tour_profile_body",
   },
   {
     id: "intent",
-    href: "/(tabs)/profile" as Href,
+    href: "/profile" as Href,
     titleKey: "tour_intent_title",
     bodyKey: "tour_intent_body",
   },

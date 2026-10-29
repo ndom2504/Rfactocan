@@ -25,5 +25,5 @@ export const CG: CountryConfig = {
   payments: ["mtn_momo", "airtel_money", "mobile_money", "bank"],
   transportModes: ["AIR", "ROAD", "SEA"],
   communityWhatsApp: "RFacto Congo Brazzaville",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

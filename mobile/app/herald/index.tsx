@@ -282,7 +282,7 @@ export default function HeraldScreen() {
             <Button
               label={t("nav_profile")}
               variant="outline"
-              onPress={() => router.push("/(tabs)/profile")}
+              onPress={() => router.push("/profile")}
             />
 
             {commissions.slice(0, 8).map((c) => (

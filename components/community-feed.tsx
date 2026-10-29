@@ -19,6 +19,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { NewServiceForm } from "@/components/new-service-form";
 import NewTripPage from "@/app/(app)/trips/new/page";
 import { useI18n } from "@/components/locale-provider";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 import {
   COMMUNITY_FEED_FILTERS,
   COMMUNITY_MAX_ATTACHMENTS,
@@ -28,7 +29,7 @@ import {
 } from "@/lib/community";
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import type { DictKey } from "@/lib/i18n";
-import { formatDate } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
 import { isNativeCommunityPostId } from "@/lib/community-source";
 
 type FeedPost = {
@@ -439,26 +440,13 @@ export function CommunityFeed() {
                   />
                 </Link>
               ) : null}
-              <div className="flex gap-3">
-                <Link
-                  href={`/member/${post.author.id}`}
-                  className="flex shrink-0 flex-col items-center gap-1"
-                >
+              <div className="flex items-center gap-3">
+                <Link href={`/member/${post.author.id}`} className="shrink-0">
                   <UserAvatar
                     name={post.author.displayName}
                     avatarUrl={post.author.avatarUrl}
                     size="md"
                   />
-                  <p
-                    className="max-w-[4.5rem] text-center text-[10px] leading-tight text-[var(--muted)]"
-                    title={t("community_connections")}
-                  >
-                    <span className="font-semibold text-[var(--foreground)]">
-                      {post.author.connectionCount ?? 0}
-                    </span>
-                    <br />
-                    {t("community_connections")}
-                  </p>
                 </Link>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -468,18 +456,19 @@ export function CommunityFeed() {
                     >
                       {post.author.displayName}
                     </Link>
-                    {post.author.verified && (
+                    {showIdentityVerified(post.author.verified) && (
                       <span className="text-xs font-medium text-[var(--foreground)]">
                         {t("verified")}
                       </span>
                     )}
-                    <span className="text-xs text-[var(--muted)]">
-                      {t(
-                        kindLabelKey[post.kind] ?? "community_kind_community"
-                      )}{" "}
-                      · {formatDate(post.createdAt)}
-                    </span>
                   </div>
+                  <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                    {t(kindLabelKey[post.kind] ?? "community_kind_community")}
+                    {formatRelativeTime(post.createdAt)
+                      ? ` · ${formatRelativeTime(post.createdAt)}`
+                      : ""}
+                    {` · ${post.author.connectionCount ?? 0} ${t("community_connections")}`}
+                  </p>
                   {post.author.bio && (
                     <p className="mt-0.5 line-clamp-1 text-xs text-[var(--muted)]">
                       {post.author.bio}

@@ -5,6 +5,7 @@ import { ProfileMenu } from "@/components/profile-menu";
 import { useI18n } from "@/components/locale-provider";
 
 type Props = {
+  userId?: string;
   displayName: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
@@ -61,8 +62,9 @@ export function DashboardWelcomeBanner({
             showName={false}
           />
         </div>
-        <h1 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[#0b3d8c] sm:text-4xl">
-          {t("hello")}, {displayName}
+        <p className="mt-4 text-sm text-[#4b5568]">{t("hello")},</p>
+        <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[#0b3d8c] sm:text-4xl">
+          {displayName}
         </h1>
         {kycVerified ? (
           <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--rfacto-green)]">

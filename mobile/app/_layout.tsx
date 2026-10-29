@@ -42,7 +42,7 @@ function AuthGate({
   children: React.ReactNode;
   holdSplash: boolean;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading, addingAccount } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -61,12 +61,15 @@ function AuthGate({
       router.replace("/");
       return;
     }
+    if (user && inAuth && addingAccount) {
+      return;
+    }
     if (user && (inAuth || atWelcome || googleReturn)) {
       router.replace("/(tabs)");
     } else if (!user && !inAuth && !atWelcome) {
       router.replace("/");
     }
-  }, [user, loading, segments, router]);
+  }, [user, loading, segments, router, addingAccount]);
 
   useEffect(() => {
     if (!loading && !holdSplash) {
@@ -167,6 +170,18 @@ export default function RootLayout() {
           <Stack.Screen
             name="community/[id]"
             options={{ headerShown: true, title: "Publication" }}
+          />
+          <Stack.Screen
+            name="community/videos"
+            options={{ headerShown: false, animation: "fade", gestureEnabled: true }}
+          />
+          <Stack.Screen
+            name="profile"
+            options={{ headerShown: true, title: "Profil" }}
+          />
+          <Stack.Screen
+            name="settings"
+            options={{ headerShown: true, title: "Paramètres" }}
           />
           <Stack.Screen
             name="member/[id]"

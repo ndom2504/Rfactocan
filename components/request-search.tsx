@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatDate, formatKg } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type RequestHit = {
   requestId: string;
@@ -278,7 +279,8 @@ export function RequestSearch({
                         {hit.desiredDate && (
                           <Badge>{formatDate(hit.desiredDate)}</Badge>
                         )}
-                        {hit.user.kycStatus === "VERIFIED" && (
+                        {isIdentityVerificationEnabled() &&
+                          hit.user.kycStatus === "VERIFIED" && (
                           <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                             {t("verified")}
                           </Badge>

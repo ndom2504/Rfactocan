@@ -11,6 +11,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { ListingOwnerActions } from "@/components/listing-owner-actions";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type Props = { searchParams: Promise<{ mine?: string }> };
 
@@ -151,7 +152,7 @@ export default async function RequestsPage({ searchParams }: Props) {
                     {req.description}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {req.user.kycStatus === "VERIFIED" && (
+                    {isIdentityVerificationEnabled() && req.user.kycStatus === "VERIFIED" && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "verified")}
                       </Badge>

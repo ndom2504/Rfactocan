@@ -18,6 +18,7 @@ import { Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
 import { api, mediaUrl } from "@/lib/api";
 import { startDirectChat } from "@/lib/dm";
 import { formatDate } from "@/lib/format";
+import { showIdentityVerified } from "@/lib/kyc";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -273,7 +274,7 @@ export default function MemberProfileScreen() {
           <View style={{ paddingHorizontal: 16, marginTop: -36 }}>
             <MiniAvatar name={user?.displayName || "R"} url={user?.avatarUrl} size={80} />
             <Title>{user?.displayName || t("member_profile_title")}</Title>
-            {user?.verified ? (
+            {showIdentityVerified(user?.verified) ? (
               <Text style={{ color: colors.foreground, fontWeight: "700", marginBottom: 4 }}>
                 {t("verified")}
               </Text>
@@ -297,7 +298,7 @@ export default function MemberProfileScreen() {
                 <Button
                   label={t("member_edit_profile")}
                   variant="outline"
-                  onPress={() => router.push("/(tabs)/profile")}
+                  onPress={() => router.push("/profile")}
                 />
               </View>
             ) : (

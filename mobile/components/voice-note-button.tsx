@@ -8,12 +8,16 @@ import { useEffect, useRef, useState } from "react";
 import {
   formatVoiceSecs,
   stopAllVoicePlayback,
+  VOICE_MAX_MS,
   voiceUploadMeta,
 } from "@/lib/voice";
 
-const MAX_MS = 120_000;
-
-export type VoicePickedFile = { uri: string; name: string; type: string };
+export type VoicePickedFile = {
+  uri: string;
+  name: string;
+  type: string;
+  durationMs?: number;
+};
 
 export function useVoiceNote({
   sending,
@@ -36,7 +40,7 @@ export function useVoiceNote({
     const tick = setInterval(() => {
       const ms = Date.now() - startedAt.current;
       setElapsedMs(ms);
-      if (ms >= MAX_MS) void stopRef.current(true);
+      if (ms >= VOICE_MAX_MS) void stopRef.current(true);
     }, 250);
     return () => clearInterval(tick);
   }, [recording]);
@@ -94,6 +98,7 @@ export function useVoiceNote({
     }
     setRecording(false);
     const durationMs = elapsedMs || Date.now() - startedAt.current;
+    setElapsedMs(durationMs);
     if (!keep || !uri || durationMs < 400) {
       setPreviewUri(null);
       return;
@@ -106,7 +111,11 @@ export function useVoiceNote({
     if (!previewUri || sending) return;
     setError("");
     try {
-      await onRecorded({ uri: previewUri, ...voiceUploadMeta(previewUri) });
+      await onRecorded({
+        uri: previewUri,
+        ...voiceUploadMeta(previewUri),
+        durationMs: elapsedMs,
+      });
       setPreviewUri(null);
     } catch {
       setError("Impossible d’envoyer la note vocale.");

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type Props = {
   locale: Locale;
@@ -25,10 +26,14 @@ export function PaymentReadinessCard({
   stripeConfigured,
 }: Props) {
   const steps = [
-    {
-      ok: !kycRequired || kycStatus === "VERIFIED",
-      label: t(locale, kycRequired ? "kyc_step" : "kyc_not_required"),
-    },
+    ...(isIdentityVerificationEnabled()
+      ? [
+          {
+            ok: !kycRequired || kycStatus === "VERIFIED",
+            label: t(locale, kycRequired ? "kyc_step" : "kyc_not_required"),
+          },
+        ]
+      : []),
     {
       ok: connectCharges,
       label: t(locale, "bank_step"),

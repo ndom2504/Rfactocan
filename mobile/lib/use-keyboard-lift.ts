@@ -16,11 +16,15 @@ export function useKeyboardLift() {
     };
     const onHide = () => setHeight(0);
 
-    const show = Keyboard.addListener("keyboardWillShow", onShow);
-    const hide = Keyboard.addListener("keyboardWillHide", onHide);
+    const willShow = Keyboard.addListener("keyboardWillShow", onShow);
+    const didShow = Keyboard.addListener("keyboardDidShow", onShow);
+    const willHide = Keyboard.addListener("keyboardWillHide", onHide);
+    const didHide = Keyboard.addListener("keyboardDidHide", onHide);
     return () => {
-      show.remove();
-      hide.remove();
+      willShow.remove();
+      didShow.remove();
+      willHide.remove();
+      didHide.remove();
     };
   }, []);
 

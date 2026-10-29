@@ -12,7 +12,12 @@ import { UserAvatar } from "@/components/user-avatar";
 import { LinkedText } from "@/components/linked-text";
 import { cn, formatDate } from "@/lib/utils";
 import { formatMoneyFromCents } from "@/lib/currency";
-import { COMMUNITY_MAX_ATTACHMENTS, isAudioAttachment } from "@/lib/community";
+import {
+  COMMUNITY_MAX_ATTACHMENTS,
+  isAudioAttachment,
+  parseVoiceDurationSec,
+  voiceNoteCaption,
+} from "@/lib/community";
 import { VIDEO_CALLS_ENABLED } from "@/lib/call-rules";
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import { VoiceNoteButton } from "@/components/voice-note-button";
@@ -43,6 +48,7 @@ type DmMessage = {
   body: string;
   senderId: string;
   createdAt: string;
+  readAt?: string | null;
   attachmentUrl?: string | null;
   contextType?: string | null;
   contextId?: string | null;
@@ -78,7 +84,7 @@ type ForwardThread = {
 
 function isVoiceMessage(url?: string | null, body?: string | null) {
   const text = (body || "").trim();
-  if (text === "Note vocale" || text === "Voice note") return true;
+  if (/^Note vocale\b/i.test(text) || /^Voice note\b/i.test(text)) return true;
   return Boolean(url && isAudioAttachment("", url));
 }
 
@@ -93,8 +99,8 @@ function isAttachmentOnlyBody(body: string) {
     body === "Pièce jointe" ||
     body === "Attachment" ||
     body === "📎" ||
-    body === "Note vocale" ||
-    body === "Voice note"
+    /^Note vocale\b/i.test(body) ||
+    /^Voice note\b/i.test(body)
   );
 }
 
@@ -801,7 +807,11 @@ export default function DirectMessageChatPage() {
               {m.attachmentUrl && (
                 <div className="mb-2 space-y-2" data-dm-attachment>
                   {isVoiceMessage(m.attachmentUrl, m.body) ? (
-                    <VoiceNoteBubble url={m.attachmentUrl} mine={mine} />
+                    <VoiceNoteBubble
+                      url={m.attachmentUrl}
+                      mine={mine}
+                      durationHintSec={parseVoiceDurationSec(m.body)}
+                    />
                   ) : (
                     <>
                   <a
@@ -883,6 +893,14 @@ export default function DirectMessageChatPage() {
                 }`}
               >
                 {formatDate(m.createdAt)}
+                {mine ? (
+                  <>
+                    {" · "}
+                    <span className={m.readAt ? "text-emerald-100" : "text-white/70"}>
+                      {m.readAt ? t("message_read") : t("message_delivered")}
+                    </span>
+                  </>
+                ) : null}
               </p>
             </div>
             </DmBubble>
@@ -981,13 +999,13 @@ export default function DirectMessageChatPage() {
           </Button>
           <VoiceNoteButton
             disabled={sending || uploading}
-            onRecorded={async (file) => {
+            onRecorded={async (file, durationMs) => {
               setUploading(true);
               setError("");
               try {
                 const att = await uploadCommunityAttachment(file);
                 await sendMessage({
-                  body: t("voice_note"),
+                  body: voiceNoteCaption(durationMs),
                   attachmentUrl: att.url,
                 });
               } catch (err) {

@@ -32,5 +32,5 @@ export const GH: CountryConfig = {
   payments: ["mtn_momo", "mobile_money", "bank", "stripe"],
   transportModes: ["AIR", "ROAD", "SEA"],
   communityWhatsApp: "RFacto Ghana",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

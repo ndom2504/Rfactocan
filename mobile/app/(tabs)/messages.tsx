@@ -1,7 +1,8 @@
 import { type Href, useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -10,12 +11,14 @@ import {
   View,
 } from "react-native";
 import { Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
-import { api, getApiUrl, mediaUrl } from "@/lib/api";
+import { api, mediaUrl } from "@/lib/api";
+import { chatReplyListPreview } from "@/lib/chat-reply";
 import { useAuth } from "@/lib/auth-context";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
 type Peer = { displayName?: string | null; avatarUrl?: string | null };
 
@@ -110,10 +113,7 @@ function previewOf(
   attachmentUrl?: string | null,
   empty = "Aucun message"
 ) {
-  if (attachmentUrl) return `📎 ${body?.slice(0, 60) || "Pièce jointe"}`;
-  const text = (body || "").trim();
-  if (!text) return empty;
-  return text.length > 80 ? `${text.slice(0, 80)}…` : text;
+  return chatReplyListPreview(body, attachmentUrl, empty);
 }
 
 export default function MessagesScreen() {
@@ -217,10 +217,12 @@ export default function MessagesScreen() {
     }, [load])
   );
 
-  async function shareInvite() {
-    const url = agentCode
-      ? `${getApiUrl()}/register?ref=${encodeURIComponent(agentCode)}`
-      : `${getApiUrl()}/register`;
+  useEffect(() => {
+    setRows([]);
+    void load();
+  }, [user?.id, load]);
+
+  async function shareInvite(url: string) {
     const who = user?.displayName || "Rfacto";
     try {
       await Share.share({
@@ -233,14 +235,29 @@ export default function MessagesScreen() {
     }
   }
 
+  function pickStoreAndShare() {
+    Alert.alert(t("invite_share_pick_title"), t("invite_share_pick_hint"), [
+      {
+        text: t("invite_share_android"),
+        onPress: () => void shareInvite(PLAY_STORE_URL),
+      },
+      {
+        text: t("invite_share_iphone"),
+        onPress: () => void shareInvite(APP_STORE_URL),
+      },
+      { text: t("close"), style: "cancel" },
+    ]);
+  }
+
   return (
-    <Screen style={{ paddingBottom: 0 }}>
+    <Screen style={{ paddingBottom: 8 }}>
       <FlatList
+        style={{ flex: 1 }}
         data={rows}
         keyExtractor={(item) => item.key}
         refreshing={loading}
         onRefresh={() => void load()}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
         ListHeaderComponent={
           <View style={{ marginBottom: 8 }}>
             <Title>{t("messages_title")}</Title>
@@ -249,19 +266,9 @@ export default function MessagesScreen() {
               <Button
                 label={t("invite_contacts_share_link")}
                 variant="outline"
-                onPress={() => void shareInvite()}
+                onPress={pickStoreAndShare}
               />
             </View>
-            <Text
-              style={{
-                color: colors.muted,
-                fontSize: 12,
-                marginTop: 8,
-                marginBottom: 8,
-              }}
-            >
-              {t("invite_contacts_hint")}
-            </Text>
             <ErrorText>{error}</ErrorText>
           </View>
         }

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { formatCad, formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 import {
   categoryLabel,
   serviceTypeLabel,
@@ -475,7 +476,8 @@ export default function RequestDetailPage({
                     <div className="min-w-0">
                       <p className="font-medium">
                         {m.trip.user.displayName}
-                        {m.trip.user.kycStatus === "VERIFIED"
+                        {isIdentityVerificationEnabled() &&
+                        m.trip.user.kycStatus === "VERIFIED"
                           ? ` · ${t("verified")}`
                           : ""}
                         {m.trip.user.ratingCount
@@ -711,7 +713,8 @@ export default function RequestDetailPage({
                     />
                     <p className="font-medium">
                       {m.request.user.displayName}
-                      {m.request.user.kycStatus === "VERIFIED"
+                      {isIdentityVerificationEnabled() &&
+                      m.request.user.kycStatus === "VERIFIED"
                         ? ` · ${t("verified")}`
                         : ""}
                       {m.request.user.ratingCount

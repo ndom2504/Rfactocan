@@ -1,10 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ComponentProps } from "react";
 import { VoiceNoteBubble } from "@/components/voice-note-bubble";
 import { useVoiceNote, type VoicePickedFile } from "@/components/voice-note-button";
 import { useI18n } from "@/lib/i18n";
-import { useKeyboardLift } from "@/lib/use-keyboard-lift";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 
@@ -57,13 +57,14 @@ export function ChatComposer({
 }) {
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
-  const keyboardLift = useKeyboardLift();
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, 12);
   const voice = useVoiceNote({ sending, onRecorded });
   const locked = sending || voice.recording || Boolean(voice.previewUri);
   const canSend = !locked && draft.trim().length > 0;
 
   return (
-    <View style={{ paddingBottom: keyboardLift }}>
+    <View style={{ paddingBottom: bottomPad }}>
       {voice.recording ? (
         <View
           style={{
@@ -93,7 +94,10 @@ export function ChatComposer({
           <Text style={{ color: colors.muted, fontSize: 12 }}>{t("voice_preview")}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <View style={{ flex: 1 }}>
-              <VoiceNoteBubble url={voice.previewUri} />
+              <VoiceNoteBubble
+                url={voice.previewUri}
+                durationHintSec={Math.max(1, Math.round(voice.elapsedMs / 1000))}
+              />
             </View>
             <Pressable
               onPress={voice.discardPreview}

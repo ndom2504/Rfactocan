@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { userSatisfiesKyc } from "@/lib/kyc-policy";
+import {
+  isIdentityVerificationEnabled,
+  userSatisfiesKyc,
+} from "@/lib/kyc-policy";
 
 export type DmContextType = "SERVICE" | "JOB" | "MEET" | "IN";
 export type DmChannel = "APP" | "IN";
@@ -50,7 +53,7 @@ export async function assertBothVerified(
     if (u.status === "SUSPENDED") {
       return { ok: false as const, error: "Compte indisponible.", status: 403 };
     }
-    if (!userSatisfiesKyc(u, contextCountry)) {
+    if (isIdentityVerificationEnabled() && !userSatisfiesKyc(u, contextCountry)) {
       return {
         ok: false as const,
         error:
@@ -150,6 +153,22 @@ export async function assertDirectContactAllowed(
       select: { status: true },
     });
     if (!peerUser || peerUser.status === "SUSPENDED") {
+      return {
+        ok: false as const,
+        error: "Utilisateur indisponible.",
+        status: 404,
+        code: "ACCOUNT_UNAVAILABLE",
+      };
+    }
+    return { ok: true as const };
+  }
+
+  if (!isIdentityVerificationEnabled()) {
+    const peer = await prisma.user.findUnique({
+      where: { id: peerId },
+      select: { status: true },
+    });
+    if (!peer || peer.status === "SUSPENDED") {
       return {
         ok: false as const,
         error: "Utilisateur indisponible.",
@@ -331,6 +350,8 @@ export function isDmPlaceholderBody(body?: string | null) {
     text === "Attachment" ||
     text === "📎" ||
     text === "Note vocale" ||
-    text === "Voice note"
+    text === "Voice note" ||
+    /^Note vocale\s+\d+:\d{2}/i.test(text) ||
+    /^Voice note\s+\d+:\d{2}/i.test(text)
   );
 }

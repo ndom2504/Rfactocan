@@ -15,7 +15,11 @@ import {
   serviceTypeLabel,
 } from "@/lib/services-catalog";
 import { displayWebsiteHost } from "@/lib/service-website";
-import { identityDocumentsAccepted, userSatisfiesKyc } from "@/lib/kyc-policy";
+import {
+  identityDocumentsAccepted,
+  isIdentityVerificationEnabled,
+  userSatisfiesKyc,
+} from "@/lib/kyc-policy";
 
 type Listing = {
   id: string;
@@ -274,7 +278,8 @@ export default function ServiceListingDetailPage() {
             {listing.user.ratingCount
               ? `★ ${listing.user.ratingAvg.toFixed(1)} (${listing.user.ratingCount})`
               : t("services_no_rating")}
-            {identityDocumentsAccepted(listing.user)
+            {isIdentityVerificationEnabled() &&
+            identityDocumentsAccepted(listing.user)
               ? ` · ${t("verified")}`
               : ""}
           </p>
@@ -309,7 +314,7 @@ export default function ServiceListingDetailPage() {
               {t("services_contact")}
             </Button>
           )}
-          {!isOwner && meId && !meVerified && (
+          {!isOwner && meId && !meVerified && isIdentityVerificationEnabled() && (
             <Link href={`/profile?next=${encodeURIComponent(`/services/listing/${listing.id}`)}`}>
               <Button type="button">{t("verify_identity")}</Button>
             </Link>

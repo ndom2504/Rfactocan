@@ -19,6 +19,10 @@ import {
   KIND_LABELS,
   type CommunityPost,
 } from "@/lib/community";
+import {
+  collectCommunityVideos,
+  setCommunityVideoFeed,
+} from "@/lib/community-video-feed";
 import { startDirectChat } from "@/lib/dm";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -213,6 +217,11 @@ export default function CommunityPostScreen() {
               <CommunityVideoPlayer
                 url={mediaUrl(video.url)}
                 edgeToEdge
+                onOpenFeed={(url) => {
+                  if (!post) return;
+                  setCommunityVideoFeed(collectCommunityVideos([post]), url);
+                  router.push("/community/videos");
+                }}
               />
             </View>
           ))}

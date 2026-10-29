@@ -59,6 +59,18 @@ export default function TabLayout() {
         options={{ href: null, title: t("nav_announce") }}
       />
       <Tabs.Screen
+        name="bookings"
+        options={{
+          title: t("nav_bookings"),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name="calendar"
+              color={focused ? colors.accent : colors.muted}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: t("nav_messages"),
@@ -80,12 +92,6 @@ export default function TabLayout() {
       />
       <Tabs.Screen name="trips" options={{ href: null, title: "Voyages" }} />
       <Tabs.Screen name="requests" options={{ href: null, title: "Demandes" }} />
-      <Tabs.Screen
-        name="bookings"
-        options={{ href: null, title: t("nav_bookings") }}
-      />
-      <Tabs.Screen name="profile" options={{ href: null, title: t("nav_profile") }} />
-      <Tabs.Screen name="settings" options={{ href: null, title: t("nav_settings") }} />
     </Tabs>
   );
 }

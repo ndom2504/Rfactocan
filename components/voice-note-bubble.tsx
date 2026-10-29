@@ -25,14 +25,19 @@ function formatTime(sec: number) {
 type Props = {
   url: string;
   mine?: boolean;
+  durationHintSec?: number;
 };
 
-export function VoiceNoteBubble({ url, mine = false }: Props) {
+export function VoiceNoteBubble({
+  url,
+  mine = false,
+  durationHintSec = 0,
+}: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(durationHintSec);
   const [current, setCurrent] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -187,7 +192,13 @@ export function VoiceNoteBubble({ url, mine = false }: Props) {
             ))}
           </div>
           <p className={cn("mt-0.5 text-[11px]", mine ? "text-white/80" : "text-[var(--muted)]")}>
-            {formatTime(playing || progress > 0 ? current : duration)}
+            {formatTime(
+              playing || progress > 0
+                ? current
+                : duration > 0
+                  ? duration
+                  : durationHintSec
+            )}
           </p>
         </div>
       </div>

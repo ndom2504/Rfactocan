@@ -40,5 +40,5 @@ export const CD: CountryConfig = {
   ],
   transportModes: ["AIR", "ROAD", "SEA", "RAIL"],
   communityWhatsApp: "RFacto Congo Kinshasa",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

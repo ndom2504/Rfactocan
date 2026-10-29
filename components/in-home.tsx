@@ -14,6 +14,8 @@ import { CountryPhoneFields } from "@/components/country-phone-fields";
 import { getPhonePlan } from "@/lib/phone-countries";
 import { indexByPhoneKeys, lookupByPhoneKeys } from "@/lib/phone-auth";
 import { inConversationPath } from "@/lib/dm";
+import { chatReplyListPreview } from "@/lib/chat-reply";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
 type InMe = {
   id?: string;
@@ -90,15 +92,6 @@ function writeStoredContacts(rows: LocalContact[]) {
   }
 }
 
-function inviteUrl(agentCode?: string | null) {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://www.rfacto.com";
-  const code = agentCode?.trim();
-  return code
-    ? `${origin}/share/in?ref=${encodeURIComponent(code)}`
-    : `${origin}/share/in`;
-}
-
 export function InHome({
   displayName,
   avatarUrl,
@@ -134,6 +127,8 @@ export function InHome({
   const [inThreads, setInThreads] = useState<InThread[]>([]);
   const [locals, setLocals] = useState<LocalContact[]>([]);
   const [copied, setCopied] = useState(false);
+  const [storePick, setStorePick] = useState<"share" | "sms" | null>(null);
+  const [smsPhone, setSmsPhone] = useState("");
   const [pickerOk, setPickerOk] = useState(false);
   const [lookupMissed, setLookupMissed] = useState(false);
   const [pane, setPane] = useState<"chat" | "directory" | "calls">("chat");
@@ -351,15 +346,17 @@ export function InHome({
     router.push(inConversationPath(id));
   }
 
-  const link = inviteUrl(agentCode);
   const inviteName = (me.displayName || displayName).trim();
-  const inviteText = (
-    inviteName
-      ? t("in_invite_share_signed").replace("{name}", inviteName)
-      : t("in_invite_share")
-  ).replace("{url}", link);
+  function inviteTextFor(url: string) {
+    return (
+      inviteName
+        ? t("in_invite_share_signed").replace("{name}", inviteName)
+        : t("in_invite_share")
+    ).replace("{url}", url);
+  }
 
-  async function shareInvite() {
+  async function shareInvite(url: string) {
+    const inviteText = inviteTextFor(url);
     try {
       const res = await fetch(IN_AD_PATH);
       const blob = await res.blob();
@@ -369,7 +366,7 @@ export function InHome({
       const withFile = {
         title: "Rfacto + In",
         text: inviteText,
-        url: link,
+        url,
         files: [file],
       };
       if (navigator.canShare?.(withFile)) {
@@ -381,7 +378,7 @@ export function InHome({
     }
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Rfacto + In", text: inviteText, url: link });
+        await navigator.share({ title: "Rfacto + In", text: inviteText, url });
         return;
       } catch {
         // fall through
@@ -390,6 +387,17 @@ export function InHome({
     await navigator.clipboard.writeText(inviteText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function applyStorePick(url: string) {
+    const mode = storePick;
+    setStorePick(null);
+    if (mode === "sms" && smsPhone) {
+      const body = encodeURIComponent(inviteTextFor(url));
+      window.location.href = `sms:${encodeURIComponent(smsPhone)}?body=${body}`;
+      return;
+    }
+    void shareInvite(url);
   }
 
   const matchByPhone = useMemo(
@@ -553,10 +561,11 @@ export function InHome({
                               {th.peer?.displayName || t("dm_direct_chat")}
                             </p>
                             <p className="truncate text-sm text-[var(--muted)]">
-                              {th.lastMessage?.body?.trim() ||
-                                (th.lastMessage?.attachmentUrl
-                                  ? t("attachment_label")
-                                  : t("no_messages"))}
+                              {chatReplyListPreview(
+                                th.lastMessage?.body,
+                                th.lastMessage?.attachmentUrl,
+                                t("no_messages")
+                              )}
                             </p>
                           </div>
                         </div>
@@ -643,7 +652,11 @@ export function InHome({
                 >
                   {t("in_import_contacts")}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => void shareInvite()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStorePick("share")}
+                >
                   {copied ? t("in_invite_copied") : t("in_share_invite")}
                 </Button>
               </div>
@@ -661,12 +674,16 @@ export function InHome({
                     <p className="font-medium">{c.name}</p>
                     <p className="text-sm text-[var(--muted)]">{c.phone}</p>
                   </div>
-                  <a
-                    href={`sms:${encodeURIComponent(c.phone)}?body=${encodeURIComponent(inviteText)}`}
+                  <button
+                    type="button"
                     className="text-sm font-medium text-[var(--foreground)]"
+                    onClick={() => {
+                      setSmsPhone(c.phone);
+                      setStorePick("sms");
+                    }}
                   >
                     SMS
-                  </a>
+                  </button>
                 </Card>
               ))}
             </div>
@@ -744,6 +761,38 @@ export function InHome({
 
       {info && <p className="text-sm text-[#D4AF37]">{info}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
+
+      {storePick && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <Card className="w-full max-w-sm space-y-3 p-5">
+            <h3 className="text-lg font-semibold">{t("invite_share_pick_title")}</h3>
+            <p className="text-sm text-[var(--muted)]">{t("invite_share_pick_hint")}</p>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => applyStorePick(PLAY_STORE_URL)}
+            >
+              {t("invite_share_android")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => applyStorePick(APP_STORE_URL)}
+            >
+              {t("invite_share_iphone")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => setStorePick(null)}
+            >
+              {t("close")}
+            </Button>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

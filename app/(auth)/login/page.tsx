@@ -19,6 +19,7 @@ import {
   isSmsOnlyCountry,
   showWebGoogleAuth,
 } from "@/lib/phone-countries";
+import { rememberSavedAccount } from "@/lib/saved-accounts";
 
 const ERROR_MESSAGES: Record<string, { fr: string; en: string }> = {
   google_not_configured: {
@@ -152,6 +153,14 @@ function LoginForm() {
       setInfo(t("otp_sent"));
       return;
     }
+    if (data.token && data.user?.id) {
+      rememberSavedAccount({
+        id: data.user.id,
+        displayName: data.user.displayName,
+        avatarUrl: data.user.avatarUrl,
+        token: data.token,
+      });
+    }
     goNext();
   }
 
@@ -171,6 +180,14 @@ function LoginForm() {
     if (!res.ok) {
       setError(data.error ?? t("otp_invalid"));
       return;
+    }
+    if (data.token && data.user?.id) {
+      rememberSavedAccount({
+        id: data.user.id,
+        displayName: data.user.displayName,
+        avatarUrl: data.user.avatarUrl,
+        token: data.token,
+      });
     }
     goNext();
   }

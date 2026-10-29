@@ -14,6 +14,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { transportModeLabel } from "@/lib/transport";
 import { useI18n } from "@/components/locale-provider";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type TravelerHit = {
   tripId: string;
@@ -272,7 +273,8 @@ export function TravelerSearch({
                         )}
                         /kg
                       </Badge>
-                      {hit.user.kycStatus === "VERIFIED" && (
+                      {isIdentityVerificationEnabled() &&
+                        hit.user.kycStatus === "VERIFIED" && (
                         <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                           {t("verified")}
                         </Badge>

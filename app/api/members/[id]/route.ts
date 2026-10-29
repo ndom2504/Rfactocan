@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { openRequestDateWhere, openTripDateWhere } from "@/lib/listing-freshness";
 import { prisma } from "@/lib/prisma";
 import { toReadableMediaUrl } from "@/lib/storage";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -82,7 +83,7 @@ export async function GET(_request: Request, { params }: Params) {
       id: row.follower.id,
       displayName: row.follower.displayName,
       avatarUrl: toReadableMediaUrl(row.follower.avatarUrl),
-      verified: row.follower.kycStatus === "VERIFIED",
+      verified: showIdentityVerified(row.follower.kycStatus === "VERIFIED"),
     }));
   } catch (error) {
     console.error("Member connections query failed:", error);
@@ -193,7 +194,7 @@ export async function GET(_request: Request, { params }: Params) {
       bannerUrl: toReadableMediaUrl(user.bannerUrl),
       bio: user.bio,
       country: user.country,
-      verified: user.kycStatus === "VERIFIED",
+      verified: showIdentityVerified(user.kycStatus === "VERIFIED"),
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,
       completedDeliveries: user.completedDeliveries,

@@ -2,14 +2,17 @@ import { requestRecordingPermissionsAsync } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { type Href, Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   Pressable,
   Share,
   Text,
@@ -46,7 +49,12 @@ import {
 } from "@/lib/service-payments";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
-import { isVoiceMessage, stopAllVoicePlayback } from "@/lib/voice";
+import {
+  isVoiceMessage,
+  parseVoiceDurationSec,
+  stopAllVoicePlayback,
+  voiceNoteCaption,
+} from "@/lib/voice";
 
 const PROCESSING_DAYS = [1, 2, 3, 5, 7, 14, 30];
 
@@ -56,6 +64,7 @@ type Message = {
   attachmentUrl?: string | null;
   senderId: string;
   createdAt: string;
+  readAt?: string | null;
   contextType?: string | null;
   contextId?: string | null;
   reactions?: ReactionSummary[];
@@ -95,8 +104,8 @@ function isAttachmentOnlyBody(body?: string | null) {
     text === "Pièce jointe" ||
     text === "Attachment" ||
     text === "📎" ||
-    text === "Note vocale" ||
-    text === "Voice note"
+    text.startsWith("Note vocale") ||
+    text.startsWith("Voice note")
   );
 }
 
@@ -106,6 +115,8 @@ export default function DirectChatScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
+  const insets = useSafeAreaInsets();
+  const headerOffset = Platform.OS === "ios" ? insets.top + 44 : 0;
   const { startOutgoing } = useCallActions();
   const listRef = useRef<FlatList<Message>>(null);
   const [peer, setPeer] = useState<string>("");
@@ -458,7 +469,7 @@ export default function DirectChatScreen() {
       await api(`/api/dm/${id}/messages`, {
         method: "POST",
         body: JSON.stringify({
-          body: "Note vocale",
+          body: voiceNoteCaption(file.durationMs || 0),
           attachmentUrl: att.url,
         }),
       });
@@ -539,7 +550,12 @@ export default function DirectChatScreen() {
   }
 
   return (
-    <Screen style={{ padding: 12, paddingBottom: 8 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={headerOffset}
+    >
+    <Screen style={{ padding: 12, paddingBottom: 0 }}>
       <Stack.Screen
         options={{
           headerTintColor: colors.accent,
@@ -758,7 +774,11 @@ export default function DirectChatScreen() {
                     }}
                   >
                 {voice && url ? (
-                  <VoiceNoteBubble url={url} mine={mine} />
+                  <VoiceNoteBubble
+                    url={url}
+                    mine={mine}
+                    durationHintSec={parseVoiceDurationSec(item.body)}
+                  />
                 ) : url ? (
                   <View>
                     <AttachmentPreview
@@ -818,6 +838,19 @@ export default function DirectChatScreen() {
                 ) : null}
                   </View>
                 </Pressable>
+                {mine ? (
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      color: colors.muted,
+                      alignSelf: "flex-end",
+                      marginTop: 2,
+                      marginRight: 4,
+                    }}
+                  >
+                    {item.readAt ? t("message_read") : t("message_delivered")}
+                  </Text>
+                ) : null}
                 <DmReactionChips
                   reactions={item.reactions ?? []}
                   mine={mine}
@@ -1034,5 +1067,6 @@ export default function DirectChatScreen() {
         </Pressable>
       </Modal>
     </Screen>
+    </KeyboardAvoidingView>
   );
 }

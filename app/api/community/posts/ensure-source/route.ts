@@ -8,6 +8,7 @@ import {
   parseCommunityFeedId,
 } from "@/lib/community-source";
 import { prisma } from "@/lib/prisma";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 
 const bodySchema = z.object({
   feedId: z.string().trim().min(3).max(80),
@@ -60,7 +61,7 @@ function serializeEnsured(post: {
       avatarUrl: post.author.avatarUrl,
       bio: post.author.bio,
       country: post.author.country,
-      verified: post.author.kycStatus === "VERIFIED",
+      verified: showIdentityVerified(post.author.kycStatus === "VERIFIED"),
       ratingAvg: post.author.ratingAvg,
       ratingCount: post.author.ratingCount,
       connectionCount: 0,

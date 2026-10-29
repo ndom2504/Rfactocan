@@ -33,5 +33,5 @@ export const SN: CountryConfig = {
   payments: ["orange_money", "mobile_money", "bank"],
   transportModes: ["AIR", "ROAD", "SEA"],
   communityWhatsApp: "RFacto Sénégal",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { useI18n } from "@/components/locale-provider";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type MyTrip = {
   id: string;
@@ -348,7 +349,8 @@ export function TripSuggestedRequests({ tripId }: { tripId: string }) {
               <p className="text-xs text-[var(--muted)]">{t("profile_photo")}</p>
               <p className="font-medium">
                 {m.request.user.displayName}
-                {m.request.user.kycStatus === "VERIFIED"
+                {isIdentityVerificationEnabled() &&
+                m.request.user.kycStatus === "VERIFIED"
                   ? ` · ${t("verified")}`
                   : ""}
                 {m.request.user.ratingCount

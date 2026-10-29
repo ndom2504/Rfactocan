@@ -1,12 +1,11 @@
-import { Image, Pressable, Text, View } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useRouter } from "expo-router";
+import { useRef } from "react";
+import { Image, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AccountMenu } from "@/components/account-menu";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { useAuth } from "@/lib/auth-context";
 import { mediaUrl } from "@/lib/api";
-import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 
@@ -15,12 +14,13 @@ const BAR_HEIGHT = 64;
 
 export function AppHeader() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { user } = useAuth();
-  const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const initial = (user?.displayName || "R").slice(0, 1).toUpperCase();
   const avatar = user?.avatarUrl ? mediaUrl(user.avatarUrl) : "";
+  const stickyAvatar = useRef(avatar);
+  if (avatar) stickyAvatar.current = avatar;
+  const shownAvatar = user ? avatar || stickyAvatar.current : "";
 
   return (
     <View
@@ -40,30 +40,37 @@ export function AppHeader() {
           justifyContent: "space-between",
         }}
       >
-        <Pressable
-          onPress={() => router.push("/(tabs)/profile")}
+        <View
           style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}
-          accessibilityLabel={t("nav_profile")}
         >
-          {avatar ? (
-            <Image
-              source={{ uri: avatar }}
-              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.accentSoft }}
-            />
-          ) : (
-            <View
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: colors.accentSoft,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ color: colors.foreground, fontWeight: "700" }}>{initial}</Text>
-            </View>
-          )}
+          <AccountMenu size={36}>
+            {shownAvatar ? (
+              <Image
+                source={{ uri: shownAvatar }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: colors.accentSoft,
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: colors.accentSoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: colors.foreground, fontWeight: "700" }}>
+                  {initial}
+                </Text>
+              </View>
+            )}
+          </AccountMenu>
           <Text
             style={{
               fontSize: 20,
@@ -73,26 +80,10 @@ export function AppHeader() {
           >
             Rfacto
           </Text>
-        </Pressable>
+        </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           <LocaleToggle />
           <NotificationBell />
-          <Pressable
-            onPress={() => router.push("/(tabs)/settings")}
-            hitSlop={8}
-            style={{ padding: 6 }}
-            accessibilityLabel={t("nav_settings")}
-          >
-            <FontAwesome name="cog" size={20} color={colors.accent} />
-          </Pressable>
-          <Pressable
-            onPress={() => router.push("/(tabs)/bookings")}
-            hitSlop={8}
-            style={{ padding: 6 }}
-            accessibilityLabel={t("nav_bookings")}
-          >
-            <FontAwesome name="calendar" size={18} color={colors.accent} />
-          </Pressable>
         </View>
       </View>
     </View>

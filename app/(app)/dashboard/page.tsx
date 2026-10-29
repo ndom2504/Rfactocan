@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
-import { userSatisfiesKyc } from "@/lib/kyc-policy";
+import { isIdentityVerificationEnabled, userSatisfiesKyc } from "@/lib/kyc-policy";
 import { prisma } from "@/lib/prisma";
 import { getRequestLocale } from "@/lib/locale";
 import { t, bookingStatusLabel } from "@/lib/i18n";
@@ -57,10 +57,11 @@ export default async function DashboardPage() {
   return (
     <div>
       <DashboardWelcomeBanner
+        userId={user.id}
         displayName={user.displayName}
         avatarUrl={user.avatarUrl}
         bannerUrl={user.bannerUrl}
-        kycVerified={userSatisfiesKyc(user)}
+        kycVerified={isIdentityVerificationEnabled() && userSatisfiesKyc(user)}
       />
 
       <div className="mx-auto max-w-6xl space-y-8 px-6 py-8">
@@ -120,15 +121,15 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3" data-tour="stats">
-        <Card>
+        <Card className="text-center">
           <CardDescription>{t(locale, "open_trips")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">{trips}</CardTitle>
         </Card>
-        <Card>
+        <Card className="text-center">
           <CardDescription>{t(locale, "open_requests")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">{requests}</CardTitle>
         </Card>
-        <Card>
+        <Card className="text-center">
           <CardDescription>{t(locale, "avg_rating")}</CardDescription>
           <CardTitle className="mt-2 text-3xl">
             {user.ratingCount ? user.ratingAvg.toFixed(1) : "—"}

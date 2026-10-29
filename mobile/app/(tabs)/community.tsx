@@ -5,13 +5,14 @@ import {
   FlatList,
   Image,
   Pressable,
-  ScrollView,
   Share,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
+  type ViewToken,
 } from "react-native";
-import { Button, ErrorText, Field, Muted, Screen } from "@/components/ui";
+import { Button, ErrorText, Screen } from "@/components/ui";
 import { CommunityVideoPlayer } from "@/components/community-video-player";
 import { api, getApiUrl, mediaUrl } from "@/lib/api";
 import {
@@ -24,7 +25,12 @@ import {
   type CommunityPost,
   KIND_LABELS,
 } from "@/lib/community";
-import { formatDate } from "@/lib/format";
+import {
+  collectCommunityVideos,
+  setCommunityVideoFeed,
+} from "@/lib/community-video-feed";
+import { formatRelativeTime } from "@/lib/format";
+import { showIdentityVerified } from "@/lib/kyc";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -138,20 +144,18 @@ function ActionCell({
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const locked = Boolean(disabled || busy);
   return (
-    <View style={{ flex: 1, padding: 4 }} collapsable={false}>
+    <View style={{ flex: 1 }} collapsable={false}>
       <TouchableOpacity
         accessibilityRole="button"
         activeOpacity={0.65}
         disabled={locked}
         onPress={onPress}
         style={{
-          minHeight: 44,
-          borderRadius: 8,
+          minHeight: 40,
           alignItems: "center",
           justifyContent: "center",
-          paddingHorizontal: 6,
-          backgroundColor: active ? colors.accentSoft : colors.surface2,
-          opacity: locked ? 0.45 : 1,
+          paddingHorizontal: 4,
+          opacity: locked ? 0.4 : 1,
         }}
       >
         {busy ? (
@@ -160,10 +164,10 @@ function ActionCell({
           <Text
             numberOfLines={1}
             style={{
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: "700",
               textAlign: "center",
-              color: active ? colors.accent : colors.foreground,
+              color: active ? colors.accent : colors.muted,
             }}
           >
             {label}
@@ -186,7 +190,30 @@ export default function CommunityScreen() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [inViewIds, setInViewIds] = useState<Record<string, boolean>>({});
+  const [soundPostId, setSoundPostId] = useState<string | null>(null);
   const actionLock = useRef(false);
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 45,
+  }).current;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const next: Record<string, boolean> = {};
+      let best: { id: string; pct: number } | null = null;
+      for (const token of viewableItems) {
+        const post = token.item as CommunityPost | undefined;
+        if (!post?.id) continue;
+        next[post.id] = true;
+        const hasVideo = (post.attachments ?? []).some(attachmentIsVideo);
+        const pct = token.percentVisible ?? 0;
+        if (hasVideo && (!best || pct > best.pct)) {
+          best = { id: post.id, pct };
+        }
+      }
+      setInViewIds(next);
+      setSoundPostId(best?.id ?? null);
+    }
+  ).current;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -220,6 +247,35 @@ export default function CommunityScreen() {
     () => posts.filter((p) => postMatchesQuery(p, query)),
     [posts, query]
   );
+
+  function filterLabel(id: CommunityFilter) {
+    switch (id) {
+      case "ANNOUNCE":
+        return t("community_kind_announce");
+      case "TRIP":
+        return t("community_kind_trip");
+      case "PARCEL":
+        return t("community_kind_parcel");
+      case "SERVICE":
+        return t("community_kind_service");
+      default:
+        return t("filter_all");
+    }
+  }
+
+  function kindLabel(kind: string) {
+    const keys: Record<string, "community_kind_announce" | "community_kind_trip" | "community_kind_parcel" | "community_kind_service" | "community_kind_business" | "community_kind_opportunity" | "community_kind_community"> = {
+      ANNOUNCE: "community_kind_announce",
+      TRIP: "community_kind_trip",
+      PARCEL: "community_kind_parcel",
+      SERVICE: "community_kind_service",
+      BUSINESS: "community_kind_business",
+      OPPORTUNITY: "community_kind_opportunity",
+      COMMUNITY: "community_kind_community",
+    };
+    const key = keys[kind];
+    return key ? t(key) : KIND_LABELS[kind] || kind;
+  }
 
   function runExclusive(key: string, run: () => void | Promise<void>) {
     if (actionLock.current) return;
@@ -313,18 +369,45 @@ export default function CommunityScreen() {
   }
 
   const header: ReactNode = (
-    <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-      <Muted>{t("community_announce_prompt")}</Muted>
-      <View style={{ marginBottom: 20 }}>
+    <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 }}>
+      <Text
+        style={{
+          fontSize: 28,
+          fontWeight: "800",
+          textAlign: "center",
+          color: colors.foreground,
+          letterSpacing: -0.4,
+        }}
+      >
+        {t("nav_community")}
+      </Text>
+      <Text
+        style={{
+          marginTop: 8,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: "center",
+          color: colors.muted,
+          paddingHorizontal: 8,
+        }}
+      >
+        {t("community_announce_prompt")}
+      </Text>
+      <View style={{ marginTop: 16, alignSelf: "stretch" }}>
         <Button
           label={t("nav_announce")}
+          variant="outline"
           onPress={() => router.push("/(tabs)/announce")}
         />
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 8, gap: 8 }}
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: 8,
+          marginTop: 18,
+        }}
       >
         {FILTERS.map((item) => {
           const selected = filter === item.id;
@@ -333,32 +416,43 @@ export default function CommunityScreen() {
               key={item.id || "all"}
               onPress={() => setFilter(item.id)}
               style={{
-                paddingHorizontal: 12,
+                paddingHorizontal: 14,
                 paddingVertical: 8,
                 borderRadius: 999,
                 backgroundColor: selected ? colors.accent : colors.surface,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: selected ? colors.accent : colors.border,
               }}
             >
               <Text
                 style={{
                   fontWeight: "700",
                   fontSize: 13,
-                  color: selected ? "#fff" : colors.foreground,
+                  color: selected ? colors.white : colors.foreground,
                 }}
               >
-                {item.label}
+                {filterLabel(item.id)}
               </Text>
             </Pressable>
           );
         })}
-      </ScrollView>
-      <Field
-        label={t("search")}
+      </View>
+      <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Trajet, kilos, auteur…"
+        placeholder={t("community_search_placeholder")}
+        placeholderTextColor={colors.muted}
+        style={{
+          marginTop: 14,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 14,
+          paddingHorizontal: 14,
+          paddingVertical: 12,
+          fontSize: 16,
+          color: colors.foreground,
+        }}
       />
     </View>
   );
@@ -376,20 +470,26 @@ export default function CommunityScreen() {
         refreshing={loading}
         onRefresh={() => void load()}
         ListHeaderComponent={header}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        ItemSeparatorComponent={() => (
-          <View style={{ height: 8, backgroundColor: colors.surface2 }} />
-        )}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={colors.accent} style={{ marginTop: 24 }} />
+            <ActivityIndicator color={colors.accent} style={{ marginTop: 32 }} />
           ) : (
-            <View style={{ paddingHorizontal: 16 }}>
-              <Muted>
-                Rien pour le moment. Annoncez un événement, ou publiez un voyage,
-                un colis ou un service.
-              </Muted>
-            </View>
+            <Text
+              style={{
+                marginTop: 28,
+                paddingHorizontal: 28,
+                textAlign: "center",
+                color: colors.muted,
+                fontSize: 15,
+                lineHeight: 22,
+              }}
+            >
+              {t("community_empty")}
+            </Text>
           )
         }
         renderItem={({ item }) => {
@@ -400,90 +500,72 @@ export default function CommunityScreen() {
           const isOpen = Boolean(expanded[item.id]);
           const name = item.author?.displayName || "Rfacto";
           const authorId = item.author?.id;
-          const banner = item.author?.bannerUrl
-            ? mediaUrl(item.author.bannerUrl)
-            : "";
           const openMember = () => {
             if (authorId) router.push(`/member/${authorId}` as Href);
           };
           return (
-            <View style={{ backgroundColor: colors.background, width: "100%" }}>
-              {banner ? (
-                <Pressable onPress={openMember} disabled={!authorId}>
-                  <Image
-                    source={{ uri: banner }}
-                    style={{ width: "100%", height: 112, backgroundColor: colors.surface2 }}
-                    resizeMode="cover"
-                  />
-                </Pressable>
-              ) : null}
+            <View
+              style={{
+                backgroundColor: colors.surface,
+                marginHorizontal: 16,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+                overflow: "hidden",
+              }}
+            >
               <View
                 style={{
                   flexDirection: "row",
+                  alignItems: "center",
                   gap: 12,
-                  paddingHorizontal: 16,
-                  paddingTop: banner ? 8 : 12,
+                  paddingHorizontal: 14,
+                  paddingTop: 12,
                   paddingBottom: 8,
                 }}
               >
+                <Pressable onPress={openMember} disabled={!authorId}>
+                  <Avatar name={name} url={item.author?.avatarUrl} />
+                </Pressable>
                 <Pressable
                   onPress={openMember}
                   disabled={!authorId}
-                  style={{ alignItems: "center", width: 56 }}
+                  style={{ flex: 1 }}
                 >
-                  <Avatar name={name} url={item.author?.avatarUrl} />
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "700",
-                      color: colors.foreground,
-                      marginTop: 4,
-                    }}
-                  >
-                    {item.author?.connectionCount ?? 0}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 10,
-                      color: colors.muted,
-                      textAlign: "center",
-                    }}
-                  >
-                    {t("community_connections")}
-                  </Text>
-                </Pressable>
-                <Pressable onPress={openMember} disabled={!authorId} style={{ flex: 1 }}>
                   <Text
                     style={{
                       fontWeight: "700",
                       color: colors.foreground,
                       fontSize: 15,
                     }}
+                    numberOfLines={1}
                   >
                     {name}
+                    {showIdentityVerified(item.author?.verified)
+                      ? ` · ${t("verified")}`
+                      : ""}
                   </Text>
-                  {item.author?.verified ? (
-                    <Text
-                      style={{
-                        color: colors.foreground,
-                        fontSize: 12,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {t("verified")}
-                    </Text>
-                  ) : null}
-                  <Muted>
-                    {KIND_LABELS[item.kind] || item.kind}
-                    {` · ${formatDate(item.createdAt)}`}
-                  </Muted>
+                  <Text
+                    style={{
+                      marginTop: 2,
+                      color: colors.muted,
+                      fontSize: 12,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {kindLabel(item.kind)}
+                    {formatRelativeTime(item.createdAt)
+                      ? ` · ${formatRelativeTime(item.createdAt)}`
+                      : ""}
+                    {` · ${item.author?.connectionCount ?? 0} ${t("community_connections")}`}
+                  </Text>
                 </Pressable>
               </View>
 
               {item.title?.trim() ? (
                 <Pressable
                   onPress={() => openListing(item)}
-                  style={{ paddingHorizontal: 16 }}
+                  style={{ paddingHorizontal: 14 }}
                 >
                   <Text
                     style={{
@@ -502,9 +584,9 @@ export default function CommunityScreen() {
                 <Text
                   style={{
                     color: colors.foreground,
-                    lineHeight: 20,
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
+                    lineHeight: 21,
+                    paddingHorizontal: 14,
+                    paddingBottom: 8,
                   }}
                   numberOfLines={longBody && !isOpen ? 5 : undefined}
                 >
@@ -519,13 +601,13 @@ export default function CommunityScreen() {
                       [item.id]: !prev[item.id],
                     }))
                   }
-                  style={{ paddingHorizontal: 16 }}
+                  style={{ paddingHorizontal: 14, paddingBottom: 8 }}
                 >
                   <Text
                     style={{
-                      color: colors.foreground,
+                      color: colors.accent,
                       fontWeight: "700",
-                      marginTop: 4,
+                      fontSize: 13,
                     }}
                   >
                     {isOpen ? t("community_read_less") : t("community_read_more")}
@@ -541,61 +623,66 @@ export default function CommunityScreen() {
                   key={video.url}
                   url={mediaUrl(video.url)}
                   edgeToEdge
+                  inView={Boolean(inViewIds[item.id])}
+                  canHear={soundPostId === item.id}
+                  onOpenFeed={(url) => {
+                    setCommunityVideoFeed(collectCommunityVideos(posts), url);
+                    router.push("/community/videos");
+                  }}
                 />
               ))}
 
-              <Text
-                style={{
-                  color: colors.muted,
-                  fontSize: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 4,
-                }}
-              >
-                {item.commentCount ?? 0} {t("community_comment_action")}
-              </Text>
+              {(item.commentCount ?? 0) > 0 ? (
+                <Text
+                  style={{
+                    color: colors.muted,
+                    fontSize: 12,
+                    paddingHorizontal: 14,
+                    paddingTop: 8,
+                  }}
+                >
+                  {item.commentCount} {t("community_comment_action")}
+                </Text>
+              ) : null}
 
               <View
                 style={{
-                  marginTop: 2,
-                  paddingHorizontal: 8,
-                  paddingBottom: 8,
+                  marginTop: 4,
+                  flexDirection: "row",
+                  paddingHorizontal: 4,
+                  paddingVertical: 4,
                   borderTopWidth: 1,
                   borderTopColor: colors.border,
                 }}
               >
-                <View style={{ flexDirection: "row" }}>
-                  <ActionCell
-                    label={
-                      item.author?.connectedByMe
-                        ? t("community_connected")
-                        : t("community_connect")
-                    }
-                    active={Boolean(item.author?.connectedByMe)}
-                    disabled={item.isOwner}
-                    busy={busyKey === `${item.id}:connect`}
-                    onPress={() => toggleConnect(item)}
-                  />
-                  <ActionCell
-                    label={t("community_comment_action")}
-                    busy={busyKey === `${item.id}:comments`}
-                    onPress={() => openComments(item)}
-                  />
-                </View>
-                <View style={{ flexDirection: "row" }}>
-                  <ActionCell
-                    label={t("community_see")}
-                    onPress={() =>
-                      runExclusive(`${item.id}:see`, () => openListing(item))
-                    }
-                  />
-                  <ActionCell
-                    label={t("community_share")}
-                    onPress={() =>
-                      runExclusive(`${item.id}:share`, () => sharePost(item))
-                    }
-                  />
-                </View>
+                <ActionCell
+                  label={
+                    item.author?.connectedByMe
+                      ? t("community_connected")
+                      : t("community_connect")
+                  }
+                  active={Boolean(item.author?.connectedByMe)}
+                  disabled={item.isOwner}
+                  busy={busyKey === `${item.id}:connect`}
+                  onPress={() => toggleConnect(item)}
+                />
+                <ActionCell
+                  label={t("community_comment_action")}
+                  busy={busyKey === `${item.id}:comments`}
+                  onPress={() => openComments(item)}
+                />
+                <ActionCell
+                  label={t("community_see")}
+                  onPress={() =>
+                    runExclusive(`${item.id}:see`, () => openListing(item))
+                  }
+                />
+                <ActionCell
+                  label={t("community_share")}
+                  onPress={() =>
+                    runExclusive(`${item.id}:share`, () => sharePost(item))
+                  }
+                />
               </View>
             </View>
           );

@@ -13,6 +13,7 @@ import {
 import { loadAuthorConnections } from "@/lib/connections";
 import { prisma } from "@/lib/prisma";
 import { toReadableMediaUrl } from "@/lib/storage";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 import {
   communitySourceKey,
   parseCommunityFeedId,
@@ -104,7 +105,7 @@ function serializePost(post: {
       bannerUrl: toReadableMediaUrl(post.author.bannerUrl ?? null),
       bio: post.author.bio,
       country: post.author.country,
-      verified: post.author.kycStatus === "VERIFIED",
+      verified: showIdentityVerified(post.author.kycStatus === "VERIFIED"),
       ratingAvg: post.author.ratingAvg,
       ratingCount: post.author.ratingCount,
       connectionCount: 0,
@@ -137,7 +138,7 @@ function toFeedAuthor(
     bannerUrl: toReadableMediaUrl(user.bannerUrl ?? null),
     bio: user.bio,
     country: user.country ?? country ?? null,
-    verified: user.kycStatus === "VERIFIED",
+    verified: showIdentityVerified(user.kycStatus === "VERIFIED"),
     ratingAvg: user.ratingAvg,
     ratingCount: user.ratingCount,
     connectionCount: 0,

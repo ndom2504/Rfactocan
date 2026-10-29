@@ -14,6 +14,7 @@ import { BookingTracker } from "@/components/booking-tracker";
 import { HandoverQrPanel } from "@/components/handover-qr";
 import { DisputePanel } from "@/components/dispute-panel";
 import { formatDate, formatKg } from "@/lib/utils";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 import {
   formatMoney,
   formatMoneyFromCents,
@@ -305,7 +306,8 @@ export default function BookingDetailPage({
                 {paymentStatus(payment.status)}
               </Badge>
             )}
-            {booking.trip.user.kycStatus === "VERIFIED" && (
+            {isIdentityVerificationEnabled() &&
+              booking.trip.user.kycStatus === "VERIFIED" && (
               <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                 {t("traveler_verified")}
               </Badge>

@@ -245,7 +245,7 @@ export default function ServiceListingScreen() {
                 <Button
                   label={t("verify_identity")}
                   variant="outline"
-                  onPress={() => router.push("/(tabs)/settings")}
+                  onPress={() => router.push("/settings")}
                 />
               ) : (
                 <Button

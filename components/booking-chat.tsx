@@ -75,6 +75,10 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [peerTyping, setPeerTyping] = useState(false);
+  const typingOnRef = useRef(false);
+  const typingPingAt = useRef(0);
+  const typingIdle = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function loadMessages() {
     const res = await fetch(`/api/bookings/${bookingId}/messages`);
@@ -82,13 +86,58 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
     if (res.ok) {
       setMessages(data.messages ?? []);
       if (data.peer) setPeer(data.peer);
+      setPeerTyping(Boolean(data.peerTyping));
     }
+  }
+
+  function notifyTyping(active: boolean) {
+    if (!bookingId) return;
+    if (!active) {
+      if (typingIdle.current) {
+        clearTimeout(typingIdle.current);
+        typingIdle.current = null;
+      }
+      if (typingOnRef.current) {
+        typingOnRef.current = false;
+        void fetch(`/api/bookings/${bookingId}/typing`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ typing: false }),
+        }).catch(() => {});
+      }
+      return;
+    }
+    const now = Date.now();
+    if (!typingOnRef.current || now - typingPingAt.current > 2000) {
+      typingOnRef.current = true;
+      typingPingAt.current = now;
+      void fetch(`/api/bookings/${bookingId}/typing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ typing: true }),
+      }).catch(() => {});
+    }
+    if (typingIdle.current) clearTimeout(typingIdle.current);
+    typingIdle.current = setTimeout(() => notifyTyping(false), 4000);
   }
 
   useEffect(() => {
     void loadMessages();
     const interval = setInterval(() => void loadMessages(), 4000);
     return () => clearInterval(interval);
+  }, [bookingId]);
+
+  useEffect(() => {
+    return () => {
+      if (typingIdle.current) clearTimeout(typingIdle.current);
+      if (!typingOnRef.current) return;
+      typingOnRef.current = false;
+      void fetch(`/api/bookings/${bookingId}/typing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ typing: false }),
+      }).catch(() => {});
+    };
   }, [bookingId]);
 
   useEffect(() => {
@@ -157,6 +206,7 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
       return;
     }
     setBody("");
+    notifyTyping(false);
     clearAttachment();
     if (data.message) {
       setMessages((prev) => [...prev, data.message]);
@@ -187,10 +237,16 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
               <p
                 className={cn(
                   "text-[11px]",
-                  peer.online ? "text-emerald-600" : "text-[var(--muted)]"
+                  peerTyping || peer.online
+                    ? "text-emerald-600"
+                    : "text-[var(--muted)]"
                 )}
               >
-                {peer.online ? t("status_online") : t("status_offline")}
+                {peerTyping
+                  ? t("typing")
+                  : peer.online
+                    ? t("status_online")
+                    : t("status_offline")}
               </p>
             </div>
           </div>
@@ -295,7 +351,18 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
             </div>
           );
         })}
-        {messages.length === 0 && (
+        {peerTyping ? (
+          <div className="flex justify-start">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+              <span className="inline-flex gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--muted)] [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--muted)] [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--muted)]" />
+              </span>
+            </div>
+          </div>
+        ) : null}
+        {messages.length === 0 && !peerTyping && (
           <p className="py-8 text-center text-sm text-[var(--muted)]">
             {t("no_messages")}
           </p>
@@ -355,7 +422,11 @@ export function BookingChat({ bookingId, meId, closed, className }: Props) {
             </Button>
             <Input
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setBody(next);
+                notifyTyping(next.trim().length > 0);
+              }}
               placeholder={t("your_message")}
               disabled={sending || uploading}
               className="flex-1"

@@ -8,6 +8,14 @@ import React, {
   useState,
 } from "react";
 import { api, getToken, setToken } from "@/lib/api";
+import {
+  isAddingAccount,
+  listSavedAccounts,
+  rememberSavedAccount,
+  removeSavedAccount,
+  setAddingAccount,
+  type SavedAccount,
+} from "@/lib/saved-accounts";
 import { googleAuthSessionUrls } from "@/lib/google-auth-url";
 import { markTourPendingIfNeeded } from "@/lib/guided-tour";
 import { requestSignedInDeviceAccess } from "@/lib/device-permissions";
@@ -102,6 +110,11 @@ type AuthContextValue = {
   >;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  savedAccounts: SavedAccount[];
+  addingAccount: boolean;
+  switchAccount: (id: string) => Promise<void>;
+  addAccount: () => Promise<void>;
+  cancelAddAccount: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -109,15 +122,31 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
+  const [addingAccount, setAdding] = useState(false);
   const sessionGen = useRef(0);
+
+  const reloadAccounts = useCallback(async () => {
+    setSavedAccounts(await listSavedAccounts());
+    setAdding(await isAddingAccount());
+  }, []);
 
   const applySession = useCallback(async (token: string, nextUser: AuthUser) => {
     const gen = sessionGen.current;
+    await rememberSavedAccount({
+      id: nextUser.id,
+      displayName: nextUser.displayName,
+      avatarUrl: nextUser.avatarUrl,
+      token,
+    });
+    await setAddingAccount(false);
     await setToken(token);
     if (gen !== sessionGen.current) return;
     await markTourPendingIfNeeded();
     if (gen !== sessionGen.current) return;
     setUser(nextUser);
+    setAdding(false);
+    setSavedAccounts(await listSavedAccounts());
   }, []);
 
   const refresh = useCallback(async () => {
@@ -133,7 +162,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await api<{ user: AuthUser | null }>("/api/auth/me");
       if (gen !== sessionGen.current) return;
-      setUser(data.user);
+      setUser((prev) => {
+        const next = data.user;
+        if (!next) return null;
+        return {
+          ...next,
+          avatarUrl: next.avatarUrl || prev?.avatarUrl,
+          bannerUrl: next.bannerUrl || prev?.bannerUrl,
+        };
+      });
     } catch {
       if (gen !== sessionGen.current) return;
       await setToken(null);
@@ -145,7 +182,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    void reloadAccounts();
+  }, [refresh, reloadAccounts]);
 
   useEffect(() => {
     if (user) void requestSignedInDeviceAccess();
@@ -371,10 +409,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { pending: false as const, mfaRequired: false as const };
   }, [applySession]);
 
+  const switchAccount = useCallback(async (id: string) => {
+    const accounts = await listSavedAccounts();
+    const next = accounts.find((a) => a.id === id);
+    if (!next) return;
+    sessionGen.current += 1;
+    await setToken(next.token);
+    try {
+      const data = await api<{ user: AuthUser }>("/api/auth/me");
+      if (data.user) {
+        await applySession(next.token, data.user);
+        return;
+      }
+    } catch {
+      /* fall through with cached profile */
+    }
+    setUser({
+      id: next.id,
+      email: "",
+      displayName: next.displayName,
+      role: "BOTH",
+      avatarUrl: next.avatarUrl,
+    });
+    setSavedAccounts(accounts);
+  }, [applySession]);
+
+  const addAccount = useCallback(async () => {
+    await setAddingAccount(true);
+    setAdding(true);
+  }, []);
+
+  const cancelAddAccount = useCallback(async () => {
+    await setAddingAccount(false);
+    setAdding(false);
+  }, []);
+
   const logout = useCallback(async () => {
+    const currentId = user?.id;
+    const accounts = await listSavedAccounts();
+    const other = accounts.find((a) => a.id !== currentId);
+    if (currentId) await removeSavedAccount(currentId);
+    if (other) {
+      await switchAccount(other.id);
+      return;
+    }
     sessionGen.current += 1;
     setUser(null);
     setLoading(false);
+    setSavedAccounts([]);
     try {
       await Promise.race([
         unregisterPushToken(),
@@ -388,7 +470,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* still logged out in memory */
     }
-  }, []);
+  }, [switchAccount, user?.id]);
 
   const value = useMemo(
     () => ({
@@ -407,8 +489,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       applyGooglePoll,
       logout,
       refresh,
+      savedAccounts,
+      addingAccount,
+      switchAccount,
+      addAccount,
+      cancelAddAccount,
     }),
-    [user, loading, login, verifyLoginOtp, resendLoginOtp, requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp, register, loginWithGoogle, loginWithApple, finishGoogleTicket, applyGooglePoll, logout, refresh]
+    [user, loading, login, verifyLoginOtp, resendLoginOtp, requestPhoneOtp, verifyPhoneOtp, resendPhoneOtp, register, loginWithGoogle, loginWithApple, finishGoogleTicket, applyGooglePoll, logout, refresh, savedAccounts, addingAccount, switchAccount, addAccount, cancelAddAccount]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -32,7 +32,14 @@ type Message = {
   body: string | null;
   createdAt: string;
   senderId: string;
+  readAt?: string | null;
   sender?: { displayName: string };
+};
+
+type BookingPeer = {
+  id?: string;
+  displayName?: string | null;
+  online?: boolean;
 };
 
 type BookingPayload = {
@@ -100,6 +107,11 @@ export default function BookingDetailScreen() {
   const keyboardLift = useKeyboardLift();
   const [data, setData] = useState<BookingPayload | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [peer, setPeer] = useState<BookingPeer | null>(null);
+  const [peerTyping, setPeerTyping] = useState(false);
+  const typingOnRef = useRef(false);
+  const typingPingAt = useRef(0);
+  const typingIdle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [tracking, setTracking] = useState<Tracking | null>(null);
   const [handover, setHandover] = useState<Handover | null>(null);
   const [draft, setDraft] = useState("");
@@ -117,12 +129,18 @@ export default function BookingDetailScreen() {
     try {
       const [bookingData, msgData, trackingData, handoverData] = await Promise.all([
         api<BookingPayload>(`/api/bookings/${id}`),
-        api<{ messages: Message[] }>(`/api/bookings/${id}/messages`),
+        api<{
+          messages: Message[];
+          peerTyping?: boolean;
+          peer?: BookingPeer | null;
+        }>(`/api/bookings/${id}/messages`),
         api<Tracking>(`/api/bookings/${id}/tracking`).catch(() => null),
         api<Handover>(`/api/bookings/${id}/handover`).catch(() => null),
       ]);
       setData(bookingData);
       setMessages(msgData.messages ?? []);
+      setPeer(msgData.peer ?? null);
+      setPeerTyping(msgData.peerTyping === true);
       setTracking(trackingData);
       setHandover(handoverData);
     } catch (e) {
@@ -134,7 +152,50 @@ export default function BookingDetailScreen() {
 
   useEffect(() => {
     void load();
+    const timer = setInterval(() => void load({ silent: true }), 4000);
+    return () => clearInterval(timer);
   }, [load]);
+
+  function notifyTyping(active: boolean) {
+    if (!id) return;
+    if (!active) {
+      if (typingIdle.current) {
+        clearTimeout(typingIdle.current);
+        typingIdle.current = null;
+      }
+      if (typingOnRef.current) {
+        typingOnRef.current = false;
+        void api(`/api/bookings/${id}/typing`, {
+          method: "POST",
+          body: JSON.stringify({ typing: false }),
+        }).catch(() => {});
+      }
+      return;
+    }
+    const now = Date.now();
+    if (!typingOnRef.current || now - typingPingAt.current > 2000) {
+      typingOnRef.current = true;
+      typingPingAt.current = now;
+      void api(`/api/bookings/${id}/typing`, {
+        method: "POST",
+        body: JSON.stringify({ typing: true }),
+      }).catch(() => {});
+    }
+    if (typingIdle.current) clearTimeout(typingIdle.current);
+    typingIdle.current = setTimeout(() => notifyTyping(false), 4000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (typingIdle.current) clearTimeout(typingIdle.current);
+      if (!id || !typingOnRef.current) return;
+      typingOnRef.current = false;
+      void api(`/api/bookings/${id}/typing`, {
+        method: "POST",
+        body: JSON.stringify({ typing: false }),
+      }).catch(() => {});
+    };
+  }, [id]);
 
   async function sendMessage() {
     if (!id || !draft.trim()) return;
@@ -146,6 +207,7 @@ export default function BookingDetailScreen() {
         body: JSON.stringify({ body: draft.trim() }),
       });
       setDraft("");
+      notifyTyping(false);
       await load({ silent: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Envoi impossible");
@@ -565,20 +627,37 @@ export default function BookingDetailScreen() {
               >
                 Messages
               </Text>
+              {peer ? (
+                <Muted>
+                  {peerTyping
+                    ? t("typing")
+                    : peer.online
+                      ? t("online")
+                      : t("offline")}
+                </Muted>
+              ) : null}
               <ErrorText>{error}</ErrorText>
             </View>
           }
-          renderItem={({ item }) => (
-            <Card>
-              <Muted>
-                {item.sender?.displayName ??
-                  (item.senderId === user?.id ? "Vous" : "Participant")}
-              </Muted>
-              <Text style={{ color: colors.foreground, marginTop: 4 }}>
-                {item.body}
-              </Text>
-            </Card>
-          )}
+          renderItem={({ item }) => {
+            const mine = item.senderId === user?.id;
+            return (
+              <Card>
+                <Muted>
+                  {item.sender?.displayName ??
+                    (mine ? "Vous" : "Participant")}
+                </Muted>
+                <Text style={{ color: colors.foreground, marginTop: 4 }}>
+                  {item.body}
+                </Text>
+                {mine ? (
+                  <Muted>
+                    {item.readAt ? t("message_read") : t("message_delivered")}
+                  </Muted>
+                ) : null}
+              </Card>
+            );
+          }}
           ListEmptyComponent={<Muted>Aucun message.</Muted>}
         />
         <View
@@ -593,7 +672,10 @@ export default function BookingDetailScreen() {
           <Field
             label="Nouveau message"
             value={draft}
-            onChangeText={setDraft}
+            onChangeText={(next) => {
+              setDraft(next);
+              notifyTyping(next.trim().length > 0);
+            }}
             placeholder="Écrire…"
           />
           <Button

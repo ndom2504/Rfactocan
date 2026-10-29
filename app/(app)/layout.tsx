@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 import { getRequestLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { LocaleToggle } from "@/components/locale-toggle";
@@ -70,12 +71,13 @@ export default async function AppLayout({
               </div>
               <LocaleToggle locale={locale} />
               <NotificationBell locale={locale} />
-              {user.kycStatus === "VERIFIED" && (
+              {showIdentityVerified(user.kycStatus === "VERIFIED") && (
                 <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                   {t(locale, "verified")}
                 </Badge>
               )}
               <HeaderProfileSlot
+                userId={user.id}
                 displayName={user.displayName}
                 avatarUrl={user.avatarUrl}
               />

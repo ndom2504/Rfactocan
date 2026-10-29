@@ -10,6 +10,7 @@ import {
 } from "@/lib/community";
 import { loadAuthorConnections } from "@/lib/connections";
 import { prisma } from "@/lib/prisma";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -75,7 +76,7 @@ async function serializeOpenPost(id: string, sessionId: string, isAdmin: boolean
       avatarUrl: post.author.avatarUrl,
       bio: post.author.bio,
       country: post.author.country,
-      verified: post.author.kycStatus === "VERIFIED",
+      verified: showIdentityVerified(post.author.kycStatus === "VERIFIED"),
       ratingAvg: post.author.ratingAvg,
       ratingCount: post.author.ratingCount,
       connectionCount: stats.connectionCount,

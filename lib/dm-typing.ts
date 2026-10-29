@@ -61,6 +61,22 @@ export async function readPeerTyping(threadId: string, meId: string) {
   }
 }
 
+export function bookingTypingKey(bookingId: string) {
+  return `booking:${bookingId}`;
+}
+
+export function readBookingPeerTyping(bookingId: string, meId: string) {
+  return isPeerTypingMemory(bookingTypingKey(bookingId), meId);
+}
+
+export function persistBookingTyping(
+  bookingId: string,
+  userId: string,
+  typing: boolean
+) {
+  setTypingMemory(bookingTypingKey(bookingId), userId, typing);
+}
+
 export async function persistTyping(
   threadId: string,
   userId: string,

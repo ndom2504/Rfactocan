@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useI18n } from "@/components/locale-provider";
+import { showIdentityVerified } from "@/lib/kyc-policy";
 
 type ViewData = {
   profile: {
@@ -143,7 +144,7 @@ export default function MeetPublicProfilePage() {
           </h1>
           <p className="text-sm text-[var(--muted)]">
             {user.displayName}
-            {user.verified ? ` · ${t("verified")}` : ""}
+            {showIdentityVerified(user.verified) ? ` · ${t("verified")}` : ""}
           </p>
           <p className="mt-1 text-sm">
             {kindLabel}

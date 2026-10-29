@@ -32,5 +32,5 @@ export const MA: CountryConfig = {
   payments: ["stripe", "bank", "mobile_money"],
   transportModes: ["AIR", "ROAD", "SEA"],
   communityWhatsApp: "RFacto Maroc",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

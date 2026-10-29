@@ -22,6 +22,21 @@ export function formatVoiceSecs(ms: number) {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+export const VOICE_MAX_MS = 300_000;
+
+export function voiceNoteCaption(durationMs: number) {
+  const sec = Math.max(1, Math.round(durationMs / 1000));
+  return `Note vocale ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
+
+export function parseVoiceDurationSec(body?: string | null) {
+  const match = /(?:Note vocale|Voice note)\s+(\d+):(\d{2})/i.exec(
+    (body || "").trim()
+  );
+  if (!match) return 0;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
 export function formatVoiceTime(sec: number) {
   if (!Number.isFinite(sec) || sec < 0) return "0:00";
   const m = Math.floor(sec / 60);

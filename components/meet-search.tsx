@@ -11,6 +11,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/locale-provider";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type MeetHit = {
   userId: string;
@@ -251,7 +252,8 @@ export function MeetSearch({
                             Match {Math.round(hit.matchScore)}
                           </Badge>
                         )}
-                        {hit.user.kycStatus === "VERIFIED" && (
+                        {isIdentityVerificationEnabled() &&
+                          hit.user.kycStatus === "VERIFIED" && (
                           <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                             {t("verified")}
                           </Badge>

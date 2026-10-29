@@ -13,6 +13,7 @@ import { formatDate, formatKg, formatMoney } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 import { TRANSPORT_MODES, transportModeLabel } from "@/lib/transport";
 import { negotiationLabel } from "@/lib/negotiation";
+import { isIdentityVerificationEnabled } from "@/lib/kyc-policy";
 
 type Props = {
   searchParams: Promise<{ mine?: string; transportMode?: string }>;
@@ -168,7 +169,7 @@ export default async function TripsPage({ searchParams }: Props) {
                     >
                       {nego}
                     </Badge>
-                    {trip.user.kycStatus === "VERIFIED" && (
+                    {isIdentityVerificationEnabled() && trip.user.kycStatus === "VERIFIED" && (
                       <Badge className="bg-[var(--accent-soft)] text-[var(--foreground)]">
                         {t(locale, "traveler_verified")}
                       </Badge>

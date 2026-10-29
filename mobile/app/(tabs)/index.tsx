@@ -1,22 +1,21 @@
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
-  Linking,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { type Href, useFocusEffect, useRouter } from "expo-router";
+import { AccountMenu } from "@/components/account-menu";
 import { CoverBanner } from "@/components/cover-banner";
 import { Button, Card, ErrorText } from "@/components/ui";
-import { api, mediaUrl } from "@/lib/api";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { bookingStatusLabel, useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
-import { IOS_TESTER_URL, PLAY_STORE_URL } from "@/lib/store-testing";
+import { showIdentityVerified } from "@/lib/kyc";
 
 type Booking = {
   id: string;
@@ -67,8 +66,6 @@ export default function HomeScreen() {
     user?.ratingCount && user.ratingCount > 0 && user.ratingAvg != null
       ? user.ratingAvg.toFixed(1)
       : "—";
-  const avatar = user?.avatarUrl ? mediaUrl(user.avatarUrl) : "";
-  const initial = (user?.displayName || "R").slice(0, 1).toUpperCase();
 
   return (
     <ScrollView
@@ -77,49 +74,33 @@ export default function HomeScreen() {
     >
       <View style={{ alignItems: "center" }}>
         <CoverBanner customUrl={user?.bannerUrl} />
-        <Pressable
-          onPress={() => router.push("/(tabs)/profile")}
-          style={{ marginTop: 16, alignItems: "center" }}
-        >
-          {avatar ? (
-            <Image
-              source={{ uri: avatar }}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: colors.accentSoft,
-              }}
-            />
-          ) : (
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: colors.accentSoft,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 22 }}>
-                {initial}
-              </Text>
-            </View>
-          )}
-        </Pressable>
+        <View style={{ marginTop: 16, alignItems: "center" }}>
+          <AccountMenu size={56} />
+        </View>
         <Text
           style={{
             marginTop: 12,
+            fontSize: 14,
+            color: colors.muted,
+            textAlign: "center",
+          }}
+        >
+          {t("hello")},
+        </Text>
+        <Text
+          style={{
+            marginTop: 2,
             fontSize: 24,
             fontWeight: "800",
             color: colors.foreground,
             textAlign: "center",
           }}
         >
-          {t("hello")}, {user?.displayName ?? ""}
+          {user?.displayName ?? ""}
         </Text>
-        {user?.identityVerified || user?.kycStatus === "VERIFIED" ? (
+        {showIdentityVerified(
+          user?.identityVerified || user?.kycStatus === "VERIFIED"
+        ) ? (
           <Text style={{ marginTop: 4, color: colors.muted, fontWeight: "600" }}>
             {t("verified")}
           </Text>
@@ -197,28 +178,6 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      <View style={{ gap: 10 }}>
-        <Text
-          style={{
-            color: colors.foreground,
-            fontWeight: "700",
-            fontSize: 15,
-            textAlign: "center",
-          }}
-        >
-          {t("tester_apps_title")}
-        </Text>
-        <Button
-          label={t("tester_ios_cta")}
-          onPress={() => void Linking.openURL(IOS_TESTER_URL)}
-        />
-        <Button
-          label={t("tester_android_cta")}
-          variant="outline"
-          onPress={() => void Linking.openURL(PLAY_STORE_URL)}
-        />
-      </View>
-
       {error ? <ErrorText>{error}</ErrorText> : null}
       {loading ? (
         <View style={{ alignItems: "center", paddingVertical: 16 }}>
@@ -226,7 +185,7 @@ export default function HomeScreen() {
           <Text style={{ color: colors.muted, marginTop: 8 }}>{t("dashboard_loading")}</Text>
         </View>
       ) : (
-        <View style={{ flexDirection: "row", gap: 10 }}>
+        <View style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
           <KpiCard
             label={t("open_trips")}
             value={String(tripsCount)}
@@ -333,15 +292,20 @@ function KpiCard({
         borderWidth: 1,
         borderColor: colors.border,
         padding: 12,
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <Text style={{ fontSize: 11, color: colors.muted }}>{label}</Text>
+      <Text style={{ fontSize: 11, color: colors.muted, textAlign: "center" }}>
+        {label}
+      </Text>
       <Text
         style={{
           fontSize: 24,
           fontWeight: "800",
           color: colors.foreground,
           marginTop: 4,
+          textAlign: "center",
         }}
       >
         {value}

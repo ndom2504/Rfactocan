@@ -7,6 +7,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatDate } from "@/lib/utils";
+import { chatReplyListPreview } from "@/lib/chat-reply";
 
 export default async function MessagesPage() {
   const user = await getSessionUser();
@@ -68,9 +69,11 @@ export default async function MessagesPage() {
     const other = isSender ? b.trip.user : b.sender;
     const last = b.messages[0];
     const preview = last
-      ? last.attachmentUrl
-        ? `📎 ${last.body?.slice(0, 60) || t(locale, "attachment_label")}`
-        : `${last.body.slice(0, 80)}${last.body.length > 80 ? "…" : ""}`
+      ? chatReplyListPreview(
+          last.body,
+          last.attachmentUrl,
+          t(locale, "no_messages")
+        )
       : t(locale, "no_messages");
     rows.push({
       key: `b-${b.id}`,
@@ -94,9 +97,11 @@ export default async function MessagesPage() {
           ? t(locale, "dm_context_service")
           : t(locale, "dm_direct_chat");
     const preview = last
-      ? last.attachmentUrl
-        ? `📎 ${last.body?.slice(0, 60) || t(locale, "attachment_label")}`
-        : `${last.body.slice(0, 80)}${last.body.length > 80 ? "…" : ""}`
+      ? chatReplyListPreview(
+          last.body,
+          last.attachmentUrl,
+          t(locale, "no_messages")
+        )
       : t(locale, "no_messages");
     rows.push({
       key: `dm-${th.id}`,

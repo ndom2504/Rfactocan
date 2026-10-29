@@ -4,6 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { Chip, ChipRow } from "@/components/chip";
 import { Button, ErrorText, Field } from "@/components/ui";
 import { api, postMultipart } from "@/lib/api";
+import { isIdentityVerificationEnabled, userSatisfiesKyc } from "@/lib/kyc";
 import { useI18n, type DictKey } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -52,22 +53,11 @@ const PROVIDERS: { id: PayoutProvider; key: DictKey }[] = [
 ];
 
 function kycRequiredFor(user: ProfileUser) {
-  const country = (user.country ?? "").trim().toUpperCase();
-  if (user.kycRequired === false) return false;
-  if (country === "GA" || country.includes("GABON")) return false;
-  if (user.kycRequired === true) return true;
-  return Boolean(country);
+  return !userSatisfiesKyc(user);
 }
 
 export function userPassesKyc(user: ProfileUser) {
-  if (
-    user.identityVerified === true ||
-    user.kycStatus === "VERIFIED" ||
-    user.manualIdDocStatus === "APPROVED"
-  ) {
-    return true;
-  }
-  return !kycRequiredFor(user);
+  return userSatisfiesKyc(user);
 }
 
 function kycLabel(status?: string | null) {
@@ -309,7 +299,9 @@ export function PaymentSetupCard({
         {t("wallet_lead")}
       </Text>
 
-      <View
+      {isIdentityVerificationEnabled() ? (
+      <>
+      <View>
         style={{
           borderWidth: 1,
           borderColor: colors.accent,
@@ -394,6 +386,8 @@ export function PaymentSetupCard({
             {t("manual_id_hint")}
           </Text>
         </View>
+      ) : null}
+      </>
       ) : null}
 
       {!stripeDone ? (

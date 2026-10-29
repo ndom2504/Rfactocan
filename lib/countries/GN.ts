@@ -25,5 +25,5 @@ export const GN: CountryConfig = {
   payments: ["orange_money", "mtn_momo", "mobile_money", "bank"],
   transportModes: ["AIR", "ROAD", "SEA"],
   communityWhatsApp: "RFacto Guinée",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

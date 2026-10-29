@@ -1,5 +1,86 @@
 # Notes de version
 
+## 1.0.22 — 2026-10-28
+
+### iOS (TestFlight / Expo) — à valider
+- `version` **1.0.22** (build EAS auto-incrémenté au submit)
+- Tester d’abord dans **Expo Go** : Messages (aperçu réponse, switch de compte, invitation Play/App Store), Communauté (en-tête, connexions, date relative)
+- Puis `npm run eas:ios` + `eas submit` pour TestFlight
+
+### Android (Play)
+- `versionName` **1.0.22** · `versionCode` **27**
+- Changement de compte : messages, profil, fichiers et paramètres suivent le compte actif
+- Messages : aperçu du dernier message après une réponse glissée
+- Communauté : en-tête d’annonce alignée, date relative, compteur de connexions, menu ⋯
+- Invitation Messages / répertoire : choix Android (Play Store) ou iPhone (App Store)
+- Chat : statut en ligne, en train d’écrire, lu par le destinataire
+- Notes vocales : durée affichée, limite 5 minutes
+
+### Play Store — texte à coller
+
+**FR**
+```
+Nouveautés Rfacto 1.0.22
+
+• Changer de compte recharge messages, profil et paramètres
+• Messages : aperçu correct après une réponse glissée
+• Communauté : en-tête d’annonce plus claire, date relative, compteur de connexions
+• Invitation : choix Android (Play Store) ou iPhone (App Store)
+• Chat : en ligne, en train d’écrire, lu ; notes vocales (durée et limite 5 min)
+```
+
+**EN**
+```
+What's new in Rfacto 1.0.22
+
+• Switching accounts reloads messages, profile and settings
+• Messages: correct preview after swipe-to-reply
+• Community: clearer post header, relative time, connection count
+• Invite: choose Android (Play Store) or iPhone (App Store)
+• Chat: online, typing, read; voice notes (duration and 5 min cap)
+```
+
+---
+
+## 1.0.21 — 2026-10-28
+
+### Android (Play)
+- `versionName` **1.0.21** · `versionCode` **26**
+- Accueil : photo de profil centrée au-dessus du nom ; indicateurs (KPI) centrés
+- Communauté : mise en page plus claire ; défilement vidéo vertical ; son comme Facebook (un clip à la fois, sourdine globale)
+- Actions vidéo : favori, téléchargement, partage
+- Messages : liste des conversations en une seule page (plus coupée en deux)
+- Invitation depuis le répertoire : feuille et liste en hauteur complète
+- Appel sortant : aperçu plein écran avec la photo de profil du contact
+
+### Play Store — texte à coller
+
+**FR**
+```
+Nouveautés Rfacto 1.0.21
+
+• Accueil : photo et nom centrés, indicateurs plus lisibles
+• Communauté : vidéos en défilement vertical, son plus clair
+• Favori, téléchargement et partage sur les vidéos
+• Messages : historique des conversations plus complet
+• Invitation contacts : liste plus facile à parcourir
+• Appel : écran plein écran avec la photo du contact
+```
+
+**EN**
+```
+What's new in Rfacto 1.0.21
+
+• Home: centered photo and name, clearer stats
+• Community: vertical video scroll and cleaner sound
+• Favorite, download and share on videos
+• Messages: fuller conversation list
+• Contact invite: easier full-height list
+• Calls: full-screen preview with the contact photo
+```
+
+---
+
 ## 1.0.19 — 2026-10-18
 
 ### iOS / TestFlight

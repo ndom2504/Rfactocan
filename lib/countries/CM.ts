@@ -34,5 +34,5 @@ export const CM: CountryConfig = {
   payments: ["mtn_momo", "orange_money", "mobile_money", "bank"],
   transportModes: ["AIR", "ROAD", "RAIL", "SEA"],
   communityWhatsApp: "RFacto Cameroun",
-  features: { kycRequired: true, escrow: true },
+  features: { kycRequired: false, escrow: true },
 };

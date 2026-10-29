@@ -169,7 +169,7 @@ export default function ProfileScreen() {
           <Button
             label={t("profile_open_settings")}
             variant="outline"
-            onPress={() => router.push("/(tabs)/settings")}
+            onPress={() => router.push("/settings")}
           />
         </View>
 
