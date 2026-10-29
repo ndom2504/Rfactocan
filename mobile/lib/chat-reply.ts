@@ -15,7 +15,7 @@ export function parseChatReply(raw?: string | null): ParsedChatReply {
     return { quoteId: null, quoteName: null, quoteExcerpt: null, body: text };
   }
   const inner = match[1] || "";
-  let rest = match[2] || "";
+  const rest = match[2] || "";
   const parts = inner.split("|");
   let name = parts[1]?.trim() || null;
   let excerpt = parts.slice(2).join("|").trim() || null;
