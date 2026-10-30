@@ -103,6 +103,27 @@ type OpenReport = {
   createdAt: string;
   reporter: { displayName: string; email: string };
   targetUser: { id: string; displayName: string; email: string };
+  communityPost?: { id: string; title?: string | null; body?: string } | null;
+};
+
+type CommunityAdminPost = {
+  id: string;
+  kind: string;
+  title: string | null;
+  body: string;
+  status: string;
+  createdAt: string;
+  author: { displayName: string; email: string };
+};
+
+type CommunityAdminListing = {
+  feedId: string;
+  kind: string;
+  title: string;
+  body: string;
+  place: string;
+  createdAt: string;
+  author: { displayName: string; email: string };
 };
 
 type AdminPayload = {
@@ -214,8 +235,27 @@ export default function AdminScreen() {
     url: string;
     name: string;
   } | null>(null);
+  const [communityPosts, setCommunityPosts] = useState<CommunityAdminPost[]>(
+    []
+  );
+  const [communityListings, setCommunityListings] = useState<
+    CommunityAdminListing[]
+  >([]);
 
   const isAdmin = user?.role === "ADMIN";
+
+  const loadCommunity = useCallback(async () => {
+    try {
+      const next = await api<{
+        posts?: CommunityAdminPost[];
+        listings?: CommunityAdminListing[];
+      }>("/api/admin/community-posts?limit=40");
+      setCommunityPosts(next.posts ?? []);
+      setCommunityListings(next.listings ?? []);
+    } catch {
+      /* section best-effort */
+    }
+  }, []);
 
   const load = useCallback(
     async (q?: string) => {
@@ -227,6 +267,7 @@ export default function AdminScreen() {
           api<{ url?: string }>("/api/admin/whatsapp-community").catch(
             () => ({ url: "" })
           ),
+          loadCommunity(),
         ]);
         setData(next);
         if (typeof wa.url === "string") setWhatsappUrl(wa.url);
@@ -236,7 +277,7 @@ export default function AdminScreen() {
         setLoading(false);
       }
     },
-    [t]
+    [loadCommunity, t]
   );
 
   useFocusEffect(
@@ -827,6 +868,138 @@ export default function AdminScreen() {
                 danger
                 disabled={busy !== null}
                 onPress={() => void markWithdrawal(row.id, "CANCELLED")}
+              />
+            </View>
+          </Card>
+        ))}
+
+        <Text style={{ fontWeight: "800", color: colors.foreground, marginTop: 8, marginBottom: 8 }}>
+          Publications communauté ({communityPosts.length})
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+          <ActionBtn
+            label="Publier exemples virtuels"
+            disabled={busy !== null}
+            onPress={() => {
+              Alert.alert("Exemples", "Publier des annonces d’exemple maintenant ?", [
+                { text: t("cancel"), style: "cancel" },
+                {
+                  text: t("admin_confirm"),
+                  onPress: () => {
+                    void (async () => {
+                      setBusy("virtual");
+                      try {
+                        await api("/api/admin/community-posts", {
+                          method: "PATCH",
+                          body: JSON.stringify({ publishVirtual: true }),
+                        });
+                        await loadCommunity();
+                        setInfo("Annonces d’exemple publiées.");
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : t("retry"));
+                      } finally {
+                        setBusy(null);
+                      }
+                    })();
+                  },
+                },
+              ]);
+            }}
+          />
+        </View>
+        {communityPosts.length === 0 ? <Muted>{t("admin_empty")}</Muted> : null}
+        {communityPosts.slice(0, 25).map((row) => (
+          <Card key={row.id}>
+            <Text style={{ fontWeight: "700", color: colors.foreground }}>
+              {row.title || row.body.slice(0, 60)}
+            </Text>
+            <Muted>
+              {row.author.displayName} · {row.kind} · {row.status}
+            </Muted>
+            <Muted>{formatDate(row.createdAt)}</Muted>
+            {row.status !== "REMOVED" ? (
+              <View style={{ marginTop: 10 }}>
+                <ActionBtn
+                  label="Supprimer"
+                  danger
+                  disabled={busy !== null}
+                  onPress={() =>
+                    Alert.alert("Supprimer", "Retirer du fil Communauté ?", [
+                      { text: t("cancel"), style: "cancel" },
+                      {
+                        text: t("admin_confirm"),
+                        style: "destructive",
+                        onPress: () => {
+                          void (async () => {
+                            setBusy(`del:${row.id}`);
+                            try {
+                              await api("/api/admin/community-posts", {
+                                method: "DELETE",
+                                body: JSON.stringify({ postId: row.id }),
+                              });
+                              await loadCommunity();
+                            } catch (e) {
+                              setError(
+                                e instanceof Error ? e.message : t("retry")
+                              );
+                            } finally {
+                              setBusy(null);
+                            }
+                          })();
+                        },
+                      },
+                    ])
+                  }
+                />
+              </View>
+            ) : null}
+          </Card>
+        ))}
+
+        <Text style={{ fontWeight: "800", color: colors.foreground, marginTop: 8, marginBottom: 8 }}>
+          Annonces actives dans le fil ({communityListings.length})
+        </Text>
+        {communityListings.length === 0 ? <Muted>{t("admin_empty")}</Muted> : null}
+        {communityListings.slice(0, 30).map((row) => (
+          <Card key={row.feedId}>
+            <Text style={{ fontWeight: "700", color: colors.foreground }}>
+              {row.title}
+            </Text>
+            <Muted>
+              {row.author.displayName} · {row.kind} · {row.place}
+            </Muted>
+            <View style={{ marginTop: 10 }}>
+              <ActionBtn
+                label="Supprimer du fil"
+                danger
+                disabled={busy !== null}
+                onPress={() =>
+                  Alert.alert("Supprimer", "Retirer cette annonce du fil ?", [
+                    { text: t("cancel"), style: "cancel" },
+                    {
+                      text: t("admin_confirm"),
+                      style: "destructive",
+                      onPress: () => {
+                        void (async () => {
+                          setBusy(`feed:${row.feedId}`);
+                          try {
+                            await api("/api/admin/community-posts", {
+                              method: "DELETE",
+                              body: JSON.stringify({ feedId: row.feedId }),
+                            });
+                            await loadCommunity();
+                          } catch (e) {
+                            setError(
+                              e instanceof Error ? e.message : t("retry")
+                            );
+                          } finally {
+                            setBusy(null);
+                          }
+                        })();
+                      },
+                    },
+                  ])
+                }
               />
             </View>
           </Card>

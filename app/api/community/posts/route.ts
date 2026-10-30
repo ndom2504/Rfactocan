@@ -187,7 +187,14 @@ export async function GET(request: Request) {
   if (wantAnnounce) {
     try {
       const posts = await prisma.communityPost.findMany({
-        where: { status: "OPEN", sourceKey: null },
+        where: {
+          status: "OPEN",
+          OR: [
+            { sourceKey: null },
+            // Annonces d’exemple (cron Inspiration Rfacto)
+            { sourceKey: { startsWith: "virtual:" } },
+          ],
+        },
         include: {
           author: { select: AUTHOR_SELECT },
           _count: { select: { comments: true } },

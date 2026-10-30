@@ -236,6 +236,7 @@ export default function AdminPage() {
       title: string | null;
       body: string;
       status: string;
+      sourceKey?: string | null;
       createdAt: string;
       viewCount: number;
       commentCount: number;
@@ -243,6 +244,18 @@ export default function AdminPage() {
       author: { id: string; displayName: string; email: string };
     }>
   >([]);
+  const [communityListings, setCommunityListings] = useState<
+    Array<{
+      feedId: string;
+      kind: string;
+      title: string;
+      body: string;
+      place: string;
+      createdAt: string;
+      author: { id: string; displayName: string; email: string };
+    }>
+  >([]);
+  const [publishingVirtual, setPublishingVirtual] = useState(false);
   const [userLetter, setUserLetter] = useState<string>("");
   const [userQuery, setUserQuery] = useState("");
   const [userQueryDraft, setUserQueryDraft] = useState("");
@@ -301,7 +314,10 @@ export default function AdminPage() {
   async function loadCommunityPosts() {
     const res = await fetch("/api/admin/community-posts?limit=50");
     const json = await res.json();
-    if (res.ok) setCommunityPosts(json.posts ?? []);
+    if (res.ok) {
+      setCommunityPosts(json.posts ?? []);
+      setCommunityListings(json.listings ?? []);
+    }
   }
 
   async function loadWhatsappUrl() {
@@ -333,6 +349,73 @@ export default function AdminPage() {
       return;
     }
     await loadCommunityPosts();
+  }
+
+  async function removeFeedListing(feedId: string) {
+    if (
+      !window.confirm(
+        "Retirer cette annonce de la communauté ? Elle ne sera plus visible."
+      )
+    ) {
+      return;
+    }
+    const res = await fetch("/api/admin/community-posts", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ feedId }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      window.alert(json.error ?? "Suppression impossible");
+      return;
+    }
+    await loadCommunityPosts();
+  }
+
+  async function deleteCommunityPost(postId: string) {
+    if (
+      !window.confirm(
+        "Supprimer cette publication ? Elle disparaîtra du fil Communauté."
+      )
+    ) {
+      return;
+    }
+    const res = await fetch("/api/admin/community-posts", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postId }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      window.alert(json.error ?? "Suppression impossible");
+      return;
+    }
+    await loadCommunityPosts();
+  }
+
+  async function publishVirtualNow() {
+    setPublishingVirtual(true);
+    try {
+      const res = await fetch("/api/admin/community-posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publishVirtual: true }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        window.alert(json.error ?? "Publication impossible");
+        return;
+      }
+      const n = json.virtual?.created?.length ?? 0;
+      window.alert(
+        n > 0
+          ? `${n} annonce(s) d’exemple publiée(s) dans Communauté.`
+          : "Aucune nouvelle annonce (déjà publiées pour ce créneau)."
+      );
+      await loadCommunityPosts();
+    } finally {
+      setPublishingVirtual(false);
+    }
   }
 
   function applyUserLetter(next: string) {
@@ -1737,9 +1820,25 @@ export default function AdminPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-          Publications communauté
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+            Publications communauté
+          </h2>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={publishingVirtual}
+            onClick={() => void publishVirtualNow()}
+          >
+            {publishingVirtual
+              ? "Publication…"
+              : "Publier exemples virtuels"}
+          </Button>
+        </div>
+        <p className="text-xs text-[var(--muted)]">
+          Masquer / Supprimer retire aussi l’annonce liée (service, voyage,
+          colis) du fil Communauté.
+        </p>
         {communityPosts.length === 0 && (
           <p className="text-sm text-[var(--muted)]">Aucune publication.</p>
         )}
@@ -1749,7 +1848,8 @@ export default function AdminPage() {
               {p.title || p.body.slice(0, 60)}
             </CardTitle>
             <CardDescription>
-              {p.author.displayName} · {p.kind} · {p.status} ·{" "}
+              {p.author.displayName} · {p.kind} · {p.status}
+              {p.sourceKey ? ` · ${p.sourceKey}` : ""} ·{" "}
               {formatDate(p.createdAt)} · {p.commentCount} com. ·{" "}
               {p.reportCount} signal.
             </CardDescription>
@@ -1779,11 +1879,44 @@ export default function AdminPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => void setCommunityStatus(p.id, "REMOVED")}
+                  onClick={() => void deleteCommunityPost(p.id)}
                 >
-                  Retirer
+                  Supprimer
                 </Button>
               )}
+            </div>
+          </Card>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+          Annonces actives dans le fil ({communityListings.length})
+        </h2>
+        <p className="text-xs text-[var(--muted)]">
+          Services, voyages et colis encore visibles dans Communauté.
+        </p>
+        {communityListings.length === 0 && (
+          <p className="text-sm text-[var(--muted)]">Aucune annonce ouverte.</p>
+        )}
+        {communityListings.map((item) => (
+          <Card key={item.feedId}>
+            <CardTitle className="text-base">{item.title}</CardTitle>
+            <CardDescription>
+              {item.author.displayName} · {item.kind} · {item.place} ·{" "}
+              {formatDate(item.createdAt)}
+            </CardDescription>
+            <p className="mt-2 line-clamp-2 text-sm text-[var(--muted)]">
+              {item.body}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void removeFeedListing(item.feedId)}
+              >
+                Supprimer du fil
+              </Button>
             </div>
           </Card>
         ))}
@@ -1813,15 +1946,26 @@ export default function AdminPage() {
             </CardDescription>
             <div className="mt-3 flex flex-wrap gap-2">
               {r.communityPost && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    void setCommunityStatus(r.communityPost!.id, "HIDDEN")
-                  }
-                >
-                  Masquer la publication
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      void setCommunityStatus(r.communityPost!.id, "HIDDEN")
+                    }
+                  >
+                    Masquer la publication
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      void deleteCommunityPost(r.communityPost!.id)
+                    }
+                  >
+                    Supprimer la publication
+                  </Button>
+                </>
               )}
               <Button size="sm" onClick={() => resolveReport(r.id)}>
                 Marquer résolu
