@@ -1,5 +1,45 @@
 # Notes de version
 
+## 1.0.23 — 2026-10-30
+
+### iOS (TestFlight / Expo)
+- `version` **1.0.23** (build EAS auto-incrémenté au submit)
+- Onglet Appels, dates WhatsApp, appels manqués, ringback sortant
+
+### Android (Play)
+- `versionName` **1.0.23** · `versionCode` **28**
+- Onglet Appels + historique
+- Appels manqués en rouge (Messages / Appels)
+- Dates style WhatsApp (liste + séparateurs dans le chat)
+- Sonnerie sortante + aperçu d’appel
+- Admin : supprimer du fil Communauté
+
+### Play Store — texte à coller
+
+**FR**
+```
+Nouveautés Rfacto 1.0.23
+
+• Onglet Appels : historique des appels récents
+• Appels manqués indiqués en rouge dans Messages et Appels
+• Dates style WhatsApp dans la liste et le fil de chat
+• Sonnerie émise à l’appel sortant + aperçu plein écran
+• Communauté admin : suppression des annonces du fil
+```
+
+**EN**
+```
+What's new in Rfacto 1.0.23
+
+• Calls tab: recent call history
+• Missed calls highlighted in Messages and Calls
+• WhatsApp-style dates in the inbox and chat thread
+• Outgoing ringback tone and full-screen call preview
+• Admin community: remove listings from the feed
+```
+
+---
+
 ## 1.0.22 — 2026-10-28
 
 ### iOS (TestFlight / Expo) — à valider
