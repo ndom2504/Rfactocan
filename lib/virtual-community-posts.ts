@@ -175,10 +175,12 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
   },
 ];
 
+/** Clé de jour UTC — Hobby = 1 run/jour ; cron externe peut appeler plusieurs fois. */
 function slotKey(now = new Date()) {
-  const hour = now.getUTCHours();
-  const slot = Math.floor(hour / 7); // 0..3 for 0-6, 7-13, 14-20, 21-23
   const day = now.toISOString().slice(0, 10);
+  const hour = now.getUTCHours();
+  // Sous-créneau 7 h pour permettre un cron externe sans republier le même lot.
+  const slot = Math.floor(hour / 7);
   return `${day}-s${slot}`;
 }
 
@@ -273,10 +275,10 @@ function templatesForCountries(countries: string[]) {
 }
 
 /**
- * Publie jusqu’à `limit` annonces d’exemple pour le créneau 7h courant.
+ * Publie jusqu’à `limit` annonces d’exemple pour le créneau courant.
  * Idempotent via sourceKey `virtual:…`.
  */
-export async function publishVirtualCommunityPosts(limit = 2) {
+export async function publishVirtualCommunityPosts(limit = 4) {
   const publisher = await ensureVirtualPublisherUser();
   const countries = await activeCountriesForVirtualPosts();
   const pool = templatesForCountries(countries);

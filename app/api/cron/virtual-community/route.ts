@@ -6,12 +6,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Toutes les ~7 h : publie 1–2 annonces d’exemple dans Communauté
+ * Quotidien (Hobby Vercel) : publie plusieurs annonces d’exemple dans Communauté
  * (photo + localisation + rédaction), ciblées sur les pays des membres.
  *
- * Auth: Authorization: Bearer $CRON_SECRET (Vercel Cron ou cron externe).
- * Sur plan Hobby, si Vercel n’accepte qu’1 cron/jour, pointer un cron
- * externe (cron-job.org) vers cette URL toutes les 7 h.
+ * Auth: Authorization: Bearer $CRON_SECRET.
+ * Pour un rythme ~7 h sans plan Pro : cron externe → cette URL avec ?limit=2.
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -22,8 +21,14 @@ export async function GET(request: Request) {
     }
   }
 
+  const url = new URL(request.url);
+  const rawLimit = Number(url.searchParams.get("limit") || "4");
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(8, Math.max(1, Math.floor(rawLimit)))
+    : 4;
+
   try {
-    const result = await publishVirtualCommunityPosts(2);
+    const result = await publishVirtualCommunityPosts(limit);
     return NextResponse.json(result);
   } catch (error) {
     console.error("[cron/virtual-community]", error);
