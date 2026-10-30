@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { callDirection, callDurationMs } from "@/lib/call-rules";
+import { expireInactiveCalls } from "@/lib/calls";
 import {
   assertDirectContactAllowed,
   conversationPath,
@@ -37,6 +39,8 @@ export async function GET(request: Request) {
   const scope = new URL(request.url).searchParams.get("scope");
   const channel = scope === "in" ? "IN" : "APP";
 
+  await expireInactiveCalls();
+
   const threads = await prisma.directThread.findMany({
     where: {
       channel,
@@ -63,11 +67,25 @@ export async function GET(request: Request) {
   });
 
   const unreadByThread = new Map<string, number>();
+  const lastCallByThread = new Map<
+    string,
+    {
+      id: string;
+      status: string;
+      mediaType: string;
+      createdAt: Date;
+      direction: "inbound" | "outbound" | null;
+      missed: boolean;
+      durationMs: number | null;
+    }
+  >();
+
   if (threads.length > 0) {
+    const threadIds = threads.map((t) => t.id);
     const unreadRows = await prisma.directMessage.groupBy({
       by: ["threadId"],
       where: {
-        threadId: { in: threads.map((t) => t.id) },
+        threadId: { in: threadIds },
         senderId: { not: session.id },
         readAt: null,
       },
@@ -76,12 +94,47 @@ export async function GET(request: Request) {
     for (const row of unreadRows) {
       unreadByThread.set(row.threadId, row._count._all);
     }
+
+    const recentCalls = await prisma.call.findMany({
+      where: { threadId: { in: threadIds } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        threadId: true,
+        status: true,
+        mediaType: true,
+        createdAt: true,
+        callerId: true,
+        calleeId: true,
+        answeredAt: true,
+        endedAt: true,
+      },
+    });
+    for (const call of recentCalls) {
+      if (lastCallByThread.has(call.threadId)) continue;
+      lastCallByThread.set(call.threadId, {
+        id: call.id,
+        status: call.status,
+        mediaType: call.mediaType,
+        createdAt: call.createdAt,
+        direction: callDirection(call, session.id),
+        missed: call.status === "MISSED",
+        durationMs: callDurationMs(call),
+      });
+    }
   }
 
   const items = threads.map((t) => {
     const peer = t.userLowId === session.id ? t.userHigh : t.userLow;
     const last = t.messages[0] ?? null;
     const unreadCount = unreadByThread.get(t.id) ?? 0;
+    const lastCall = lastCallByThread.get(t.id) ?? null;
+    const lastMessageMs = t.lastMessageAt?.getTime() ?? 0;
+    const lastCallMs = lastCall?.createdAt.getTime() ?? 0;
+    const activityAt =
+      lastCallMs > lastMessageMs
+        ? lastCall!.createdAt
+        : t.lastMessageAt ?? t.updatedAt;
     return {
       id: t.id,
       kind: "dm" as const,
@@ -90,10 +143,18 @@ export async function GET(request: Request) {
       lastContextId: t.lastContextId,
       lastMessageAt: t.lastMessageAt,
       updatedAt: t.updatedAt,
+      activityAt,
       peer,
       lastMessage: last,
+      lastCall,
       unreadCount,
     };
+  });
+
+  items.sort((a, b) => {
+    const ta = a.activityAt ? new Date(a.activityAt).getTime() : 0;
+    const tb = b.activityAt ? new Date(b.activityAt).getTime() : 0;
+    return tb - ta;
   });
 
   const unreadTotal = items.reduce((sum, t) => sum + t.unreadCount, 0);

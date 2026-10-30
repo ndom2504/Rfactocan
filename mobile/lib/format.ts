@@ -66,3 +66,73 @@ export function formatMoneyFromCents(units: number, currency = "CAD") {
   const major = zero ? units : units / 100;
   return formatMoney(major, code);
 }
+
+function startOfLocalDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function calendarDaysBetween(a: Date, b: Date) {
+  const ms =
+    startOfLocalDay(a).getTime() - startOfLocalDay(b).getTime();
+  return Math.round(ms / 86_400_000);
+}
+
+/** WhatsApp-style time on conversation list rows (fr-CA). */
+export function formatChatListTime(value: string | Date | null | undefined) {
+  const parsed = parseFlexibleDate(value);
+  if (!parsed) return "";
+  const now = new Date();
+  const days = calendarDaysBetween(now, parsed);
+  try {
+    if (days === 0) {
+      return new Intl.DateTimeFormat("fr-CA", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(parsed);
+    }
+    if (days === 1) return "Hier";
+    if (days > 1 && days < 7) {
+      return new Intl.DateTimeFormat("fr-CA", { weekday: "long" }).format(
+        parsed
+      );
+    }
+    return new Intl.DateTimeFormat("fr-CA", {
+      day: "numeric",
+      month: "short",
+      year: parsed.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    }).format(parsed);
+  } catch {
+    return formatDate(parsed);
+  }
+}
+
+/** Day chip label in a chat thread (fr-CA): Aujourd'hui / Hier / full date. */
+export function formatChatDayLabel(value: string | Date | null | undefined) {
+  const parsed = parseFlexibleDate(value);
+  if (!parsed) return "";
+  const days = calendarDaysBetween(new Date(), parsed);
+  try {
+    if (days === 0) return "Aujourd'hui";
+    if (days === 1) return "Hier";
+    return new Intl.DateTimeFormat("fr-CA", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(parsed);
+  } catch {
+    return formatDate(parsed);
+  }
+}
+
+/** Same calendar day (local). */
+export function isSameChatDay(
+  a: string | Date | null | undefined,
+  b: string | Date | null | undefined
+) {
+  const da = parseFlexibleDate(a);
+  const db = parseFlexibleDate(b);
+  if (!da || !db) return false;
+  return calendarDaysBetween(da, db) === 0;
+}

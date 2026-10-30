@@ -1,6 +1,7 @@
-import { requestRecordingPermissionsAsync } from "expo-audio";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { requestRecordingPermissionsAsync, useAudioPlayer } from "expo-audio";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Modal, Text, View } from "react-native";
+import { Image, Modal, Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui";
 import { mediaUrl } from "@/lib/api";
 import {
@@ -11,8 +12,11 @@ import {
   isTerminalCallStatus,
   postCallAction,
 } from "@/lib/calls";
+import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
 import { stopAllVoicePlayback } from "@/lib/voice";
+
+const RINGBACK = require("../assets/sounds/ringback.wav");
 
 type Props = {
   call: ActiveCall;
@@ -33,17 +37,61 @@ function CallMediaLazy(props: {
   return <CallMedia {...props} />;
 }
 
+function RoundControl({
+  icon,
+  label,
+  onPress,
+  bg = "rgba(255,255,255,0.18)",
+  disabled,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress?: () => void;
+  bg?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled || !onPress}
+      style={{ alignItems: "center", opacity: disabled ? 0.45 : 1, gap: 8 }}
+    >
+      <View
+        style={{
+          width: 58,
+          height: 58,
+          borderRadius: 29,
+          backgroundColor: bg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name={icon} size={24} color="#fff" />
+      </View>
+      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function CallOverlay({ call, onUpdate, onClose }: Props) {
+  const { t } = useI18n();
   const inbound = call.direction === "inbound";
   const ringing = call.status === "RINGING";
   const accepted = call.status === "ACCEPTED";
   const peerName = call.peer?.displayName?.trim() || "Membre";
   const peerPhoto = mediaUrl(call.peer?.avatarUrl);
   const native = isLivekitNativeAvailable();
+  const playRingback = ringing && !inbound;
+
+  const ringback = useAudioPlayer(RINGBACK, { updateInterval: 1000 });
 
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [speaker, setSpeaker] = useState(false);
   const [join, setJoin] = useState<{ livekitUrl: string; token: string } | null>(
     null
   );
@@ -51,6 +99,30 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
   useEffect(() => {
     stopAllVoicePlayback();
   }, [call.id]);
+
+  useEffect(() => {
+    if (!playRingback) {
+      try {
+        if (ringback.playing) ringback.pause();
+      } catch {
+        /* player may be released */
+      }
+      return;
+    }
+    try {
+      ringback.loop = true;
+      ringback.play();
+    } catch {
+      /* ignore */
+    }
+    return () => {
+      try {
+        if (ringback.playing) ringback.pause();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [playRingback, ringback]);
 
   useEffect(() => {
     if (!ringing && !accepted) return;
@@ -98,8 +170,8 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
   const secs = String(elapsed % 60).padStart(2, "0");
   const statusLabel = ringing
     ? inbound
-      ? "Appel entrant"
-      : "Appel en cours…"
+      ? t("call_incoming")
+      : t("call_ringing_status")
     : join
       ? `${mins}:${secs}`
       : native
@@ -120,6 +192,7 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
             source={{ uri: peerPhoto }}
             style={{ position: "absolute", width: "100%", height: "100%" }}
             resizeMode="cover"
+            blurRadius={18}
           />
         ) : null}
         <View
@@ -127,7 +200,7 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
             position: "absolute",
             width: "100%",
             height: "100%",
-            backgroundColor: "rgba(18,33,14,0.45)",
+            backgroundColor: "rgba(18,33,14,0.55)",
           }}
         />
         <View
@@ -137,34 +210,43 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
             justifyContent: "space-between",
             paddingHorizontal: 28,
             paddingVertical: 48,
+            width: "100%",
           }}
         >
-          <View style={{ alignItems: "center", width: "100%" }}>
-            {!peerPhoto ? (
-              <View
-                style={{
-                  width: 168,
-                  height: 168,
-                  borderRadius: 84,
-                  backgroundColor: colors.gold,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 20,
-                }}
-              >
+          <View style={{ alignItems: "center", width: "100%", marginTop: 36 }}>
+            <View
+              style={{
+                width: 128,
+                height: 128,
+                borderRadius: 64,
+                backgroundColor: colors.gold,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 20,
+                overflow: "hidden",
+              }}
+            >
+              {peerPhoto ? (
+                <Image
+                  source={{ uri: peerPhoto }}
+                  style={{ width: 128, height: 128 }}
+                  resizeMode="cover"
+                />
+              ) : (
                 <Text
-                  style={{ fontSize: 56, fontWeight: "700", color: colors.greenDark }}
+                  style={{ fontSize: 48, fontWeight: "700", color: colors.greenDark }}
                 >
                   {(peerName[0] || "?").toUpperCase()}
                 </Text>
-              </View>
-            ) : null}
+              )}
+            </View>
             <Text
               style={{
                 color: "#fff",
                 fontSize: 28,
                 marginBottom: 8,
                 textAlign: "center",
+                fontWeight: "600",
               }}
             >
               {peerName}
@@ -225,26 +307,49 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
                 disabled={busy}
               />
             </View>
-          ) : ringing ? (
-            <Button
-              label="Annuler"
-              variant="danger"
-              onPress={() => {
-                setBusy(true);
-                void postCallAction(call.id, "cancel").then(() => {
-                  setBusy(false);
-                  onClose();
-                });
-              }}
-              loading={busy}
-            />
           ) : (
-            <Button
-              label="Raccrocher"
-              variant="danger"
-              onPress={() => void hangUp()}
-              loading={busy}
-            />
+            <View style={{ width: "100%", alignItems: "center", gap: 28 }}>
+              {!inbound || accepted ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    gap: 36,
+                  }}
+                >
+                  <RoundControl
+                    icon={muted ? "mic-off" : "mic"}
+                    label={t("call_mute")}
+                    onPress={() => setMuted((v) => !v)}
+                    bg={muted ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.18)"}
+                  />
+                  <RoundControl
+                    icon={speaker ? "volume-high" : "volume-medium"}
+                    label={t("call_speaker")}
+                    onPress={() => setSpeaker((v) => !v)}
+                    bg={speaker ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.18)"}
+                  />
+                </View>
+              ) : null}
+              <RoundControl
+                icon="call"
+                label={ringing ? t("cancel") : t("call_hang_up")}
+                onPress={() => {
+                  if (busy) return;
+                  setBusy(true);
+                  if (ringing) {
+                    void postCallAction(call.id, "cancel").then(() => {
+                      setBusy(false);
+                      onClose();
+                    });
+                  } else {
+                    void hangUp();
+                  }
+                }}
+                bg="#DC2626"
+                disabled={busy}
+              />
+            </View>
           )}
         </View>
       </View>

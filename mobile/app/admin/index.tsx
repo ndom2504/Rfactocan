@@ -917,42 +917,40 @@ export default function AdminScreen() {
               {row.author.displayName} · {row.kind} · {row.status}
             </Muted>
             <Muted>{formatDate(row.createdAt)}</Muted>
-            {row.status !== "REMOVED" ? (
-              <View style={{ marginTop: 10 }}>
-                <ActionBtn
-                  label="Supprimer"
-                  danger
-                  disabled={busy !== null}
-                  onPress={() =>
-                    Alert.alert("Supprimer", "Retirer du fil Communauté ?", [
-                      { text: t("cancel"), style: "cancel" },
-                      {
-                        text: t("admin_confirm"),
-                        style: "destructive",
-                        onPress: () => {
-                          void (async () => {
-                            setBusy(`del:${row.id}`);
-                            try {
-                              await api("/api/admin/community-posts", {
-                                method: "DELETE",
-                                body: JSON.stringify({ postId: row.id }),
-                              });
-                              await loadCommunity();
-                            } catch (e) {
-                              setError(
-                                e instanceof Error ? e.message : t("retry")
-                              );
-                            } finally {
-                              setBusy(null);
-                            }
-                          })();
-                        },
+            <View style={{ marginTop: 10 }}>
+              <ActionBtn
+                label="Supprimer"
+                danger
+                disabled={busy !== null}
+                onPress={() =>
+                  Alert.alert("Supprimer", "Retirer du fil Communauté ?", [
+                    { text: t("cancel"), style: "cancel" },
+                    {
+                      text: t("admin_confirm"),
+                      style: "destructive",
+                      onPress: () => {
+                        void (async () => {
+                          setBusy(`del:${row.id}`);
+                          try {
+                            await api("/api/admin/community-posts", {
+                              method: "DELETE",
+                              body: JSON.stringify({ postId: row.id }),
+                            });
+                            await loadCommunity();
+                          } catch (e) {
+                            setError(
+                              e instanceof Error ? e.message : t("retry")
+                            );
+                          } finally {
+                            setBusy(null);
+                          }
+                        })();
                       },
-                    ])
-                  }
-                />
-              </View>
-            ) : null}
+                    },
+                  ])
+                }
+              />
+            </View>
           </Card>
         ))}
 

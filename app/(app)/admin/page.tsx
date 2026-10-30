@@ -1875,15 +1875,13 @@ export default function AdminPage() {
                   Masquer
                 </Button>
               )}
-              {p.status !== "REMOVED" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void deleteCommunityPost(p.id)}
-                >
-                  Supprimer
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void deleteCommunityPost(p.id)}
+              >
+                Supprimer
+              </Button>
             </div>
           </Card>
         ))}

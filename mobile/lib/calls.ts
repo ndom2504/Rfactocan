@@ -15,6 +15,30 @@ export type ActiveCall = {
   status: string;
   direction?: "inbound" | "outbound" | string;
   peer?: CallPeer;
+  missed?: boolean;
+  durationMs?: number | null;
+  createdAt?: string;
+};
+
+export type CallHistoryItem = ActiveCall & {
+  threadId: string;
+  createdAt: string;
+  missed: boolean;
+  durationMs?: number | null;
+  endReason?: string | null;
+  startedAt?: string | null;
+  answeredAt?: string | null;
+  endedAt?: string | null;
+};
+
+export type ThreadLastCall = {
+  id: string;
+  status: string;
+  mediaType?: string;
+  createdAt: string;
+  direction?: "inbound" | "outbound" | string | null;
+  missed?: boolean;
+  durationMs?: number | null;
 };
 
 export function isExpoGo() {
@@ -119,4 +143,41 @@ export async function fetchLivekitJoin(callId: string): Promise<{
   } catch {
     return null;
   }
+}
+
+export async function listCalls(limit = 50): Promise<CallHistoryItem[]> {
+  try {
+    const data = await api<{ calls?: CallHistoryItem[] }>(
+      `/api/calls?limit=${Math.min(Math.max(limit, 1), 100)}`
+    );
+    return data.calls ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export function callStatusPreviewKey(
+  call: Pick<ThreadLastCall, "status" | "direction" | "missed">
+):
+  | "call_missed"
+  | "call_outgoing"
+  | "call_incoming"
+  | "call_no_answer"
+  | "call_canceled"
+  | "call_ended_short"
+  | "call_rejected"
+  | "call_ringing_status" {
+  const status = (call.status || "").toUpperCase();
+  const inbound = call.direction === "inbound";
+  if (call.missed || status === "MISSED") {
+    return inbound ? "call_missed" : "call_no_answer";
+  }
+  if (status === "RINGING") return "call_ringing_status";
+  if (status === "CANCELED") return "call_canceled";
+  if (status === "REJECTED") return "call_rejected";
+  if (status === "ENDED" || status === "ACCEPTED") {
+    return inbound ? "call_incoming" : "call_outgoing";
+  }
+  if (status === "FAILED") return "call_no_answer";
+  return inbound ? "call_incoming" : "call_outgoing";
 }

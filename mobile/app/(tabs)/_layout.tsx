@@ -95,6 +95,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="calls"
+        options={{
+          title: t("nav_calls"),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name="phone"
+              color={focused ? colors.accent : colors.muted}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="actions"
         options={{ href: null, title: t("publish_listing_cta") }}
       />

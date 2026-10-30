@@ -38,7 +38,11 @@ import {
   toggleReactionSummaries,
   type ReactionSummary,
 } from "@/lib/dm-reactions";
-import { formatMoneyFromCents } from "@/lib/format";
+import {
+  formatChatDayLabel,
+  formatMoneyFromCents,
+  isSameChatDay,
+} from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import {
   isServicePaymentOpen,
@@ -706,7 +710,7 @@ export default function DirectChatScreen() {
               </View>
             ) : null
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const mine = item.senderId === user?.id;
             const url = item.attachmentUrl ? mediaUrl(item.attachmentUrl) : "";
             const voice = isVoiceMessage(item.attachmentUrl, item.body);
@@ -732,7 +736,43 @@ export default function DirectChatScreen() {
               iPay,
               invoice?.escrowUntilConfirm
             );
+            const prev = index > 0 ? messages[index - 1] : null;
+            const showDayChip =
+              !prev || !isSameChatDay(prev.createdAt, item.createdAt);
+            const dayLabel = showDayChip
+              ? formatChatDayLabel(item.createdAt)
+              : "";
             return (
+              <View style={{ width: "100%" }}>
+              {showDayChip && dayLabel ? (
+                <View
+                  style={{
+                    alignItems: "center",
+                    marginVertical: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: colors.surface2,
+                      borderRadius: 12,
+                      paddingHorizontal: 12,
+                      paddingVertical: 4,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: "600",
+                        color: colors.muted,
+                      }}
+                    >
+                      {dayLabel}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
               <View
                 style={{
                   alignSelf: mine ? "flex-end" : "flex-start",
@@ -856,6 +896,7 @@ export default function DirectChatScreen() {
                   mine={mine}
                   onToggle={(emoji) => void reactToMessage(item.id, emoji)}
                 />
+              </View>
               </View>
             );
           }}

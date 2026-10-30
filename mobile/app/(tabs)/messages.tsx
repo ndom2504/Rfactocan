@@ -14,7 +14,11 @@ import { Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
 import { api, mediaUrl } from "@/lib/api";
 import { chatReplyListPreview } from "@/lib/chat-reply";
 import { useAuth } from "@/lib/auth-context";
-import { formatDate } from "@/lib/format";
+import {
+  callStatusPreviewKey,
+  type ThreadLastCall,
+} from "@/lib/calls";
+import { formatChatListTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -27,9 +31,11 @@ type DmThread = {
   lastMessageAt?: string | null;
   lastContextType?: string | null;
   updatedAt?: string | null;
+  activityAt?: string | null;
   unreadCount?: number;
   peer?: Peer;
   lastMessage?: { body?: string | null; attachmentUrl?: string | null } | null;
+  lastCall?: ThreadLastCall | null;
 };
 
 type Booking = {
@@ -64,6 +70,7 @@ type InboxRow = {
   avatarUrl?: string | null;
   title: string;
   preview: string;
+  previewMissed?: boolean;
   date: string | null;
   unreadCount: number;
 };
@@ -170,18 +177,40 @@ export default function MessagesScreen() {
       }
 
       for (const th of dm.threads ?? []) {
+        const lastCall = th.lastCall ?? null;
+        const lastMsgAt = th.lastMessageAt
+          ? new Date(th.lastMessageAt).getTime()
+          : 0;
+        const lastCallAt = lastCall?.createdAt
+          ? new Date(lastCall.createdAt).getTime()
+          : 0;
+        const callIsNewer = Boolean(lastCall && lastCallAt >= lastMsgAt);
+        const missedInbound =
+          Boolean(lastCall) &&
+          (lastCall!.missed ||
+            (lastCall!.status || "").toUpperCase() === "MISSED") &&
+          lastCall!.direction === "inbound";
+        let preview = previewOf(
+          th.lastMessage?.body,
+          th.lastMessage?.attachmentUrl,
+          t("no_messages")
+        );
+        if (callIsNewer && lastCall) {
+          preview = t(callStatusPreviewKey(lastCall));
+        }
         next.push({
           key: `dm-${th.id}`,
           href: `/messages/${th.id}`,
           name: th.peer?.displayName || "Contact",
           avatarUrl: th.peer?.avatarUrl,
           title: `${th.peer?.displayName || "Contact"} · ${t(dmContextLabel(th.lastContextType))}`,
-          preview: previewOf(
-            th.lastMessage?.body,
-            th.lastMessage?.attachmentUrl,
-            t("no_messages")
-          ),
-          date: th.lastMessageAt ?? th.updatedAt ?? null,
+          preview,
+          previewMissed: missedInbound && callIsNewer,
+          date:
+            th.activityAt ??
+            (callIsNewer && lastCall
+              ? lastCall.createdAt
+              : th.lastMessageAt ?? th.updatedAt ?? null),
           unreadCount: th.unreadCount ?? 0,
         });
       }
@@ -303,53 +332,80 @@ export default function MessagesScreen() {
                 }}
               >
                 <Avatar name={item.name} url={item.avatarUrl} />
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontWeight: unread ? "800" : "700",
-                      fontSize: 15,
-                      color: colors.foreground,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {item.title}
-                  </Text>
-                  <Text
-                    style={{
-                      color: unread ? colors.foreground : colors.muted,
-                      fontSize: 13,
-                      marginTop: 2,
-                      fontWeight: unread ? "600" : "400",
-                    }}
-                    numberOfLines={2}
-                  >
-                    {item.preview}
-                    {item.date ? ` · ${formatDate(item.date)}` : ""}
-                  </Text>
-                </View>
-                {unread ? (
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <View
                     style={{
-                      minWidth: 22,
-                      height: 22,
-                      borderRadius: 11,
-                      backgroundColor: colors.accent,
+                      flexDirection: "row",
                       alignItems: "center",
-                      justifyContent: "center",
-                      paddingHorizontal: 6,
+                      justifyContent: "space-between",
+                      gap: 8,
                     }}
                   >
-                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>
-                      {item.unreadCount > 9 ? "9+" : item.unreadCount}
+                    <Text
+                      style={{
+                        fontWeight: unread ? "800" : "700",
+                        fontSize: 15,
+                        color: colors.foreground,
+                        flex: 1,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {item.title}
                     </Text>
+                    {item.date ? (
+                      <Text
+                        style={{
+                          color: unread ? colors.accent : colors.muted,
+                          fontSize: 12,
+                          fontWeight: unread ? "700" : "500",
+                        }}
+                      >
+                        {formatChatListTime(item.date)}
+                      </Text>
+                    ) : null}
                   </View>
-                ) : (
-                  <Text
-                    style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      marginTop: 2,
+                    }}
                   >
-                    {t("open")}
-                  </Text>
-                )}
+                    <Text
+                      style={{
+                        color: item.previewMissed
+                          ? "#DC2626"
+                          : unread
+                            ? colors.foreground
+                            : colors.muted,
+                        fontSize: 13,
+                        fontWeight: unread || item.previewMissed ? "600" : "400",
+                        flex: 1,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {item.preview}
+                    </Text>
+                    {unread ? (
+                      <View
+                        style={{
+                          minWidth: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          backgroundColor: colors.accent,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          paddingHorizontal: 6,
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>
+                          {item.unreadCount > 9 ? "9+" : item.unreadCount}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
               </View>
             </Card>
           </Pressable>
