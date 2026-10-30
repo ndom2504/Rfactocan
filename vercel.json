@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expire-payments",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/virtual-community",
+      "schedule": "0 */7 * * *"
     }
   ]
 }

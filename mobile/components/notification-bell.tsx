@@ -9,6 +9,7 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter, type Href } from "expo-router";
 import { api } from "@/lib/api";
+import { formatRelativeTime } from "@/lib/format";
 import { onPushReceived } from "@/lib/push";
 import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
@@ -216,6 +217,17 @@ export function NotificationBell() {
                     >
                       {item.body}
                     </Text>
+                    {item.createdAt ? (
+                      <Text
+                        style={{
+                          color: colors.muted,
+                          fontSize: 11,
+                          marginTop: 4,
+                        }}
+                      >
+                        {formatRelativeTime(item.createdAt)}
+                      </Text>
+                    ) : null}
                   </Pressable>
                 );
               })}
