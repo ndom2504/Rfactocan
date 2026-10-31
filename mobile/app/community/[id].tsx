@@ -2,6 +2,7 @@ import { type Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Linking,
   Pressable,
@@ -128,6 +129,51 @@ export default function CommunityPostScreen() {
     }
   }
 
+  async function setAsStatus() {
+    const media = (post?.attachments ?? []).find(
+      (a) => attachmentIsImage(a) || attachmentIsVideo(a)
+    );
+    if (!media) {
+      Alert.alert(t("messages_title"), t("community_status_no_media"));
+      return;
+    }
+    const isVideo = attachmentIsVideo(media);
+    setBusy(true);
+    try {
+      const payload = {
+        kind: "STORY",
+        mediaUrl: media.url,
+        mediaType: isVideo ? "video" : "image",
+        caption: post?.title?.trim() || undefined,
+        mirrorCommunity: false,
+      };
+      try {
+        await api("/api/status", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } catch (first) {
+        const msg = first instanceof Error ? first.message : "";
+        if (msg.includes("404") || msg.includes("Erreur 404")) {
+          await api("/api/member-status", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        } else {
+          throw first;
+        }
+      }
+      Alert.alert(t("messages_title"), t("messages_status_published"));
+    } catch (e) {
+      Alert.alert(
+        t("messages_title"),
+        e instanceof Error ? e.message : t("messages_status_failed")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <Screen>
@@ -250,7 +296,17 @@ export default function CommunityPostScreen() {
                 loading={busy}
               />
             ) : null}
-            <Button label="Partager" variant="outline" onPress={() => void sharePost()} />
+            <Button label={t("community_share")} variant="outline" onPress={() => void sharePost()} />
+            {(post.attachments ?? []).some(
+              (a) => attachmentIsImage(a) || attachmentIsVideo(a)
+            ) ? (
+              <Button
+                label={t("community_set_as_status")}
+                variant="outline"
+                onPress={() => void setAsStatus()}
+                loading={busy}
+              />
+            ) : null}
           </View>
           <Text
             style={{

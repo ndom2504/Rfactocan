@@ -46,10 +46,23 @@ export async function api<T = unknown>(
     headers,
   });
 
-  const data = (await res.json().catch(() => ({}))) as T & ApiError;
+  const rawText = await res.text().catch(() => "");
+  let data = {} as T & ApiError;
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText) as T & ApiError;
+    } catch {
+      data = {} as T & ApiError;
+    }
+  }
   if (!res.ok) {
+    const html =
+      rawText.trimStart().startsWith("<!") ||
+      rawText.trimStart().toLowerCase().startsWith("<html");
     const message =
-      (data as ApiError).error || `Erreur ${res.status}`;
+      (data as ApiError).error ||
+      (html ? `Erreur ${res.status}` : rawText.trim().slice(0, 280)) ||
+      `Erreur ${res.status}`;
     throw new Error(message);
   }
   return data;

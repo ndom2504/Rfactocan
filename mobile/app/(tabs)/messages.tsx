@@ -191,10 +191,15 @@ export default function MessagesScreen() {
         api<{
           statuses?: MemberStatusItem[];
           mine?: MemberStatusItem | null;
-        }>("/api/member-status").catch(() => ({
-          statuses: [] as MemberStatusItem[],
-          mine: null,
-        })),
+        }>("/api/status").catch(() =>
+          api<{
+            statuses?: MemberStatusItem[];
+            mine?: MemberStatusItem | null;
+          }>("/api/member-status").catch(() => ({
+            statuses: [] as MemberStatusItem[],
+            mine: null,
+          }))
+        ),
       ]);
       setStatuses(statusRes.statuses ?? []);
       setMyStatus(statusRes.mine ?? null);
@@ -356,19 +361,39 @@ export default function MessagesScreen() {
         name: asset.fileName || `status.${ext}`,
         type: mime,
       });
-      await api("/api/member-status", {
-        method: "POST",
-        body: JSON.stringify({
-          kind: "STORY",
-          mediaUrl: uploaded.url,
-          mediaType: isVideo ? "video" : "image",
-          mirrorCommunity: true,
-        }),
-      });
+      const payload = {
+        kind: "STORY",
+        mediaUrl: uploaded.url,
+        mediaType: isVideo ? "video" : "image",
+        mirrorCommunity: true,
+      };
+      try {
+        await api("/api/status", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } catch (first) {
+        const msg = first instanceof Error ? first.message : "";
+        if (msg.includes("404") || msg.includes("Erreur 404")) {
+          await api("/api/member-status", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        } else {
+          throw first;
+        }
+      }
       Alert.alert(t("messages_title"), t("messages_status_published"));
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("messages_status_failed"));
+      const raw = e instanceof Error ? e.message : "";
+      setError(
+        raw
+          ? raw.includes("404")
+            ? `${t("messages_status_failed")} (404)`
+            : raw
+          : t("messages_status_failed")
+      );
     } finally {
       setPublishing(false);
     }

@@ -2,6 +2,7 @@ import { type Href, useFocusEffect, useLocalSearchParams, useRouter } from "expo
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -368,6 +369,76 @@ export default function CommunityScreen() {
     }
   }
 
+  async function setPostAsStatus(item: CommunityPost) {
+    const media = (item.attachments ?? []).find(
+      (a) => attachmentIsImage(a) || attachmentIsVideo(a)
+    );
+    if (!media) {
+      Alert.alert(t("messages_title"), t("community_status_no_media"));
+      return;
+    }
+    const isVideo = attachmentIsVideo(media);
+    try {
+      const payload = {
+        kind: "STORY",
+        mediaUrl: media.url,
+        mediaType: isVideo ? "video" : "image",
+        caption: item.title?.trim() || undefined,
+        mirrorCommunity: false,
+      };
+      try {
+        await api("/api/status", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } catch (first) {
+        const msg = first instanceof Error ? first.message : "";
+        if (msg.includes("404") || msg.includes("Erreur 404")) {
+          await api("/api/member-status", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        } else {
+          throw first;
+        }
+      }
+      Alert.alert(t("messages_title"), t("messages_status_published"));
+    } catch (e) {
+      Alert.alert(
+        t("messages_title"),
+        e instanceof Error ? e.message : t("messages_status_failed")
+      );
+    }
+  }
+
+  function openPostOptions(item: CommunityPost) {
+    const hasMedia = (item.attachments ?? []).some(
+      (a) => attachmentIsImage(a) || attachmentIsVideo(a)
+    );
+    const buttons: {
+      text: string;
+      style?: "cancel" | "destructive" | "default";
+      onPress?: () => void;
+    }[] = [
+      {
+        text: t("community_share"),
+        onPress: () => void sharePost(item),
+      },
+    ];
+    if (hasMedia) {
+      buttons.push({
+        text: t("community_set_as_status"),
+        onPress: () => void setPostAsStatus(item),
+      });
+    }
+    buttons.push({ text: t("cancel"), style: "cancel" });
+    Alert.alert(
+      item.title?.trim() || item.author?.displayName || "Rfacto",
+      undefined,
+      buttons
+    );
+  }
+
   const header: ReactNode = (
     <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 }}>
       <Text
@@ -680,7 +751,9 @@ export default function CommunityScreen() {
                 <ActionCell
                   label={t("community_share")}
                   onPress={() =>
-                    runExclusive(`${item.id}:share`, () => sharePost(item))
+                    runExclusive(`${item.id}:share`, async () => {
+                      openPostOptions(item);
+                    })
                   }
                 />
               </View>
