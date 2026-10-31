@@ -1,5 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -18,13 +19,45 @@ import {
   getStoryFeed,
   type StoryFeedItem,
 } from "@/lib/story-feed";
-import {
-  setCommunityVideoFeed,
-  type CommunityFeedVideo,
-} from "@/lib/community-video-feed";
 
-const STORY_MS = 5200;
+const PHOTO_MS = 5200;
 const { width: W, height: H } = Dimensions.get("window");
+
+function StoryVideo({
+  uri,
+  paused,
+  onEnded,
+}: {
+  uri: string;
+  paused: boolean;
+  onEnded: () => void;
+}) {
+  const player = useVideoPlayer({ uri }, (p) => {
+    p.loop = false;
+    p.muted = false;
+    p.volume = 1;
+    p.audioMixingMode = "doNotMix";
+  });
+
+  useEffect(() => {
+    if (paused) player.pause();
+    else player.play();
+  }, [paused, player]);
+
+  useEffect(() => {
+    const sub = player.addListener("playToEnd", () => onEnded());
+    return () => sub.remove();
+  }, [player, onEnded]);
+
+  return (
+    <VideoView
+      player={player}
+      style={{ position: "absolute", width: W, height: H }}
+      contentFit="contain"
+      nativeControls={false}
+    />
+  );
+}
 
 export default function StoryViewerScreen() {
   const router = useRouter();
@@ -50,9 +83,7 @@ export default function StoryViewerScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!initial?.items?.length) {
-        close();
-      }
+      if (!initial?.items?.length) close();
       return () => {
         if (timerRef.current) clearInterval(timerRef.current);
       };
@@ -60,78 +91,68 @@ export default function StoryViewerScreen() {
   );
 
   const current = items[index];
+  const currentIsVideo = current
+    ? isStatusVideoUrl(current.mediaUrl, current.mediaType)
+    : false;
 
-  const goVideos = useCallback(
-    (start: StoryFeedItem) => {
-      const videos: CommunityFeedVideo[] = items
-        .filter((it) => isStatusVideoUrl(it.mediaUrl, it.mediaType))
-        .map((it) => ({
-          url: mediaUrl(it.mediaUrl),
-          authorName,
-          caption: (it.caption || "").slice(0, 140),
-          postId: it.id,
-        }));
-      if (!videos.length) return;
-      setCommunityVideoFeed(videos, mediaUrl(start.mediaUrl));
-      clearStoryFeed();
-      router.replace("/community/videos");
-    },
-    [items, authorName, router]
-  );
+  const goNext = useCallback(() => {
+    setIndex((i) => {
+      if (i >= items.length - 1) {
+        setTimeout(close, 0);
+        return i;
+      }
+      return i + 1;
+    });
+  }, [items.length, close]);
 
-  // If current slide is video → hand off to announcement video reel
+  const goPrev = useCallback(() => {
+    setIndex((i) => (i <= 0 ? 0 : i - 1));
+  }, []);
+
   useEffect(() => {
     if (!current) return;
-    if (isStatusVideoUrl(current.mediaUrl, current.mediaType)) {
-      goVideos(current);
-    }
-  }, [current, goVideos]);
-
-  useEffect(() => {
-    if (!current || paused) return;
-    if (isStatusVideoUrl(current.mediaUrl, current.mediaType)) return;
     if (!viewed.current.has(current.id) && !mine) {
       viewed.current.add(current.id);
       void api(`/api/member-status/${current.id}/view`, { method: "POST" }).catch(
         () => null
       );
     }
+  }, [current?.id, mine]);
+
+  // Photo auto-advance (WhatsApp-style segments)
+  useEffect(() => {
+    if (!current || paused || currentIsVideo) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
     setProgress(0);
     const started = Date.now();
     timerRef.current = setInterval(() => {
-      const p = Math.min(1, (Date.now() - started) / STORY_MS);
+      const p = Math.min(1, (Date.now() - started) / PHOTO_MS);
       setProgress(p);
       if (p >= 1) {
         if (timerRef.current) clearInterval(timerRef.current);
-        setIndex((i) => {
-          if (i >= items.length - 1) {
-            setTimeout(close, 0);
-            return i;
-          }
-          return i + 1;
-        });
+        goNext();
       }
     }, 32);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [current?.id, paused, items.length, mine, close]);
+  }, [current?.id, paused, currentIsVideo, goNext]);
 
-  function prev() {
-    if (index <= 0) {
-      close();
-      return;
-    }
-    setIndex((i) => i - 1);
-  }
-
-  function next() {
-    if (index >= items.length - 1) {
-      close();
-      return;
-    }
-    setIndex((i) => i + 1);
-  }
+  // Video: progress unknown → keep bar filling slowly as fallback; end via onEnded
+  useEffect(() => {
+    if (!current || !currentIsVideo || paused) return;
+    setProgress(0);
+    const started = Date.now();
+    const maxMs = 60_000;
+    timerRef.current = setInterval(() => {
+      setProgress(Math.min(0.95, (Date.now() - started) / maxMs));
+    }, 200);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [current?.id, currentIsVideo, paused]);
 
   async function deleteCurrent() {
     if (!current || !mine) return;
@@ -144,9 +165,10 @@ export default function StoryViewerScreen() {
           void (async () => {
             setBusy(true);
             try {
-              await api(`/api/member-status?id=${encodeURIComponent(current.id)}`, {
-                method: "DELETE",
-              });
+              await api(
+                `/api/member-status?id=${encodeURIComponent(current.id)}`,
+                { method: "DELETE" }
+              );
               const nextItems = items.filter((it) => it.id !== current.id);
               if (!nextItems.length) {
                 close();
@@ -168,17 +190,29 @@ export default function StoryViewerScreen() {
     ]);
   }
 
-  if (!current || isStatusVideoUrl(current.mediaUrl, current.mediaType)) {
+  if (!current) {
     return <View style={{ flex: 1, backgroundColor: "#0a0a0a" }} />;
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0a0a0a" }}>
-      <Image
-        source={{ uri: mediaUrl(current.mediaUrl) }}
-        style={{ position: "absolute", width: W, height: H }}
-        resizeMode="contain"
-      />
+      {currentIsVideo ? (
+        <StoryVideo
+          key={current.id}
+          uri={mediaUrl(current.mediaUrl)}
+          paused={paused}
+          onEnded={() => {
+            setProgress(1);
+            goNext();
+          }}
+        />
+      ) : (
+        <Image
+          source={{ uri: mediaUrl(current.mediaUrl) }}
+          style={{ position: "absolute", width: W, height: H }}
+          resizeMode="contain"
+        />
+      )}
       <View
         style={{
           position: "absolute",
@@ -186,27 +220,26 @@ export default function StoryViewerScreen() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.18)",
+          backgroundColor: "rgba(0,0,0,0.12)",
         }}
+        pointerEvents="none"
       />
 
-      {/* Tap zones */}
       <View style={{ flex: 1, flexDirection: "row" }}>
         <Pressable
-          onPress={prev}
+          onPress={goPrev}
           onLongPress={() => setPaused(true)}
           onPressOut={() => setPaused(false)}
           style={{ flex: 1 }}
         />
         <Pressable
-          onPress={next}
+          onPress={goNext}
           onLongPress={() => setPaused(true)}
           onPressOut={() => setPaused(false)}
           style={{ flex: 1 }}
         />
       </View>
 
-      {/* Progress + chrome */}
       <View
         style={{
           position: "absolute",
@@ -216,13 +249,13 @@ export default function StoryViewerScreen() {
           gap: 10,
         }}
       >
-        <View style={{ flexDirection: "row", gap: 4 }}>
+        <View style={{ flexDirection: "row", gap: 3 }}>
           {items.map((it, i) => (
             <View
               key={it.id}
               style={{
                 flex: 1,
-                height: 3,
+                height: 2.5,
                 borderRadius: 2,
                 backgroundColor: "rgba(255,255,255,0.28)",
                 overflow: "hidden",
@@ -245,13 +278,7 @@ export default function StoryViewerScreen() {
           ))}
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           {authorAvatar ? (
             <Image
               source={{ uri: mediaUrl(authorAvatar) }}
@@ -282,6 +309,7 @@ export default function StoryViewerScreen() {
                 "{n}",
                 formatStoryViews(current.viewCount || 0)
               )}
+              {` · ${index + 1}/${items.length}`}
             </Text>
           </View>
           {mine ? (

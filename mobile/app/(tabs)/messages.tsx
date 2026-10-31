@@ -32,10 +32,7 @@ import {
   type MemberStatusGroup,
   type MemberStatusItem,
 } from "@/lib/member-status";
-import {
-  setCommunityVideoFeed,
-  type CommunityFeedVideo,
-} from "@/lib/community-video-feed";
+import { storyCoverItem } from "@/lib/story-cover";
 import { setStoryFeed, toStoryFeedItems } from "@/lib/story-feed";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
@@ -331,54 +328,19 @@ export default function MessagesScreen() {
     );
   }, [rows, query]);
 
-  function openStoryVideo(group: MemberStatusGroup, start: MemberStatusItem) {
-    const videos: CommunityFeedVideo[] = group.items
-      .filter((it) => isStatusVideoUrl(it.mediaUrl, it.mediaType) && it.mediaUrl)
-      .map((it) => ({
-        url: mediaUrl(it.mediaUrl),
-        authorName: group.author?.displayName || "",
-        caption: (it.caption || "").slice(0, 140),
-        postId: it.id,
-      }));
-    if (!videos.length || !start.mediaUrl) return;
-    const startResolved = mediaUrl(start.mediaUrl);
-    setCommunityVideoFeed(videos, startResolved);
-    void api(`/api/member-status/${start.id}/view`, { method: "POST" }).catch(
-      () => null
-    );
-    router.push("/community/videos");
-  }
-
-  function openStoryGroup(group: MemberStatusGroup, start?: MemberStatusItem) {
-    const featured = start || group.featured;
-    if (!featured?.mediaUrl) {
+  function openStoryGroup(group: MemberStatusGroup) {
+    const all = group.items.filter((it) => Boolean(it.mediaUrl));
+    if (!all.length) {
       if (group.mine) void pickAndPublishStatus();
       return;
     }
-    if (isStatusVideoUrl(featured.mediaUrl, featured.mediaType)) {
-      openStoryVideo(group, featured);
-      return;
-    }
-    const photoItems = group.items.filter(
-      (it) => it.mediaUrl && !isStatusVideoUrl(it.mediaUrl, it.mediaType)
-    );
-    if (!photoItems.length) {
-      openStoryVideo(group, featured);
-      return;
-    }
-    const startId = photoItems.some((it) => it.id === featured.id)
-      ? featured.id
-      : photoItems[0]!.id;
-    const startIndex = Math.max(
-      0,
-      photoItems.findIndex((it) => it.id === startId)
-    );
+    // WhatsApp-style: start at oldest, advance through every story
     setStoryFeed({
       userId: group.userId,
       mine: Boolean(group.mine),
       author: group.author,
-      items: toStoryFeedItems(photoItems),
-      startIndex,
+      items: toStoryFeedItems(all),
+      startIndex: 0,
     });
     router.push("/stories/view");
   }
@@ -491,7 +453,8 @@ export default function MessagesScreen() {
   }
 
   const others = storyGroups;
-  const myFeatured = mineGroup?.featured ?? null;
+  const myCover = storyCoverItem(mineGroup);
+  const myCoverIsVideo = isStatusVideoUrl(myCover?.mediaUrl, myCover?.mediaType);
   const myCount = mineGroup?.count ?? 0;
   const myViews = mineGroup?.viewCount ?? 0;
 
@@ -540,27 +503,43 @@ export default function MessagesScreen() {
                   width: 108,
                   height: 148,
                   borderRadius: 18,
-                  overflow: "visible",
+                  overflow: "hidden",
                   backgroundColor: colors.accentSoft,
                   borderWidth: myCount > 0 ? 2.5 : 1,
                   borderColor: myCount > 0 ? "#8BC34A" : colors.border,
                   opacity: publishing ? 0.7 : 1,
                 }}
               >
-                <View
-                  style={{
-                    flex: 1,
-                    borderRadius: 16,
-                    overflow: "hidden",
-                  }}
-                >
-                {myFeatured?.mediaUrl &&
-                !isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) ? (
+                {myCover?.mediaUrl && !myCoverIsVideo ? (
                   <Image
-                    source={{ uri: mediaUrl(myFeatured.mediaUrl) }}
+                    source={{ uri: mediaUrl(myCover.mediaUrl) }}
                     style={{ width: "100%", height: "100%" }}
                     resizeMode="cover"
                   />
+                ) : myCoverIsVideo ? (
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#1B3B14",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        backgroundColor: "rgba(0,0,0,0.45)",
+                        borderWidth: 1.5,
+                        borderColor: "rgba(255,255,255,0.85)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 16, marginLeft: 2 }}>▶</Text>
+                    </View>
+                  </View>
                 ) : user?.avatarUrl ? (
                   <Image
                     source={{ uri: mediaUrl(user.avatarUrl) }}
@@ -581,25 +560,6 @@ export default function MessagesScreen() {
                     </Text>
                   </View>
                 )}
-                {myFeatured &&
-                isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) ? (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: "40%",
-                      alignSelf: "center",
-                      left: 36,
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: "rgba(0,0,0,0.55)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontSize: 14 }}>▶</Text>
-                  </View>
-                ) : null}
                 {myCount > 0 ? (
                   <>
                     <View
@@ -646,6 +606,7 @@ export default function MessagesScreen() {
                     right: 0,
                     bottom: 0,
                     padding: 8,
+                    paddingRight: 40,
                     backgroundColor: "rgba(27,59,20,0.55)",
                   }}
                 >
@@ -656,27 +617,24 @@ export default function MessagesScreen() {
                     {t("messages_my_status")}
                   </Text>
                 </View>
-                </View>
                 <Pressable
                   onPress={(e) => {
                     e.stopPropagation?.();
                     void pickAndPublishStatus();
                   }}
-                  hitSlop={8}
+                  hitSlop={6}
                   style={{
                     position: "absolute",
-                    right: -4,
-                    bottom: -4,
-                    width: 30,
-                    height: 30,
-                    borderRadius: 15,
+                    right: 8,
+                    bottom: 8,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
                     backgroundColor: colors.accent,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 2,
                     borderColor: "#fff",
-                    zIndex: 2,
-                    elevation: 4,
                   }}
                 >
                   <Ionicons name="add" size={18} color="#fff" />
@@ -684,16 +642,13 @@ export default function MessagesScreen() {
               </Pressable>
 
               {others.map((g) => {
-                const featured = g.featured;
+                const cover = storyCoverItem(g);
                 const name = g.author?.displayName || "—";
-                const isVideo = isStatusVideoUrl(
-                  featured?.mediaUrl,
-                  featured?.mediaType
-                );
+                const isVideo = isStatusVideoUrl(cover?.mediaUrl, cover?.mediaType);
                 const photo =
-                  featured?.mediaUrl && !isVideo
-                    ? featured.mediaUrl
-                    : g.author?.avatarUrl;
+                  cover?.mediaUrl && !isVideo
+                    ? cover.mediaUrl
+                    : null;
                 return (
                   <Pressable
                     key={g.userId}
@@ -714,6 +669,36 @@ export default function MessagesScreen() {
                         style={{ width: "100%", height: "100%" }}
                         resizeMode="cover"
                       />
+                    ) : isVideo ? (
+                      <View
+                        style={{
+                          flex: 1,
+                          backgroundColor: "#1B3B14",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 22,
+                            backgroundColor: "rgba(0,0,0,0.45)",
+                            borderWidth: 1.5,
+                            borderColor: "rgba(255,255,255,0.85)",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text style={{ color: "#fff", fontSize: 16, marginLeft: 2 }}>▶</Text>
+                        </View>
+                      </View>
+                    ) : g.author?.avatarUrl ? (
+                      <Image
+                        source={{ uri: mediaUrl(g.author.avatarUrl) }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                      />
                     ) : (
                       <View
                         style={{
@@ -728,23 +713,6 @@ export default function MessagesScreen() {
                         </Text>
                       </View>
                     )}
-                    {isVideo ? (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: "40%",
-                          left: 36,
-                          width: 36,
-                          height: 36,
-                          borderRadius: 18,
-                          backgroundColor: "rgba(0,0,0,0.55)",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontSize: 14 }}>▶</Text>
-                      </View>
-                    ) : null}
                     <View
                       style={{
                         position: "absolute",

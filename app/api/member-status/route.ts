@@ -90,7 +90,8 @@ function groupByUser(rows: StatusRow[], meId: string) {
   }
 
   const groups = [...map.values()].map((g) => {
-    const featured = g.items[0] ?? null;
+    // items are oldest→newest; card preview = most recent so new stories show up
+    const featured = g.items[g.items.length - 1] ?? null;
     const viewCount = g.items.reduce((sum, it) => sum + (it.viewCount || 0), 0);
     return {
       userId: g.userId,
