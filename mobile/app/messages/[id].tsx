@@ -120,6 +120,8 @@ function isAttachmentOnlyBody(body?: string | null) {
     text === "Pièce jointe" ||
     text === "Attachment" ||
     text === "📎" ||
+    text === "🎥" ||
+    text.toLowerCase() === "[video]" ||
     text.startsWith("Note vocale") ||
     text.startsWith("Voice note")
   );
@@ -704,11 +706,14 @@ export default function DirectChatScreen() {
     try {
       for (const [index, file] of files.entries()) {
         const att = await uploadFile("/api/community/upload", file);
+        const isVideo = (file.mimeType || "").startsWith("video/");
+        const body =
+          index === 0 && caption ? caption : isVideo ? "🎥" : undefined;
         await api(`/api/dm/${id}/messages`, {
           method: "POST",
           body: JSON.stringify({
             attachmentUrl: att.url,
-            ...(index === 0 && caption ? { body: caption } : {}),
+            ...(body ? { body } : {}),
           }),
         });
       }
@@ -724,7 +729,7 @@ export default function DirectChatScreen() {
 
   async function pickAttachments() {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ["image/*", "application/pdf"],
+      type: ["image/*", "video/*", "application/pdf"],
       copyToCacheDirectory: true,
       multiple: true,
     });
@@ -1047,6 +1052,7 @@ export default function DirectChatScreen() {
                       url={url}
                       fileName={fileName}
                       mine={mine}
+                      body={item.body}
                     />
                     <Pressable
                       onPress={() => void downloadAttachment(url)}

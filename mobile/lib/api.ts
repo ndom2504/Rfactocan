@@ -177,6 +177,24 @@ export async function postMultipart<T = Record<string, unknown>>(
   return (await nativeMultipart(path, file, fields)) as T;
 }
 
+function mediaHaystack(url: string) {
+  try {
+    return decodeURIComponent(url);
+  } catch {
+    return url;
+  }
+}
+
+export function isVideoAttachment(
+  url?: string | null,
+  body?: string | null
+) {
+  if (body?.includes("🎥") || /\[video\]/i.test(body || "")) return true;
+  if (!url) return false;
+  const hay = mediaHaystack(url);
+  return /\.(mp4|mov|webm|m4v|mkv)(\?|#|$)/i.test(hay);
+}
+
 export function isImageAttachment(url?: string | null) {
   if (!url) return false;
   try {

@@ -1,17 +1,98 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as WebBrowser from "expo-web-browser";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Image, Pressable, Text, View } from "react-native";
-import { isImageAttachment, isPdfAttachment } from "@/lib/api";
+import {
+  isImageAttachment,
+  isPdfAttachment,
+  isVideoAttachment,
+} from "@/lib/api";
 import { colors } from "@/lib/theme";
+
+function VideoThumb({
+  url,
+  mine,
+}: {
+  url: string;
+  mine?: boolean;
+}) {
+  const player = useVideoPlayer({ uri: url }, (p) => {
+    p.loop = false;
+    p.muted = true;
+    p.pause();
+  });
+
+  return (
+    <Pressable
+      onPress={() => void WebBrowser.openBrowserAsync(url)}
+      style={{
+        width: 220,
+        height: 160,
+        borderRadius: 10,
+        overflow: "hidden",
+        backgroundColor: "#0B1F0A",
+      }}
+    >
+      <VideoView
+        player={player}
+        style={{ width: 220, height: 160 }}
+        contentFit="cover"
+        nativeControls={false}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(0,0,0,0.2)",
+        }}
+      >
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: "rgba(0,0,0,0.55)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="play" size={28} color="#fff" style={{ marginLeft: 2 }} />
+        </View>
+      </View>
+      <Text
+        style={{
+          position: "absolute",
+          left: 8,
+          bottom: 8,
+          color: mine ? "#fff" : "#fff",
+          fontSize: 11,
+          fontWeight: "700",
+          textShadowColor: "rgba(0,0,0,0.6)",
+          textShadowRadius: 4,
+        }}
+      >
+        Vidéo
+      </Text>
+    </Pressable>
+  );
+}
 
 export function AttachmentPreview({
   url,
   fileName,
   mine,
+  body,
 }: {
   url: string;
   fileName: string;
   mine?: boolean;
+  body?: string | null;
 }) {
   const label = mine ? "#fff" : colors.foreground;
   const muted = mine ? "rgba(255,255,255,0.85)" : colors.muted;
@@ -32,6 +113,14 @@ export function AttachmentPreview({
     } catch {
       /* ignore */
     }
+  }
+
+  const looksVideo =
+    isVideoAttachment(url, body) ||
+    (!isPdfAttachment(url) && !fileName.includes("."));
+
+  if (looksVideo) {
+    return <VideoThumb url={url} mine={mine} />;
   }
 
   if (isPdfAttachment(url)) {
@@ -92,7 +181,7 @@ export function AttachmentPreview({
           color={mine ? "#fff" : colors.accent}
         />
         <Text style={{ color: label, fontSize: 13, flex: 1 }} numberOfLines={2}>
-          {fileName}
+          {fileName.includes(".") ? fileName : "Fichier"}
         </Text>
       </View>
     </Pressable>
