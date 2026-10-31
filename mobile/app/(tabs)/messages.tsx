@@ -25,12 +25,17 @@ import {
 import { formatChatListTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import {
+  MEMBER_STATUS_MAX_PER_USER,
   MEMBER_STATUS_VIDEO_MAX_SEC,
+  formatStoryViews,
   isStatusVideoUrl,
-  statusEmoji,
-  statusLabelKey,
+  type MemberStatusGroup,
   type MemberStatusItem,
 } from "@/lib/member-status";
+import {
+  setCommunityVideoFeed,
+  type CommunityFeedVideo,
+} from "@/lib/community-video-feed";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-testing";
@@ -171,8 +176,8 @@ export default function MessagesScreen() {
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const [rows, setRows] = useState<InboxRow[]>([]);
-  const [statuses, setStatuses] = useState<MemberStatusItem[]>([]);
-  const [myStatus, setMyStatus] = useState<MemberStatusItem | null>(null);
+  const [storyGroups, setStoryGroups] = useState<MemberStatusGroup[]>([]);
+  const [mineGroup, setMineGroup] = useState<MemberStatusGroup | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -189,20 +194,22 @@ export default function MessagesScreen() {
           () => ({ payments: [] as ServicePayment[] })
         ),
         api<{
+          groups?: MemberStatusGroup[];
+          mineGroup?: MemberStatusGroup | null;
           statuses?: MemberStatusItem[];
           mine?: MemberStatusItem | null;
-        }>("/api/member-status").catch(() =>
-          api<{
-            statuses?: MemberStatusItem[];
-            mine?: MemberStatusItem | null;
-          }>("/api/status").catch(() => ({
-            statuses: [] as MemberStatusItem[],
-            mine: null,
-          }))
-        ),
+        }>("/api/member-status").catch(() => ({
+          groups: [] as MemberStatusGroup[],
+          mineGroup: null,
+          statuses: [] as MemberStatusItem[],
+          mine: null,
+        })),
       ]);
-      setStatuses(statusRes.statuses ?? []);
-      setMyStatus(statusRes.mine ?? null);
+      const groups = statusRes.groups ?? [];
+      setMineGroup(
+        statusRes.mineGroup ?? groups.find((g) => g.mine) ?? null
+      );
+      setStoryGroups(groups.filter((g) => !g.mine).slice(0, 12));
 
       const next: InboxRow[] = [];
 
@@ -323,8 +330,30 @@ export default function MessagesScreen() {
     );
   }, [rows, query]);
 
+  function openStoryVideo(group: MemberStatusGroup, start: MemberStatusItem) {
+    const videos: CommunityFeedVideo[] = group.items
+      .filter((it) => isStatusVideoUrl(it.mediaUrl, it.mediaType) && it.mediaUrl)
+      .map((it) => ({
+        url: mediaUrl(it.mediaUrl),
+        authorName: group.author?.displayName || "",
+        caption: (it.caption || "").slice(0, 140),
+        postId: it.id,
+      }));
+    if (!videos.length || !start.mediaUrl) return;
+    const startResolved = mediaUrl(start.mediaUrl);
+    setCommunityVideoFeed(videos, startResolved);
+    void api(`/api/member-status/${start.id}/view`, { method: "POST" }).catch(
+      () => null
+    );
+    router.push("/community/videos");
+  }
+
   async function pickAndPublishStatus() {
     if (publishing) return;
+    if ((mineGroup?.count ?? 0) >= MEMBER_STATUS_MAX_PER_USER) {
+      Alert.alert(t("messages_title"), t("messages_story_max"));
+      return;
+    }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       setError(t("messages_status_failed"));
@@ -365,7 +394,7 @@ export default function MessagesScreen() {
         kind: "STORY",
         mediaUrl: uploaded.url,
         mediaType: isVideo ? "video" : "image",
-        mirrorCommunity: true,
+        mirrorCommunity: false,
       };
       try {
         await api("/api/member-status", {
@@ -426,7 +455,10 @@ export default function MessagesScreen() {
     ]);
   }
 
-  const others = statuses.filter((s) => !s.mine).slice(0, 12);
+  const others = storyGroups;
+  const myFeatured = mineGroup?.featured ?? null;
+  const myCount = mineGroup?.count ?? 0;
+  const myViews = mineGroup?.viewCount ?? 0;
 
   return (
     <Screen style={{ paddingBottom: 8, paddingTop: 4 }}>
@@ -461,7 +493,17 @@ export default function MessagesScreen() {
               contentContainerStyle={{ gap: 10, paddingVertical: 2 }}
             >
               <Pressable
-                onPress={() => void pickAndPublishStatus()}
+                onPress={() => {
+                  if (
+                    myFeatured &&
+                    isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) &&
+                    mineGroup
+                  ) {
+                    openStoryVideo(mineGroup, myFeatured);
+                    return;
+                  }
+                  void pickAndPublishStatus();
+                }}
                 disabled={publishing}
                 style={{
                   width: 108,
@@ -469,14 +511,15 @@ export default function MessagesScreen() {
                   borderRadius: 18,
                   overflow: "hidden",
                   backgroundColor: colors.accentSoft,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  borderWidth: myCount > 0 ? 2.5 : 1,
+                  borderColor: myCount > 0 ? "#8BC34A" : colors.border,
                   opacity: publishing ? 0.7 : 1,
                 }}
               >
-                {myStatus?.mediaUrl && !isStatusVideoUrl(myStatus.mediaUrl) ? (
+                {myFeatured?.mediaUrl &&
+                !isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) ? (
                   <Image
-                    source={{ uri: mediaUrl(myStatus.mediaUrl) }}
+                    source={{ uri: mediaUrl(myFeatured.mediaUrl) }}
                     style={{ width: "100%", height: "100%" }}
                     resizeMode="cover"
                   />
@@ -500,20 +543,63 @@ export default function MessagesScreen() {
                     </Text>
                   </View>
                 )}
-                {myStatus?.mediaUrl && isStatusVideoUrl(myStatus.mediaUrl) ? (
+                {myFeatured &&
+                isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) ? (
                   <View
                     style={{
                       position: "absolute",
-                      top: 8,
-                      left: 8,
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                      borderRadius: 10,
-                      paddingHorizontal: 6,
-                      paddingVertical: 2,
+                      top: "40%",
+                      alignSelf: "center",
+                      left: 36,
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: "rgba(0,0,0,0.55)",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <Text style={{ color: "#fff", fontSize: 11 }}>▶</Text>
+                    <Text style={{ color: "#fff", fontSize: 14 }}>▶</Text>
                   </View>
+                ) : null}
+                {myCount > 0 ? (
+                  <>
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        backgroundColor: "rgba(0,0,0,0.55)",
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor: "rgba(139,195,74,0.9)",
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "700", fontSize: 11 }}>
+                        {myCount}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                        borderRadius: 999,
+                        paddingHorizontal: 7,
+                        paddingVertical: 3,
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "600", fontSize: 10 }}>
+                        {t("messages_story_views").replace(
+                          "{n}",
+                          formatStoryViews(myViews)
+                        )}
+                      </Text>
+                    </View>
+                  </>
                 ) : null}
                 <View
                   style={{
@@ -529,10 +615,11 @@ export default function MessagesScreen() {
                     style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}
                     numberOfLines={1}
                   >
-                    {myStatus ? t("status_kind_story") : t("messages_my_status")}
+                    {t("messages_my_status")}
                   </Text>
                 </View>
-                <View
+                <Pressable
+                  onPress={() => void pickAndPublishStatus()}
                   style={{
                     position: "absolute",
                     right: 8,
@@ -548,21 +635,40 @@ export default function MessagesScreen() {
                   }}
                 >
                   <Ionicons name="add" size={18} color="#fff" />
-                </View>
+                </Pressable>
               </Pressable>
 
-              {others.map((s) => {
-                const name = s.author?.displayName || "—";
-                const photo = s.mediaUrl || s.author?.avatarUrl;
+              {others.map((g) => {
+                const featured = g.featured;
+                const name = g.author?.displayName || "—";
+                const isVideo = isStatusVideoUrl(
+                  featured?.mediaUrl,
+                  featured?.mediaType
+                );
+                const photo =
+                  featured?.mediaUrl && !isVideo
+                    ? featured.mediaUrl
+                    : g.author?.avatarUrl;
                 return (
-                  <View
-                    key={s.id}
+                  <Pressable
+                    key={g.userId}
+                    onPress={() => {
+                      if (!featured) return;
+                      if (isVideo) openStoryVideo(g, featured);
+                      else {
+                        void api(`/api/member-status/${featured.id}/view`, {
+                          method: "POST",
+                        }).catch(() => null);
+                      }
+                    }}
                     style={{
                       width: 108,
                       height: 148,
                       borderRadius: 18,
                       overflow: "hidden",
                       backgroundColor: colors.surface2,
+                      borderWidth: 2.5,
+                      borderColor: "#5D8443",
                     }}
                   >
                     {photo ? (
@@ -585,19 +691,56 @@ export default function MessagesScreen() {
                         </Text>
                       </View>
                     )}
+                    {isVideo ? (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: "40%",
+                          left: 36,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          backgroundColor: "rgba(0,0,0,0.55)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 14 }}>▶</Text>
+                      </View>
+                    ) : null}
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        backgroundColor: "rgba(0,0,0,0.55)",
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor: "rgba(139,195,74,0.9)",
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "700", fontSize: 11 }}>
+                        {g.count}
+                      </Text>
+                    </View>
                     <View
                       style={{
                         position: "absolute",
                         top: 8,
                         right: 8,
-                        backgroundColor: "rgba(0,0,0,0.45)",
-                        borderRadius: 10,
-                        paddingHorizontal: 6,
-                        paddingVertical: 2,
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                        borderRadius: 999,
+                        paddingHorizontal: 7,
+                        paddingVertical: 3,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 12 }}>
-                        {statusEmoji(s.kind)}
+                      <Text style={{ color: "#fff", fontWeight: "600", fontSize: 10 }}>
+                        {t("messages_story_views").replace(
+                          "{n}",
+                          formatStoryViews(g.viewCount || 0)
+                        )}
                       </Text>
                     </View>
                     <View
@@ -611,13 +754,13 @@ export default function MessagesScreen() {
                       }}
                     >
                       <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
-                        {t(statusLabelKey(s.kind))}
+                        {t("status_kind_story")}
                       </Text>
                       <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }} numberOfLines={1}>
                         {name}
                       </Text>
                     </View>
-                  </View>
+                  </Pressable>
                 );
               })}
             </ScrollView>

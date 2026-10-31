@@ -10,6 +10,8 @@ export type MemberStatusKindValue = (typeof MEMBER_STATUS_KINDS)[number];
 
 export const MEMBER_STATUS_TTL_MS = 24 * 60 * 60 * 1000;
 export const MEMBER_STATUS_VIDEO_MAX_SEC = 60;
+/** Max active 24h stories per user (WhatsApp-style stack). */
+export const MEMBER_STATUS_MAX_PER_USER = 10;
 
 export function isMemberStatusKind(
   value: unknown
@@ -23,7 +25,7 @@ export function isMemberStatusKind(
 export function memberStatusLabelFr(kind: MemberStatusKindValue) {
   switch (kind) {
     case "STORY":
-      return "Statut";
+      return "Story";
     case "IDEA":
       return "Une idée";
     case "HELP":

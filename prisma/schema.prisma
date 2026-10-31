@@ -1241,10 +1241,13 @@ enum MemberStatusKind {
 
 model MemberStatus {
   id        String           @id @default(cuid())
-  userId    String           @unique
+  userId    String
   kind      MemberStatusKind
   caption   String?
   mediaUrl  String?
+  /// "image" | "video"
+  mediaType String?
+  viewCount Int              @default(0)
   /// When true, a CommunityPost was also created (sourceKey member-status:{id}).
   mirrored  Boolean          @default(false)
   expiresAt DateTime
@@ -1253,6 +1256,7 @@ model MemberStatus {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, expiresAt])
   @@index([expiresAt])
   @@index([kind, expiresAt])
 }

@@ -8,7 +8,15 @@ export const MEMBER_STATUS_KINDS = [
 
 export type MemberStatusKind = (typeof MEMBER_STATUS_KINDS)[number];
 
+export const MEMBER_STATUS_TTL_MS = 24 * 60 * 60 * 1000;
 export const MEMBER_STATUS_VIDEO_MAX_SEC = 60;
+export const MEMBER_STATUS_MAX_PER_USER = 10;
+
+export type MemberStatusAuthor = {
+  id?: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+};
 
 export type MemberStatusItem = {
   id: string;
@@ -16,14 +24,22 @@ export type MemberStatusItem = {
   kind: MemberStatusKind | string;
   caption?: string | null;
   mediaUrl?: string | null;
+  mediaType?: string | null;
+  viewCount?: number;
   expiresAt?: string;
   createdAt?: string;
   mine?: boolean;
-  author?: {
-    id?: string;
-    displayName?: string | null;
-    avatarUrl?: string | null;
-  };
+  author?: MemberStatusAuthor;
+};
+
+export type MemberStatusGroup = {
+  userId: string;
+  author?: MemberStatusAuthor;
+  mine?: boolean;
+  count: number;
+  viewCount: number;
+  featured: MemberStatusItem | null;
+  items: MemberStatusItem[];
 };
 
 export function statusLabelKey(kind: string) {
@@ -60,7 +76,14 @@ export function statusEmoji(kind: string) {
   }
 }
 
-export function isStatusVideoUrl(url?: string | null) {
+export function isStatusVideoUrl(url?: string | null, mediaType?: string | null) {
+  if ((mediaType || "").toLowerCase() === "video") return true;
   if (!url) return false;
   return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(url);
+}
+
+export function formatStoryViews(n: number) {
+  if (n < 1000) return String(n);
+  if (n < 10000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return `${Math.round(n / 1000)}k`;
 }

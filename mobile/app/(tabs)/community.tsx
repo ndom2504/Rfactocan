@@ -411,10 +411,18 @@ export default function CommunityScreen() {
     }
   }
 
+  async function deletePost(item: CommunityPost) {
+    if (!isNativeCommunityPostId(item.id)) return;
+    await api(`/api/community/posts/${item.id}`, { method: "DELETE" });
+    setPosts((prev) => prev.filter((p) => p.id !== item.id));
+  }
+
   function openPostOptions(item: CommunityPost) {
     const hasMedia = (item.attachments ?? []).some(
       (a) => attachmentIsImage(a) || attachmentIsVideo(a)
     );
+    const isOwnerNative =
+      Boolean(item.isOwner) && isNativeCommunityPostId(item.id);
     const buttons: {
       text: string;
       style?: "cancel" | "destructive" | "default";
@@ -429,6 +437,27 @@ export default function CommunityScreen() {
       buttons.push({
         text: t("community_set_as_status"),
         onPress: () => void setPostAsStatus(item),
+      });
+    }
+    if (isOwnerNative) {
+      buttons.push({
+        text: t("community_edit"),
+        onPress: () => router.push(`/community/${item.id}` as Href),
+      });
+      buttons.push({
+        text: t("community_delete"),
+        style: "destructive",
+        onPress: () => {
+          Alert.alert(t("community_delete"), t("community_delete_confirm"), [
+            { text: t("cancel"), style: "cancel" },
+            {
+              text: t("community_delete"),
+              style: "destructive",
+              onPress: () =>
+                void runExclusive(`${item.id}:delete`, () => deletePost(item)),
+            },
+          ]);
+        },
       });
     }
     buttons.push({ text: t("cancel"), style: "cancel" });

@@ -307,6 +307,39 @@ export default function CommunityPostScreen() {
                 loading={busy}
               />
             ) : null}
+            {post.isOwner ? (
+              <Button
+                label={t("community_delete")}
+                variant="outline"
+                onPress={() => {
+                  Alert.alert(t("community_delete"), t("community_delete_confirm"), [
+                    { text: t("cancel"), style: "cancel" },
+                    {
+                      text: t("community_delete"),
+                      style: "destructive",
+                      onPress: () => {
+                        void (async () => {
+                          setBusy(true);
+                          try {
+                            await api(`/api/community/posts/${id}`, {
+                              method: "DELETE",
+                            });
+                            router.back();
+                          } catch (e) {
+                            setError(
+                              e instanceof Error ? e.message : t("retry")
+                            );
+                          } finally {
+                            setBusy(false);
+                          }
+                        })();
+                      },
+                    },
+                  ]);
+                }}
+                loading={busy}
+              />
+            ) : null}
           </View>
           <Text
             style={{
