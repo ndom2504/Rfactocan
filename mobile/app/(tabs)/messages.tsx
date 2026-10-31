@@ -36,6 +36,7 @@ import {
   setCommunityVideoFeed,
   type CommunityFeedVideo,
 } from "@/lib/community-video-feed";
+import { setStoryFeed, toStoryFeedItems } from "@/lib/story-feed";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-testing";
@@ -348,6 +349,40 @@ export default function MessagesScreen() {
     router.push("/community/videos");
   }
 
+  function openStoryGroup(group: MemberStatusGroup, start?: MemberStatusItem) {
+    const featured = start || group.featured;
+    if (!featured?.mediaUrl) {
+      if (group.mine) void pickAndPublishStatus();
+      return;
+    }
+    if (isStatusVideoUrl(featured.mediaUrl, featured.mediaType)) {
+      openStoryVideo(group, featured);
+      return;
+    }
+    const photoItems = group.items.filter(
+      (it) => it.mediaUrl && !isStatusVideoUrl(it.mediaUrl, it.mediaType)
+    );
+    if (!photoItems.length) {
+      openStoryVideo(group, featured);
+      return;
+    }
+    const startId = photoItems.some((it) => it.id === featured.id)
+      ? featured.id
+      : photoItems[0]!.id;
+    const startIndex = Math.max(
+      0,
+      photoItems.findIndex((it) => it.id === startId)
+    );
+    setStoryFeed({
+      userId: group.userId,
+      mine: Boolean(group.mine),
+      author: group.author,
+      items: toStoryFeedItems(photoItems),
+      startIndex,
+    });
+    router.push("/stories/view");
+  }
+
   async function pickAndPublishStatus() {
     if (publishing) return;
     if ((mineGroup?.count ?? 0) >= MEMBER_STATUS_MAX_PER_USER) {
@@ -494,12 +529,8 @@ export default function MessagesScreen() {
             >
               <Pressable
                 onPress={() => {
-                  if (
-                    myFeatured &&
-                    isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) &&
-                    mineGroup
-                  ) {
-                    openStoryVideo(mineGroup, myFeatured);
+                  if (mineGroup && myCount > 0) {
+                    openStoryGroup(mineGroup);
                     return;
                   }
                   void pickAndPublishStatus();
@@ -509,13 +540,20 @@ export default function MessagesScreen() {
                   width: 108,
                   height: 148,
                   borderRadius: 18,
-                  overflow: "hidden",
+                  overflow: "visible",
                   backgroundColor: colors.accentSoft,
                   borderWidth: myCount > 0 ? 2.5 : 1,
                   borderColor: myCount > 0 ? "#8BC34A" : colors.border,
                   opacity: publishing ? 0.7 : 1,
                 }}
               >
+                <View
+                  style={{
+                    flex: 1,
+                    borderRadius: 16,
+                    overflow: "hidden",
+                  }}
+                >
                 {myFeatured?.mediaUrl &&
                 !isStatusVideoUrl(myFeatured.mediaUrl, myFeatured.mediaType) ? (
                   <Image
@@ -618,20 +656,27 @@ export default function MessagesScreen() {
                     {t("messages_my_status")}
                   </Text>
                 </View>
+                </View>
                 <Pressable
-                  onPress={() => void pickAndPublishStatus()}
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    void pickAndPublishStatus();
+                  }}
+                  hitSlop={8}
                   style={{
                     position: "absolute",
-                    right: 8,
-                    bottom: 34,
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
+                    right: -4,
+                    bottom: -4,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
                     backgroundColor: colors.accent,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 2,
                     borderColor: "#fff",
+                    zIndex: 2,
+                    elevation: 4,
                   }}
                 >
                   <Ionicons name="add" size={18} color="#fff" />
@@ -652,15 +697,7 @@ export default function MessagesScreen() {
                 return (
                   <Pressable
                     key={g.userId}
-                    onPress={() => {
-                      if (!featured) return;
-                      if (isVideo) openStoryVideo(g, featured);
-                      else {
-                        void api(`/api/member-status/${featured.id}/view`, {
-                          method: "POST",
-                        }).catch(() => null);
-                      }
-                    }}
+                    onPress={() => openStoryGroup(g)}
                     style={{
                       width: 108,
                       height: 148,

@@ -176,6 +176,10 @@ export default function RootLayout() {
             options={{ headerShown: false, animation: "fade", gestureEnabled: true }}
           />
           <Stack.Screen
+            name="stories/view"
+            options={{ headerShown: false, animation: "fade", gestureEnabled: true }}
+          />
+          <Stack.Screen
             name="profile"
             options={{ headerShown: true, title: "Profil" }}
           />
