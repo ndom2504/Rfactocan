@@ -431,7 +431,8 @@ const dict = {
     kyc_not_required_country:
       "Au Gabon, la vérification d’identité n’est pas exigée pour utiliser Rfacto.",
     dm_attachments_max: "Maximum 10 fichiers par message.",
-    dm_attach_hint: "Photos et fichiers jusqu’à 50 Mo, plusieurs à la fois.",
+    dm_attach_hint:
+      "Images, vidéos (max 500 Mo) ou PDF (50 Mo), plusieurs fichiers.",
     online: "En ligne",
     offline: "Hors ligne",
     typing: "En train d’écrire…",
@@ -1496,7 +1497,8 @@ const dict = {
     send: "Envoyer",
     no_messages: "Aucun message. Présentez-vous et négociez les détails.",
     attach_file: "Joindre une image",
-    attach_hint: "Images jpeg, png, webp, gif ou PDF · jusqu’à 50 Mo, plusieurs fichiers",
+    attach_hint:
+      "Images, vidéos (max 500 Mo) ou PDF (50 Mo), plusieurs fichiers",
     attach_failed: "Échec de l'envoi du fichier.",
     attachment_label: "Pièce jointe",
     attachment_ready: "Prêt à envoyer",
@@ -2230,7 +2232,8 @@ const dict = {
     kyc_not_required_country:
       "In Gabon, identity verification is not required to use Rfacto.",
     dm_attachments_max: "Maximum 10 files per message.",
-    dm_attach_hint: "Photos and files up to 50 MB, several at once.",
+    dm_attach_hint:
+      "Images, videos (max 500 MB) or PDF (50 MB), multiple files.",
     online: "Online",
     offline: "Offline",
     typing: "Typing…",
@@ -3286,7 +3289,8 @@ const dict = {
     send: "Send",
     no_messages: "No messages yet. Introduce yourself and agree on details.",
     attach_file: "Attach an image",
-    attach_hint: "jpeg, png, webp, gif or PDF · up to 50 MB, several files",
+    attach_hint:
+      "Images, videos (max 500 MB) or PDF (50 MB), multiple files",
     attach_failed: "Failed to upload the file.",
     attachment_label: "Attachment",
     attachment_ready: "Ready to send",

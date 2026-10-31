@@ -19,10 +19,12 @@ import {
   parseVoiceDurationSec,
   voiceNoteCaption,
 } from "@/lib/community";
+import { isDmImageUrl, isDmPdfUrl, isDmVideoUrl } from "@/lib/dm-media";
 import { VIDEO_CALLS_ENABLED } from "@/lib/call-rules";
 import { uploadCommunityAttachment } from "@/lib/community-upload-client";
 import { VoiceNoteButton } from "@/components/voice-note-button";
 import { VoiceNoteBubble } from "@/components/voice-note-bubble";
+import { DmVideoPreview } from "@/components/dm-video-preview";
 import {
   ReactionChips,
   ReactionPicker,
@@ -125,19 +127,16 @@ function isVoiceMessage(url?: string | null, body?: string | null) {
   return Boolean(url && isAudioAttachment("", url));
 }
 
-function isImageUrl(url: string) {
-  if (isAudioAttachment("", url)) return false;
-  const hay = decodeURIComponent(url);
-  return /\.(jpe?g|png|gif|webp)(\?|#|$)/i.test(hay);
-}
-
 function isAttachmentOnlyBody(body: string) {
   return (
     body === "Pièce jointe" ||
     body === "Attachment" ||
     body === "📎" ||
+    body === "🎥" ||
+    body.toLowerCase() === "[video]" ||
     /^Note vocale\b/i.test(body) ||
-    /^Voice note\b/i.test(body)
+    /^Voice note\b/i.test(body) ||
+    (body.length >= 24 && !/[\s/\\]/.test(body) && !body.includes("."))
   );
 }
 
@@ -580,8 +579,18 @@ export default function DirectMessageChatPage() {
         await sendMessage({ body: bodyText });
       } else {
         for (let i = 0; i < urls.length; i++) {
+          const file = files[i];
+          const isVideo =
+            Boolean(file?.type?.startsWith("video/")) ||
+            isDmVideoUrl(urls[i], undefined);
+          const caption =
+            i === 0 && bodyText
+              ? bodyText
+              : isVideo
+                ? "🎥"
+                : undefined;
           await sendMessage({
-            body: i === 0 ? bodyText || undefined : undefined,
+            body: caption,
             attachmentUrl: urls[i],
           });
         }
@@ -1166,35 +1175,69 @@ export default function DirectMessageChatPage() {
                       mine={mine}
                       durationHintSec={parseVoiceDurationSec(m.body)}
                     />
+                  ) : isDmImageUrl(m.attachmentUrl) ? (
+                    <>
+                      <a
+                        href={m.attachmentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block overflow-hidden rounded-lg"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={m.attachmentUrl}
+                          alt={t("attachment_label")}
+                          className="max-h-48 w-full object-cover"
+                        />
+                      </a>
+                      <a
+                        href={m.attachmentUrl}
+                        download
+                        className={cn(
+                          "inline-flex text-xs font-medium underline",
+                          mine ? "text-white/90" : "text-[var(--foreground)]"
+                        )}
+                      >
+                        {t("download_attachment")}
+                      </a>
+                    </>
+                  ) : isDmPdfUrl(m.attachmentUrl) ? (
+                    <>
+                      <a
+                        href={m.attachmentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={cn(
+                          "inline-flex underline",
+                          mine ? "text-white" : "text-[var(--accent)]"
+                        )}
+                      >
+                        {t("open_attachment")} · PDF
+                      </a>
+                      <a
+                        href={m.attachmentUrl}
+                        download
+                        className={cn(
+                          "inline-flex text-xs font-medium underline",
+                          mine ? "text-white/90" : "text-[var(--foreground)]"
+                        )}
+                      >
+                        {t("download_attachment")}
+                      </a>
+                    </>
                   ) : (
                     <>
-                  <a
-                    href={m.attachmentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block overflow-hidden rounded-lg"
-                  >
-                    {isImageUrl(m.attachmentUrl) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={m.attachmentUrl}
-                        alt={t("attachment_label")}
-                        className="max-h-48 w-full object-cover"
-                      />
-                    ) : (
-                      <span className="underline">{t("open_attachment")}</span>
-                    )}
-                  </a>
-                  <a
-                    href={m.attachmentUrl}
-                    download
-                    className={cn(
-                      "inline-flex text-xs font-medium underline",
-                      mine ? "text-white/90" : "text-[var(--foreground)]"
-                    )}
-                  >
-                    {t("download_attachment")}
-                  </a>
+                      <DmVideoPreview url={m.attachmentUrl} mine={mine} />
+                      <a
+                        href={m.attachmentUrl}
+                        download
+                        className={cn(
+                          "inline-flex text-xs font-medium underline",
+                          mine ? "text-white/90" : "text-[var(--foreground)]"
+                        )}
+                      >
+                        {t("download_attachment")}
+                      </a>
                     </>
                   )}
                 </div>
@@ -1477,7 +1520,7 @@ export default function DirectMessageChatPage() {
             ref={fileRef}
             type="file"
             multiple
-            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf"
             className="hidden"
             onChange={(e) => {
               const picked = Array.from(e.target.files ?? []);
