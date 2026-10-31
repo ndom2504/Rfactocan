@@ -11,6 +11,7 @@ import {
   type DmContextType,
 } from "@/lib/dm";
 import { notifyUser } from "@/lib/notifications";
+import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
 
 const startSchema = z.object({
@@ -27,6 +28,7 @@ const peerSelect = {
   kycStatus: true,
   ratingAvg: true,
   ratingCount: true,
+  lastSeenAt: true,
 } as const;
 
 /** GET — list my direct threads. ?scope=in = communauté In ; sinon messagerie services. */
@@ -125,7 +127,16 @@ export async function GET(request: Request) {
   }
 
   const items = threads.map((t) => {
-    const peer = t.userLowId === session.id ? t.userHigh : t.userLow;
+    const rawPeer = t.userLowId === session.id ? t.userHigh : t.userLow;
+    const peer = {
+      id: rawPeer.id,
+      displayName: rawPeer.displayName,
+      avatarUrl: rawPeer.avatarUrl,
+      kycStatus: rawPeer.kycStatus,
+      ratingAvg: rawPeer.ratingAvg,
+      ratingCount: rawPeer.ratingCount,
+      online: isUserOnline(rawPeer.lastSeenAt),
+    };
     const last = t.messages[0] ?? null;
     const unreadCount = unreadByThread.get(t.id) ?? 0;
     const lastCall = lastCallByThread.get(t.id) ?? null;

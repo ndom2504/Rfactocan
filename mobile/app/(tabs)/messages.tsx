@@ -1,17 +1,21 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
 import { type Href, useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
   Pressable,
+  ScrollView,
   Share,
   Text,
+  TextInput,
   View,
 } from "react-native";
-import { Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
-import { api, mediaUrl } from "@/lib/api";
+import { ErrorText, Muted, Screen } from "@/components/ui";
+import { api, mediaUrl, uploadFile } from "@/lib/api";
 import { chatReplyListPreview } from "@/lib/chat-reply";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -20,11 +24,22 @@ import {
 } from "@/lib/calls";
 import { formatChatListTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import {
+  MEMBER_STATUS_VIDEO_MAX_SEC,
+  isStatusVideoUrl,
+  statusEmoji,
+  statusLabelKey,
+  type MemberStatusItem,
+} from "@/lib/member-status";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
-type Peer = { displayName?: string | null; avatarUrl?: string | null };
+type Peer = {
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  online?: boolean | null;
+};
 
 type DmThread = {
   id: string;
@@ -68,6 +83,7 @@ type InboxRow = {
   href: Href;
   name: string;
   avatarUrl?: string | null;
+  online?: boolean;
   title: string;
   preview: string;
   previewMissed?: boolean;
@@ -75,46 +91,70 @@ type InboxRow = {
   unreadCount: number;
 };
 
-function Avatar({ name, url }: { name: string; url?: string | null }) {
+function Avatar({
+  name,
+  url,
+  size = 48,
+  online,
+}: {
+  name: string;
+  url?: string | null;
+  size?: number;
+  online?: boolean;
+}) {
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const src = url ? mediaUrl(url) : "";
-  if (src) {
-    return (
-      <Image
-        source={{ uri: src }}
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: colors.accentSoft,
-        }}
-      />
-    );
-  }
   return (
-    <View
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: colors.accentSoft,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 18 }}>
-        {(name || "R").slice(0, 1).toUpperCase()}
-      </Text>
+    <View style={{ width: size, height: size }}>
+      {src ? (
+        <Image
+          source={{ uri: src }}
+          style={{
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: colors.accentSoft,
+          }}
+        />
+      ) : (
+        <View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: colors.accentSoft,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{
+              color: colors.foreground,
+              fontWeight: "700",
+              fontSize: size * 0.38,
+            }}
+          >
+            {(name || "R").slice(0, 1).toUpperCase()}
+          </Text>
+        </View>
+      )}
+      {online ? (
+        <View
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: "#22c55e",
+            borderWidth: 2,
+            borderColor: colors.surface,
+          }}
+        />
+      ) : null}
     </View>
   );
-}
-
-function dmContextLabel(type: string | null | undefined) {
-  if (type === "JOB") return "dm_context_job" as const;
-  if (type === "SERVICE") return "dm_context_service" as const;
-  if (type === "MEET") return "dm_context_meet" as const;
-  if (type === "IN") return "dm_context_in" as const;
-  return "dm_direct_chat" as const;
 }
 
 function previewOf(
@@ -131,25 +171,33 @@ export default function MessagesScreen() {
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const [rows, setRows] = useState<InboxRow[]>([]);
+  const [statuses, setStatuses] = useState<MemberStatusItem[]>([]);
+  const [myStatus, setMyStatus] = useState<MemberStatusItem | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [agentCode, setAgentCode] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [publishing, setPublishing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [dm, bookingsRes, payRes, profile] = await Promise.all([
+      const [dm, bookingsRes, payRes, statusRes] = await Promise.all([
         api<{ threads?: DmThread[] }>("/api/dm"),
         api<{ bookings?: Booking[] }>("/api/bookings"),
         api<{ payments?: ServicePayment[] }>("/api/service-payments").catch(
           () => ({ payments: [] as ServicePayment[] })
         ),
-        api<{ user?: { agentCode?: string | null; displayName?: string } }>(
-          "/api/profile"
-        ).catch(() => ({ user: undefined })),
+        api<{
+          statuses?: MemberStatusItem[];
+          mine?: MemberStatusItem | null;
+        }>("/api/member-status").catch(() => ({
+          statuses: [] as MemberStatusItem[],
+          mine: null,
+        })),
       ]);
-      setAgentCode(profile.user?.agentCode ?? null);
+      setStatuses(statusRes.statuses ?? []);
+      setMyStatus(statusRes.mine ?? null);
 
       const next: InboxRow[] = [];
 
@@ -169,6 +217,7 @@ export default function MessagesScreen() {
           href: `/messages/${p.threadId}`,
           name: other?.displayName || "—",
           avatarUrl: other?.avatarUrl,
+          online: Boolean(other?.online),
           title: p.title || t("svc_pay_inbox"),
           preview: `${iPay ? t("svc_pay_you_pay") : t("svc_pay_you_receive")} · ${other?.displayName || "—"} · ${amount} ${(p.currency || "CAD").toUpperCase()}`,
           date: p.createdAt ?? null,
@@ -203,7 +252,8 @@ export default function MessagesScreen() {
           href: `/messages/${th.id}`,
           name: th.peer?.displayName || "Contact",
           avatarUrl: th.peer?.avatarUrl,
-          title: `${th.peer?.displayName || "Contact"} · ${t(dmContextLabel(th.lastContextType))}`,
+          online: Boolean(th.peer?.online),
+          title: th.peer?.displayName || "Contact",
           preview,
           previewMissed: missedInbound && callIsNewer,
           date:
@@ -225,6 +275,7 @@ export default function MessagesScreen() {
           href: `/booking/${b.id}`,
           name: peer?.displayName || "—",
           avatarUrl: peer?.avatarUrl,
+          online: Boolean(peer?.online),
           title: `${peer?.displayName || "—"} · ${b.request?.fromCity || "?"} → ${b.request?.toCity || "?"}`,
           preview: previewOf(last?.body, last?.attachmentUrl, t("order_need_parcel")),
           date: last?.createdAt ?? b.updatedAt ?? null,
@@ -256,6 +307,73 @@ export default function MessagesScreen() {
     void load();
   }, [user?.id, load]);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.name.toLowerCase().includes(q) ||
+        r.preview.toLowerCase().includes(q)
+    );
+  }, [rows, query]);
+
+  async function pickAndPublishStatus() {
+    if (publishing) return;
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      setError(t("messages_status_failed"));
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      quality: 0.85,
+      videoMaxDuration: MEMBER_STATUS_VIDEO_MAX_SEC,
+      allowsEditing: false,
+    });
+    if (picked.canceled || !picked.assets?.[0]) return;
+    const asset = picked.assets[0];
+    const isVideo = (asset.type || "").includes("video");
+    if (
+      isVideo &&
+      typeof asset.duration === "number" &&
+      asset.duration > MEMBER_STATUS_VIDEO_MAX_SEC * 1000
+    ) {
+      Alert.alert(t("messages_title"), t("messages_status_video_too_long"));
+      return;
+    }
+    const ext =
+      asset.fileName?.split(".").pop() ||
+      (isVideo ? "mp4" : "jpg");
+    const mime =
+      asset.mimeType ||
+      (isVideo ? "video/mp4" : "image/jpeg");
+    setPublishing(true);
+    setError("");
+    try {
+      const uploaded = await uploadFile("/api/community/upload", {
+        uri: asset.uri,
+        name: asset.fileName || `status.${ext}`,
+        type: mime,
+      });
+      await api("/api/member-status", {
+        method: "POST",
+        body: JSON.stringify({
+          kind: "STORY",
+          mediaUrl: uploaded.url,
+          mediaType: isVideo ? "video" : "image",
+          mirrorCommunity: true,
+        }),
+      });
+      Alert.alert(t("messages_title"), t("messages_status_published"));
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("messages_status_failed"));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   async function shareInvite(url: string) {
     const who = user?.displayName || "Rfacto";
     try {
@@ -283,25 +401,245 @@ export default function MessagesScreen() {
     ]);
   }
 
+  const others = statuses.filter((s) => !s.mine).slice(0, 12);
+
   return (
-    <Screen style={{ paddingBottom: 8 }}>
+    <Screen style={{ paddingBottom: 8, paddingTop: 4 }}>
       <FlatList
         style={{ flex: 1 }}
-        data={rows}
+        data={filtered}
         keyExtractor={(item) => item.key}
         refreshing={loading}
         onRefresh={() => void load()}
-        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+        contentContainerStyle={{ paddingBottom: 28, flexGrow: 1 }}
         ListHeaderComponent={
-          <View style={{ marginBottom: 8 }}>
-            <Title>{t("messages_title")}</Title>
-            <Muted>{t("messages_subtitle")}</Muted>
-            <View style={{ marginTop: 12 }}>
-              <Button
-                label={t("invite_contacts_share_link")}
-                variant="outline"
-                onPress={pickStoreAndShare}
+          <View style={{ gap: 14, marginBottom: 6 }}>
+            <View>
+              <Text
+                style={{
+                  fontSize: 28,
+                  fontWeight: "800",
+                  color: colors.greenDark,
+                  letterSpacing: -0.4,
+                }}
+              >
+                {t("messages_title")}
+              </Text>
+              <Text style={{ color: colors.muted, marginTop: 2, fontSize: 14 }}>
+                {t("messages_subtitle")}
+              </Text>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10, paddingVertical: 2 }}
+            >
+              <Pressable
+                onPress={() => void pickAndPublishStatus()}
+                disabled={publishing}
+                style={{
+                  width: 108,
+                  height: 148,
+                  borderRadius: 18,
+                  overflow: "hidden",
+                  backgroundColor: colors.accentSoft,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  opacity: publishing ? 0.7 : 1,
+                }}
+              >
+                {myStatus?.mediaUrl && !isStatusVideoUrl(myStatus.mediaUrl) ? (
+                  <Image
+                    source={{ uri: mediaUrl(myStatus.mediaUrl) }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
+                ) : user?.avatarUrl ? (
+                  <Image
+                    source={{ uri: mediaUrl(user.avatarUrl) }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: colors.accent,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 36, fontWeight: "700" }}>
+                      {(user?.displayName || "R").slice(0, 1).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                {myStatus?.mediaUrl && isStatusVideoUrl(myStatus.mediaUrl) ? (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      borderRadius: 10,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 11 }}>▶</Text>
+                  </View>
+                ) : null}
+                <View
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    padding: 8,
+                    backgroundColor: "rgba(27,59,20,0.55)",
+                  }}
+                >
+                  <Text
+                    style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}
+                    numberOfLines={1}
+                  >
+                    {myStatus ? t("status_kind_story") : t("messages_my_status")}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    bottom: 34,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: colors.accent,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: 2,
+                    borderColor: "#fff",
+                  }}
+                >
+                  <Ionicons name="add" size={18} color="#fff" />
+                </View>
+              </Pressable>
+
+              {others.map((s) => {
+                const name = s.author?.displayName || "—";
+                const photo = s.mediaUrl || s.author?.avatarUrl;
+                return (
+                  <View
+                    key={s.id}
+                    style={{
+                      width: 108,
+                      height: 148,
+                      borderRadius: 18,
+                      overflow: "hidden",
+                      backgroundColor: colors.surface2,
+                    }}
+                  >
+                    {photo ? (
+                      <Image
+                        source={{ uri: mediaUrl(photo) }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          flex: 1,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: colors.accentSoft,
+                        }}
+                      >
+                        <Text style={{ fontSize: 32, fontWeight: "700", color: colors.accent }}>
+                          {name.slice(0, 1).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        backgroundColor: "rgba(0,0,0,0.45)",
+                        borderRadius: 10,
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 12 }}>
+                        {statusEmoji(s.kind)}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        padding: 8,
+                        backgroundColor: "rgba(27,59,20,0.55)",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
+                        {t(statusLabelKey(s.kind))}
+                      </Text>
+                      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }} numberOfLines={1}>
+                        {name}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                backgroundColor: colors.surface2,
+                borderRadius: 14,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+              }}
+            >
+              <Ionicons name="search" size={18} color={colors.muted} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t("messages_search_placeholder")}
+                placeholderTextColor={colors.muted}
+                style={{
+                  flex: 1,
+                  color: colors.foreground,
+                  fontSize: 15,
+                  padding: 0,
+                }}
               />
+            </View>
+
+            <Muted>{t("messages_status_pick")}</Muted>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ fontWeight: "800", fontSize: 17, color: colors.foreground }}>
+                {t("messages_conversations")}
+              </Text>
+              <Pressable onPress={pickStoreAndShare}>
+                <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
+                  {t("invite_contacts_share_link")} ›
+                </Text>
+              </Pressable>
             </View>
             <ErrorText>{error}</ErrorText>
           </View>
@@ -316,99 +654,97 @@ export default function MessagesScreen() {
         renderItem={({ item }) => {
           const unread = item.unreadCount > 0;
           return (
-          <Pressable onPress={() => router.push(item.href)}>
-            <Card
-              style={
-                unread
-                  ? { backgroundColor: colors.accentSoft, borderColor: colors.accent }
-                  : undefined
-              }
+            <Pressable
+              onPress={() => router.push(item.href)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+              }}
             >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <Avatar name={item.name} url={item.avatarUrl} />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <View
+              <Avatar
+                name={item.name}
+                url={item.avatarUrl}
+                online={item.online}
+              />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                  }}
+                >
+                  <Text
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 8,
+                      fontWeight: unread ? "800" : "700",
+                      fontSize: 15,
+                      color: colors.foreground,
+                      flex: 1,
                     }}
+                    numberOfLines={1}
                   >
+                    {item.title}
+                  </Text>
+                  {item.date ? (
                     <Text
                       style={{
-                        fontWeight: unread ? "800" : "700",
-                        fontSize: 15,
-                        color: colors.foreground,
-                        flex: 1,
+                        color: unread ? colors.accent : colors.muted,
+                        fontSize: 12,
+                        fontWeight: unread ? "700" : "500",
                       }}
-                      numberOfLines={1}
                     >
-                      {item.title}
+                      {formatChatListTime(item.date)}
                     </Text>
-                    {item.date ? (
-                      <Text
-                        style={{
-                          color: unread ? colors.accent : colors.muted,
-                          fontSize: 12,
-                          fontWeight: unread ? "700" : "500",
-                        }}
-                      >
-                        {formatChatListTime(item.date)}
+                  ) : null}
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    marginTop: 2,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: item.previewMissed
+                        ? "#DC2626"
+                        : unread
+                          ? colors.foreground
+                          : colors.muted,
+                      fontSize: 13,
+                      fontWeight: unread || item.previewMissed ? "600" : "400",
+                      flex: 1,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {item.preview}
+                  </Text>
+                  {unread ? (
+                    <View
+                      style={{
+                        minWidth: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: colors.accent,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingHorizontal: 6,
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>
+                        {item.unreadCount > 9 ? "9+" : item.unreadCount}
                       </Text>
-                    ) : null}
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                      marginTop: 2,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: item.previewMissed
-                          ? "#DC2626"
-                          : unread
-                            ? colors.foreground
-                            : colors.muted,
-                        fontSize: 13,
-                        fontWeight: unread || item.previewMissed ? "600" : "400",
-                        flex: 1,
-                      }}
-                      numberOfLines={2}
-                    >
-                      {item.preview}
-                    </Text>
-                    {unread ? (
-                      <View
-                        style={{
-                          minWidth: 22,
-                          height: 22,
-                          borderRadius: 11,
-                          backgroundColor: colors.accent,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          paddingHorizontal: 6,
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>
-                          {item.unreadCount > 9 ? "9+" : item.unreadCount}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
+                    </View>
+                  ) : null}
                 </View>
               </View>
-            </Card>
-          </Pressable>
+            </Pressable>
           );
         }}
       />
