@@ -191,11 +191,11 @@ export default function MessagesScreen() {
         api<{
           statuses?: MemberStatusItem[];
           mine?: MemberStatusItem | null;
-        }>("/api/status").catch(() =>
+        }>("/api/member-status").catch(() =>
           api<{
             statuses?: MemberStatusItem[];
             mine?: MemberStatusItem | null;
-          }>("/api/member-status").catch(() => ({
+          }>("/api/status").catch(() => ({
             statuses: [] as MemberStatusItem[],
             mine: null,
           }))
@@ -368,14 +368,14 @@ export default function MessagesScreen() {
         mirrorCommunity: true,
       };
       try {
-        await api("/api/status", {
+        await api("/api/member-status", {
           method: "POST",
           body: JSON.stringify(payload),
         });
       } catch (first) {
         const msg = first instanceof Error ? first.message : "";
         if (msg.includes("404") || msg.includes("Erreur 404")) {
-          await api("/api/member-status", {
+          await api("/api/status", {
             method: "POST",
             body: JSON.stringify(payload),
           });

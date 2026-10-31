@@ -387,14 +387,14 @@ export default function CommunityScreen() {
         mirrorCommunity: false,
       };
       try {
-        await api("/api/status", {
+        await api("/api/member-status", {
           method: "POST",
           body: JSON.stringify(payload),
         });
       } catch (first) {
         const msg = first instanceof Error ? first.message : "";
         if (msg.includes("404") || msg.includes("Erreur 404")) {
-          await api("/api/member-status", {
+          await api("/api/status", {
             method: "POST",
             body: JSON.stringify(payload),
           });
