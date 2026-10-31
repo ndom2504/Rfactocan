@@ -57,7 +57,9 @@ export function DmReactionPicker({
       style={{
         alignSelf: alignEnd ? "flex-end" : "flex-start",
         flexDirection: "row",
+        flexWrap: "wrap",
         alignItems: "center",
+        maxWidth: 320,
         backgroundColor: colors.surface,
         borderRadius: 24,
         paddingHorizontal: 4,

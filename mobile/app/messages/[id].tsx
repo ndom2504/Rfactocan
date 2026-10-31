@@ -595,13 +595,19 @@ export default function DirectChatScreen() {
     }
   }
 
+  function canDeleteMessage(message: Message) {
+    if (message.senderId !== user?.id) return false;
+    const ctx = (message.contextType || "").toUpperCase();
+    return ctx !== "SERVICE" && ctx !== "OFFER";
+  }
+
   function confirmDeleteFile(message: Message) {
-    if (message.senderId !== user?.id || !message.attachmentUrl) return;
+    if (!canDeleteMessage(message)) return;
     setReactingToId(null);
     Alert.alert(t("dm_delete_file"), t("dm_delete_file_confirm"), [
         { text: t("cancel"), style: "cancel" },
         {
-          text: "Supprimer",
+          text: t("dm_delete_file"),
           style: "destructive",
           onPress: () => void deleteAttachment(message),
         },
@@ -617,7 +623,7 @@ export default function DirectChatScreen() {
         `/api/dm/${id}/messages/${message.id}`,
         { method: "DELETE" }
       );
-      if (data.deletedMessage) {
+      if (data.deletedMessage !== false) {
         setMessages((prev) => prev.filter((m) => m.id !== message.id));
       } else {
         setMessages((prev) =>
@@ -1014,7 +1020,7 @@ export default function DirectChatScreen() {
                         : undefined
                     }
                     onDelete={
-                      mine && item.attachmentUrl
+                      canDeleteMessage(item)
                         ? () => confirmDeleteFile(item)
                         : undefined
                     }

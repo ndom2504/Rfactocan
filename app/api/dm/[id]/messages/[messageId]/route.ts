@@ -81,10 +81,10 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 /**
- * Remove a file (or voice note) from a DM. The sender can delete it for
- * everyone. If the bubble was only the file, the message is removed.
+ * Delete own DM for everyone (text and/or attachment).
+ * Legacy: if ?attachmentOnly=1 and there is a real caption, only clears the file.
  */
-export async function DELETE(_request: Request, { params }: Params) {
+export async function DELETE(request: Request, { params }: Params) {
   const session = await getSessionUser();
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
@@ -104,6 +104,7 @@ export async function DELETE(_request: Request, { params }: Params) {
         senderId: true,
         body: true,
         attachmentUrl: true,
+        contextType: true,
       },
     });
     if (!message) {
@@ -111,50 +112,58 @@ export async function DELETE(_request: Request, { params }: Params) {
     }
     if (message.senderId !== session.id) {
       return NextResponse.json(
-        { error: "Seul l’auteur peut supprimer ce fichier." },
+        { error: "Seul l’auteur peut supprimer ce message." },
         { status: 403 }
       );
     }
-    if (!message.attachmentUrl) {
+    const ctx = (message.contextType || "").toUpperCase();
+    if (ctx === "SERVICE" || ctx === "OFFER") {
       return NextResponse.json(
-        { error: "Ce message n’a pas de fichier." },
+        { error: "Ce message système ne peut pas être supprimé." },
         { status: 400 }
       );
     }
 
-    if (isDmPlaceholderBody(message.body)) {
-      await prisma.directMessage.delete({ where: { id: message.id } });
-      const last = await prisma.directMessage.findFirst({
-        where: { threadId: id },
-        orderBy: { createdAt: "desc" },
-        select: {
-          createdAt: true,
-          contextType: true,
-          contextId: true,
-        },
+    const attachmentOnly =
+      new URL(request.url).searchParams.get("attachmentOnly") === "1";
+
+    if (
+      attachmentOnly &&
+      message.attachmentUrl &&
+      !isDmPlaceholderBody(message.body)
+    ) {
+      const updated = await prisma.directMessage.update({
+        where: { id: message.id },
+        data: { attachmentUrl: null },
       });
-      await prisma.directThread.update({
-        where: { id },
-        data: {
-          lastMessageAt: last?.createdAt ?? null,
-          lastContextType: last?.contextType ?? null,
-          lastContextId: last?.contextId ?? null,
-        },
+      return NextResponse.json({
+        ok: true,
+        deletedMessage: false,
+        message: updated,
       });
-      return NextResponse.json({ ok: true, deletedMessage: true });
     }
 
-    const updated = await prisma.directMessage.update({
-      where: { id: message.id },
-      data: { attachmentUrl: null },
+    await prisma.directMessage.delete({ where: { id: message.id } });
+    const last = await prisma.directMessage.findFirst({
+      where: { threadId: id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        createdAt: true,
+        contextType: true,
+        contextId: true,
+      },
     });
-    return NextResponse.json({
-      ok: true,
-      deletedMessage: false,
-      message: updated,
+    await prisma.directThread.update({
+      where: { id },
+      data: {
+        lastMessageAt: last?.createdAt ?? null,
+        lastContextType: last?.contextType ?? null,
+        lastContextId: last?.contextId ?? null,
+      },
     });
+    return NextResponse.json({ ok: true, deletedMessage: true });
   } catch (error) {
-    console.error("[dm] delete attachment", error);
+    console.error("[dm] delete message", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

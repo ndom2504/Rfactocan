@@ -1139,7 +1139,11 @@ export default function DirectMessageChatPage() {
               onEdit={canEditMessage(m) ? () => startEditMessage(m) : undefined}
               editLabel={t("dm_edit")}
               onDeleteFile={
-                mine && m.attachmentUrl
+                mine &&
+                !(
+                  (m.contextType || "").toUpperCase() === "SERVICE" ||
+                  (m.contextType || "").toUpperCase() === "OFFER"
+                )
                   ? () => void deleteAttachment(m)
                   : undefined
               }

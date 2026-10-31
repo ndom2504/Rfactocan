@@ -360,6 +360,8 @@ export function isDmPlaceholderBody(body?: string | null) {
     text === "Pièce jointe" ||
     text === "Attachment" ||
     text === "📎" ||
+    text === "🎥" ||
+    text.toLowerCase() === "[video]" ||
     text === "Note vocale" ||
     text === "Voice note" ||
     /^Note vocale\s+\d+:\d{2}/i.test(text) ||
