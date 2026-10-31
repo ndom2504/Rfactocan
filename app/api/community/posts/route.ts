@@ -6,6 +6,7 @@ import { openRequestDateWhere, openTripDateWhere } from "@/lib/listing-freshness
 import {
   attachmentFromImageUrl,
   COMMUNITY_MAX_ATTACHMENTS,
+  COMMUNITY_MAX_VIDEO_BYTES,
   isAllowedCommunityContentType,
   parseAttachmentsJson,
   type CommunityAttachment,
@@ -25,7 +26,7 @@ const attachmentSchema = z.object({
   url: z.string().min(1).max(800),
   name: z.string().min(1).max(180),
   contentType: z.string().min(3).max(120),
-  size: z.number().int().nonnegative().max(100 * 1024 * 1024),
+  size: z.number().int().nonnegative().max(COMMUNITY_MAX_VIDEO_BYTES),
 });
 
 const createSchema = z.object({

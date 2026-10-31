@@ -1,5 +1,6 @@
 import { requestRecordingPermissionsAsync } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { type Href, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,7 +32,17 @@ import { VoiceNoteBubble } from "@/components/voice-note-bubble";
 import type { VoicePickedFile } from "@/components/voice-note-button";
 import { Button, ErrorText, Field, Muted, Screen } from "@/components/ui";
 import { api, mediaUrl, uploadFile } from "@/lib/api";
-import { prepareImageUpload } from "@/lib/prepare-image";
+import { IOS_IMAGE_PICKER, prepareImageUpload } from "@/lib/prepare-image";
+import {
+  agreedOfferCents,
+  canAcceptOffer,
+  canProposeOffer,
+  canRefuseOffer,
+  isProductOfferOpen,
+  offerIdFromMessage,
+  stripProductOfferLinks,
+  type ProductOffer,
+} from "@/lib/product-offers";
 import { useAuth } from "@/lib/auth-context";
 import { createOutgoingCall } from "@/lib/calls";
 import {
@@ -43,7 +54,7 @@ import {
   formatMoneyFromCents,
   isSameChatDay,
 } from "@/lib/format";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type DictKey } from "@/lib/i18n";
 import {
   isServicePaymentOpen,
   paymentIdFromMessage,
@@ -69,6 +80,7 @@ type Message = {
   senderId: string;
   createdAt: string;
   readAt?: string | null;
+  editedAt?: string | null;
   contextType?: string | null;
   contextId?: string | null;
   reactions?: ReactionSummary[];
@@ -136,12 +148,27 @@ export default function DirectChatScreen() {
   const [payDays, setPayDays] = useState(3);
   const [payBusy, setPayBusy] = useState(false);
   const [payOk, setPayOk] = useState("");
+  const [offers, setOffers] = useState<Record<string, ProductOffer>>({});
+  const [showOfferForm, setShowOfferForm] = useState(false);
+  const [offerName, setOfferName] = useState("");
+  const [offerDescription, setOfferDescription] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
+  const [offerPhotoUrl, setOfferPhotoUrl] = useState("");
+  const [offerPhotoUploading, setOfferPhotoUploading] = useState(false);
+  const [offerBusy, setOfferBusy] = useState(false);
+  const [offerActionId, setOfferActionId] = useState<string | null>(null);
+  const [proposeOfferId, setProposeOfferId] = useState<string | null>(null);
+  const [proposePrice, setProposePrice] = useState("");
+  const offerFetchRef = useRef<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [calling, setCalling] = useState(false);
   const [reactingToId, setReactingToId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [forwardThreads, setForwardThreads] = useState<ForwardThread[]>([]);
   const [forwardLoading, setForwardLoading] = useState(false);
@@ -156,7 +183,7 @@ export default function DirectChatScreen() {
     if (!id) return;
     if (!opts?.silent) setError("");
     try {
-      const [data, payRes] = await Promise.all([
+      const [data, payRes, offerRes] = await Promise.all([
         api<{
           messages: Message[];
           canInvoice?: boolean;
@@ -171,7 +198,17 @@ export default function DirectChatScreen() {
         api<{ payments?: ServicePayment[] }>(
           `/api/service-payments?threadId=${encodeURIComponent(id)}`
         ).catch(() => ({ payments: [] as ServicePayment[] })),
+        api<{ offers?: ProductOffer[] }>(
+          `/api/product-offers?threadId=${encodeURIComponent(id)}`
+        ).catch(() => ({ offers: [] as ProductOffer[] })),
       ]);
+      if (offerRes.offers?.length) {
+        setOffers((prev) => {
+          const next = { ...prev };
+          for (const o of offerRes.offers ?? []) next[o.id] = o;
+          return next;
+        });
+      }
       setMessages(data.messages ?? []);
       setPeer(data.peer?.displayName || "Contact");
       setPeerId(data.peer?.id ?? null);
@@ -195,6 +232,23 @@ export default function DirectChatScreen() {
     const timer = setInterval(() => void load({ silent: true }), 4000);
     return () => clearInterval(timer);
   }, [load]);
+
+  // Fetch offer details on demand for messages whose offer isn't in the list yet.
+  useEffect(() => {
+    for (const m of messages) {
+      const offerId = offerIdFromMessage(m);
+      if (!offerId || offers[offerId] || offerFetchRef.current.has(offerId)) {
+        continue;
+      }
+      offerFetchRef.current.add(offerId);
+      void api<{ offer?: ProductOffer }>(`/api/product-offers/${offerId}`)
+        .then((res) => {
+          const offer = res.offer;
+          if (offer) setOffers((prev) => ({ ...prev, [offer.id]: offer }));
+        })
+        .catch(() => {});
+    }
+  }, [messages, offers]);
 
   useEffect(() => {
     return () => {
@@ -380,6 +434,161 @@ export default function DirectChatScreen() {
       setError(e instanceof Error ? e.message : t("svc_pay_need_service_price"));
     } finally {
       setPayBusy(false);
+    }
+  }
+
+  async function pickOfferPhoto() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      setError("Autorisez l'accès aux photos.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      ...IOS_IMAGE_PICKER,
+      allowsMultipleSelection: false,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    setOfferPhotoUploading(true);
+    setError("");
+    try {
+      const file = await prepareImageUpload(result.assets[0]);
+      const sent = await uploadFile("/api/community/upload", file);
+      setOfferPhotoUrl(sent.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("attach_failed"));
+    } finally {
+      setOfferPhotoUploading(false);
+    }
+  }
+
+  async function sendProductOffer() {
+    if (!id || offerBusy || offerPhotoUploading) return;
+    const price = Number(offerPrice.replace(",", "."));
+    if (offerName.trim().length < 3 || !Number.isFinite(price) || price <= 0) {
+      setError(t("prod_offer_need_fields"));
+      return;
+    }
+    setOfferBusy(true);
+    setError("");
+    setPayOk("");
+    try {
+      await api("/api/product-offers", {
+        method: "POST",
+        body: JSON.stringify({
+          threadId: id,
+          name: offerName.trim(),
+          description: offerDescription.trim(),
+          price,
+          ...(offerPhotoUrl ? { photoUrl: offerPhotoUrl } : {}),
+        }),
+      });
+      setShowOfferForm(false);
+      setOfferName("");
+      setOfferDescription("");
+      setOfferPrice("");
+      setOfferPhotoUrl("");
+      setPayOk(t("prod_offer_sent_ok"));
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("prod_offer_failed"));
+    } finally {
+      setOfferBusy(false);
+    }
+  }
+
+  async function offerAction(
+    offerId: string,
+    action: "accept" | "refuse" | "propose",
+    payload?: Record<string, unknown>
+  ) {
+    if (offerActionId) return;
+    setOfferActionId(offerId);
+    setError("");
+    try {
+      await api(`/api/product-offers/${offerId}/${action}`, {
+        method: "POST",
+        ...(payload ? { body: JSON.stringify(payload) } : {}),
+      });
+      if (action === "propose") {
+        setProposeOfferId(null);
+        setProposePrice("");
+      }
+      const res = await api<{ offer?: ProductOffer }>(
+        `/api/product-offers/${offerId}`
+      ).catch(() => ({ offer: undefined }));
+      const fresh = res.offer;
+      if (fresh) setOffers((prev) => ({ ...prev, [fresh.id]: fresh }));
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("prod_offer_failed"));
+    } finally {
+      setOfferActionId(null);
+    }
+  }
+
+  function submitProposal(offerId: string) {
+    const price = Number(proposePrice.replace(",", "."));
+    if (!Number.isFinite(price) || price <= 0) {
+      setError(t("prod_offer_need_fields"));
+      return;
+    }
+    void offerAction(offerId, "propose", { price });
+  }
+
+  function canEditMessage(message: Message) {
+    if (message.senderId !== user?.id) return false;
+    if (message.readAt) return false;
+    const ctx = (message.contextType || "").toUpperCase();
+    if (ctx === "SERVICE" || ctx === "OFFER") return false;
+    const body = (message.body || "").trim();
+    if (!body) return false;
+    if (/\/service-payments\//i.test(body) || /\/product-offers\//i.test(body)) {
+      return false;
+    }
+    return true;
+  }
+
+  function startEditMessage(message: Message) {
+    if (!canEditMessage(message)) return;
+    setReactingToId(null);
+    setEditingId(message.id);
+    setEditDraft(
+      isAttachmentOnlyBody(message.body) ? "" : (message.body || "").trim()
+    );
+  }
+
+  async function saveEditMessage() {
+    if (!id || !editingId || editBusy) return;
+    const next = editDraft.trim();
+    if (!next) {
+      setError(t("dm_edit_failed"));
+      return;
+    }
+    setEditBusy(true);
+    setError("");
+    try {
+      const data = await api<{ message?: Message }>(
+        `/api/dm/${id}/messages/${editingId}`,
+        { method: "PATCH", body: JSON.stringify({ body: next }) }
+      );
+      const updated = data.message;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === editingId
+            ? {
+                ...m,
+                body: updated?.body ?? next,
+                editedAt: updated?.editedAt ?? new Date().toISOString(),
+              }
+            : m
+        )
+      );
+      setEditingId(null);
+      setEditDraft("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("dm_edit_failed"));
+    } finally {
+      setEditBusy(false);
     }
   }
 
@@ -718,9 +927,17 @@ export default function DirectChatScreen() {
             const invoice = paymentId
               ? invoices.find((p) => p.id === paymentId)
               : undefined;
-            const displayBody = paymentId
-              ? stripServicePaymentLinks(item.body || "")
-              : item.body;
+            const offerId = offerIdFromMessage(item);
+            const offer = offerId ? offers[offerId] : undefined;
+            const offerAmount = offer
+              ? formatMoneyFromCents(
+                  agreedOfferCents(offer),
+                  offer.currency || "CAD"
+                )
+              : "";
+            let displayBody = item.body;
+            if (paymentId) displayBody = stripServicePaymentLinks(displayBody || "");
+            if (offerId) displayBody = stripProductOfferLinks(displayBody || "");
             const showBody = !isAttachmentOnlyBody(displayBody) && !voice;
             const fileName = url ? fileNameFromUri(url, t("attachment_label")) : "";
             const labelColor = mine ? "#fff" : colors.foreground;
@@ -785,6 +1002,11 @@ export default function DirectChatScreen() {
                     onPick={(emoji) => void reactToMessage(item.id, emoji)}
                     onShare={() => void shareMessage(item)}
                     onForward={() => void openForward(item)}
+                    onEdit={
+                      canEditMessage(item)
+                        ? () => startEditMessage(item)
+                        : undefined
+                    }
                     onDelete={
                       mine && item.attachmentUrl
                         ? () => confirmDeleteFile(item)
@@ -847,6 +1069,12 @@ export default function DirectChatScreen() {
                 {showBody ? (
                   <Text style={{ color: labelColor, marginTop: url && !voice ? 4 : 0 }}>
                     {displayBody}
+                    {item.editedAt ? (
+                      <Text style={{ color: mutedOnBubble, fontSize: 11 }}>
+                        {" "}
+                        ({t("dm_edited")})
+                      </Text>
+                    ) : null}
                   </Text>
                 ) : null}
                 {paymentId && paymentOpen ? (
@@ -876,6 +1104,153 @@ export default function DirectChatScreen() {
                     {t(statusKey ?? "svc_pay_status_PAID")}
                   </Text>
                 ) : null}
+                {offerId && offer ? (
+                  <View
+                    style={{
+                      marginTop: 6,
+                      gap: 4,
+                      padding: 8,
+                      borderRadius: 10,
+                      backgroundColor: mine
+                        ? "rgba(255,255,255,0.15)"
+                        : colors.surface,
+                      borderWidth: 1,
+                      borderColor: mine ? "rgba(255,255,255,0.3)" : colors.border,
+                    }}
+                  >
+                    {offer.photoUrl ? (
+                      <Image
+                        source={{ uri: mediaUrl(offer.photoUrl) }}
+                        style={{
+                          width: 180,
+                          height: 120,
+                          borderRadius: 8,
+                          backgroundColor: colors.accentSoft,
+                        }}
+                        resizeMode="cover"
+                      />
+                    ) : null}
+                    <Text
+                      style={{ color: labelColor, fontWeight: "700", fontSize: 14 }}
+                    >
+                      {offer.name}
+                    </Text>
+                    {offer.description ? (
+                      <Text style={{ color: labelColor, fontSize: 12 }}>
+                        {offer.description}
+                      </Text>
+                    ) : null}
+                    <Text style={{ color: mutedOnBubble, fontSize: 12 }}>
+                      {offerAmount}
+                      {offer.status
+                        ? ` · ${t(`prod_offer_status_${offer.status}` as DictKey)}`
+                        : ""}
+                    </Text>
+                    {isProductOfferOpen(offer.status) ? (
+                      <View style={{ gap: 6, marginTop: 2 }}>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                          {canAcceptOffer(offer, user?.id) ? (
+                            <Pressable
+                              disabled={offerActionId === offer.id}
+                              onPress={() => void offerAction(offer.id, "accept")}
+                            >
+                              <Text
+                                style={{
+                                  color: mine ? "#fff" : colors.accent,
+                                  fontWeight: "700",
+                                  fontSize: 12,
+                                }}
+                              >
+                                {t("prod_offer_accept")}
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                          {canRefuseOffer(offer, user?.id) ? (
+                            <Pressable
+                              disabled={offerActionId === offer.id}
+                              onPress={() => void offerAction(offer.id, "refuse")}
+                            >
+                              <Text
+                                style={{
+                                  color: mine ? "#fff" : colors.accent,
+                                  fontWeight: "700",
+                                  fontSize: 12,
+                                }}
+                              >
+                                {t("prod_offer_refuse")}
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                          {canProposeOffer(offer, user?.id) ? (
+                            <Pressable
+                              disabled={offerActionId === offer.id}
+                              onPress={() => {
+                                setProposePrice("");
+                                setProposeOfferId((cur) =>
+                                  cur === offer.id ? null : offer.id
+                                );
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: mine ? "#fff" : colors.accent,
+                                  fontWeight: "700",
+                                  fontSize: 12,
+                                }}
+                              >
+                                {t("prod_offer_propose")}
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                        </View>
+                        {proposeOfferId === offer.id ? (
+                          <View style={{ gap: 4 }}>
+                            <Text style={{ color: mutedOnBubble, fontSize: 11 }}>
+                              {t("prod_offer_propose_hint")}
+                            </Text>
+                            <Field
+                              label={t("prod_offer_new_price")}
+                              value={proposePrice}
+                              onChangeText={(v) =>
+                                setProposePrice(
+                                  v.replace(/[^0-9.,]/g, "").slice(0, 12)
+                                )
+                              }
+                              keyboardType="decimal-pad"
+                            />
+                            <Button
+                              label={
+                                offerActionId === offer.id
+                                  ? t("loading")
+                                  : t("prod_offer_propose")
+                              }
+                              onPress={() => submitProposal(offer.id)}
+                              disabled={offerActionId === offer.id}
+                              loading={offerActionId === offer.id}
+                            />
+                          </View>
+                        ) : null}
+                      </View>
+                    ) : offer.status === "ACCEPTED" && offer.paymentId ? (
+                      <Pressable
+                        onPress={() => openPayment(offer.paymentId as string)}
+                        style={{ marginTop: 2, paddingVertical: 2 }}
+                      >
+                        <Text
+                          style={{
+                            color: mine ? "#fff" : colors.accent,
+                            fontSize: 12,
+                            fontWeight: "700",
+                          }}
+                        >
+                          {offer.buyerId === user?.id
+                            ? t("svc_pay_pay")
+                            : t("svc_pay_open")}
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : null}
                   </View>
                 </Pressable>
                 {mine ? (
@@ -901,18 +1276,105 @@ export default function DirectChatScreen() {
             );
           }}
         />
-        {canInvoice ? (
+        {peerId ? (
           <View style={{ marginTop: 4 }}>
-            <Pressable
-              onPress={() => setShowPayForm((v) => !v)}
-              disabled={payBusy || !peerId}
-              style={{ paddingVertical: 8, opacity: payBusy || !peerId ? 0.5 : 1 }}
-            >
-              <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 14 }}>
-                {showPayForm ? t("cancel") : t("svc_pay_request")}
-              </Text>
-            </Pressable>
-            {showPayForm ? (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+              {canInvoice ? (
+                <Pressable
+                  onPress={() => setShowPayForm((v) => !v)}
+                  disabled={payBusy}
+                  style={{ paddingVertical: 8, opacity: payBusy ? 0.5 : 1 }}
+                >
+                  <Text
+                    style={{ color: colors.foreground, fontWeight: "700", fontSize: 14 }}
+                  >
+                    {showPayForm ? t("cancel") : t("svc_pay_request")}
+                  </Text>
+                </Pressable>
+              ) : null}
+              <Pressable
+                onPress={() => setShowOfferForm((v) => !v)}
+                disabled={offerBusy}
+                style={{ paddingVertical: 8, opacity: offerBusy ? 0.5 : 1 }}
+              >
+                <Text
+                  style={{ color: colors.foreground, fontWeight: "700", fontSize: 14 }}
+                >
+                  {showOfferForm ? t("cancel") : t("prod_offer_request")}
+                </Text>
+              </Pressable>
+            </View>
+            {showOfferForm ? (
+              <View style={{ gap: 4, marginBottom: 8 }}>
+                <Muted>{t("prod_offer_request_hint")}</Muted>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    color: colors.foreground,
+                  }}
+                >
+                  {t("prod_offer_photo")}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  {offerPhotoUrl ? (
+                    <Image
+                      source={{ uri: mediaUrl(offerPhotoUrl) }}
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: 8,
+                        backgroundColor: colors.accentSoft,
+                      }}
+                    />
+                  ) : null}
+                  <Pressable
+                    onPress={() => void pickOfferPhoto()}
+                    disabled={offerPhotoUploading || offerBusy}
+                    style={{ paddingVertical: 6 }}
+                  >
+                    {offerPhotoUploading ? (
+                      <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                        {t("uploading")}
+                      </Text>
+                    ) : (
+                      <Ionicons name="image-outline" size={24} color={colors.accent} />
+                    )}
+                  </Pressable>
+                  {offerPhotoUrl ? (
+                    <Pressable onPress={() => setOfferPhotoUrl("")}>
+                      <Ionicons name="trash-outline" size={18} color={colors.muted} />
+                    </Pressable>
+                  ) : null}
+                </View>
+                <Field
+                  label={t("prod_offer_name")}
+                  value={offerName}
+                  onChangeText={(v) => setOfferName(v.slice(0, 160))}
+                />
+                <Field
+                  label={t("prod_offer_description")}
+                  value={offerDescription}
+                  onChangeText={(v) => setOfferDescription(v.slice(0, 2000))}
+                  multiline
+                />
+                <Field
+                  label={t("prod_offer_price")}
+                  value={offerPrice}
+                  onChangeText={(v) =>
+                    setOfferPrice(v.replace(/[^0-9.,]/g, "").slice(0, 12))
+                  }
+                  keyboardType="decimal-pad"
+                />
+                <Button
+                  label={offerBusy ? t("loading") : t("prod_offer_send")}
+                  onPress={() => void sendProductOffer()}
+                  disabled={offerBusy || offerPhotoUploading}
+                  loading={offerBusy}
+                />
+              </View>
+            ) : null}
+            {canInvoice && showPayForm ? (
               <View style={{ gap: 4, marginBottom: 8 }}>
                 <Muted>{t("svc_pay_request_hint")}</Muted>
                 <Field
@@ -965,14 +1427,57 @@ export default function DirectChatScreen() {
             ) : null}
           </View>
         ) : null}
-        <ChatComposer
-          draft={draft}
-          onDraftChange={handleDraft}
-          sending={sending}
-          onSend={() => void send()}
-          onAttach={() => void pickAttachments()}
-          onRecorded={sendVoice}
-        />
+        {editingId ? (
+          <View
+            style={{
+              gap: 8,
+              marginBottom: 8,
+              padding: 10,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface2,
+            }}
+          >
+            <Text style={{ fontWeight: "700", color: colors.foreground }}>
+              {t("dm_edit")}
+            </Text>
+            <Field
+              label=""
+              value={editDraft}
+              onChangeText={(v) => setEditDraft(v.slice(0, 4000))}
+              multiline
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={() => {
+                  setEditingId(null);
+                  setEditDraft("");
+                }}
+                style={{ paddingVertical: 8, paddingHorizontal: 4 }}
+              >
+                <Text style={{ color: colors.muted, fontWeight: "600" }}>
+                  {t("cancel")}
+                </Text>
+              </Pressable>
+              <Button
+                label={editBusy ? t("loading") : t("dm_edit_save")}
+                onPress={() => void saveEditMessage()}
+                disabled={editBusy}
+                loading={editBusy}
+              />
+            </View>
+          </View>
+        ) : (
+          <ChatComposer
+            draft={draft}
+            onDraftChange={handleDraft}
+            sending={sending}
+            onSend={() => void send()}
+            onAttach={() => void pickAttachments()}
+            onRecorded={sendVoice}
+          />
+        )}
       </View>
       <Modal
         visible={Boolean(forwardMessage)}

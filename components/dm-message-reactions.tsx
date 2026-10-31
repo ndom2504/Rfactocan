@@ -6,7 +6,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { Forward, Share2, Trash2 } from "lucide-react";
+import { Forward, Pencil, Share2, Trash2 } from "lucide-react";
 import { DM_REACTION_EMOJIS, type ReactionSummary } from "@/lib/dm-reactions";
 import { cn } from "@/lib/utils";
 
@@ -92,18 +92,22 @@ export function ReactionPicker({
   onPick,
   onShare,
   onForward,
+  onEdit,
   onDelete,
   shareLabel,
   forwardLabel,
+  editLabel,
   deleteLabel,
   alignEnd,
 }: {
   onPick: (emoji: string) => void;
   onShare?: () => void;
   onForward?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   shareLabel?: string;
   forwardLabel?: string;
+  editLabel?: string;
   deleteLabel?: string;
   alignEnd?: boolean;
 }) {
@@ -128,7 +132,7 @@ export function ReactionPicker({
           {emoji}
         </button>
       ))}
-      {(onShare || onForward || onDelete) && (
+      {(onShare || onForward || onEdit || onDelete) && (
         <span className="mx-0.5 h-6 w-px bg-black/10" aria-hidden />
       )}
       {onShare && (
@@ -159,6 +163,21 @@ export function ReactionPicker({
           }}
         >
           <Forward className="h-4 w-4" />
+        </button>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-black/5 hover:text-[var(--foreground)]"
+          title={editLabel}
+          aria-label={editLabel}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdit();
+          }}
+        >
+          <Pencil className="h-4 w-4" />
         </button>
       )}
       {onDelete && (

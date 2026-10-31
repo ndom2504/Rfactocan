@@ -1,5 +1,40 @@
 # Notes de version
 
+## 1.0.28 — 2026-10-31
+
+### iOS (TestFlight / Expo)
+- `version` **1.0.28** (build EAS auto-incrémenté au submit)
+- Messages : bouton « Faire une offre » (produit, photo optionnelle, prix) dans toute conversation
+- Offres produit dans le chat : Accepter / Refuser / Proposer un autre prix, puis paiement après acceptation
+- Modification d’un message non lu (Modifier / Enregistrer, mention « Modifié »)
+
+### Android (Play)
+- `versionName` **1.0.28** · `versionCode` **33**
+- Offres produit et modification de messages (parité avec Expo) — code Android à appliquer dans le projet Android (`DirectChatScreen.kt`, `ApiService.kt`, `I18n.kt`, `build.gradle.kts`)
+
+### Web
+- Offres produit (bouton, formulaire, cartes avec actions) et modification des messages non lus dans le chat direct
+
+### Play Store — texte à coller
+
+**FR**
+```
+Nouveautés Rfacto 1.0.28
+
+• Faire une offre sur un produit directement dans la conversation
+• Accepter, refuser ou proposer un autre prix, puis payer
+• Modifier un message non lu
+```
+
+**EN**
+```
+What's new in Rfacto 1.0.28
+
+• Make a product offer right inside the conversation
+• Accept, refuse or counter with another price, then pay
+• Edit a message that hasn't been read yet
+```
+
 ## 1.0.23 — 2026-10-30
 
 ### iOS (TestFlight / Expo)

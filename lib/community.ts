@@ -210,7 +210,7 @@ export const COMMUNITY_MAX_AUDIO_BYTES = 15 * 1024 * 1024;
 export const COMMUNITY_MAX_IMAGE_BYTES = 50 * 1024 * 1024;
 export const COMMUNITY_MAX_DOC_BYTES = 50 * 1024 * 1024;
 /** Community clip limit (direct-to-Blob upload; bypasses serverless body limit). */
-export const COMMUNITY_MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+export const COMMUNITY_MAX_VIDEO_BYTES = 500 * 1024 * 1024;
 /** Photos / files per community post or DM album. */
 export const COMMUNITY_MAX_ATTACHMENTS = 10;
 

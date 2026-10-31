@@ -32,7 +32,7 @@ async function getUploadConfig(): Promise<UploadConfig> {
       cachedConfig = {
         access: data.access === "public" ? "public" : "private",
         blobConfigured: Boolean(data.blobConfigured),
-        maxVideoBytes: Number(data.maxVideoBytes) || 100 * 1024 * 1024,
+        maxVideoBytes: Number(data.maxVideoBytes) || 500 * 1024 * 1024,
       };
       return cachedConfig;
     }
@@ -42,7 +42,7 @@ async function getUploadConfig(): Promise<UploadConfig> {
   return {
     access: "private",
     blobConfigured: true,
-    maxVideoBytes: 100 * 1024 * 1024,
+    maxVideoBytes: 500 * 1024 * 1024,
   };
 }
 

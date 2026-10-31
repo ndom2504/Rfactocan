@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/locale-provider";
+import type { DictKey } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,11 +50,47 @@ type DmMessage = {
   senderId: string;
   createdAt: string;
   readAt?: string | null;
+  editedAt?: string | null;
   attachmentUrl?: string | null;
   contextType?: string | null;
   contextId?: string | null;
   reactions?: ReactionSummary[];
 };
+
+type ThreadOffer = {
+  id: string;
+  sellerId: string;
+  buyerId: string;
+  photoUrl?: string | null;
+  name: string;
+  description?: string | null;
+  status: string;
+  paymentId?: string | null;
+  agreedPriceLabel?: string;
+  priceLabel?: string;
+  canAccept?: boolean;
+  canRefuse?: boolean;
+  canPropose?: boolean;
+};
+
+const PRODUCT_OFFER_ID_RE = /\/product-offers\/([a-zA-Z0-9_-]+)/;
+
+function offerIdFromDm(m: {
+  body: string;
+  contextType?: string | null;
+  contextId?: string | null;
+}) {
+  const fromBody = m.body.match(PRODUCT_OFFER_ID_RE)?.[1];
+  if (fromBody) return fromBody;
+  if (
+    m.contextType === "OFFER" &&
+    m.contextId &&
+    /offre produit|product offer/i.test(m.body)
+  ) {
+    return m.contextId;
+  }
+  return null;
+}
 
 type Thread = {
   id: string;
@@ -133,6 +170,21 @@ export default function DirectMessageChatPage() {
   const [payProcessingDays, setPayProcessingDays] = useState("3");
   const [payBusy, setPayBusy] = useState(false);
   const [listingIdForPay, setListingIdForPay] = useState<string | null>(null);
+  const [offers, setOffers] = useState<Record<string, ThreadOffer>>({});
+  const [showOfferForm, setShowOfferForm] = useState(false);
+  const [offerName, setOfferName] = useState("");
+  const [offerDescription, setOfferDescription] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
+  const [offerPhotoUrl, setOfferPhotoUrl] = useState("");
+  const [offerPhotoUploading, setOfferPhotoUploading] = useState(false);
+  const [offerBusy, setOfferBusy] = useState(false);
+  const [offerActionId, setOfferActionId] = useState<string | null>(null);
+  const [proposeOfferId, setProposeOfferId] = useState<string | null>(null);
+  const [proposePrice, setProposePrice] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
+  const offerFetchRef = useRef<Set<string>>(new Set());
   const [calling, setCalling] = useState(false);
   const [reactingToId, setReactingToId] = useState<string | null>(null);
   const [forwardMessage, setForwardMessage] = useState<DmMessage | null>(null);
@@ -186,8 +238,28 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  async function loadOffers() {
+    if (!id) return;
+    try {
+      const res = await fetch(
+        `/api/product-offers?threadId=${encodeURIComponent(id)}`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const list: ThreadOffer[] = data.offers ?? [];
+      if (!list.length) return;
+      setOffers((prev) => {
+        const next = { ...prev };
+        for (const o of list) next[o.id] = o;
+        return next;
+      });
+    } catch {
+      /* ignore — chat must keep working */
+    }
+  }
+
   async function load() {
-    await Promise.all([loadMessages(), loadInvoices()]);
+    await Promise.all([loadMessages(), loadInvoices(), loadOffers()]);
   }
 
   useEffect(() => {
@@ -195,6 +267,7 @@ export default function DirectMessageChatPage() {
     const timer = setInterval(() => {
       void loadMessages();
       void loadInvoices();
+      void loadOffers();
     }, 5000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -524,6 +597,186 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  useEffect(() => {
+    for (const m of messages) {
+      const offerId = offerIdFromDm(m);
+      if (!offerId || offers[offerId] || offerFetchRef.current.has(offerId)) {
+        continue;
+      }
+      offerFetchRef.current.add(offerId);
+      void fetch(`/api/product-offers/${offerId}`)
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data = await res.json();
+          const offer: ThreadOffer | undefined = data.offer;
+          if (offer) setOffers((prev) => ({ ...prev, [offer.id]: offer }));
+        })
+        .catch(() => {});
+    }
+  }, [messages, offers]);
+
+  async function onOfferPhoto(file: File | undefined) {
+    if (!file) return;
+    setOfferPhotoUploading(true);
+    setError("");
+    try {
+      const att = await uploadCommunityAttachment(file);
+      setOfferPhotoUrl(att.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("attach_failed"));
+    } finally {
+      setOfferPhotoUploading(false);
+    }
+  }
+
+  async function onSendOffer(e: FormEvent) {
+    e.preventDefault();
+    if (offerBusy || offerPhotoUploading) return;
+    const price = Number(offerPrice.replace(",", "."));
+    if (offerName.trim().length < 3 || !Number.isFinite(price) || price <= 0) {
+      setError(t("prod_offer_need_fields"));
+      return;
+    }
+    setOfferBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/product-offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          threadId: id,
+          name: offerName.trim(),
+          description: offerDescription.trim(),
+          price,
+          ...(offerPhotoUrl ? { photoUrl: offerPhotoUrl } : {}),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || t("prod_offer_failed"));
+        return;
+      }
+      setShowOfferForm(false);
+      setOfferName("");
+      setOfferDescription("");
+      setOfferPrice("");
+      setOfferPhotoUrl("");
+      setPayOk(t("prod_offer_sent_ok"));
+      void load();
+    } catch {
+      setError(t("prod_offer_failed"));
+    } finally {
+      setOfferBusy(false);
+    }
+  }
+
+  async function offerAction(
+    offerId: string,
+    action: "accept" | "refuse" | "propose",
+    payload?: Record<string, unknown>
+  ) {
+    if (offerActionId) return;
+    setOfferActionId(offerId);
+    setError("");
+    try {
+      const res = await fetch(`/api/product-offers/${offerId}/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload ?? {}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || t("prod_offer_failed"));
+        return;
+      }
+      if (action === "propose") {
+        setProposeOfferId(null);
+        setProposePrice("");
+      }
+      if (data.offer) {
+        const fresh: ThreadOffer = data.offer;
+        setOffers((prev) => ({ ...prev, [fresh.id]: fresh }));
+      }
+      void load();
+    } catch {
+      setError(t("prod_offer_failed"));
+    } finally {
+      setOfferActionId(null);
+    }
+  }
+
+  function submitProposal(offerId: string) {
+    const price = Number(proposePrice.replace(",", "."));
+    if (!Number.isFinite(price) || price <= 0) {
+      setError(t("prod_offer_need_fields"));
+      return;
+    }
+    void offerAction(offerId, "propose", { price });
+  }
+
+  function canEditMessage(m: DmMessage) {
+    if (m.senderId !== meId || m.readAt) return false;
+    const ctx = (m.contextType || "").toUpperCase();
+    if (ctx === "SERVICE" || ctx === "OFFER") return false;
+    const body = (m.body || "").trim();
+    if (!body || isAttachmentOnlyBody(body)) return false;
+    if (/\/service-payments\//i.test(body) || PRODUCT_OFFER_ID_RE.test(body)) {
+      return false;
+    }
+    return true;
+  }
+
+  function startEditMessage(m: DmMessage) {
+    setReactingToId(null);
+    if (!canEditMessage(m)) {
+      setError(t("dm_edit_only_unread"));
+      return;
+    }
+    setEditingId(m.id);
+    setEditDraft(m.body.trim());
+  }
+
+  async function saveEditMessage() {
+    if (!editingId || editBusy) return;
+    const next = editDraft.trim();
+    if (!next) {
+      setError(t("dm_edit_failed"));
+      return;
+    }
+    setEditBusy(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/dm/${id}/messages/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || t("dm_edit_failed"));
+        return;
+      }
+      const updated: DmMessage | undefined = data.message;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === editingId
+            ? {
+                ...m,
+                body: updated?.body ?? next,
+                editedAt: updated?.editedAt ?? new Date().toISOString(),
+              }
+            : m
+        )
+      );
+      setEditingId(null);
+      setEditDraft("");
+    } catch {
+      setError(t("dm_edit_failed"));
+    } finally {
+      setEditBusy(false);
+    }
+  }
+
   async function onRequestPayment(e: FormEvent) {
     e.preventDefault();
     if (!peer || payBusy) return;
@@ -623,17 +876,107 @@ export default function DirectMessageChatPage() {
         </div>
       </div>
 
-      {peer && meId && canInvoice && (
+      {peer && meId && (
         <div className="flex flex-wrap gap-2">
+          {canInvoice && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPayForm((v) => !v)}
+            >
+              {showPayForm ? t("cancel") : t("svc_pay_request")}
+            </Button>
+          )}
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setShowPayForm((v) => !v)}
+            onClick={() => setShowOfferForm((v) => !v)}
           >
-            {showPayForm ? t("cancel") : t("svc_pay_request")}
+            {showOfferForm ? t("cancel") : t("prod_offer_request")}
           </Button>
         </div>
+      )}
+
+      {showOfferForm && peer && (
+        <form
+          onSubmit={onSendOffer}
+          className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+        >
+          <p className="text-sm font-medium">{t("prod_offer_request")}</p>
+          <p className="text-xs text-[var(--muted)]">
+            {t("prod_offer_request_hint")}
+          </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="offer-photo">{t("prod_offer_photo")}</Label>
+            <input
+              id="offer-photo"
+              type="file"
+              accept="image/*"
+              disabled={offerPhotoUploading || offerBusy}
+              onChange={(e) => {
+                void onOfferPhoto(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+              className="block w-full text-sm"
+            />
+            {offerPhotoUploading && (
+              <p className="text-xs text-[var(--muted)]">{t("uploading")}</p>
+            )}
+            {offerPhotoUrl && (
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={offerPhotoUrl}
+                  alt={t("prod_offer_photo")}
+                  className="h-16 w-16 rounded-lg object-cover"
+                />
+                <button
+                  type="button"
+                  className="text-xs text-[var(--muted)] underline"
+                  onClick={() => setOfferPhotoUrl("")}
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="offer-name">{t("prod_offer_name")}</Label>
+            <Input
+              id="offer-name"
+              value={offerName}
+              maxLength={160}
+              onChange={(e) => setOfferName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="offer-description">
+              {t("prod_offer_description")}
+            </Label>
+            <Textarea
+              id="offer-description"
+              value={offerDescription}
+              maxLength={2000}
+              onChange={(e) => setOfferDescription(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="offer-price">{t("prod_offer_price")}</Label>
+            <Input
+              id="offer-price"
+              inputMode="decimal"
+              value={offerPrice}
+              onChange={(e) =>
+                setOfferPrice(e.target.value.replace(/[^0-9.,]/g, ""))
+              }
+            />
+          </div>
+          <Button type="submit" disabled={offerBusy || offerPhotoUploading}>
+            {offerBusy ? t("loading") : t("prod_offer_send")}
+          </Button>
+        </form>
       )}
 
       {showPayForm && peer && canInvoice && (
@@ -777,7 +1120,12 @@ export default function DirectMessageChatPage() {
           const bodyWithoutPayLink = m.body
             .replace(/https?:\/\/\S*\/service-payments\/[a-zA-Z0-9_-]+/gi, "")
             .replace(/\/service-payments\/[a-zA-Z0-9_-]+/gi, "")
+            .replace(/https?:\/\/\S*\/product-offers\/[a-zA-Z0-9_-]+/gi, "")
+            .replace(/\/product-offers\/[a-zA-Z0-9_-]+/gi, "")
             .trim();
+          const offerId = offerIdFromDm(m);
+          const offer = offerId ? offers[offerId] : undefined;
+          const offerBusyHere = offer ? offerActionId === offer.id : false;
           return (
             <DmBubble
               key={m.id}
@@ -788,6 +1136,8 @@ export default function DirectMessageChatPage() {
               onReact={(emoji) => void reactToMessage(m.id, emoji)}
               onShare={() => void shareMessage(m)}
               onForward={() => void openForward(m)}
+              onEdit={canEditMessage(m) ? () => startEditMessage(m) : undefined}
+              editLabel={t("dm_edit")}
               onDeleteFile={
                 mine && m.attachmentUrl
                   ? () => void deleteAttachment(m)
@@ -845,17 +1195,177 @@ export default function DirectMessageChatPage() {
                   )}
                 </div>
               )}
-              {m.body && !isAttachmentOnlyBody(m.body) && bodyWithoutPayLink && (
-                <p className="whitespace-pre-wrap break-words">
-                  <LinkedText
-                    text={bodyWithoutPayLink}
-                    linkClassName={
-                      mine
-                        ? "break-all font-medium text-white underline underline-offset-2"
-                        : undefined
-                    }
+              {editingId === m.id ? (
+                <div className="space-y-2" data-dm-forward>
+                  <Textarea
+                    value={editDraft}
+                    maxLength={4000}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    className="min-h-[60px] bg-white text-[var(--foreground)]"
                   />
-                </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={editBusy}
+                      onClick={() => void saveEditMessage()}
+                    >
+                      {editBusy ? t("loading") : t("dm_edit_save")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={editBusy}
+                      onClick={() => {
+                        setEditingId(null);
+                        setEditDraft("");
+                      }}
+                    >
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                m.body &&
+                !isAttachmentOnlyBody(m.body) &&
+                bodyWithoutPayLink && (
+                  <p className="whitespace-pre-wrap break-words">
+                    <LinkedText
+                      text={bodyWithoutPayLink}
+                      linkClassName={
+                        mine
+                          ? "break-all font-medium text-white underline underline-offset-2"
+                          : undefined
+                      }
+                    />
+                    {m.editedAt ? (
+                      <span
+                        className={`ml-1 text-[10px] ${
+                          mine ? "text-white/70" : "text-[var(--muted)]"
+                        }`}
+                      >
+                        ({t("dm_edited")})
+                      </span>
+                    ) : null}
+                  </p>
+                )
+              )}
+              {offerId && offer && (
+                <div
+                  className={`mt-2 space-y-1.5 rounded-xl border p-2 ${
+                    mine
+                      ? "border-white/30 bg-white/10"
+                      : "border-[var(--border)] bg-[var(--surface)]"
+                  }`}
+                >
+                  {offer.photoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={offer.photoUrl}
+                      alt={offer.name}
+                      className="max-h-40 w-full rounded-lg object-cover"
+                    />
+                  )}
+                  <p className="text-sm font-semibold">{offer.name}</p>
+                  {offer.description && (
+                    <p className="whitespace-pre-wrap break-words text-xs">
+                      {offer.description}
+                    </p>
+                  )}
+                  <p
+                    className={`text-xs ${
+                      mine ? "text-white/80" : "text-[var(--muted)]"
+                    }`}
+                  >
+                    {offer.agreedPriceLabel}
+                    {offer.status
+                      ? ` · ${t(`prod_offer_status_${offer.status}` as DictKey)}`
+                      : ""}
+                  </p>
+                  {(offer.status === "PENDING" ||
+                    offer.status === "COUNTERED") && (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-3 text-xs font-semibold">
+                        {offer.canAccept && (
+                          <button
+                            type="button"
+                            className="underline disabled:opacity-50"
+                            disabled={offerBusyHere}
+                            onClick={() => void offerAction(offer.id, "accept")}
+                          >
+                            {t("prod_offer_accept")}
+                          </button>
+                        )}
+                        {offer.canRefuse && (
+                          <button
+                            type="button"
+                            className="underline disabled:opacity-50"
+                            disabled={offerBusyHere}
+                            onClick={() => void offerAction(offer.id, "refuse")}
+                          >
+                            {t("prod_offer_refuse")}
+                          </button>
+                        )}
+                        {offer.canPropose && (
+                          <button
+                            type="button"
+                            className="underline disabled:opacity-50"
+                            disabled={offerBusyHere}
+                            onClick={() => {
+                              setProposePrice("");
+                              setProposeOfferId((cur) =>
+                                cur === offer.id ? null : offer.id
+                              );
+                            }}
+                          >
+                            {t("prod_offer_propose")}
+                          </button>
+                        )}
+                      </div>
+                      {proposeOfferId === offer.id && (
+                        <div className="space-y-1.5" data-dm-forward>
+                          <p className="text-[11px]">
+                            {t("prod_offer_propose_hint")}
+                          </p>
+                          <Input
+                            inputMode="decimal"
+                            placeholder={t("prod_offer_new_price")}
+                            value={proposePrice}
+                            onChange={(e) =>
+                              setProposePrice(
+                                e.target.value.replace(/[^0-9.,]/g, "")
+                              )
+                            }
+                            className="bg-white text-[var(--foreground)]"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={offerBusyHere}
+                            onClick={() => submitProposal(offer.id)}
+                          >
+                            {offerBusyHere
+                              ? t("loading")
+                              : t("prod_offer_propose")}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {offer.status === "ACCEPTED" && offer.paymentId && (
+                    <Link
+                      href={`/service-payments/${offer.paymentId}`}
+                      className={`inline-block text-xs font-semibold underline ${
+                        mine ? "text-white" : "text-[var(--foreground)]"
+                      }`}
+                    >
+                      {offer.buyerId === meId
+                        ? t("svc_pay_pay")
+                        : t("svc_pay_open")}
+                    </Link>
+                  )}
+                </div>
               )}
               {paymentId && paymentOpen && (
                 <Link
@@ -1125,6 +1635,8 @@ function DmBubble({
   onReact,
   onShare,
   onForward,
+  onEdit,
+  editLabel,
   onDeleteFile,
   shareLabel,
   forwardLabel,
@@ -1138,6 +1650,8 @@ function DmBubble({
   onReact: (emoji: string | null) => void;
   onShare: () => void;
   onForward: () => void;
+  onEdit?: () => void;
+  editLabel?: string;
   onDeleteFile?: () => void;
   shareLabel: string;
   forwardLabel: string;
@@ -1158,9 +1672,11 @@ function DmBubble({
           onPick={(emoji) => onReact(emoji)}
           onShare={onShare}
           onForward={onForward}
+          onEdit={onEdit}
           onDelete={onDeleteFile}
           shareLabel={shareLabel}
           forwardLabel={forwardLabel}
+          editLabel={editLabel}
           deleteLabel={deleteLabel}
         />
       )}

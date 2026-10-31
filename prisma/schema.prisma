@@ -197,118 +197,120 @@ model City {
 }
 
 model User {
-  id                          String     @id @default(cuid())
-  email                       String     @unique
-  passwordHash                String?
-  googleId                    String?    @unique
-  appleId                     String?    @unique
-  displayName                 String
-  avatarUrl                   String?
+  id                           String                  @id @default(cuid())
+  email                        String                  @unique
+  passwordHash                 String?
+  googleId                     String?                 @unique
+  appleId                      String?                 @unique
+  displayName                  String
+  avatarUrl                    String?
   /// Profile cover / banner image
-  bannerUrl                   String?
-  country                     String?
+  bannerUrl                    String?
+  country                      String?
   /// E.164 (ex. +24107470000). Unique when set — Gabon SMS login.
-  phone                       String?    @unique
-  language                    String     @default("fr")
-  preferredCurrency           String     @default("CAD")
-  bio                         String?
-  role                        UserRole   @default(BOTH)
-  status                      UserStatus @default(ACTIVE)
-  verifiedAt                  DateTime?
-  ratingAvg                   Float      @default(0)
-  ratingCount                 Int        @default(0)
-  completedDeliveries         Int        @default(0)
-  stripeCustomerId            String?    @unique
-  stripeConnectAccountId      String?    @unique
-  stripeConnectChargesEnabled Boolean    @default(false)
-  stripeConnectPayoutsEnabled Boolean    @default(false)
-  kycStatus                   KycStatus  @default(NONE)
-  kycSessionId                String?
-  kycVerifiedAt               DateTime?
+  phone                        String?                 @unique
+  language                     String                  @default("fr")
+  preferredCurrency            String                  @default("CAD")
+  bio                          String?
+  role                         UserRole                @default(BOTH)
+  status                       UserStatus              @default(ACTIVE)
+  verifiedAt                   DateTime?
+  ratingAvg                    Float                   @default(0)
+  ratingCount                  Int                     @default(0)
+  completedDeliveries          Int                     @default(0)
+  stripeCustomerId             String?                 @unique
+  stripeConnectAccountId       String?                 @unique
+  stripeConnectChargesEnabled  Boolean                 @default(false)
+  stripeConnectPayoutsEnabled  Boolean                 @default(false)
+  kycStatus                    KycStatus               @default(NONE)
+  kycSessionId                 String?
+  kycVerifiedAt                DateTime?
   /// Private URL of manually uploaded ID (admin review fallback)
-  manualIdDocUrl              String?
-  manualIdDocStatus           ManualIdDocStatus @default(NONE)
-  manualIdDocUploadedAt       DateTime?
+  manualIdDocUrl               String?
+  manualIdDocStatus            ManualIdDocStatus       @default(NONE)
+  manualIdDocUploadedAt        DateTime?
   /// Optional user note or admin rejection reason
-  manualIdDocNote             String?
+  manualIdDocNote              String?
   /// Last presence heartbeat (for online/offline in chat)
-  lastSeenAt                  DateTime?
+  lastSeenAt                   DateTime?
   /// Last known GPS for nearby job alerts (Uber-style)
-  lastLat                     Float?
-  lastLng                     Float?
-  lastLocationAt              DateTime?
+  lastLat                      Float?
+  lastLng                      Float?
+  lastLocationAt               DateTime?
   /// Opt-in for nearby job / service push alerts (default on)
-  nearbyAlertsEnabled         Boolean    @default(true)
+  nearbyAlertsEnabled          Boolean                 @default(true)
   /// Named ambassador by admin (keeps product role)
-  isAmbassador                Boolean    @default(false)
+  isAmbassador                 Boolean                 @default(false)
   /// Unique agent code for invite links (/register?ref=CODE)
-  agentCode                   String?    @unique
+  agentCode                    String?                 @unique
   /// Set once at signup when arriving via an active ambassador link
-  referredById                String?
+  referredById                 String?
   /// User-submitted request to become ambassador
-  ambassadorRequestStatus     AmbassadorRequestStatus @default(NONE)
+  ambassadorRequestStatus      AmbassadorRequestStatus @default(NONE)
   /// WhatsApp number provided with the ambassador request (admin contact)
-  ambassadorWhatsapp          String?
-  ambassadorRequestedAt       DateTime?
+  ambassadorWhatsapp           String?
+  ambassadorRequestedAt        DateTime?
   /// User accepted the community publication charter (profile settings)
   publicationCharterAcceptedAt DateTime?
-  createdAt                   DateTime   @default(now())
-  updatedAt                   DateTime   @updatedAt
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime                @updatedAt
 
-  referredBy       User?           @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals        User[]          @relation("UserReferrals")
-  trips            Trip[]
-  parcelRequests   ParcelRequest[]
-  serviceListings  ServiceListing[]
+  referredBy                User?                   @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals                 User[]                  @relation("UserReferrals")
+  trips                     Trip[]
+  parcelRequests            ParcelRequest[]
+  serviceListings           ServiceListing[]
   servicePaymentsAsProvider ServicePaymentRequest[] @relation("ServicePaymentProvider")
   servicePaymentsAsClient   ServicePaymentRequest[] @relation("ServicePaymentClient")
-  shops            Shop[]
-  shopOrdersAsBuyer ShopOrder[]    @relation("ShopOrderBuyer")
-  bookingsAsSender Booking[]       @relation("BookingSender")
-  messages         Message[]
-  directThreadsAsLow   DirectThread[] @relation("DirectThreadLow")
-  directThreadsAsHigh  DirectThread[] @relation("DirectThreadHigh")
-  directMessagesSent   DirectMessage[] @relation("DirectMessageSender")
-  reviewsGiven     Review[]        @relation("ReviewsGiven")
-  reviewsReceived  Review[]        @relation("ReviewsReceived")
-  reportsFiled     Report[]        @relation("ReportsFiled")
-  reportsAgainst   Report[]        @relation("ReportsAgainst")
-  disputesOpened   Dispute[]       @relation("DisputesOpened")
-  disputesAgainst  Dispute[]       @relation("DisputesAgainst")
-  passwordResets   PasswordResetToken[]
-  loginOtps        LoginOtp[]
-  phoneOtps        PhoneOtp[]
-  notifications    Notification[]
-  deviceTokens     DeviceToken[]
-  communityPosts   CommunityPost[]
-  communityComments CommunityComment[]
-  connectionsFrom  UserConnection[] @relation("ConnectionsFrom")
-  connectionsTo    UserConnection[] @relation("ConnectionsTo")
-  jobContactsSent     JobContact[] @relation("JobContactsSent")
-  jobContactsReceived JobContact[] @relation("JobContactsReceived")
-  meetProfile         MeetProfile?
-  meetContactsSent    MeetContact[] @relation("MeetContactsSent")
-  meetContactsReceived MeetContact[] @relation("MeetContactsReceived")
-  heraldCommissions   HeraldCommission[] @relation("HeraldCommissions")
-  heraldCommissionReferrals HeraldCommission[] @relation("HeraldCommissionReferral")
-  heraldPayouts       HeraldPayout[]
+  productOffersAsSeller     ProductOffer[]          @relation("ProductOfferSeller")
+  productOffersAsBuyer      ProductOffer[]          @relation("ProductOfferBuyer")
+  shops                     Shop[]
+  shopOrdersAsBuyer         ShopOrder[]             @relation("ShopOrderBuyer")
+  bookingsAsSender          Booking[]               @relation("BookingSender")
+  messages                  Message[]
+  directThreadsAsLow        DirectThread[]          @relation("DirectThreadLow")
+  directThreadsAsHigh       DirectThread[]          @relation("DirectThreadHigh")
+  directMessagesSent        DirectMessage[]         @relation("DirectMessageSender")
+  reviewsGiven              Review[]                @relation("ReviewsGiven")
+  reviewsReceived           Review[]                @relation("ReviewsReceived")
+  reportsFiled              Report[]                @relation("ReportsFiled")
+  reportsAgainst            Report[]                @relation("ReportsAgainst")
+  disputesOpened            Dispute[]               @relation("DisputesOpened")
+  disputesAgainst           Dispute[]               @relation("DisputesAgainst")
+  passwordResets            PasswordResetToken[]
+  loginOtps                 LoginOtp[]
+  phoneOtps                 PhoneOtp[]
+  notifications             Notification[]
+  deviceTokens              DeviceToken[]
+  communityPosts            CommunityPost[]
+  communityComments         CommunityComment[]
+  connectionsFrom           UserConnection[]        @relation("ConnectionsFrom")
+  connectionsTo             UserConnection[]        @relation("ConnectionsTo")
+  jobContactsSent           JobContact[]            @relation("JobContactsSent")
+  jobContactsReceived       JobContact[]            @relation("JobContactsReceived")
+  meetProfile               MeetProfile?
+  meetContactsSent          MeetContact[]           @relation("MeetContactsSent")
+  meetContactsReceived      MeetContact[]           @relation("MeetContactsReceived")
+  heraldCommissions         HeraldCommission[]      @relation("HeraldCommissions")
+  heraldCommissionReferrals HeraldCommission[]      @relation("HeraldCommissionReferral")
+  heraldPayouts             HeraldPayout[]
   /// Canal de retrait par défaut pour le portefeuille (gains, commissions Héraut…)
-  payoutChannel       String?
+  payoutChannel             String?
   /// Opérateur mobile / Interac (voir lib/user-intent PayoutProvider)
-  payoutProvider      String?
+  payoutProvider            String?
   /// Téléphone e164 ou courriel Interac
-  payoutIdentifier    String?
+  payoutIdentifier          String?
   /// Détails bancaires (Afrique + gros clients ; JSON léger)
-  payoutBankName      String?
-  payoutBankHolder    String?
-  payoutBankAccount   String?
+  payoutBankName            String?
+  payoutBankHolder          String?
+  payoutBankAccount         String?
   /// IBAN / RIB si disponible
-  payoutBankIban      String?
-  walletWithdrawals   WalletWithdrawal[]
-  callsAsCaller       Call[]            @relation("CallCaller")
-  callsAsCallee       Call[]            @relation("CallCallee")
-  directMessageReactions DirectMessageReaction[]
-  memberStatuses       MemberStatus[]
+  payoutBankIban            String?
+  walletWithdrawals         WalletWithdrawal[]
+  callsAsCaller             Call[]                  @relation("CallCaller")
+  callsAsCallee             Call[]                  @relation("CallCallee")
+  directMessageReactions    DirectMessageReaction[]
+  memberStatuses            MemberStatus[]
 
   @@index([referredById])
   @@index([ambassadorRequestStatus])
@@ -390,20 +392,20 @@ model PhoneOtp {
 }
 
 model Trip {
-  id            String     @id @default(cuid())
-  userId        String
-  fromCountry   String
-  fromCity      String
-  toCountry     String
-  toCity        String
-  departAt      DateTime
-  arriveAt      DateTime?
-  weightKg      Float
-  pricePerKgCad Float
-  currency      String     @default("CAD")
+  id              String        @id @default(cuid())
+  userId          String
+  fromCountry     String
+  fromCity        String
+  toCountry       String
+  toCity          String
+  departAt        DateTime
+  arriveAt        DateTime?
+  weightKg        Float
+  pricePerKgCad   Float
+  currency        String        @default("CAD")
   /// If true, senders can counter-offer a price per kg; traveler may talk to several parties.
-  priceNegotiable Boolean  @default(false)
-  acceptedGoods String
+  priceNegotiable Boolean       @default(false)
+  acceptedGoods   String
   notes           String?
   transportMode   TransportMode @default(AIR)
   /// Specific vehicle/means within the mode (e.g. PLANE, TRUCK).
@@ -412,9 +414,9 @@ model Trip {
   flightNumber    String?
   fromAirportCode String?
   toAirportCode   String?
-  status          TripStatus @default(OPEN)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  status          TripStatus    @default(OPEN)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]
@@ -426,16 +428,16 @@ model Trip {
 }
 
 model ParcelRequest {
-  id            String        @id @default(cuid())
-  userId        String
+  id              String         @id @default(cuid())
+  userId          String
   /// PARCEL (colis), SERVICE (prestation), PRODUCT (achat boutique).
-  needType      OrderNeedType @default(PARCEL)
+  needType        OrderNeedType  @default(PARCEL)
   /// Envoyer / recevoir (colis uniquement).
-  orderSide     String?
+  orderSide       String?
   /// Catégorie métier (SERVICE).
   serviceCategory String?
   /// Type de prestation (SERVICE).
-  serviceType   String?
+  serviceType     String?
   /// Catégorie boutique (PRODUCT).
   productCategory String?
   /// Emploi — intitulé poste / profil
@@ -448,26 +450,26 @@ model ParcelRequest {
   jobDiploma      String?
   /// Emploi — URL CV (PDF ou image)
   jobCvUrl        String?
-  fromCountry   String
-  fromCity      String
-  toCountry     String
-  toCity        String
+  fromCountry     String
+  fromCity        String
+  toCountry       String
+  toCity          String
   /// Poids colis ; 0 pour besoins service/produit/emploi.
-  weightKg      Float         @default(0)
-  description   String
-  photosJson    String        @default("[]")
-  urgency       Urgency       @default(NORMAL)
-  declaredValue Float?
-  desiredDate   DateTime?
-  transportMode TransportMode?
-  transportType String?
-  status        RequestStatus @default(OPEN)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  weightKg        Float          @default(0)
+  description     String
+  photosJson      String         @default("[]")
+  urgency         Urgency        @default(NORMAL)
+  declaredValue   Float?
+  desiredDate     DateTime?
+  transportMode   TransportMode?
+  transportType   String?
+  status          RequestStatus  @default(OPEN)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bookings  Booking[]
-  shopOrder ShopOrder?
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+  shopOrder       ShopOrder?
   jobContactsFrom JobContact[] @relation("JobContactFromRequest")
   jobContactsTo   JobContact[] @relation("JobContactToRequest")
 
@@ -482,14 +484,14 @@ model ParcelRequest {
 
 /// Premier contact emploi (employeur ↔ candidat) sans booking.
 model JobContact {
-  id             String   @id @default(cuid())
-  fromUserId     String
-  toUserId       String
-  fromRequestId  String
-  toRequestId    String
-  message        String
-  status         String   @default("SENT")
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  fromUserId    String
+  toUserId      String
+  fromRequestId String
+  toRequestId   String
+  message       String
+  status        String   @default("SENT")
+  createdAt     DateTime @default(now())
 
   fromUser    User          @relation("JobContactsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUser      User          @relation("JobContactsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
@@ -503,7 +505,7 @@ model JobContact {
 
 /// Offre de service collaboratif (hors flux colis Trip/ParcelRequest).
 model ServiceListing {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   userId        String
   category      String
   serviceType   String
@@ -512,20 +514,20 @@ model ServiceListing {
   country       String
   city          String
   priceAmount   Float?
-  priceUnit     String   @default("forfait")
-  currency      String   @default("CAD")
+  priceUnit     String    @default("forfait")
+  currency      String    @default("CAD")
   availableFrom DateTime?
   availableTo   DateTime?
-  photosJson    String   @default("[]")
+  photosJson    String    @default("[]")
   /// Produits / articles (JSON string[]) — surtout pour la catégorie vente.
-  productsJson  String   @default("[]")
+  productsJson  String    @default("[]")
   /// Site web / page du service (optionnel).
   websiteUrl    String?
-  status        String   @default("OPEN")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  status        String    @default("OPEN")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   paymentRequests ServicePaymentRequest[]
 
   @@index([category, country, city])
@@ -536,40 +538,40 @@ model ServiceListing {
 
 /// Provider invoices a client for a service (card / Interac / mobile)
 model ServicePaymentRequest {
-  id                      String           @id @default(cuid())
+  id                      String            @id @default(cuid())
   listingId               String?
   threadId                String?
   providerId              String
   clientId                String
   title                   String
-  description             String           @default("")
+  description             String            @default("")
   amountCents             Int
-  currency                String           @default("cad")
-  platformFeeCents        Int              @default(0)
-  providerPayoutCents     Int              @default(0)
-  status                  ServicePayStatus @default(AWAITING_PAYMENT)
+  currency                String            @default("cad")
+  platformFeeCents        Int               @default(0)
+  providerPayoutCents     Int               @default(0)
+  status                  ServicePayStatus  @default(AWAITING_PAYMENT)
   payMethod               ServicePayMethod?
   /// e.g. orange_money, interac (when mobile/interac)
   payProvider             String?
   /// Phone / Interac email for off-platform transfer
   receiverHint            String?
-  stripeCheckoutSessionId String?          @unique
-  stripePaymentIntentId   String?          @unique
+  stripeCheckoutSessionId String?           @unique
+  stripePaymentIntentId   String?           @unique
   clientMarkedPaidAt      DateTime?
   providerConfirmedAt     DateTime?
   paidAt                  DateTime?
   /// Announced fulfillment window after payment (calendar days)
-  processingDays          Int              @default(3)
+  processingDays          Int               @default(3)
   /// New card invoices hold funds until the client confirms delivery
-  escrowUntilConfirm      Boolean          @default(false)
+  escrowUntilConfirm      Boolean           @default(false)
   processingDueAt         DateTime?
   deliveredAt             DateTime?
   clientConfirmedAt       DateTime?
-  stripeTransferId        String?          @unique
+  stripeTransferId        String?           @unique
   releasedAt              DateTime?
   expiresAt               DateTime?
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
 
   listing  ServiceListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
   provider User            @relation("ServicePaymentProvider", fields: [providerId], references: [id], onDelete: Cascade)
@@ -580,6 +582,53 @@ model ServicePaymentRequest {
   @@index([threadId])
   @@index([status])
   @@index([listingId])
+}
+
+enum ProductOfferStatus {
+  PENDING
+  COUNTERED
+  ACCEPTED
+  REFUSED
+  CANCELLED
+}
+
+/// Seller offers a product to a buyer in a DM thread; buyer can accept / refuse / counter.
+model ProductOffer {
+  id                 String             @id @default(cuid())
+  threadId           String?
+  sellerId           String
+  buyerId            String
+  photoUrl           String?
+  name               String
+  description        String             @default("")
+  priceCents         Int
+  currency           String             @default("cad")
+  status             ProductOfferStatus @default(PENDING)
+  proposedPriceCents Int?
+  proposedById       String?
+  proposedNote       String             @default("")
+  paymentId          String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  seller User @relation("ProductOfferSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  buyer  User @relation("ProductOfferBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([sellerId, createdAt])
+  @@index([buyerId, createdAt])
+  @@index([status])
+}
+
+model ProductOfferProposal {
+  id         String   @id @default(cuid())
+  offerId    String
+  authorId   String
+  priceCents Int
+  note       String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([offerId, createdAt])
 }
 
 /// Virtual shop for multi-vendor product sales (Stripe Connect).
@@ -698,9 +747,9 @@ model Booking {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
-  request  ParcelRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  trip     Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  sender   User          @relation("BookingSender", fields: [senderId], references: [id], onDelete: Cascade)
+  request   ParcelRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  trip      Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sender    User              @relation("BookingSender", fields: [senderId], references: [id], onDelete: Cascade)
   messages  Message[]
   reviews   Review[]
   payment   Payment?
@@ -731,14 +780,14 @@ model BookingEvent {
 }
 
 model BookingLocation {
-  id         String   @id @default(cuid())
-  bookingId  String
-  userId     String
-  latitude   Float
-  longitude  Float
-  accuracyM  Float?
-  label      String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  bookingId String
+  userId    String
+  latitude  Float
+  longitude Float
+  accuracyM Float?
+  label     String?
+  createdAt DateTime @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -746,19 +795,19 @@ model BookingLocation {
 }
 
 model Payment {
-  id                     String        @id @default(cuid())
-  bookingId              String        @unique
-  amountCadCents         Int
-  platformFeeCents       Int
-  travelerPayoutCents    Int
-  currency               String        @default("cad")
-  provider               String        @default("stripe")
-  status                 PaymentStatus @default(REQUIRES_PAYMENT)
-  stripePaymentIntentId  String?       @unique
-  stripeCheckoutSessionId String?      @unique
-  stripeTransferId       String?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  id                      String        @id @default(cuid())
+  bookingId               String        @unique
+  amountCadCents          Int
+  platformFeeCents        Int
+  travelerPayoutCents     Int
+  currency                String        @default("cad")
+  provider                String        @default("stripe")
+  status                  PaymentStatus @default(REQUIRES_PAYMENT)
+  stripePaymentIntentId   String?       @unique
+  stripeCheckoutSessionId String?       @unique
+  stripeTransferId        String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -785,7 +834,7 @@ enum HeraldCommissionStatus {
 }
 
 model HeraldCommission {
-  id               String                  @id @default(cuid())
+  id               String                 @id @default(cuid())
   heraldId         String
   /// Filleul dont l'activité a généré la commission
   referralUserId   String
@@ -795,15 +844,15 @@ model HeraldCommission {
   platformFeeCents Int
   rewardBps        Int
   rewardCents      Int
-  currency         String                  @default("cad")
-  status           HeraldCommissionStatus  @default(ACCRUED)
+  currency         String                 @default("cad")
+  status           HeraldCommissionStatus @default(ACCRUED)
   stripeTransferId String?
   payoutId         String?
   paidAt           DateTime?
   reversedAt       DateTime?
   note             String?
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
 
   herald   User          @relation("HeraldCommissions", fields: [heraldId], references: [id], onDelete: Cascade)
   referral User          @relation("HeraldCommissionReferral", fields: [referralUserId], references: [id], onDelete: Cascade)
@@ -827,8 +876,8 @@ model HeraldPayout {
   note             String?
   createdAt        DateTime @default(now())
 
-  herald       User               @relation(fields: [heraldId], references: [id], onDelete: Cascade)
-  commissions  HeraldCommission[]
+  herald      User               @relation(fields: [heraldId], references: [id], onDelete: Cascade)
+  commissions HeraldCommission[]
 
   @@index([heraldId, createdAt])
 }
@@ -849,29 +898,29 @@ enum WalletWithdrawalSource {
 
 /// Demande de retrait portefeuille → mobile money ou banque (traitement admin / API partenaire).
 model WalletWithdrawal {
-  id               String                   @id @default(cuid())
-  userId           String
-  amountCents      Int
-  currency         String                   @default("cad")
-  status           WalletWithdrawalStatus   @default(REQUESTED)
-  source           WalletWithdrawalSource   @default(HERALD_COMMISSIONS)
+  id              String                 @id @default(cuid())
+  userId          String
+  amountCents     Int
+  currency        String                 @default("cad")
+  status          WalletWithdrawalStatus @default(REQUESTED)
+  source          WalletWithdrawalSource @default(HERALD_COMMISSIONS)
   /// mobile | bank | stripe
-  channel          String
-  provider         String?
+  channel         String
+  provider        String?
   /// Snapshot destinataire au moment de la demande
-  destinationHint  String
-  bankName         String?
-  bankHolder       String?
-  bankAccount      String?
-  bankIban         String?
-  note             String?
-  adminNote        String?
-  processedById    String?
-  processedAt      DateTime?
+  destinationHint String
+  bankName        String?
+  bankHolder      String?
+  bankAccount     String?
+  bankIban        String?
+  note            String?
+  adminNote       String?
+  processedById   String?
+  processedAt     DateTime?
   /// Liens optionnels vers un HeraldPayout Stripe
-  heraldPayoutId   String?
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
+  heraldPayoutId  String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1016,8 +1065,8 @@ model DirectThread {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  userLow  User @relation("DirectThreadLow", fields: [userLowId], references: [id], onDelete: Cascade)
-  userHigh User @relation("DirectThreadHigh", fields: [userHighId], references: [id], onDelete: Cascade)
+  userLow  User            @relation("DirectThreadLow", fields: [userLowId], references: [id], onDelete: Cascade)
+  userHigh User            @relation("DirectThreadHigh", fields: [userHighId], references: [id], onDelete: Cascade)
   messages DirectMessage[]
   calls    Call[]
 
@@ -1034,14 +1083,15 @@ model DirectMessage {
   senderId      String
   body          String
   attachmentUrl String?
-  /// SERVICE | JOB | MEET | IN
+  /// SERVICE | JOB | MEET | IN | OFFER
   contextType   String?
   contextId     String?
   readAt        DateTime?
+  editedAt      DateTime?
   createdAt     DateTime  @default(now())
 
-  thread    DirectThread             @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  sender    User                     @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  thread    DirectThread            @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender    User                    @relation("DirectMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   reactions DirectMessageReaction[]
 
   @@index([threadId, createdAt])

@@ -39,12 +39,14 @@ export function DmReactionPicker({
   onPick,
   onShare,
   onForward,
+  onEdit,
   onDelete,
   alignEnd,
 }: {
   onPick: (emoji: string) => void;
   onShare: () => void;
   onForward: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   alignEnd?: boolean;
 }) {
@@ -106,6 +108,14 @@ export function DmReactionPicker({
         color={colors.accent}
         label={t("dm_forward")}
       />
+      {onEdit ? (
+        <IconBtn
+          name="create-outline"
+          onPress={onEdit}
+          color={colors.accent}
+          label={t("dm_edit")}
+        />
+      ) : null}
       {onDelete ? (
         <IconBtn
           name="trash-outline"
