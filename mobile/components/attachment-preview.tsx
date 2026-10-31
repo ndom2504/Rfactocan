@@ -115,14 +115,6 @@ export function AttachmentPreview({
     }
   }
 
-  const looksVideo =
-    isVideoAttachment(url, body) ||
-    (!isPdfAttachment(url) && !fileName.includes("."));
-
-  if (looksVideo) {
-    return <VideoThumb url={url} mine={mine} />;
-  }
-
   if (isPdfAttachment(url)) {
     return (
       <Pressable onPress={() => void open()}>
@@ -153,13 +145,22 @@ export function AttachmentPreview({
               numberOfLines={3}
               style={{ color: label, fontSize: 13, fontWeight: "600" }}
             >
-              {fileName}
+              {fileName.includes(".") ? fileName : "document.pdf"}
             </Text>
             <Text style={{ color: muted, fontSize: 11 }}>PDF · Aperçu</Text>
           </View>
         </View>
       </Pressable>
     );
+  }
+
+  // WhatsApp-style: anything that is not image/PDF → video thumbnail
+  if (
+    isVideoAttachment(url, body) ||
+    !fileName.includes(".") ||
+    fileName.length > 40
+  ) {
+    return <VideoThumb url={url} mine={mine} />;
   }
 
   return (

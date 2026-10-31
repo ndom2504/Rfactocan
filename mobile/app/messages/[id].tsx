@@ -123,7 +123,8 @@ function isAttachmentOnlyBody(body?: string | null) {
     text === "🎥" ||
     text.toLowerCase() === "[video]" ||
     text.startsWith("Note vocale") ||
-    text.startsWith("Voice note")
+    text.startsWith("Voice note") ||
+    (text.length >= 24 && !/[\s/\\]/.test(text) && !text.includes("."))
   );
 }
 

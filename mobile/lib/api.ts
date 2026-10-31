@@ -185,6 +185,20 @@ function mediaHaystack(url: string) {
   }
 }
 
+/** Opaque Vercel-style blob segment — never show as chat label. */
+export function isOpaqueBlobFileName(name?: string | null) {
+  const n = (name || "").trim();
+  if (n.length < 24 || /[\s/\\]/.test(n)) return false;
+  if (
+    /\.(jpe?g|png|gif|webp|heic|heif|pdf|mp4|mov|webm|m4v|mkv|m4a|aac|mp3|ogg|wav)$/i.test(
+      n
+    )
+  ) {
+    return false;
+  }
+  return !n.includes(".") || /^[a-z0-9]{20,}[-_].+/i.test(n);
+}
+
 export function isVideoAttachment(
   url?: string | null,
   body?: string | null
@@ -192,7 +206,24 @@ export function isVideoAttachment(
   if (body?.includes("🎥") || /\[video\]/i.test(body || "")) return true;
   if (!url) return false;
   const hay = mediaHaystack(url);
-  return /\.(mp4|mov|webm|m4v|mkv)(\?|#|$)/i.test(hay);
+  if (/\.(mp4|mov|webm|m4v|mkv)(\?|#|$)/i.test(hay)) return true;
+  if (isImageAttachment(url) || isPdfAttachment(url)) return false;
+  try {
+    const last = decodeURIComponent(url.split("?")[0].split("/").pop() || "");
+    const blobParam = (() => {
+      try {
+        return new URL(url).searchParams.get("url");
+      } catch {
+        return null;
+      }
+    })();
+    const nested = blobParam
+      ? decodeURIComponent(blobParam.split("?")[0].split("/").pop() || "")
+      : "";
+    return isOpaqueBlobFileName(last) || isOpaqueBlobFileName(nested);
+  } catch {
+    return false;
+  }
 }
 
 export function isImageAttachment(url?: string | null) {
