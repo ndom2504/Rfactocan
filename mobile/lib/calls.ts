@@ -145,10 +145,20 @@ export async function fetchLivekitJoin(callId: string): Promise<{
   }
 }
 
-export async function listCalls(limit = 50): Promise<CallHistoryItem[]> {
+export type CallListFilter = "recent" | "missed" | "inbound" | "outbound";
+
+export async function listCalls(
+  limit = 50,
+  filter: CallListFilter = "recent"
+): Promise<CallHistoryItem[]> {
   try {
+    const params = new URLSearchParams();
+    params.set("limit", String(Math.min(Math.max(limit, 1), 100)));
+    if (filter === "missed") params.set("missed", "1");
+    if (filter === "inbound") params.set("direction", "inbound");
+    if (filter === "outbound") params.set("direction", "outbound");
     const data = await api<{ calls?: CallHistoryItem[] }>(
-      `/api/calls?limit=${Math.min(Math.max(limit, 1), 100)}`
+      `/api/calls?${params.toString()}`
     );
     return data.calls ?? [];
   } catch {

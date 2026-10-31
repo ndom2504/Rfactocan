@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -17,11 +18,19 @@ import {
   createOutgoingCall,
   listCalls,
   type CallHistoryItem,
+  type CallListFilter,
 } from "@/lib/calls";
 import { formatChatListTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
+
+const FILTERS: { id: CallListFilter; labelKey: string }[] = [
+  { id: "recent", labelKey: "calls_filter_recent" },
+  { id: "missed", labelKey: "calls_filter_missed" },
+  { id: "inbound", labelKey: "calls_filter_incoming" },
+  { id: "outbound", labelKey: "calls_filter_outgoing" },
+];
 
 function Avatar({ name, url }: { name: string; url?: string | null }) {
   const colors = useOptionalTheme()?.colors ?? lightColors;
@@ -75,6 +84,7 @@ export default function CallsScreen() {
   const { t } = useI18n();
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const { startOutgoing } = useCallActions();
+  const [filter, setFilter] = useState<CallListFilter>("recent");
   const [items, setItems] = useState<CallHistoryItem[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -84,14 +94,14 @@ export default function CallsScreen() {
     setLoading(true);
     setError("");
     try {
-      const calls = await listCalls(50);
+      const calls = await listCalls(50, filter);
       setItems(calls);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filter]);
 
   useFocusEffect(
     useCallback(() => {
@@ -137,9 +147,44 @@ export default function CallsScreen() {
         onRefresh={() => void load()}
         contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
         ListHeaderComponent={
-          <View style={{ marginBottom: 8 }}>
-            <Title>{t("calls_title")}</Title>
-            <Muted>{t("calls_subtitle")}</Muted>
+          <View style={{ marginBottom: 8, gap: 10 }}>
+            <View>
+              <Title>{t("calls_title")}</Title>
+              <Muted>{t("calls_subtitle")}</Muted>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+            >
+              {FILTERS.map((f) => {
+                const active = filter === f.id;
+                return (
+                  <Pressable
+                    key={f.id}
+                    onPress={() => setFilter(f.id)}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      backgroundColor: active ? colors.accent : colors.surface2,
+                      borderWidth: 1,
+                      borderColor: active ? colors.accent : colors.border,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: active ? "#fff" : colors.foreground,
+                        fontWeight: active ? "700" : "600",
+                        fontSize: 13,
+                      }}
+                    >
+                      {t(f.labelKey)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
             <ErrorText>{error}</ErrorText>
           </View>
         }

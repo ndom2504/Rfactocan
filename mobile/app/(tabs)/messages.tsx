@@ -237,26 +237,35 @@ export default function MessagesScreen() {
 
       for (const th of dm.threads ?? []) {
         const lastCall = th.lastCall ?? null;
+        const hasMessage = Boolean(
+          th.lastMessage?.body?.trim() || th.lastMessage?.attachmentUrl
+        );
+        const unread = th.unreadCount ?? 0;
+        // Always show last message text when present (especially unread).
+        // Call status only when there is no message yet.
         const lastMsgAt = th.lastMessageAt
           ? new Date(th.lastMessageAt).getTime()
-          : 0;
+          : th.lastMessage?.createdAt
+            ? new Date(th.lastMessage.createdAt).getTime()
+            : 0;
         const lastCallAt = lastCall?.createdAt
           ? new Date(lastCall.createdAt).getTime()
           : 0;
-        const callIsNewer = Boolean(lastCall && lastCallAt >= lastMsgAt);
+        const callOnly = Boolean(lastCall) && !hasMessage;
         const missedInbound =
-          Boolean(lastCall) &&
+          callOnly &&
           (lastCall!.missed ||
             (lastCall!.status || "").toUpperCase() === "MISSED") &&
           lastCall!.direction === "inbound";
-        let preview = previewOf(
-          th.lastMessage?.body,
-          th.lastMessage?.attachmentUrl,
-          t("no_messages")
-        );
-        if (callIsNewer && lastCall) {
-          preview = t(callStatusPreviewKey(lastCall));
-        }
+        const preview = hasMessage
+          ? previewOf(
+              th.lastMessage?.body,
+              th.lastMessage?.attachmentUrl,
+              t("no_messages")
+            )
+          : lastCall
+            ? t(callStatusPreviewKey(lastCall))
+            : t("no_messages");
         next.push({
           key: `dm-${th.id}`,
           href: `/messages/${th.id}`,
@@ -265,13 +274,13 @@ export default function MessagesScreen() {
           online: Boolean(th.peer?.online),
           title: th.peer?.displayName || "Contact",
           preview,
-          previewMissed: missedInbound && callIsNewer,
+          previewMissed: missedInbound,
           date:
             th.activityAt ??
-            (callIsNewer && lastCall
+            (lastCallAt > lastMsgAt && lastCall
               ? lastCall.createdAt
-              : th.lastMessageAt ?? th.updatedAt ?? null),
-          unreadCount: th.unreadCount ?? 0,
+              : th.lastMessageAt ?? th.lastMessage?.createdAt ?? th.updatedAt ?? null),
+          unreadCount: unread,
         });
       }
 
