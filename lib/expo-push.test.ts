@@ -11,4 +11,9 @@ describe("isExpoPushToken", () => {
     assert.equal(isExpoPushToken("dGVzdC1mY20tdG9rZW4tbG9uZw"), false);
     assert.equal(isExpoPushToken("a".repeat(64)), false);
   });
+
+  it("rejette vide / null", () => {
+    assert.equal(isExpoPushToken(""), false);
+    assert.equal(isExpoPushToken(null), false);
+  });
 });

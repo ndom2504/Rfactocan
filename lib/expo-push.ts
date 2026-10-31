@@ -1,4 +1,6 @@
-/** Expo Push Service — iOS TestFlight tokens (`ExponentPushToken[...]`). */
+/** Expo Push Service — iOS TestFlight / App Store tokens (`ExponentPushToken[...]`). */
+
+import { prisma } from "@/lib/prisma";
 
 export function isExpoPushToken(token?: string | null) {
   return Boolean(token && token.startsWith("ExponentPushToken["));
@@ -15,7 +17,15 @@ type ExpoMessage = {
   priority?: "default" | "normal" | "high";
   ttl?: number;
   interruptionLevel?: "active" | "critical" | "passive" | "time-sensitive";
+  /** Only for silent/background wake — do NOT set on normal alerts or iOS may hide the banner. */
   _contentAvailable?: boolean;
+};
+
+type ExpoTicket = {
+  status?: string;
+  id?: string;
+  message?: string;
+  details?: { error?: string };
 };
 
 export async function sendExpoPushToTokens(input: {
@@ -30,6 +40,8 @@ export async function sendExpoPushToTokens(input: {
   const unique = [...new Set(input.tokens)].filter(isExpoPushToken);
   if (unique.length === 0) return { sent: 0 };
 
+  // Visible alert for messages. content-available alone = silent (no banner) on iOS.
+  // Only wake silently for incoming-call handoff when we also need background fetch.
   const messages: ExpoMessage[] = unique.map((to) => ({
     to,
     title: input.title,
@@ -41,10 +53,11 @@ export async function sendExpoPushToTokens(input: {
     priority: "high",
     ttl: input.ttlSeconds,
     interruptionLevel: input.incomingCall ? "time-sensitive" : "active",
-    _contentAvailable: true,
+    ...(input.incomingCall ? { _contentAvailable: true } : {}),
   }));
 
   let sent = 0;
+  const invalidTokens: string[] = [];
   const chunkSize = 100;
   for (let i = 0; i < messages.length; i += chunkSize) {
     const chunk = messages.slice(i, i + chunkSize);
@@ -62,13 +75,33 @@ export async function sendExpoPushToTokens(input: {
         console.error("[expo-push] HTTP", res.status, await res.text());
         continue;
       }
-      const json = (await res.json()) as {
-        data?: Array<{ status?: string }>;
-      };
-      sent += (json.data ?? []).filter((row) => row.status === "ok").length;
+      const json = (await res.json()) as { data?: ExpoTicket[] };
+      const tickets = json.data ?? [];
+      tickets.forEach((ticket, idx) => {
+        if (ticket.status === "ok") {
+          sent += 1;
+          return;
+        }
+        const err = ticket.details?.error || ticket.message || "unknown";
+        console.error("[expo-push] ticket error", err, chunk[idx]?.to?.slice(0, 32));
+        if (
+          err === "DeviceNotRegistered" ||
+          err === "InvalidCredentials" ||
+          /not.?registered/i.test(err)
+        ) {
+          invalidTokens.push(chunk[idx].to);
+        }
+      });
     } catch (error) {
       console.error("[expo-push] send failed", error);
     }
   }
+
+  if (invalidTokens.length > 0) {
+    await prisma.deviceToken
+      .deleteMany({ where: { token: { in: invalidTokens } } })
+      .catch((error) => console.error("[expo-push] prune tokens", error));
+  }
+
   return { sent };
 }

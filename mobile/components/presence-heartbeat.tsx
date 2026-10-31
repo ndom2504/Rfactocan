@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AppState } from "react-native";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { sendLocationIfAllowed } from "@/lib/device-permissions";
+import { registerPushToken } from "@/lib/push";
 
 /** Marks the signed-in user as online while the app is in the foreground. */
 export function PresenceHeartbeat() {
@@ -15,6 +16,9 @@ export function PresenceHeartbeat() {
     async function beat() {
       if (cancelled || AppState.currentState !== "active") return;
       try {
+        // Re-register push when returning to foreground (user may have
+        // enabled notifications in Settings after first launch).
+        await registerPushToken();
         await api("/api/presence", { method: "POST" });
         await sendLocationIfAllowed();
       } catch {

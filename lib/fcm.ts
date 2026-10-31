@@ -73,9 +73,9 @@ export async function sendFcmToUsers(input: {
   };
 
   const expoTokens = tokens.filter((t) => isExpoPushToken(t.token));
-  const fcmTokens = tokens.filter(
-    (t) => !isExpoPushToken(t.token) && t.platform.toUpperCase() !== "IOS"
-  );
+  // Non-Expo tokens (Android FCM, or legacy iOS APNs via Firebase).
+  // Expo iOS tokens must go through Expo Push — never drop raw iOS tokens silently.
+  const fcmTokens = tokens.filter((t) => !isExpoPushToken(t.token));
 
   let sent = 0;
   const expo = await sendExpoPushToTokens({

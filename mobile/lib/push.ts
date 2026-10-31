@@ -166,37 +166,64 @@ async function ensureAndroidChannels(Notifications: NotificationsModule) {
   }
 }
 
+let registerInFlight: Promise<void> | null = null;
+let lastRegisteredToken = "";
+
 export async function registerPushToken() {
   if (isExpoGo() || !Device.isDevice) return;
-  const Notifications = await loadNotifications();
-  if (!Notifications) return;
-  try {
-    const current = await Notifications.getPermissionsAsync();
-    let status = current.status;
-    if (status !== "granted") {
-      const asked = await Notifications.requestPermissionsAsync({
-        ios: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-        },
+  if (registerInFlight) return registerInFlight;
+  registerInFlight = (async () => {
+    const Notifications = await loadNotifications();
+    if (!Notifications) return;
+    try {
+      const current = await Notifications.getPermissionsAsync();
+      let status = current.status;
+      if (status !== "granted") {
+        const asked = await Notifications.requestPermissionsAsync({
+          ios: {
+            allowAlert: true,
+            allowBadge: true,
+            allowSound: true,
+            allowDisplayInCarPlay: false,
+            allowCriticalAlerts: false,
+            provideAppNotificationSettings: false,
+            allowProvisional: false,
+          },
+        });
+        status = asked.status;
+      }
+      if (status !== "granted") {
+        console.warn("[push] permission not granted", status);
+        return;
+      }
+
+      // Required on iOS so APNs device token is issued before Expo token.
+      await Notifications.getDevicePushTokenAsync().catch((error) => {
+        console.warn("[push] device token", error);
       });
-      status = asked.status;
+
+      await ensureAndroidChannels(Notifications);
+      const token = await readPushToken(Notifications);
+      if (token.length < 20) {
+        console.warn("[push] empty expo/device token");
+        return;
+      }
+      if (token === lastRegisteredToken) return;
+      await api("/api/devices/fcm", {
+        method: "POST",
+        body: JSON.stringify({
+          token,
+          platform: Platform.OS === "ios" ? "IOS" : "ANDROID",
+        }),
+      });
+      lastRegisteredToken = token;
+    } catch (error) {
+      console.warn("[push] register skipped", error);
     }
-    if (status !== "granted") return;
-    await ensureAndroidChannels(Notifications);
-    const token = await readPushToken(Notifications);
-    if (token.length < 20) return;
-    await api("/api/devices/fcm", {
-      method: "POST",
-      body: JSON.stringify({
-        token,
-        platform: Platform.OS === "ios" ? "IOS" : "ANDROID",
-      }),
-    });
-  } catch (error) {
-    console.warn("[push] register skipped", error);
-  }
+  })().finally(() => {
+    registerInFlight = null;
+  });
+  return registerInFlight;
 }
 
 export async function unregisterPushToken() {
@@ -205,6 +232,7 @@ export async function unregisterPushToken() {
   if (!Notifications) return;
   try {
     const token = await readPushToken(Notifications);
+    lastRegisteredToken = "";
     if (token.length < 20) return;
     await api("/api/devices/fcm", {
       method: "DELETE",
