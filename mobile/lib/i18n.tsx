@@ -292,6 +292,9 @@ const FR = {
   profile_open_settings: "Paramètres du compte",
   settings_title: "Paramètres",
   settings_subtitle: "Identité, portefeuille, charte, devise et compte.",
+  push_test_cta: "Tester les notifications",
+  push_test_ok: "Notification de test envoyée. Fermez l’app pour vérifier.",
+  push_test_failed: "Échec du test de notification.",
   profile_saved: "Profil mis à jour.",
   profile_banner: "Bannière de profil",
   profile_banner_hint:
@@ -1086,6 +1089,9 @@ const EN: Record<keyof typeof FR, string> = {
   profile_open_settings: "Account settings",
   settings_title: "Settings",
   settings_subtitle: "Identity, wallet, charter, currency and account.",
+  push_test_cta: "Test notifications",
+  push_test_ok: "Test notification sent. Close the app to verify.",
+  push_test_failed: "Notification test failed.",
   profile_saved: "Profile updated.",
   profile_banner: "Profile banner",
   profile_banner_hint:

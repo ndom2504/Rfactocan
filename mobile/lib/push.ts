@@ -168,9 +168,21 @@ async function ensureAndroidChannels(Notifications: NotificationsModule) {
 }
 
 let registerInFlight: Promise<void> | null = null;
-let lastRegisteredToken = "";
+let lastPostedToken = "";
+let lastPostedAt = 0;
 
-export async function registerPushToken() {
+export async function clearAppBadge() {
+  if (isExpoGo()) return;
+  const Notifications = await loadNotifications();
+  if (!Notifications) return;
+  try {
+    await Notifications.setBadgeCountAsync(0);
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function registerPushToken(force = false) {
   if (isExpoGo() || !Device.isDevice) return;
   if (registerInFlight) return registerInFlight;
   registerInFlight = (async () => {
@@ -209,7 +221,12 @@ export async function registerPushToken() {
         console.warn("[push] empty expo/device token");
         return;
       }
-      if (token === lastRegisteredToken) return;
+      // Always upsert at least every 6h (or when forced) so pruned server tokens recover.
+      const freshEnough =
+        !force &&
+        token === lastPostedToken &&
+        Date.now() - lastPostedAt < 6 * 60 * 60 * 1000;
+      if (freshEnough) return;
       await api("/api/devices/fcm", {
         method: "POST",
         body: JSON.stringify({
@@ -217,7 +234,8 @@ export async function registerPushToken() {
           platform: Platform.OS === "ios" ? "IOS" : "ANDROID",
         }),
       });
-      lastRegisteredToken = token;
+      lastPostedToken = token;
+      lastPostedAt = Date.now();
     } catch (error) {
       console.warn("[push] register skipped", error);
     }
@@ -227,13 +245,52 @@ export async function registerPushToken() {
   return registerInFlight;
 }
 
+/** Ask permission, register token, then ask the API to send a test push. */
+export async function testPushNotification(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  await registerPushToken(true);
+  try {
+    const data = await api<{
+      ok?: boolean;
+      sent?: number;
+      error?: string;
+      hint?: string;
+      tokens?: Array<{ platform: string; expo: boolean }>;
+    }>("/api/devices/push-test", { method: "POST" });
+    if (!data.ok) {
+      return { ok: false, message: data.error || "Échec du test push." };
+    }
+    if (!data.sent) {
+      return {
+        ok: false,
+        message:
+          data.hint ||
+          "Aucun jeton push envoyé. Activez les notifications dans Réglages iPhone → Rfacto.",
+      };
+    }
+    return {
+      ok: true,
+      message:
+        "Notification de test envoyée. Fermez l’app et vérifiez la bannière.",
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error ? e.message : "Échec du test push.",
+    };
+  }
+}
+
 export async function unregisterPushToken() {
   if (isExpoGo()) return;
   const Notifications = await loadNotifications();
   if (!Notifications) return;
   try {
     const token = await readPushToken(Notifications);
-    lastRegisteredToken = "";
+    lastPostedToken = "";
+    lastPostedAt = 0;
     if (token.length < 20) return;
     await api("/api/devices/fcm", {
       method: "DELETE",

@@ -29,6 +29,7 @@ import { requestTourStart } from "@/lib/guided-tour";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
+import { testPushNotification } from "@/lib/push";
 import { IOS_TESTER_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
 const CURRENCIES = ["CAD", "USD", "EUR", "XOF", "XAF"] as const;
@@ -47,6 +48,7 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showLiability, setShowLiability] = useState(false);
+  const [pushTesting, setPushTesting] = useState(false);
 
   async function load() {
     try {
@@ -254,6 +256,22 @@ export default function SettingsScreen() {
         ) : null}
 
         <View style={{ height: 8 }} />
+        <Button
+          label={t("push_test_cta")}
+          variant="outline"
+          loading={pushTesting}
+          onPress={() => {
+            void (async () => {
+              setPushTesting(true);
+              setError("");
+              setMessage("");
+              const res = await testPushNotification();
+              if (res.ok) setMessage(res.message || t("push_test_ok"));
+              else setError(res.message || t("push_test_failed"));
+              setPushTesting(false);
+            })();
+          }}
+        />
         {sessionUser?.role === "ADMIN" ? (
           <Button
             label={t("admin_open_cta")}
