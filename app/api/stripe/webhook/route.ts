@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { formatMoneyFromCents } from "@/lib/currency";
 import { syncConnectAccount } from "@/lib/connect";
 import { emailPaymentAuthorized } from "@/lib/email";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { markRequestMatchedOnPayment } from "@/lib/payments/expiry";
 import { syncIdentitySessionStatus } from "@/lib/kyc";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
@@ -135,14 +135,14 @@ async function handlePaymentIntent(
         bookingId,
         amountLabel,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.senderId,
         type: "payment_authorized",
         title: "Paiement confirmé",
         body: `${amountLabel} · ${route}`,
         href: `/bookings/${bookingId}`,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.trip.userId,
         type: "payment_authorized",
         title: "Paiement reçu (séquestre)",

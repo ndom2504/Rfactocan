@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { readBookingPeerTyping } from "@/lib/dm-typing";
 
 type Params = { params: Promise<{ id: string }> };
@@ -208,7 +208,7 @@ export async function POST(request: Request, { params }: Params) {
         : "📎 Pièce jointe"
       : text.slice(0, 100);
 
-    void notifyUser({
+    notifyUserBackground({
       userId: recipientId,
       type: "MESSAGE",
       title: `Message de ${session.displayName}`,

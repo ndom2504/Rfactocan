@@ -5,6 +5,7 @@ import { isExpoPushToken } from "./expo-push";
 describe("isExpoPushToken", () => {
   it("accepte les jetons Expo iOS", () => {
     assert.equal(isExpoPushToken("ExponentPushToken[abc]"), true);
+    assert.equal(isExpoPushToken("ExpoPushToken[abc]"), true);
   });
 
   it("ignore les jetons FCM / APNs", () => {

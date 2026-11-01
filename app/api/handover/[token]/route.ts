@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
@@ -124,7 +124,7 @@ export async function POST(_request: Request, { params }: Params) {
   });
 
   const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
-  void notifyUser({
+  notifyUserBackground({
     userId: booking.senderId,
     type: "handed_over",
     title: "Colis remis",

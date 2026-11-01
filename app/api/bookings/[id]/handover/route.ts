@@ -8,7 +8,7 @@ import {
   handoverConfirmUrl,
   handoverExpiry,
 } from "@/lib/handover";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
 
@@ -147,7 +147,7 @@ export async function POST(request: Request, { params }: Params) {
 
       const otherId = isSender ? booking.trip.userId : booking.senderId;
       const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
-      void notifyUser({
+      notifyUserBackground({
         userId: otherId,
         type: "handover_qr",
         title: "QR de remise prêt",
@@ -212,7 +212,7 @@ export async function POST(request: Request, { params }: Params) {
     });
 
     const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
-    void notifyUser({
+    notifyUserBackground({
       userId: booking.senderId,
       type: "handed_over",
       title: "Colis remis",

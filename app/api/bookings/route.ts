@@ -6,7 +6,7 @@ import {
   emailBookingApplication,
   emailBookingProposed,
 } from "@/lib/email";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
 import { userSatisfiesKyc } from "@/lib/kyc-policy";
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
         route,
         bookingId: booking.id,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: trip.userId,
         type: "booking_proposed",
         title: "Nouvelle proposition de colis",
@@ -243,7 +243,7 @@ export async function POST(request: Request) {
         route,
         bookingId: booking.id,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: parcel.userId,
         type: "booking_application",
         title: "Un voyageur a postulé",

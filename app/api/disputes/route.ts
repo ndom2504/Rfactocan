@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { recordBookingEvent } from "@/lib/tracking";
 
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
     });
 
     const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
-    void notifyUser({
+    notifyUserBackground({
       userId: againstUserId,
       type: "dispute_opened",
       title: "Litige ouvert",
@@ -195,7 +195,7 @@ export async function POST(request: Request) {
       select: { id: true },
     });
     for (const admin of admins) {
-      void notifyUser({
+      notifyUserBackground({
         userId: admin.id,
         type: "dispute_admin",
         title: "Nouveau litige",
@@ -263,7 +263,7 @@ export async function PATCH(request: Request) {
 
     const route = `${existing.booking.request.fromCity} → ${existing.booking.request.toCity}`;
     for (const userId of [existing.openedById, existing.againstUserId]) {
-      void notifyUser({
+      notifyUserBackground({
         userId,
         type: "dispute_updated",
         title: "Mise à jour du litige",

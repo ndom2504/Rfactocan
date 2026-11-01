@@ -1,5 +1,5 @@
 import { getPaymentProvider } from "@/lib/payments/provider";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { isStripeConfigured } from "@/lib/stripe";
 import { recordBookingEvent, statusEventLabel } from "@/lib/tracking";
@@ -103,14 +103,14 @@ export async function expireBookingPayment(
           ? "Une autre offre a été payée en premier"
           : "Offre annulée";
 
-  void notifyUser({
+  notifyUserBackground({
     userId: booking.senderId,
     type: "booking_cancelled",
     title: "Offre annulée",
     body: `${reasonLabel} · ${route}`,
     href: `/bookings/${bookingId}`,
   });
-  void notifyUser({
+  notifyUserBackground({
     userId: booking.trip.userId,
     type: "booking_cancelled",
     title: "Offre annulée",
@@ -154,14 +154,14 @@ export async function deletePendingBookingOffer(
 
   await prisma.booking.delete({ where: { id: bookingId } });
 
-  void notifyUser({
+  notifyUserBackground({
     userId: booking.senderId,
     type: "booking_cancelled",
     title: "Offre supprimée",
     body: `Une offre en attente a été supprimée par l'admin · ${route}`,
     href: "/bookings",
   });
-  void notifyUser({
+  notifyUserBackground({
     userId: booking.trip.userId,
     type: "booking_cancelled",
     title: "Offre supprimée",

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { travelerCanReceivePayments } from "@/lib/connect";
 import { emailDelivered, emailPaymentRequested } from "@/lib/email";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { getPaymentProvider, quotePaymentAmount } from "@/lib/payments/provider";
 import {
   ensurePaymentNotExpired,
@@ -231,7 +231,7 @@ export async function PATCH(request: Request, { params }: Params) {
           sender: true,
         },
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.trip.userId,
         type: "price_offer",
         title: "Nouvelle offre de prix",
@@ -506,7 +506,7 @@ export async function PATCH(request: Request, { params }: Params) {
         acceptedBySender: proposedByTraveler,
         amountLabel,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.senderId,
         type: "payment_requested",
         title: "Paiement requis",
@@ -514,7 +514,7 @@ export async function PATCH(request: Request, { params }: Params) {
         href: `/bookings/${booking.id}`,
       });
       if (proposedByTraveler) {
-        void notifyUser({
+        notifyUserBackground({
           userId: booking.trip.userId,
           type: "booking_accepted",
           title: "Candidature acceptée",
@@ -527,7 +527,7 @@ export async function PATCH(request: Request, { params }: Params) {
       booking.status === "PROPOSED" &&
       proposedByTraveler
     ) {
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.trip.userId,
         type: "booking_accepted",
         title: "Candidature acceptée",
@@ -555,14 +555,14 @@ export async function PATCH(request: Request, { params }: Params) {
         bookingId: booking.id,
         payoutLabel,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.senderId,
         type: "delivered",
         title: "Colis livré",
         body: route,
         href: `/bookings/${booking.id}`,
       });
-      void notifyUser({
+      notifyUserBackground({
         userId: booking.trip.userId,
         type: "payout_released",
         title: "Fonds libérés",

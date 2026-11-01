@@ -10,7 +10,7 @@ import {
   getLivekitConfig,
   livekitRoomName,
 } from "@/lib/livekit";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import {
   ACTIVE_CALL_STATUSES,
@@ -250,7 +250,7 @@ export async function createCall(input: {
     });
 
     const callerName = created.caller.displayName?.trim() || "Un membre";
-    void notifyUser({
+    notifyUserBackground({
       userId: created.calleeId,
       type: "INCOMING_CALL",
       title: "Appel entrant",

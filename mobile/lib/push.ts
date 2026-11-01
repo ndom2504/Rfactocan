@@ -95,15 +95,16 @@ async function loadNotifications(): Promise<NotificationsModule | null> {
   }
 }
 
+const EAS_PROJECT_ID = "d8977989-e19b-4dfa-92e3-25e47b779597";
+
 async function readPushToken(Notifications: NotificationsModule) {
   if (Platform.OS === "ios") {
     const projectId =
       Constants.easConfig?.projectId ??
       (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)
-        ?.eas?.projectId;
-    const expo = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined
-    );
+        ?.eas?.projectId ??
+      EAS_PROJECT_ID;
+    const expo = await Notifications.getExpoPushTokenAsync({ projectId });
     return typeof expo.data === "string" ? expo.data.trim() : "";
   }
   const device = await Notifications.getDevicePushTokenAsync();

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { TRACK_STEPS, stepIndex } from "@/lib/tracking";
 import type { BookingStatus } from "@prisma/client";
@@ -152,7 +152,7 @@ export async function POST(request: Request, { params }: Params) {
     });
 
     const route = `${booking.request.fromCity} → ${booking.request.toCity}`;
-    void notifyUser({
+    notifyUserBackground({
       userId: booking.senderId,
       type: "location_shared",
       title: "Position mise à jour",
