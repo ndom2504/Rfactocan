@@ -2,7 +2,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { requestRecordingPermissionsAsync, useAudioPlayer } from "expo-audio";
 import { useCallback, useEffect, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
-import { Button } from "@/components/ui";
 import { mediaUrl } from "@/lib/api";
 import {
   type ActiveCall,
@@ -43,32 +42,49 @@ function RoundControl({
   onPress,
   bg = "rgba(255,255,255,0.18)",
   disabled,
+  size = 58,
+  iconSize = 24,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress?: () => void;
   bg?: string;
   disabled?: boolean;
+  size?: number;
+  iconSize?: number;
 }) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled || !onPress}
-      style={{ alignItems: "center", opacity: disabled ? 0.45 : 1, gap: 8 }}
+      accessibilityLabel={label}
+      style={{
+        alignItems: "center",
+        opacity: disabled ? 0.45 : 1,
+        gap: 10,
+        minWidth: size + 12,
+      }}
     >
       <View
         style={{
-          width: 58,
-          height: 58,
-          borderRadius: 29,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
           backgroundColor: bg,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Ionicons name={icon} size={24} color="#fff" />
+        <Ionicons name={icon} size={iconSize} color="#fff" />
       </View>
-      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+      <Text
+        style={{
+          color: "rgba(255,255,255,0.9)",
+          fontSize: 13,
+          fontWeight: "600",
+          textAlign: "center",
+        }}
+      >
         {label}
       </Text>
     </Pressable>
@@ -270,10 +286,41 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
               onError={setError}
             />
           ) : ringing && inbound ? (
-            <View style={{ flexDirection: "row", gap: 12, width: "100%" }}>
-              <Button
-                label="Décrocher"
+            <View
+              style={{
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "space-evenly",
+                alignItems: "flex-end",
+                paddingBottom: 24,
+                paddingHorizontal: 12,
+              }}
+            >
+              <RoundControl
+                icon="close"
+                label={t("call_decline")}
+                size={72}
+                iconSize={32}
+                bg="#DC2626"
+                disabled={busy}
                 onPress={() => {
+                  if (busy) return;
+                  setBusy(true);
+                  void postCallAction(call.id, "reject").then(() => {
+                    setBusy(false);
+                    onClose();
+                  });
+                }}
+              />
+              <RoundControl
+                icon="call"
+                label={t("call_accept")}
+                size={72}
+                iconSize={32}
+                bg={colors.accent}
+                disabled={busy}
+                onPress={() => {
+                  if (busy) return;
                   void (async () => {
                     const perm = await requestRecordingPermissionsAsync();
                     if (!perm.granted) {
@@ -292,19 +339,6 @@ export function CallOverlay({ call, onUpdate, onClose }: Props) {
                     } else setError("Impossible d’appeler.");
                   })();
                 }}
-                loading={busy}
-              />
-              <Button
-                label="Refuser"
-                variant="danger"
-                onPress={() => {
-                  setBusy(true);
-                  void postCallAction(call.id, "reject").then(() => {
-                    setBusy(false);
-                    onClose();
-                  });
-                }}
-                disabled={busy}
               />
             </View>
           ) : (

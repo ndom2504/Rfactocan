@@ -786,6 +786,8 @@ export default function DirectChatScreen() {
           headerTintColor: colors.accent,
           headerStyle: { backgroundColor: colors.surface },
           headerTitleAlign: "left",
+          headerBackTitle: "",
+          headerBackTitleVisible: false,
           headerTitle: () => (
             <View style={{ maxWidth: 220 }}>
               <Text

@@ -118,10 +118,17 @@ export default function RootLayout() {
         <CallProvider>
         <PushBridge />
         <PresenceHeartbeat />
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            // iOS otherwise shows previous route group name "(tabs)" next to ◀
+            headerBackTitle: "",
+            headerBackTitleVisible: false,
+          }}
+        >
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(tabs)" options={{ title: "" }} />
           <Stack.Screen
             name="trip/[id]"
             options={{ headerShown: true, title: "Voyage" }}
