@@ -1122,9 +1122,10 @@ export default function DirectChatScreen() {
                       borderWidth: mine ? 0 : 1,
                       borderColor: colors.border,
                       borderRadius: 16,
-                      paddingHorizontal: 12,
-                      paddingVertical: voice ? 6 : 8,
+                      paddingHorizontal: voice ? 10 : 12,
+                      paddingVertical: voice ? 8 : 8,
                       justifyContent: "center",
+                      minHeight: voice ? 56 : undefined,
                     }}
                   >
                 {voice && url ? (
@@ -1132,6 +1133,13 @@ export default function DirectChatScreen() {
                     url={url}
                     mine={mine}
                     durationHintSec={parseVoiceDurationSec(item.body)}
+                    statusLabel={
+                      mine
+                        ? item.readAt
+                          ? t("message_read")
+                          : t("message_delivered")
+                        : undefined
+                    }
                   />
                 ) : url ? (
                   <View>
@@ -1346,7 +1354,7 @@ export default function DirectChatScreen() {
                 ) : null}
                   </View>
                 </Pressable>
-                {mine ? (
+                {mine && !voice ? (
                   <Text
                     style={{
                       fontSize: 10,

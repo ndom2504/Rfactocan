@@ -10,17 +10,19 @@ import {
   waveformFromKey,
 } from "@/lib/voice";
 
-const ROW_H = 44;
 const WAVE_H = 28;
 
 export function VoiceNoteBubble({
   url,
   mine = false,
   durationHintSec = 0,
+  statusLabel,
 }: {
   url: string;
   mine?: boolean;
   durationHintSec?: number;
+  /** Optional delivery label shown on the same footer row as the duration. */
+  statusLabel?: string;
 }) {
   const player = useAudioPlayer(url, { updateInterval: 200 });
   const status = useAudioPlayerStatus(player);
@@ -67,81 +69,99 @@ export function VoiceNoteBubble({
   return (
     <View
       style={{
-        width: 230,
-        height: ROW_H,
+        width: 220,
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
+        gap: 10,
       }}
     >
       <Pressable
         onPress={toggle}
-        hitSlop={4}
+        hitSlop={6}
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
+          width: 42,
+          height: 42,
+          borderRadius: 21,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: mine ? "rgba(255,255,255,0.2)" : colors.accent,
+          backgroundColor: mine ? "rgba(255,255,255,0.22)" : colors.accent,
         }}
       >
         <Ionicons
           name={status.playing ? "pause" : "play"}
-          size={18}
+          size={20}
           color={colors.white}
           style={{ marginLeft: status.playing ? 0 : 2 }}
         />
       </Pressable>
-      <View
-        style={{
-          flex: 1,
-          height: WAVE_H,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 1.5,
-        }}
-      >
-        {bars.map((h, i) => {
-          const barH = Math.max(4, Math.round(h * WAVE_H));
-          return (
-            <Pressable
-              key={i}
-              onPress={() => seek(i)}
-              style={{
-                width: 3,
-                height: WAVE_H,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <View
+
+      <View style={{ flex: 1, justifyContent: "center", gap: 6 }}>
+        <View
+          style={{
+            height: WAVE_H,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 1.5,
+          }}
+        >
+          {bars.map((h, i) => {
+            const barH = Math.max(3, Math.round(h * WAVE_H));
+            return (
+              <Pressable
+                key={i}
+                onPress={() => seek(i)}
+                hitSlop={2}
                 style={{
                   width: 3,
-                  height: barH,
-                  borderRadius: 99,
-                  backgroundColor:
-                    i / bars.length <= progress ? played : rest,
+                  height: WAVE_H,
+                  justifyContent: "center",
                 }}
-              />
-            </Pressable>
-          );
-        })}
+              >
+                <View
+                  style={{
+                    width: 3,
+                    height: barH,
+                    borderRadius: 99,
+                    backgroundColor:
+                      i / bars.length <= progress ? played : rest,
+                  }}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 11,
+              lineHeight: 13,
+              includeFontPadding: false,
+              color: mine ? "rgba(255,255,255,0.85)" : colors.muted,
+            }}
+          >
+            {timeLabel}
+          </Text>
+          {statusLabel ? (
+            <Text
+              style={{
+                fontSize: 10,
+                lineHeight: 12,
+                includeFontPadding: false,
+                color: mine ? "rgba(255,255,255,0.7)" : colors.muted,
+              }}
+            >
+              {statusLabel}
+            </Text>
+          ) : null}
+        </View>
       </View>
-      <Text
-        style={{
-          fontSize: 11,
-          lineHeight: 14,
-          minWidth: 34,
-          textAlign: "right",
-          textAlignVertical: "center",
-          includeFontPadding: false,
-          color: mine ? "rgba(255,255,255,0.85)" : colors.muted,
-        }}
-      >
-        {timeLabel}
-      </Text>
     </View>
   );
 }
