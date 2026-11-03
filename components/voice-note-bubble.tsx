@@ -139,69 +139,76 @@ export function VoiceNoteBubble({
 
   return (
     <div
-      className="flex w-[230px] flex-col gap-1 py-0.5"
+      className="flex h-11 w-[230px] items-center gap-2"
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center gap-2">
-        <audio
-          ref={audioRef}
-          src={url}
-          preload="auto"
-          playsInline
-          data-rfacto-voice
-        />
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            void toggle();
-          }}
-          className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-            mine ? "bg-white/20 text-white" : "bg-[var(--accent)] text-white"
-          )}
-          aria-label={playing ? "Pause" : "Lecture"}
-          disabled={busy}
-        >
-          {busy ? (
-            <span className="text-xs">…</span>
-          ) : playing ? (
-            <span className="text-lg leading-none">❚❚</span>
-          ) : (
-            <span className="pl-0.5 text-lg leading-none">▶</span>
-          )}
-        </button>
-        <div className="min-w-0 flex-1">
-          <div className="flex h-7 items-end gap-px">
-            {bars.map((h, i) => (
-              <button
-                key={i}
-                type="button"
-                className={cn(
-                  "w-[3px] min-h-[4px] rounded-full",
-                  i / bars.length <= progress ? played : rest
-                )}
-                style={{ height: `${Math.round(h * 100)}%` }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  seek(i);
-                }}
-                aria-hidden
-              />
-            ))}
-          </div>
-          <p className={cn("mt-0.5 text-[11px]", mine ? "text-white/80" : "text-[var(--muted)]")}>
-            {formatTime(
-              playing || progress > 0
-                ? current
-                : duration > 0
-                  ? duration
-                  : durationHintSec
+      <audio
+        ref={audioRef}
+        src={url}
+        preload="auto"
+        playsInline
+        data-rfacto-voice
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          void toggle();
+        }}
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+          mine ? "bg-white/20 text-white" : "bg-[var(--accent)] text-white"
+        )}
+        aria-label={playing ? "Pause" : "Lecture"}
+        disabled={busy}
+      >
+        {busy ? (
+          <span className="text-xs">…</span>
+        ) : playing ? (
+          <span className="text-lg leading-none">❚❚</span>
+        ) : (
+          <span className="pl-0.5 text-lg leading-none">▶</span>
+        )}
+      </button>
+      <div className="flex h-7 min-w-0 flex-1 items-center gap-px">
+        {bars.map((h, i) => (
+          <button
+            key={i}
+            type="button"
+            className={cn(
+              "flex h-7 w-[3px] items-center justify-center rounded-full p-0"
             )}
-          </p>
-        </div>
+            onClick={(e) => {
+              e.stopPropagation();
+              seek(i);
+            }}
+            aria-hidden
+          >
+            <span
+              className={cn(
+                "block w-[3px] min-h-[4px] rounded-full",
+                i / bars.length <= progress ? played : rest
+              )}
+              style={{ height: `${Math.round(h * 100)}%` }}
+            />
+          </button>
+        ))}
       </div>
+      <span
+        className={cn(
+          "min-w-[34px] text-right text-[11px] leading-none",
+          mine ? "text-white/85" : "text-[var(--muted)]"
+        )}
+      >
+        {formatTime(
+          playing || progress > 0
+            ? current
+            : duration > 0
+              ? duration
+              : durationHintSec
+        )}
+      </span>
       {error ? (
         <a
           href={url}
@@ -212,7 +219,7 @@ export function VoiceNoteBubble({
             mine ? "text-white/90" : "text-[var(--foreground)]"
           )}
         >
-          Ouvrir l’audio
+          Ouvrir
         </a>
       ) : null}
     </div>

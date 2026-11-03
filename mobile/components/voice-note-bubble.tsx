@@ -10,6 +10,9 @@ import {
   waveformFromKey,
 } from "@/lib/voice";
 
+const ROW_H = 44;
+const WAVE_H = 28;
+
 export function VoiceNoteBubble({
   url,
   mine = false,
@@ -65,18 +68,20 @@ export function VoiceNoteBubble({
     <View
       style={{
         width: 230,
-        minHeight: 40,
+        height: ROW_H,
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "center",
         gap: 8,
       }}
     >
       <Pressable
         onPress={toggle}
+        hitSlop={4}
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: 36,
+          height: 36,
+          borderRadius: 18,
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: mine ? "rgba(255,255,255,0.2)" : colors.accent,
@@ -86,36 +91,53 @@ export function VoiceNoteBubble({
           name={status.playing ? "pause" : "play"}
           size={18}
           color={colors.white}
+          style={{ marginLeft: status.playing ? 0 : 2 }}
         />
       </Pressable>
       <View
         style={{
           flex: 1,
-          height: 32,
+          height: WAVE_H,
           flexDirection: "row",
           alignItems: "center",
-          gap: 1,
+          gap: 1.5,
         }}
       >
-        {bars.map((h, i) => (
-          <Pressable
-            key={i}
-            onPress={() => seek(i)}
-            style={{
-              width: 3,
-              height: Math.max(4, Math.round(h * 28)),
-              borderRadius: 99,
-              backgroundColor: i / bars.length <= progress ? played : rest,
-            }}
-          />
-        ))}
+        {bars.map((h, i) => {
+          const barH = Math.max(4, Math.round(h * WAVE_H));
+          return (
+            <Pressable
+              key={i}
+              onPress={() => seek(i)}
+              style={{
+                width: 3,
+                height: WAVE_H,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <View
+                style={{
+                  width: 3,
+                  height: barH,
+                  borderRadius: 99,
+                  backgroundColor:
+                    i / bars.length <= progress ? played : rest,
+                }}
+              />
+            </Pressable>
+          );
+        })}
       </View>
       <Text
         style={{
           fontSize: 11,
+          lineHeight: 14,
           minWidth: 34,
           textAlign: "right",
-          color: mine ? "rgba(255,255,255,0.8)" : colors.muted,
+          textAlignVertical: "center",
+          includeFontPadding: false,
+          color: mine ? "rgba(255,255,255,0.85)" : colors.muted,
         }}
       >
         {timeLabel}

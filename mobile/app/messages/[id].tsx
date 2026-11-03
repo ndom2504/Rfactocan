@@ -1123,7 +1123,8 @@ export default function DirectChatScreen() {
                       borderColor: colors.border,
                       borderRadius: 16,
                       paddingHorizontal: 12,
-                      paddingVertical: 8,
+                      paddingVertical: voice ? 6 : 8,
+                      justifyContent: "center",
                     }}
                   >
                 {voice && url ? (

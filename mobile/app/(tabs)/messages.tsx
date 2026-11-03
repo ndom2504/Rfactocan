@@ -163,7 +163,12 @@ function Avatar({
   );
   if (!onPress) return body;
   return (
-    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="button">
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      style={{ zIndex: 2 }}
+    >
       {body}
     </Pressable>
   );
@@ -836,9 +841,6 @@ export default function MessagesScreen() {
         }
         renderItem={({ item }) => {
           const unread = item.unreadCount > 0;
-          const openMember = item.memberId
-            ? () => router.push(`/member/${item.memberId}` as Href)
-            : undefined;
           return (
             <View
               style={{
@@ -855,12 +857,16 @@ export default function MessagesScreen() {
                 url={item.avatarUrl}
                 online={item.online}
                 onPress={
-                  openMember || (() => router.push(item.href))
+                  item.memberId
+                    ? () =>
+                        router.push(`/member/${item.memberId}` as Href)
+                    : undefined
                 }
               />
               <Pressable
                 onPress={() => router.push(item.href)}
                 style={{ flex: 1, minWidth: 0 }}
+                accessibilityRole="button"
               >
                 <View
                   style={{
