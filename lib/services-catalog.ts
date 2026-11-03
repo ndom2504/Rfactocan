@@ -28,6 +28,8 @@ export const SERVICE_CATEGORIES = [
   "transport",
   "transitaire",
   "autre",
+  "produit",
+  "don",
 ] as const;
 
 export type ServiceCategoryId = (typeof SERVICE_CATEGORIES)[number];
@@ -1079,6 +1081,27 @@ export const SERVICE_CATALOG: ServiceCategoryDef[] = [
     hintEn: "Any other useful service",
     isParcel: false,
     types: [{ id: "autre", labelFr: "Autre", labelEn: "Other" }],
+  },
+  {
+    id: "produit",
+    labelFr: "Produit",
+    labelEn: "Product",
+    hintFr: "Un seul article, comme une petite annonce.",
+    hintEn: "A single item, like a classified ad.",
+    isParcel: false,
+    types: [{ id: "article", labelFr: "Article", labelEn: "Item" }],
+  },
+  {
+    id: "don",
+    labelFr: "Don",
+    labelEn: "Gift",
+    hintFr: "Produit ou service offert gratuitement.",
+    hintEn: "A product or service given for free.",
+    isParcel: false,
+    types: [
+      { id: "produit", labelFr: "Produit", labelEn: "Product" },
+      { id: "service", labelFr: "Service", labelEn: "Service" },
+    ],
   },
 ];
 

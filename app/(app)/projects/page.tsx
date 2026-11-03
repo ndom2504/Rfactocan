@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,15 @@ type ServiceRow = {
   photos: string[];
 };
 
+type ProductRow = {
+  id: string;
+  title: string;
+  priceCents: number;
+  photoUrl?: string | null;
+  photosJson?: string | null;
+  active: boolean;
+};
+
 type ShopRow = {
   id: string;
   name: string;
@@ -33,10 +42,42 @@ type ShopRow = {
   city: string;
   country: string;
   status: string;
+  currency?: string;
   coverUrl?: string | null;
   logoUrl?: string | null;
+  products?: ProductRow[];
   _count?: { products: number };
 };
+
+function productCover(product: ProductRow) {
+  if (product.photoUrl) return product.photoUrl;
+  try {
+    const photos = JSON.parse(product.photosJson || "[]") as unknown;
+    if (Array.isArray(photos) && typeof photos[0] === "string") return photos[0];
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function OptionsMenu({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="relative">
+      <summary className="cursor-pointer list-none rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm font-medium">
+        {label}
+      </summary>
+      <div className="absolute right-0 z-20 mt-1 flex min-w-44 flex-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
+        {children}
+      </div>
+    </details>
+  );
+}
 
 export default function MyProjectsPage() {
   const { t, locale } = useI18n();
@@ -67,6 +108,7 @@ export default function MyProjectsPage() {
 
   function serviceStatusLabel(status: string) {
     if (status === "OPEN") return t("my_projects_status_open");
+    if (status === "PAUSED") return t("my_projects_status_paused");
     if (status === "CLOSED") return t("my_projects_status_closed");
     return status;
   }
@@ -89,6 +131,116 @@ export default function MyProjectsPage() {
         return;
       }
       setServices((prev) => prev.filter((s) => s.id !== id));
+    } catch {
+      setActionError(t("my_projects_share_error"));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function setServiceStatus(id: string, status: "OPEN" | "PAUSED") {
+    setBusyId(id);
+    setActionError("");
+    try {
+      const res = await fetch(`/api/services/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(data.error || t("my_projects_share_error"));
+        return;
+      }
+      setServices((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status } : s))
+      );
+    } catch {
+      setActionError(t("my_projects_share_error"));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function setShopStatus(id: string, action: "publish" | "pause") {
+    setBusyId(id);
+    setActionError("");
+    try {
+      const res = await fetch(`/api/shops/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(data.error || t("my_projects_share_error"));
+        return;
+      }
+      const status = action === "publish" ? "OPEN" : "DRAFT";
+      setShops((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
+    } catch {
+      setActionError(t("my_projects_share_error"));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function setProductActive(shopId: string, productId: string, active: boolean) {
+    setBusyId(productId);
+    setActionError("");
+    try {
+      const res = await fetch(`/api/shops/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(data.error || t("my_projects_share_error"));
+        return;
+      }
+      setShops((prev) =>
+        prev.map((shop) =>
+          shop.id === shopId
+            ? {
+                ...shop,
+                products: (shop.products ?? []).map((p) =>
+                  p.id === productId ? { ...p, active } : p
+                ),
+              }
+            : shop
+        )
+      );
+    } catch {
+      setActionError(t("my_projects_share_error"));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteProduct(shopId: string, productId: string) {
+    if (!confirm(t("my_projects_delete_service_confirm"))) return;
+    setBusyId(productId);
+    setActionError("");
+    try {
+      const res = await fetch(`/api/shops/products/${productId}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setActionError(data.error || t("my_projects_share_error"));
+        return;
+      }
+      setShops((prev) =>
+        prev.map((shop) =>
+          shop.id === shopId
+            ? {
+                ...shop,
+                products: (shop.products ?? []).map((p) =>
+                  p.id === productId ? { ...p, active: false } : p
+                ),
+              }
+            : shop
+        )
+      );
     } catch {
       setActionError(t("my_projects_share_error"));
     } finally {
@@ -176,7 +328,7 @@ export default function MyProjectsPage() {
               return (
                 <Card key={s.id} className="overflow-hidden p-0">
                   <div className="flex flex-col sm:flex-row">
-                    <div className="relative h-28 w-full shrink-0 bg-[var(--surface-2)] sm:h-auto sm:w-32">
+                    <div className="relative h-40 w-full shrink-0 bg-[var(--surface-2)] sm:h-auto sm:w-44">
                       {cover ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -214,15 +366,28 @@ export default function MyProjectsPage() {
                         )}
                         <Badge className="mt-2">{serviceStatusLabel(s.status)}</Badge>
                       </div>
-                      <div className="flex shrink-0 flex-wrap gap-2">
-                        <Link href={`/services/listing/${s.id}`}>
-                          <Button size="sm" variant="outline">
-                            {t("open")}
+                      <OptionsMenu label={t("my_projects_options")}>
+                        <Link href={`/services/listing/${s.id}/edit`}>
+                          <Button size="sm" variant="ghost" className="w-full justify-start">
+                            {t("my_projects_edit")}
                           </Button>
                         </Link>
-                        <Link href={`/services/listing/${s.id}/edit`}>
-                          <Button size="sm">{t("my_projects_edit")}</Button>
-                        </Link>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="w-full justify-start"
+                          disabled={busyId === s.id}
+                          onClick={() =>
+                            void setServiceStatus(
+                              s.id,
+                              s.status === "PAUSED" ? "OPEN" : "PAUSED"
+                            )
+                          }
+                        >
+                          {s.status === "PAUSED"
+                            ? t("my_projects_resume")
+                            : t("my_projects_pause")}
+                        </Button>
                         <ShareProjectToCommunityButton
                           kind="service"
                           title={s.title}
@@ -235,12 +400,13 @@ export default function MyProjectsPage() {
                         <Button
                           size="sm"
                           variant="danger"
+                          className="w-full justify-start"
                           disabled={busyId === s.id}
                           onClick={() => void deleteService(s.id)}
                         >
-                          {busyId === s.id ? t("loading") : t("my_projects_delete")}
+                          {t("my_projects_delete")}
                         </Button>
-                      </div>
+                      </OptionsMenu>
                     </div>
                   </div>
                 </Card>
@@ -261,7 +427,7 @@ export default function MyProjectsPage() {
               return (
                 <Card key={s.id} className="overflow-hidden p-0">
                   <div className="flex flex-col sm:flex-row">
-                    <div className="relative h-28 w-full shrink-0 bg-[var(--surface-2)] sm:h-auto sm:w-32">
+                    <div className="relative h-40 w-full shrink-0 bg-[var(--surface-2)] sm:h-auto sm:w-44">
                       {cover ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -287,15 +453,28 @@ export default function MyProjectsPage() {
                           {t("shops_products").toLowerCase()}
                         </p>
                       </div>
-                      <div className="flex shrink-0 flex-wrap gap-2">
-                        <Link href={`/shops/${s.id}`}>
-                          <Button size="sm" variant="outline">
-                            {t("open")}
+                      <OptionsMenu label={t("my_projects_options")}>
+                        <Link href={`/shops/${s.id}/manage`}>
+                          <Button size="sm" variant="ghost" className="w-full justify-start">
+                            {t("my_projects_edit")}
                           </Button>
                         </Link>
-                        <Link href={`/shops/${s.id}/manage`}>
-                          <Button size="sm">{t("shops_manage")}</Button>
-                        </Link>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="w-full justify-start"
+                          disabled={busyId === s.id}
+                          onClick={() =>
+                            void setShopStatus(
+                              s.id,
+                              s.status === "OPEN" ? "pause" : "publish"
+                            )
+                          }
+                        >
+                          {s.status === "OPEN"
+                            ? t("my_projects_pause")
+                            : t("my_projects_resume")}
+                        </Button>
                         <ShareProjectToCommunityButton
                           kind="shop"
                           title={s.name}
@@ -308,14 +487,73 @@ export default function MyProjectsPage() {
                         <Button
                           size="sm"
                           variant="danger"
+                          className="w-full justify-start"
                           disabled={busyId === s.id}
                           onClick={() => void deleteShop(s.id)}
                         >
-                          {busyId === s.id ? t("loading") : t("my_projects_delete")}
+                          {t("my_projects_delete")}
                         </Button>
-                      </div>
+                      </OptionsMenu>
                     </div>
                   </div>
+                  {(s.products ?? []).length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] p-3 sm:grid-cols-4">
+                      {(s.products ?? []).map((product) => {
+                        const photo = productCover(product);
+                        return (
+                          <div
+                            key={product.id}
+                            className={`overflow-hidden rounded-xl border border-[var(--border)] ${product.active ? "" : "opacity-60"}`}
+                          >
+                            <div className="relative h-24 bg-[var(--surface-2)]">
+                              {photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={photo} alt="" className="h-full w-full object-cover" />
+                              ) : null}
+                              <div className="absolute right-1 top-1">
+                                <OptionsMenu label="⋯">
+                                  <Link href={`/shops/${s.id}/manage`}>
+                                    <Button size="sm" variant="ghost" className="w-full justify-start">
+                                      {t("my_projects_edit")}
+                                    </Button>
+                                  </Link>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="w-full justify-start"
+                                    disabled={busyId === product.id}
+                                    onClick={() =>
+                                      void setProductActive(s.id, product.id, !product.active)
+                                    }
+                                  >
+                                    {product.active
+                                      ? t("my_projects_pause")
+                                      : t("my_projects_resume")}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="danger"
+                                    className="w-full justify-start"
+                                    disabled={busyId === product.id}
+                                    onClick={() => void deleteProduct(s.id, product.id)}
+                                  >
+                                    {t("my_projects_delete")}
+                                  </Button>
+                                </OptionsMenu>
+                              </div>
+                            </div>
+                            <p className="truncate px-2 py-1 text-xs font-medium">{product.title}</p>
+                            <p className="px-2 pb-2 text-xs text-[var(--muted)]">
+                              {formatMoney(
+                                product.priceCents / 100,
+                                (normalizeCurrency(s.currency) as MoneyCurrency) ?? "XAF"
+                              )}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </Card>
               );
             })}

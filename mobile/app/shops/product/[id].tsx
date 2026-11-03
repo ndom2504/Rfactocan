@@ -1,7 +1,6 @@
-import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { Image, ScrollView, Text } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Button, ErrorText, Muted, Screen, Title } from "@/components/ui";
 import { api, mediaUrl } from "@/lib/api";
 import { formatMoneyFromCents } from "@/lib/format";
@@ -21,6 +20,8 @@ type Product = {
     id: string;
     name: string;
     currency?: string | null;
+    userId?: string | null;
+    user?: { id?: string | null } | null;
   };
 };
 
@@ -32,7 +33,6 @@ export default function ShopProductScreen() {
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -53,25 +53,6 @@ export default function ShopProductScreen() {
       void load();
     }, [load])
   );
-
-  async function buy() {
-    if (!id) return;
-    setBusy(true);
-    setError("");
-    try {
-      const result = await api<{ checkoutUrl?: string }>("/api/shops/checkout", {
-        method: "POST",
-        body: JSON.stringify({ productId: id, quantity: 1 }),
-      });
-      if (result.checkoutUrl) {
-        await WebBrowser.openBrowserAsync(result.checkoutUrl);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("retry"));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -128,7 +109,13 @@ export default function ShopProductScreen() {
           </Text>
         ) : null}
         <ErrorText>{error}</ErrorText>
-        <Button label={t("shop_buy")} onPress={() => void buy()} loading={busy} />
+        <Button
+          label={t("community_contact")}
+          onPress={() => {
+            const sellerId = product.shop?.user?.id || product.shop?.userId;
+            if (sellerId) router.push(`/member/${sellerId}` as Href);
+          }}
+        />
         <Button
           label={t("shops_orders")}
           variant="outline"

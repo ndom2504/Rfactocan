@@ -38,6 +38,7 @@ const patchSchema = z.object({
   photos: z.array(z.string()).max(5).optional(),
   products: z.array(z.string().min(1).max(80)).max(20).optional(),
   websiteUrl: z.string().max(300).optional().nullable(),
+  status: z.enum(["OPEN", "PAUSED", "CLOSED"]).optional(),
 });
 
 function serialize(listing: {
@@ -214,6 +215,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
           ? { productsJson: JSON.stringify(products) }
           : {}),
         ...(websiteUrl !== undefined ? { websiteUrl } : {}),
+        ...(body.status !== undefined ? { status: body.status } : {}),
       },
     });
 

@@ -1,5 +1,5 @@
 export type CommunityKind = "BUSINESS" | "OPPORTUNITY" | "COMMUNITY";
-export type CommunityFilter = "" | "ANNOUNCE" | "TRIP" | "PARCEL" | "SERVICE";
+export type CommunityFilter = "" | "PRODUCT" | "SERVICE" | "GIFT";
 
 export type CommunityAttachment = {
   url: string;
@@ -40,6 +40,8 @@ export const KIND_LABELS: Record<string, string> = {
   TRIP: "Voyages",
   PARCEL: "Colis",
   SERVICE: "Services",
+  PRODUCT: "Produits",
+  GIFT: "Dons",
   BUSINESS: "Communiqué",
   OPPORTUNITY: "Événement",
   COMMUNITY: "Annonce",
@@ -53,10 +55,9 @@ export const PUBLISH_KINDS: { id: CommunityKind; label: string }[] = [
 
 export const FILTERS: { id: CommunityFilter; label: string }[] = [
   { id: "", label: "Tout" },
-  { id: "ANNOUNCE", label: "Annonces" },
-  { id: "TRIP", label: "Voyages" },
-  { id: "PARCEL", label: "Colis" },
+  { id: "PRODUCT", label: "Produits" },
   { id: "SERVICE", label: "Services" },
+  { id: "GIFT", label: "Dons" },
 ];
 
 export function isNativeCommunityPostId(id: string) {

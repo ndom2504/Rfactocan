@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
-import { travelerCanReceivePayments } from "@/lib/connect";
 import { normalizeCurrency } from "@/lib/currency";
+import { resolveCountryCode } from "@/lib/detect-country";
 import { prisma } from "@/lib/prisma";
 import {
   effectiveProductPriceCents,
@@ -15,7 +15,7 @@ type Ctx = { params: Promise<{ id: string }> };
 const patchSchema = z.object({
   name: z.string().min(2).max(120).optional(),
   description: z.string().max(4000).optional(),
-  country: z.string().min(2).max(2).optional(),
+  country: z.string().min(2).max(80).optional(),
   city: z.string().min(2).max(80).optional(),
   currency: z.string().optional(),
   coverUrl: z.string().max(2000).optional().nullable(),
@@ -29,7 +29,7 @@ const patchSchema = z.object({
       "clothing_accessories",
     ])
     .optional(),
-  action: z.enum(["publish", "close", "draft"]).optional(),
+  action: z.enum(["publish", "close", "draft", "pause"]).optional(),
 });
 
 export async function GET(_request: Request, context: Ctx) {
@@ -82,7 +82,7 @@ export async function GET(_request: Request, context: Ctx) {
     shop: {
       ...shop,
       products,
-      canReceivePayments: travelerCanReceivePayments(shop.user),
+      canReceivePayments: true,
       isOwner,
     },
   });
@@ -115,12 +115,24 @@ export async function PATCH(request: Request, context: Ctx) {
   }
 
   try {
-    const body = patchSchema.parse(await request.json());
+    const raw = await request.json();
+    if (raw && typeof raw.country === "string") {
+      const paren = raw.country.match(/\(([A-Za-z]{2})\)/);
+      const code = paren?.[1]?.toUpperCase() ?? resolveCountryCode(raw.country);
+      if (!code) {
+        return NextResponse.json(
+          { error: "Pays invalide. Choisissez un pays dans la liste." },
+          { status: 400 }
+        );
+      }
+      raw.country = code;
+    }
+    const body = patchSchema.parse(raw);
     const data: Record<string, unknown> = {};
 
     if (body.name !== undefined) data.name = body.name.trim();
     if (body.description !== undefined) data.description = body.description.trim();
-    if (body.country !== undefined) data.country = body.country.toUpperCase();
+    if (body.country !== undefined) data.country = body.country;
     if (body.city !== undefined) data.city = body.city.trim();
     if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null;
     if (body.logoUrl !== undefined) data.logoUrl = body.logoUrl || null;
@@ -131,26 +143,10 @@ export async function PATCH(request: Request, context: Ctx) {
     }
 
     if (body.action === "publish") {
-      if (!travelerCanReceivePayments(shop.user)) {
-        return NextResponse.json(
-          {
-            error:
-              "KYC et Stripe Connect requis pour publier et recevoir des paiements.",
-            code: "PAYOUTS_REQUIRED",
-          },
-          { status: 400 }
-        );
-      }
-      if (shop._count.products < 1) {
-        return NextResponse.json(
-          { error: "Ajoutez au moins un produit actif avant de publier." },
-          { status: 400 }
-        );
-      }
       data.status = "OPEN";
     } else if (body.action === "close") {
       data.status = "CLOSED";
-    } else if (body.action === "draft") {
+    } else if (body.action === "draft" || body.action === "pause") {
       data.status = "DRAFT";
     }
 

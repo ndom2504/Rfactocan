@@ -259,17 +259,23 @@ export default function CommunityScreen() {
         return t("community_kind_parcel");
       case "SERVICE":
         return t("community_kind_service");
+      case "PRODUCT":
+        return t("community_kind_product");
+      case "GIFT":
+        return t("community_kind_gift");
       default:
         return t("filter_all");
     }
   }
 
   function kindLabel(kind: string) {
-    const keys: Record<string, "community_kind_announce" | "community_kind_trip" | "community_kind_parcel" | "community_kind_service" | "community_kind_business" | "community_kind_opportunity" | "community_kind_community"> = {
+    const keys: Record<string, "community_kind_announce" | "community_kind_trip" | "community_kind_parcel" | "community_kind_service" | "community_kind_product" | "community_kind_gift" | "community_kind_business" | "community_kind_opportunity" | "community_kind_community"> = {
       ANNOUNCE: "community_kind_announce",
       TRIP: "community_kind_trip",
       PARCEL: "community_kind_parcel",
       SERVICE: "community_kind_service",
+      PRODUCT: "community_kind_product",
+      GIFT: "community_kind_gift",
       BUSINESS: "community_kind_business",
       OPPORTUNITY: "community_kind_opportunity",
       COMMUNITY: "community_kind_community",
@@ -493,13 +499,6 @@ export default function CommunityScreen() {
       >
         {t("community_announce_prompt")}
       </Text>
-      <View style={{ marginTop: 16, alignSelf: "stretch" }}>
-        <Button
-          label={t("nav_announce")}
-          variant="outline"
-          onPress={() => router.push("/(tabs)/announce")}
-        />
-      </View>
       <View
         style={{
           flexDirection: "row",

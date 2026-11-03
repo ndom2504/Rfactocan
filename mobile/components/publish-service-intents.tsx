@@ -24,6 +24,12 @@ const INTENTS = [
     hintEn: "Online shop to sell.",
   },
   {
+    href: "/listing/new?mode=product" as Href,
+    titleKey: "publish_intent_product" as const,
+    hintFr: "Un seul article : photo, prix, ville. Publié dans la communauté.",
+    hintEn: "One item: photo, price, city. Published in the community.",
+  },
+  {
     href: "/service/new/form" as Href,
     titleKey: "publish_intent_service" as const,
     hintFr: "Services: hébergement, ménage, cours, etc.",

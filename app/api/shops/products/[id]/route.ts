@@ -53,6 +53,7 @@ export async function GET(_request: Request, context: Ctx) {
             select: {
               id: true,
               displayName: true,
+              phone: true,
               avatarUrl: true,
               ratingAvg: true,
               ratingCount: true,

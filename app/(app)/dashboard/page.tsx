@@ -99,15 +99,23 @@ export default async function DashboardPage() {
             variant="outline"
             className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
-            {t(locale, "dashboard_publish_service")}
+            {t(locale, "home_cta_sell")}
           </Button>
         </Link>
-        <Link href="/services" className="w-full" data-tour="search">
+        <Link href="/community" className="w-full" data-tour="search">
           <Button
             variant="outline"
             className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
-            {t(locale, "dashboard_search_service")}
+            {t(locale, "home_cta_buy")}
+          </Button>
+        </Link>
+        <Link href="/listing/new?mode=gift" className="w-full">
+          <Button
+            variant="outline"
+            className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
+          >
+            {t(locale, "home_cta_give")}
           </Button>
         </Link>
         <Link href="/projects" className="w-full">

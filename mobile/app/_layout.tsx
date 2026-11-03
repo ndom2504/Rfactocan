@@ -158,6 +158,10 @@ export default function RootLayout() {
             options={{ headerShown: true, title: "Publier un service" }}
           />
           <Stack.Screen
+            name="listing/new"
+            options={{ headerShown: true, title: "Publier" }}
+          />
+          <Stack.Screen
             name="service/[id]"
             options={{ headerShown: true, title: "Service" }}
           />

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { CommunityPostKind } from "@prisma/client";
 import { getSessionUser } from "@/lib/auth";
-import { openRequestDateWhere, openTripDateWhere } from "@/lib/listing-freshness";
 import {
   attachmentFromImageUrl,
   COMMUNITY_MAX_ATTACHMENTS,
@@ -19,6 +18,10 @@ import {
   communitySourceKey,
   parseCommunityFeedId,
 } from "@/lib/community-source";
+import {
+  templateFromSourceKey,
+  VIRTUAL_POST_TEMPLATES,
+} from "@/lib/virtual-community-posts";
 
 const kindSchema = z.enum(["BUSINESS", "OPPORTUNITY", "COMMUNITY"]);
 
@@ -154,14 +157,31 @@ const AUTHOR_SELECT = {
   bannerUrl: true,
   bio: true,
   country: true,
+  phone: true,
   kycStatus: true,
   ratingAvg: true,
   ratingCount: true,
 } as const;
 
-function matchesKindFilter(kind: string, filter: string) {
-  if (!filter) return true;
-  return kind === filter;
+function marketplaceKind(category: string) {
+  if (category === "produit") return "PRODUCT";
+  if (category === "don") return "GIFT";
+  return "SERVICE";
+}
+
+function wantsMarketplace(filter: string, itemKind: string) {
+  if (!filter || filter === "ALL") return true;
+  return filter === itemKind;
+}
+
+function contactLine(
+  name: string,
+  phone: string | null | undefined,
+  city: string | null | undefined
+) {
+  const who = [name, phone?.trim()].filter(Boolean).join(" · ");
+  const place = city?.trim();
+  return ["Contact : " + who, place].filter(Boolean).join(" · ");
 }
 
 export async function GET(request: Request) {
@@ -180,130 +200,35 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-  const wantAnnounce = !kind || kind === "ANNOUNCE";
-  const wantTrip = matchesKindFilter("TRIP", kind);
-  const wantParcel = matchesKindFilter("PARCEL", kind);
-  const wantService = matchesKindFilter("SERVICE", kind);
-
-  if (wantAnnounce) {
-    try {
-      const posts = await prisma.communityPost.findMany({
-        where: {
-          status: "OPEN",
-          OR: [
-            { sourceKey: null },
-            // Annonces d’exemple (cron Inspiration Rfacto)
-            { sourceKey: { startsWith: "virtual:" } },
-          ],
-        },
-        include: {
-          author: { select: AUTHOR_SELECT },
-          _count: { select: { comments: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 40,
-      });
-      for (const p of posts) {
-        feed.push({
-          ...serializePost(p),
-          isOwner: p.authorId === session.id || session.role === "ADMIN",
-        });
-      }
-    } catch (error) {
-      console.error("CommunityPost query failed:", error);
-    }
-  }
-
-  const [trips, parcels, services] = await Promise.all([
-    wantTrip
-      ? prisma.trip.findMany({
-          where: { status: "OPEN", AND: [openTripDateWhere()] },
-          include: { user: { select: AUTHOR_SELECT } },
-          orderBy: { createdAt: "desc" },
-          take: 40,
-        })
-      : Promise.resolve([]),
-    wantParcel
-      ? prisma.parcelRequest.findMany({
-          where: {
-            status: "OPEN",
-            needType: "PARCEL",
-            AND: [openRequestDateWhere()],
-          },
-          include: { user: { select: AUTHOR_SELECT } },
-          orderBy: { createdAt: "desc" },
-          take: 40,
-        })
-      : Promise.resolve([]),
-    wantService
-      ? prisma.serviceListing.findMany({
-          where: { status: "OPEN" },
-          include: { user: { select: AUTHOR_SELECT } },
-          orderBy: { createdAt: "desc" },
-          take: 40,
-        })
-      : Promise.resolve([]),
+  const [services, shopProducts, virtualPosts] = await Promise.all([
+    prisma.serviceListing.findMany({
+      where: { status: "OPEN" },
+      include: { user: { select: AUTHOR_SELECT } },
+      orderBy: { createdAt: "desc" },
+      take: 60,
+    }),
+    prisma.shopProduct.findMany({
+      where: { active: true, shop: { status: "OPEN" } },
+      include: {
+        shop: { include: { user: { select: AUTHOR_SELECT } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 40,
+    }),
+    prisma.communityPost.findMany({
+      where: { status: "OPEN", sourceKey: { startsWith: "virtual:" } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 24,
+    }),
   ]);
 
-  for (const trip of trips) {
-    const author = trip.user;
-    feed.push({
-      id: `trip:${trip.id}`,
-      kind: "TRIP",
-      title: `${trip.fromCity} → ${trip.toCity}`,
-      body: [
-        trip.weightKg != null ? `Capacité ${trip.weightKg} kg` : null,
-        trip.departAt
-          ? `Départ ${new Date(trip.departAt).toLocaleDateString("fr-CA")}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" · ") || "Voyage publié sur Rfacto",
-      attachments: [],
-      createdAt: trip.createdAt,
-      href: `/trips/${trip.id}`,
-      source: "trip",
-      author: toFeedAuthor(author, trip.fromCountry),
-      isOwner: author.id === session.id,
-      viewCount: 0,
-      commentCount: 0,
-    });
-  }
-
-  for (const req of parcels) {
-    const author = req.user;
-    let cover: string | null = null;
-    try {
-      const photos = JSON.parse(req.photosJson || "[]") as unknown;
-      if (Array.isArray(photos) && typeof photos[0] === "string") {
-        cover = photos[0];
-      }
-    } catch {
-      /* ignore */
-    }
-    const attachment = attachmentFromImageUrl(cover, `${req.fromCity}-${req.toCity}`);
-    feed.push({
-      id: `parcel:${req.id}`,
-      kind: "PARCEL",
-      title: `${req.fromCity} → ${req.toCity}`,
-      body: [
-        req.weightKg ? `${req.weightKg} kg` : null,
-        req.description?.slice(0, 280) || null,
-      ]
-        .filter(Boolean)
-        .join(" · ") || "Besoin d’expédition",
-      attachments: attachment ? [attachment] : [],
-      createdAt: req.createdAt,
-      href: `/requests/${req.id}`,
-      source: "parcel",
-      author: toFeedAuthor(author, req.fromCountry),
-      isOwner: author.id === session.id,
-      viewCount: 0,
-      commentCount: 0,
-    });
-  }
-
   for (const s of services) {
+    const itemKind = marketplaceKind(s.category);
+    if (!wantsMarketplace(kind, itemKind)) continue;
     const author = s.user;
     let cover: string | null = null;
     try {
@@ -315,11 +240,19 @@ export async function GET(request: Request) {
       /* ignore */
     }
     const attachment = attachmentFromImageUrl(cover, s.title);
+    const priceLabel =
+      itemKind === "GIFT"
+        ? "Gratuit"
+        : !s.priceAmount
+          ? "Prix à discuter"
+          : `${s.priceAmount} ${s.currency}`;
     feed.push({
       id: `svc:${s.id}`,
-      kind: "SERVICE",
+      kind: itemKind,
       title: s.title,
-      body: s.description,
+      body: [priceLabel, s.description, contactLine(author.displayName, author.phone, s.city)]
+        .filter(Boolean)
+        .join("\n"),
       attachments: attachment ? [attachment] : [],
       createdAt: s.createdAt,
       href: `/services/listing/${s.id}`,
@@ -329,6 +262,104 @@ export async function GET(request: Request) {
       viewCount: 0,
       commentCount: 0,
     });
+  }
+
+  for (const product of shopProducts) {
+    if (!wantsMarketplace(kind, "PRODUCT")) continue;
+    const author = product.shop.user;
+    let photos: string[] = [];
+    try {
+      const parsed = JSON.parse(product.photosJson || "[]") as unknown;
+      if (Array.isArray(parsed)) {
+        photos = parsed.filter((p): p is string => typeof p === "string");
+      }
+    } catch {
+      photos = [];
+    }
+    const cover = product.photoUrl || photos[0] || null;
+    const attachment = attachmentFromImageUrl(cover, product.title);
+    const major = (product.priceCents / 100).toFixed(2);
+    feed.push({
+      id: `shop-product:${product.id}`,
+      kind: "PRODUCT",
+      title: product.title,
+      body: [
+        `${major} ${product.shop.currency}`,
+        product.description,
+        contactLine(author.displayName, author.phone, product.shop.city),
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      attachments: attachment ? [attachment] : [],
+      createdAt: product.createdAt,
+      href: `/shops/${product.shop.id}`,
+      source: "shop",
+      author: toFeedAuthor(author, product.shop.country),
+      isOwner: author.id === session.id,
+      viewCount: 0,
+      commentCount: 0,
+    });
+  }
+
+  for (const post of virtualPosts) {
+    const template = templateFromSourceKey(post.sourceKey);
+    if (!template || !wantsMarketplace(kind, template.card)) continue;
+    const attachment = attachmentFromImageUrl(template.photoUrl, template.title);
+    feed.push({
+      id: post.id,
+      kind: template.card,
+      title: template.title,
+      body: [
+        template.priceLabel,
+        template.body,
+        contactLine(post.author.displayName, post.author.phone, template.city),
+      ].join("\n"),
+      attachments: attachment ? [attachment] : [],
+      createdAt: post.createdAt,
+      href: `/community/${post.id}`,
+      source: "post",
+      author: toFeedAuthor(post.author, template.country),
+      isOwner: post.authorId === session.id,
+      viewCount: post.viewCount ?? 0,
+      commentCount: post._count.comments,
+    });
+  }
+
+  if (virtualPosts.length === 0) {
+    for (const template of VIRTUAL_POST_TEMPLATES) {
+      if (!wantsMarketplace(kind, template.card)) continue;
+      const attachment = attachmentFromImageUrl(template.photoUrl, template.title);
+      feed.push({
+        id: `showcase:${template.id}`,
+        kind: template.card,
+        title: template.title,
+        body: [
+          template.priceLabel,
+          template.body,
+          contactLine("Inspiration Rfacto", null, template.city),
+        ].join("\n"),
+        attachments: attachment ? [attachment] : [],
+        createdAt: new Date().toISOString(),
+        href: null,
+        source: "post",
+        author: {
+          id: "inspiration",
+          displayName: "Inspiration Rfacto",
+          avatarUrl: null,
+          bannerUrl: null,
+          bio: null,
+          country: template.country,
+          verified: false,
+          ratingAvg: 0,
+          ratingCount: 0,
+          connectionCount: 0,
+          connectedByMe: false,
+        },
+        isOwner: false,
+        viewCount: 0,
+        commentCount: 0,
+      });
+    }
   }
 
   feed.sort(

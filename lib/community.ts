@@ -10,10 +10,9 @@ export type CommunityPostKindId = (typeof COMMUNITY_POST_KINDS)[number];
 
 /** Marketplace + community announcement filters. */
 export const COMMUNITY_FEED_FILTERS = [
-  "ANNOUNCE",
-  "TRIP",
-  "PARCEL",
+  "PRODUCT",
   "SERVICE",
+  "GIFT",
 ] as const;
 
 export type CommunityFeedFilterId = (typeof COMMUNITY_FEED_FILTERS)[number];

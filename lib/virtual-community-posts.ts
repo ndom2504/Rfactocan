@@ -14,6 +14,9 @@ export type VirtualPostTemplate = {
   city: string;
   countryName: string;
   kind: CommunityPostKind;
+  /** Carte communauté : produit à vendre, service à vendre, ou don. */
+  card: "PRODUCT" | "SERVICE" | "GIFT";
+  priceLabel: string;
   title: string;
   /** Corps sans le bandeau Exemple / localisation. */
   body: string;
@@ -22,6 +25,12 @@ export type VirtualPostTemplate = {
   /** Source d’inspiration citée (pas de scraping live). */
   inspiredBy: string;
 };
+
+export function templateFromSourceKey(sourceKey?: string | null) {
+  if (!sourceKey?.startsWith("virtual:")) return null;
+  const id = sourceKey.split(":")[2];
+  return VIRTUAL_POST_TEMPLATES.find((t) => t.id === id) ?? null;
+}
 
 /**
  * Catalogue éditorial (FR) — style d’annonces services / opportunités.
@@ -35,11 +44,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Libreville",
     countryName: "Gabon",
     kind: "BUSINESS",
-    title: "Chauffeur privé · aéroport Léon Mba",
-    body: "Courses fiables Libreville ↔ aéroport, horaires tôt le matin. Véhicule climatisé, suivi WhatsApp. Idéal pour arrivées internationales et déplacements d’affaires.",
+    card: "SERVICE",
+    priceLabel: "15 000 XAF",
+    title: "Course aéroport Léon Mba",
+    body: "Chauffeur ponctuel, véhicule climatisé, bagages OK. Tarif annoncé avant le départ. Idéal arrivées tôt le matin.",
     photoUrl:
       "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces transport urbain / aéroport",
+    inspiredBy: "service transport",
   },
   {
     id: "ga-hebergement-akanda",
@@ -47,23 +58,27 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Akanda",
     countryName: "Gabon",
     kind: "BUSINESS",
-    title: "Chambre meublée calme près d’Akanda",
-    body: "Studio propre, wifi, cuisine équipée. Séjours courts ou mission. Quartier résidentiel, accès facile vers Libreville. Photos et disponibilité sur demande.",
+    card: "PRODUCT",
+    priceLabel: "45 000 XAF / nuit",
+    title: "Studio meublé à Akanda",
+    body: "Wifi, cuisine équipée, quartier calme. Séjour court ou mission. Photos réelles, dispo cette semaine.",
     photoUrl:
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces hébergement local",
+    inspiredBy: "hébergement",
   },
   {
     id: "ga-colis-franceville",
     country: "GA",
-    city: "Franceville",
+    city: "Libreville",
     countryName: "Gabon",
     kind: "OPPORTUNITY",
-    title: "Place bagage Libreville → Franceville",
-    body: "Départ week-end prochain, place restante pour colis documentés (max 15 kg). Remise en main propre. Parfait pour médicaments, pièces détachées ou cadeaux famille.",
+    card: "PRODUCT",
+    priceLabel: "25 000 XAF",
+    title: "iPhone 13 128 Go, état neuf",
+    body: "Batterie 92 %, facture d’achat, vendu avec chargeur. Remise en main propre à Libreville.",
     photoUrl:
-      "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces colis / corridor intérieur",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
+    inspiredBy: "produit",
   },
   {
     id: "ca-interac-mtl",
@@ -71,11 +86,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Montréal",
     countryName: "Canada",
     kind: "BUSINESS",
-    title: "Aide déménagement · Plateau / Rosemont",
-    body: "Camionnette + 2 personnes, créneaux soirs et samedis. Devis clair avant le jour J. Idéal studios et 3½. Paiement Interac accepté.",
+    card: "SERVICE",
+    priceLabel: "80 CAD",
+    title: "Déménagement studio, le soir",
+    body: "Camionnette et deux personnes, Plateau et Rosemont. Devis fixe avant le jour J.",
     photoUrl:
       "https://images.unsplash.com/photo-1600518464441-9156a61fd20e?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces services locaux Canada",
+    inspiredBy: "service",
   },
   {
     id: "ca-cours-fr-toronto",
@@ -83,11 +100,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Toronto",
     countryName: "Canada",
     kind: "COMMUNITY",
-    title: "Cours de français conversation · soir",
-    body: "Petits groupes (max 6), focus oral pour la diaspora et nouveaux arrivants. Première séance découverte. En ligne ou café du centre-ville.",
+    card: "GIFT",
+    priceLabel: "Gratuit",
+    title: "Vélo de ville à donner",
+    body: "Cadre solide, freins à régler. À récupérer sur place ce week-end. Premier arrivé.",
     photoUrl:
-      "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces formation / communauté",
+      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=80",
+    inspiredBy: "don",
   },
   {
     id: "ca-colis-mtl-lbv",
@@ -95,11 +114,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Montréal",
     countryName: "Canada",
     kind: "OPPORTUNITY",
-    title: "Colis Montréal → Libreville (places)",
-    body: "Voyageur vérifié, départ bientôt. Places pour documents et petits colis. Remise à l’aéroport ou point convenu. Discutez le détail dans Messages.",
+    card: "PRODUCT",
+    priceLabel: "220 CAD",
+    title: "Canapé 2 places gris clair",
+    body: "Tissu propre, pieds bois, se démonte. Idéal premier appartement. À emporter.",
     photoUrl:
-      "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style corridor diaspora Canada ↔ Gabon",
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80",
+    inspiredBy: "produit",
   },
   {
     id: "ci-coiffure-abj",
@@ -107,11 +128,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Abidjan",
     countryName: "Côte d’Ivoire",
     kind: "BUSINESS",
-    title: "Coiffure à domicile · Cocody / Plateau",
-    body: "Tresses, pose, soins capillaires chez vous. Matériel propre, créneaux tôt le matin. Tarifs annoncés avant le rendez-vous.",
+    card: "SERVICE",
+    priceLabel: "8 000 XOF",
+    title: "Tresses à domicile, Cocody",
+    body: "Pose et soins, matériel propre. Créneau tôt le matin. Prix annoncé avant le rendez-vous.",
     photoUrl:
       "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces beauté / services à domicile",
+    inspiredBy: "service",
   },
   {
     id: "ci-transitaire-vridi",
@@ -119,11 +142,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Abidjan",
     countryName: "Côte d’Ivoire",
     kind: "BUSINESS",
-    title: "Transitaire · dédouanement Vridi",
-    body: "Accompagnement import/export léger, suivi dossier et conseils documents. Idéal entrepreneurs qui reçoivent du matériel depuis l’Europe ou le Canada.",
+    card: "PRODUCT",
+    priceLabel: "35 000 XOF",
+    title: "Machine à coudre Singer",
+    body: "Fonctionne très bien, pédale et quelques bobines incluses. Idéale pour un atelier.",
     photoUrl:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces transit / logistique",
+      "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=80",
+    inspiredBy: "produit",
   },
   {
     id: "cm-taxi-dla",
@@ -131,11 +156,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Douala",
     countryName: "Cameroun",
     kind: "BUSINESS",
-    title: "Courses Douala · aéroport & centre",
-    body: "Chauffeur ponctuel, bagages OK. Réservation la veille recommandée pour vols tôt. Tarif fixe annoncé avant départ.",
+    card: "SERVICE",
+    priceLabel: "5 000 XAF",
+    title: "Course aéroport Douala",
+    body: "Chauffeur ponctuel, bagages OK. Tarif fixe annoncé avant le départ.",
     photoUrl:
       "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces transport urbain",
+    inspiredBy: "service",
   },
   {
     id: "sn-atelier-dakar",
@@ -143,11 +170,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Dakar",
     countryName: "Sénégal",
     kind: "COMMUNITY",
-    title: "Atelier couture & retouches · Plateau",
-    body: "Retouches rapides, costumes et tenues de cérémonie. Délais annoncés à l’avance. Venez avec vos tissus ou vos pièces à ajuster.",
+    card: "GIFT",
+    priceLabel: "Gratuit",
+    title: "Livres scolaires à donner",
+    body: "Collège et lycée, bon état. À récupérer au Plateau. Parfait pour une rentrée.",
     photoUrl:
-      "https://images.unsplash.com/photo-1558171813-4c088753af8f?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces artisanat local",
+      "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80",
+    inspiredBy: "don",
   },
   {
     id: "fr-garde-paris",
@@ -155,11 +184,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Paris",
     countryName: "France",
     kind: "BUSINESS",
-    title: "Garde d’enfants occasionnelle · 18e / 19e",
-    body: "Étudiante sérieuse, expériences référencées. Soirs et week-ends. Première rencontre avec les parents avant toute garde.",
+    card: "SERVICE",
+    priceLabel: "15 EUR / h",
+    title: "Garde d’enfants, soirs et week-ends",
+    body: "18e et 19e. Première rencontre avec les parents avant toute garde.",
     photoUrl:
       "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style annonces famille / garde",
+    inspiredBy: "service",
   },
   {
     id: "fr-colis-cdg-abj",
@@ -167,11 +198,13 @@ export const VIRTUAL_POST_TEMPLATES: VirtualPostTemplate[] = [
     city: "Paris",
     countryName: "France",
     kind: "OPPORTUNITY",
-    title: "Place bagage Paris → Abidjan",
-    body: "Vol bientôt, kilos disponibles pour colis familiaux. Documents et contenu déclarés. Contactez pour le détail du poids et du point de remise.",
+    card: "PRODUCT",
+    priceLabel: "40 EUR",
+    title: "Poussette compacte, très bon état",
+    body: "Pliable, harnais complet, utilisée quelques mois. Remise en main propre dans le 18e.",
     photoUrl:
-      "https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1200&q=80",
-    inspiredBy: "style corridor diaspora France ↔ Afrique",
+      "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80",
+    inspiredBy: "produit",
   },
 ];
 
@@ -186,12 +219,9 @@ function slotKey(now = new Date()) {
 
 function buildBody(template: VirtualPostTemplate) {
   return [
-    `📌 Exemple Rfacto · ${template.city}, ${template.countryName}`,
-    "",
+    template.priceLabel,
     template.body.trim(),
-    "",
-    `Photo & localisation pour montrer le style d’une vraie annonce. Inspiré de : ${template.inspiredBy}.`,
-    "Publiez la vôtre depuis Annoncer — les membres pourront vous contacter.",
+    `Contact : ${VIRTUAL_PUBLISHER_NAME} · ${template.city}`,
   ].join("\n");
 }
 
@@ -286,6 +316,25 @@ export async function publishVirtualCommunityPosts(limit = 4) {
 
   const created: string[] = [];
   const skipped: string[] = [];
+
+  const stored = await prisma.communityPost.findMany({
+    where: { sourceKey: { startsWith: "virtual:" } },
+    select: { id: true, sourceKey: true, title: true },
+    take: 200,
+  });
+  for (const post of stored) {
+    const template = templateFromSourceKey(post.sourceKey);
+    if (!template || post.title === template.title) continue;
+    await prisma.communityPost.update({
+      where: { id: post.id },
+      data: {
+        kind: template.kind,
+        title: template.title.slice(0, 120),
+        body: buildBody(template).slice(0, 4000),
+        attachmentsJson: JSON.stringify(attachmentFor(template) ?? []),
+      },
+    });
+  }
 
   // Rotate by slot so the same country doesn’t always win.
   const start = Number.parseInt(slot.replace(/\D/g, "").slice(-2) || "0", 10) % pool.length;

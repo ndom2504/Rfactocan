@@ -44,6 +44,19 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: "desc" },
       include: {
         _count: { select: { products: true, orders: true } },
+        products: {
+          orderBy: { createdAt: "desc" },
+          take: 8,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            priceCents: true,
+            photoUrl: true,
+            photosJson: true,
+            active: true,
+          },
+        },
       },
     });
     return NextResponse.json({ shops });

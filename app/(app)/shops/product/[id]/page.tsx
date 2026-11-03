@@ -9,8 +9,6 @@ import { FormattedDescription } from "@/components/formatted-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatMoneyFromCents } from "@/lib/currency";
 import {
   shopCategoryHasElectronicsSpecs,
@@ -37,7 +35,7 @@ type Product = {
     category: string;
     currency: string;
     status: string;
-    user: { displayName: string };
+    user: { id: string; displayName: string; phone?: string | null };
   };
 };
 
@@ -46,9 +44,7 @@ function ProductBuyForm() {
   const searchParams = useSearchParams();
   const { t, locale } = useI18n();
   const [product, setProduct] = useState<Product | null>(null);
-  const [qty, setQty] = useState(1);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("payment") === "cancel") {
@@ -70,29 +66,6 @@ function ProductBuyForm() {
     })();
   }, [id]);
 
-  async function buy() {
-    if (!product) return;
-    setBusy(true);
-    setError("");
-    const res = await fetch("/api/shops/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: product.id, quantity: qty }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setBusy(false);
-      setError(data.error ?? "Paiement impossible");
-      return;
-    }
-    if (data.checkoutUrl) {
-      window.location.href = data.checkoutUrl;
-      return;
-    }
-    setBusy(false);
-    setError("URL de paiement manquante");
-  }
-
   if (!product && !error) {
     return <p className="text-sm text-[var(--muted)]">{t("loading")}</p>;
   }
@@ -106,10 +79,6 @@ function ProductBuyForm() {
   );
   const outOfStock =
     isElectronics && product.stockQty != null && product.stockQty <= 0;
-  const maxQty =
-    isElectronics && product.stockQty != null
-      ? Math.min(20, product.stockQty)
-      : 20;
   const canBuy =
     !product.isOwner && product.shop.status === "OPEN" && !outOfStock;
 
@@ -209,31 +178,17 @@ function ProductBuyForm() {
           <Badge className="mt-3">{t("shops_stock_out")}</Badge>
         )}
 
-        {canBuy && (
-          <div className="mt-6 space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="qty">{t("shops_qty")}</Label>
-              <Input
-                id="qty"
-                type="number"
-                min={1}
-                max={maxQty}
-                value={qty}
-                onChange={(e) =>
-                  setQty(Math.min(maxQty, Number(e.target.value) || 1))
-                }
-                className="max-w-[120px]"
-              />
-            </div>
-            <Button
-              className="w-full"
-              disabled={busy}
-              onClick={() => void buy()}
-            >
-              {busy ? t("shops_buying") : t("shops_buy")}
-            </Button>
+        {canBuy && product.shop.user?.id ? (
+          <div className="mt-6 space-y-2">
+            <p className="text-sm text-[var(--muted)]">
+              {t("listing_hint")}
+              {product.shop.user.phone ? ` · ${product.shop.user.phone}` : ""}
+            </p>
+            <Link href={`/member/${product.shop.user.id}`}>
+              <Button className="w-full">{t("job_contact")}</Button>
+            </Link>
           </div>
-        )}
+        ) : null}
         {product.isOwner && (
           <Link
             href={`/shops/${product.shop.id}/manage`}

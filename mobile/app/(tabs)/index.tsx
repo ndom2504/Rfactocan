@@ -129,14 +129,19 @@ export default function HomeScreen() {
 
       <View style={{ gap: 10 }}>
         <Button
-          label={t("dashboard_publish_service")}
+          label={t("home_cta_sell")}
           variant="outline"
           onPress={() => router.push("/service/new")}
         />
         <Button
-          label={t("dashboard_search_service")}
+          label={t("home_cta_buy")}
           variant="outline"
-          onPress={() => router.push("/services")}
+          onPress={() => router.push("/(tabs)/community")}
+        />
+        <Button
+          label={t("home_cta_give")}
+          variant="outline"
+          onPress={() => router.push("/listing/new?mode=gift" as Href)}
         />
         <Button
           label={t("my_projects_title")}

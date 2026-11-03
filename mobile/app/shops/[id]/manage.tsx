@@ -56,6 +56,7 @@ export default function ManageShopScreen() {
   const [price, setPrice] = useState("");
   const [productDesc, setProductDesc] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -145,19 +146,32 @@ export default function ManageShopScreen() {
     setError("");
     setMessage("");
     try {
-      await api(`/api/shops/${id}/products`, {
-        method: "POST",
-        body: JSON.stringify({
-          title: title.trim(),
-          description: productDesc.trim(),
-          price: Number(price),
-          photoUrl,
-        }),
-      });
+      if (editingId) {
+        await api(`/api/shops/products/${editingId}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            title: title.trim(),
+            description: productDesc.trim(),
+            price: Number(price),
+            photoUrl,
+          }),
+        });
+      } else {
+        await api(`/api/shops/${id}/products`, {
+          method: "POST",
+          body: JSON.stringify({
+            title: title.trim(),
+            description: productDesc.trim(),
+            price: Number(price),
+            photoUrl,
+          }),
+        });
+      }
       setTitle("");
       setPrice("");
       setProductDesc("");
       setPhotoUrl(null);
+      setEditingId(null);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("retry"));
@@ -246,9 +260,9 @@ export default function ManageShopScreen() {
             />
           ) : (
             <Button
-              label={t("shops_close")}
-              variant="danger"
-              onPress={() => void saveShop({ action: "close" })}
+              label={t("my_projects_pause")}
+              variant="outline"
+              onPress={() => void saveShop({ action: "pause" })}
               disabled={busy}
             />
           )}
@@ -287,7 +301,7 @@ export default function ManageShopScreen() {
           ) : null}
           <Button label="Photo" variant="outline" onPress={() => void pickPhoto()} />
           <Button
-            label={t("shops_add_product")}
+            label={editingId ? t("my_projects_edit") : t("shops_add_product")}
             onPress={() => void addProduct()}
             loading={busy}
             disabled={title.trim().length < 2 || !Number(price)}
@@ -295,9 +309,15 @@ export default function ManageShopScreen() {
 
           {(shop.products ?? []).map((p) => (
             <Card key={p.id}>
+              {p.photoUrl ? (
+                <Image
+                  source={{ uri: mediaUrl(p.photoUrl) }}
+                  style={{ width: "100%", height: 120, borderRadius: 12, marginBottom: 8 }}
+                />
+              ) : null}
               <Text style={{ fontWeight: "700", color: colors.foreground }}>
                 {p.title}
-                {!p.active ? " · —" : ""}
+                {!p.active ? " · " + t("my_projects_pause") : ""}
               </Text>
               <Muted>
                 {formatMoneyFromCents(
@@ -305,29 +325,54 @@ export default function ManageShopScreen() {
                   shop.currency
                 )}
               </Muted>
-              {p.active ? (
-                <Button
-                  label={t("my_projects_delete")}
-                  variant="danger"
-                  onPress={() =>
-                    Alert.alert(t("my_projects_delete"), p.title, [
-                      { text: t("cancel"), style: "cancel" },
-                      {
-                        text: t("my_projects_delete"),
-                        style: "destructive",
-                        onPress: () => void deactivate(p.id),
-                      },
-                    ])
-                  }
-                  disabled={busy}
-                />
-              ) : null}
               <Button
-                label={t("shop_buy")}
+                label={t("my_projects_options")}
                 variant="outline"
                 onPress={() =>
-                  router.push(`/shops/product/${p.id}` as Href)
+                  Alert.alert(t("my_projects_options"), p.title, [
+                    {
+                      text: t("my_projects_edit"),
+                      onPress: () => {
+                        setEditingId(p.id);
+                        setTitle(p.title);
+                        setProductDesc(p.description ?? "");
+                        setPrice(
+                          String(
+                            shop.currency === "XAF" || shop.currency === "XOF"
+                              ? p.priceCents
+                              : p.priceCents / 100
+                          )
+                        );
+                        setPhotoUrl(p.photoUrl ?? null);
+                      },
+                    },
+                    {
+                      text: p.active ? t("my_projects_pause") : t("my_projects_resume"),
+                      onPress: () =>
+                        void (async () => {
+                          setBusy(true);
+                          try {
+                            await api(`/api/shops/products/${p.id}`, {
+                              method: "PATCH",
+                              body: JSON.stringify({ active: !p.active }),
+                            });
+                            await load();
+                          } catch (e) {
+                            setError(e instanceof Error ? e.message : t("retry"));
+                          } finally {
+                            setBusy(false);
+                          }
+                        })(),
+                    },
+                    {
+                      text: t("my_projects_delete"),
+                      style: "destructive",
+                      onPress: () => void deactivate(p.id),
+                    },
+                    { text: t("cancel"), style: "cancel" },
+                  ])
                 }
+                disabled={busy}
               />
             </Card>
           ))}

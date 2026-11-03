@@ -284,7 +284,7 @@ export default function ManageShopPage() {
     await load();
   }
 
-  async function shopAction(action: "publish" | "close" | "draft") {
+  async function shopAction(action: "publish" | "close" | "draft" | "pause") {
     setBusy(true);
     setError("");
     const res = await fetch(`/api/shops/${id}`, {
@@ -358,15 +358,6 @@ export default function ManageShopPage() {
         </div>
       </div>
 
-      {!shop.canReceivePayments && (
-        <Card className="border-amber-300/50 bg-amber-50/40">
-          <CardDescription>{t("shops_payouts_required")}</CardDescription>
-          <Link href="/profile" className="mt-3 inline-block">
-            <Button size="sm">{t("nav_profile")}</Button>
-          </Link>
-        </Card>
-      )}
-
       <div className="flex flex-wrap gap-2">
         {shop.status !== "OPEN" && (
           <Button
@@ -381,9 +372,9 @@ export default function ManageShopPage() {
             <Button
               variant="outline"
               disabled={busy}
-              onClick={() => void shopAction("draft")}
+              onClick={() => void shopAction("pause")}
             >
-              {t("shops_unpublish")}
+              {t("my_projects_pause")}
             </Button>
             <Button
               variant="danger"

@@ -64,6 +64,8 @@ const kindLabelKey: Record<string, DictKey> = {
   TRIP: "community_kind_trip",
   PARCEL: "community_kind_parcel",
   SERVICE: "community_kind_service",
+  PRODUCT: "community_kind_product",
+  GIFT: "community_kind_gift",
   BUSINESS: "community_kind_business",
   OPPORTUNITY: "community_kind_opportunity",
   COMMUNITY: "community_kind_community",
@@ -277,20 +279,10 @@ export function CommunityFeed() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <section className="flex flex-col items-start gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <section className="border-b border-[var(--border)] pb-6">
         <p className="text-base font-medium text-[var(--foreground)] sm:text-lg">
           {t("community_announce_prompt")}
         </p>
-        <Button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setComposerOpen(true);
-          }}
-          className="w-full shrink-0 sm:w-auto"
-        >
-          {t("community_announce")}
-        </Button>
       </section>
 
       {composerOpen && (
