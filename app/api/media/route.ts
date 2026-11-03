@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { get } from "@vercel/blob";
 import { guessVoiceNoteMime, isAudioAttachment } from "@/lib/community";
-import { blobAccess, isAllowedBlobUrl } from "@/lib/storage";
+import { isAllowedBlobUrl, vercelBlobAccess } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -22,7 +22,8 @@ export async function GET(request: Request) {
   try {
     const requestedRange = request.headers.get("range") ?? undefined;
     const ifNoneMatch = request.headers.get("if-none-match") ?? undefined;
-    const access = blobAccess();
+    // Always use the Vercel Blob store mode — R2 being enabled must not change this.
+    const access = vercelBlobAccess();
     let useRange = Boolean(requestedRange) && !isAudioAttachment("", url);
 
     const fetchBlob = (range?: string) =>

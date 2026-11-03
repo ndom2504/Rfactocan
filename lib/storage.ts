@@ -42,15 +42,23 @@ function isVercelRuntime() {
   return Boolean(process.env.VERCEL);
 }
 
-/** Match store access mode: private (default) or public. */
-export function blobAccess(): "private" | "public" {
-  // R2 uses a public base URL; treat as public for client helpers.
-  if (isR2Configured()) return "public";
+/** Vercel Blob store access — never flip this when R2 is enabled. */
+export function vercelBlobAccess(): "private" | "public" {
   return process.env.BLOB_ACCESS === "public" ? "public" : "private";
 }
 
+/**
+ * Access hint for *new* uploads / client helpers.
+ * Existing private Vercel Blob URLs must keep using vercelBlobAccess() in /api/media.
+ */
+export function blobAccess(): "private" | "public" {
+  if (isR2Configured()) return "public";
+  return vercelBlobAccess();
+}
+
 function toAppMediaUrl(blobUrl: string) {
-  if (blobAccess() === "public" || isAllowedR2Url(blobUrl)) return blobUrl;
+  if (isAllowedR2Url(blobUrl)) return blobUrl;
+  if (vercelBlobAccess() === "public") return blobUrl;
   const encoded = encodeURIComponent(blobUrl);
   return `/api/media?url=${encoded}`;
 }
@@ -143,7 +151,7 @@ export async function fetchPrivateBlob(blobUrl: string) {
   if (!isAllowedVercelBlobUrl(blobUrl)) {
     throw new Error("URL blob invalide");
   }
-  return get(blobUrl, { access: blobAccess() });
+  return get(blobUrl, { access: vercelBlobAccess() });
 }
 
 function isAllowedVercelBlobUrl(url: string) {

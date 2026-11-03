@@ -5,14 +5,21 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+/**
+ * R2 S3 credentials (from R2 → Manage R2 API Tokens), not a Cloudflare
+ * Account API token (`cfut_…`). Bucket must be the bucket *name*, not the
+ * public `*.r2.dev` URL.
+ */
 export function isR2Configured() {
-  return Boolean(
-    process.env.R2_ACCOUNT_ID?.trim() &&
-      process.env.R2_ACCESS_KEY_ID?.trim() &&
-      process.env.R2_SECRET_ACCESS_KEY?.trim() &&
-      process.env.R2_BUCKET?.trim() &&
-      process.env.R2_PUBLIC_BASE_URL?.trim()
-  );
+  const accountId = process.env.R2_ACCOUNT_ID?.trim() || "";
+  const accessKey = process.env.R2_ACCESS_KEY_ID?.trim() || "";
+  const secret = process.env.R2_SECRET_ACCESS_KEY?.trim() || "";
+  const bucket = process.env.R2_BUCKET?.trim() || "";
+  const publicBase = process.env.R2_PUBLIC_BASE_URL?.trim() || "";
+  if (!accountId || !accessKey || !secret || !bucket || !publicBase) return false;
+  if (bucket.startsWith("http://") || bucket.startsWith("https://")) return false;
+  if (accessKey.startsWith("cfut_")) return false;
+  return true;
 }
 
 function r2Client() {
