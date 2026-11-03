@@ -21,7 +21,10 @@
     "mobile:prebuild": "npm --prefix mobile run prebuild"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1161.0",
+    "@aws-sdk/s3-request-presigner": "^3.1161.0",
     "@prisma/client": "^6.19.2",
+    "@react-email/render": "^2.2.0",
     "@stripe/stripe-js": "^9.9.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.2",

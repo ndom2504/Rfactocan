@@ -2,6 +2,11 @@ import { get, put } from "@vercel/blob";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { getAppUrl } from "@/lib/app-url";
+import {
+  isAllowedR2Url,
+  isR2Configured,
+  uploadToR2,
+} from "@/lib/r2";
 
 function extensionFor(contentType: string) {
   const type = (contentType || "").toLowerCase().split(";")[0]?.trim() ?? "";
@@ -22,19 +27,31 @@ export function isBlobConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
 }
 
+/** Prefer Cloudflare R2 when configured (temporary bypass when Blob quota is exhausted). */
+export function isCloudStorageConfigured() {
+  return isR2Configured() || isBlobConfigured();
+}
+
+export function activeStorageProvider(): "r2" | "blob" | "none" {
+  if (isR2Configured()) return "r2";
+  if (isBlobConfigured()) return "blob";
+  return "none";
+}
+
 function isVercelRuntime() {
   return Boolean(process.env.VERCEL);
 }
 
 /** Match store access mode: private (default) or public. */
 export function blobAccess(): "private" | "public" {
+  // R2 uses a public base URL; treat as public for client helpers.
+  if (isR2Configured()) return "public";
   return process.env.BLOB_ACCESS === "public" ? "public" : "private";
 }
 
 function toAppMediaUrl(blobUrl: string) {
-  if (blobAccess() === "public") return blobUrl;
+  if (blobAccess() === "public" || isAllowedR2Url(blobUrl)) return blobUrl;
   const encoded = encodeURIComponent(blobUrl);
-  // Relative URL works in browser; absolute needed if ever emailed.
   return `/api/media?url=${encoded}`;
 }
 
@@ -53,10 +70,8 @@ export function toReadableMediaUrl(url: string | null | undefined): string | nul
 }
 
 /**
- * Upload an image to Vercel Blob when configured.
- * Local disk fallback only outside Vercel (dev without a Blob token).
- * On Vercel, missing BLOB_READ_WRITE_TOKEN fails with a clear error — never
- * write to the read-only serverless filesystem.
+ * Upload a file to R2 (preferred) or Vercel Blob when configured.
+ * Local disk fallback only outside Vercel (dev without cloud storage).
  */
 async function uploadFile(
   file: File,
@@ -66,6 +81,11 @@ async function uploadFile(
   const ext = extensionFor(file.type);
   const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
   const pathname = `${folder}/${safeUserId}-${Date.now()}.${ext}`;
+
+  if (isR2Configured()) {
+    const { url } = await uploadToR2(pathname, file, file.type);
+    return { url, blobUrl: url };
+  }
 
   if (isBlobConfigured()) {
     const access = blobAccess();
@@ -79,7 +99,7 @@ async function uploadFile(
 
   if (isVercelRuntime() || process.env.NODE_ENV === "production") {
     throw new Error(
-      "Stockage cloud non configuré. Sur Vercel : Storage → Blob → lier le store au projet (Production), vérifier BLOB_READ_WRITE_TOKEN, puis Redeploy."
+      "Stockage cloud saturé ou non configuré. Ajoutez Cloudflare R2 (R2_*) ou réactivez Vercel Blob."
     );
   }
 
@@ -120,13 +140,13 @@ export async function fetchPrivateBlob(blobUrl: string) {
   if (!isBlobConfigured()) {
     throw new Error("Blob non configuré");
   }
-  if (!isAllowedBlobUrl(blobUrl)) {
+  if (!isAllowedVercelBlobUrl(blobUrl)) {
     throw new Error("URL blob invalide");
   }
   return get(blobUrl, { access: blobAccess() });
 }
 
-export function isAllowedBlobUrl(url: string) {
+function isAllowedVercelBlobUrl(url: string) {
   try {
     const parsed = new URL(url);
     return (
@@ -137,6 +157,10 @@ export function isAllowedBlobUrl(url: string) {
   } catch {
     return false;
   }
+}
+
+export function isAllowedBlobUrl(url: string) {
+  return isAllowedVercelBlobUrl(url) || isAllowedR2Url(url);
 }
 
 /** Absolute media URL for emails / Stripe (optional helper). */

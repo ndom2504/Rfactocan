@@ -53,65 +53,73 @@ export function VoiceNoteBubble({
     void player.seekTo((index / bars.length) * status.duration);
   }
 
+  const timeLabel = formatVoiceTime(
+    status.playing || progress > 0
+      ? status.currentTime
+      : status.duration > 0
+        ? status.duration
+        : durationHintSec
+  );
+
   return (
-    <View style={{ width: 230 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Pressable
-          onPress={toggle}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: mine ? "rgba(255,255,255,0.2)" : colors.accent,
-          }}
-        >
-          <Ionicons
-            name={status.playing ? "pause" : "play"}
-            size={18}
-            color={colors.white}
+    <View
+      style={{
+        width: 230,
+        minHeight: 40,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <Pressable
+        onPress={toggle}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: mine ? "rgba(255,255,255,0.2)" : colors.accent,
+        }}
+      >
+        <Ionicons
+          name={status.playing ? "pause" : "play"}
+          size={18}
+          color={colors.white}
+        />
+      </Pressable>
+      <View
+        style={{
+          flex: 1,
+          height: 32,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        {bars.map((h, i) => (
+          <Pressable
+            key={i}
+            onPress={() => seek(i)}
+            style={{
+              width: 3,
+              height: Math.max(4, Math.round(h * 28)),
+              borderRadius: 99,
+              backgroundColor: i / bars.length <= progress ? played : rest,
+            }}
           />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <View
-            style={{
-              height: 28,
-              flexDirection: "row",
-              alignItems: "flex-end",
-              gap: 1,
-            }}
-          >
-            {bars.map((h, i) => (
-              <Pressable
-                key={i}
-                onPress={() => seek(i)}
-                style={{
-                  width: 3,
-                  height: Math.max(4, Math.round(h * 28)),
-                  borderRadius: 99,
-                  backgroundColor: i / bars.length <= progress ? played : rest,
-                }}
-              />
-            ))}
-          </View>
-          <Text
-            style={{
-              marginTop: 2,
-              fontSize: 11,
-              color: mine ? "rgba(255,255,255,0.8)" : colors.muted,
-            }}
-          >
-            {formatVoiceTime(
-              status.playing || progress > 0
-                ? status.currentTime
-                : status.duration > 0
-                  ? status.duration
-                  : durationHintSec
-            )}
-          </Text>
-        </View>
+        ))}
       </View>
+      <Text
+        style={{
+          fontSize: 11,
+          minWidth: 34,
+          textAlign: "right",
+          color: mine ? "rgba(255,255,255,0.8)" : colors.muted,
+        }}
+      >
+        {timeLabel}
+      </Text>
     </View>
   );
 }

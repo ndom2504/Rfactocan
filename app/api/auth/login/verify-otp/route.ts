@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
+import { applyInviteConnection } from "@/lib/invite-connect";
 import { consumeLoginOtp, verifyMfaToken } from "@/lib/login-otp";
 import { prisma } from "@/lib/prisma";
 
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
 
     const token = await createSessionToken(user);
     await setSessionCookie(token);
+    await applyInviteConnection(user.id);
 
     return NextResponse.json({
       token,

@@ -8,8 +8,9 @@ import {
 } from "@/lib/auth";
 import { currencyForCountry } from "@/lib/currency";
 import { resolveCountryCode } from "@/lib/detect-country";
+import { applyInviteConnection } from "@/lib/invite-connect";
 import { prisma } from "@/lib/prisma";
-import { queueTesterInvite } from "@/lib/store-testing";
+import { claimTesterInvite } from "@/lib/store-testing";
 
 const schema = z.object({
   email: z.string().email(),
@@ -18,6 +19,7 @@ const schema = z.object({
   role: z.enum(["SENDER", "TRAVELER", "BOTH"]).default("BOTH"),
   country: z.string().optional(),
   ref: z.string().max(32).optional(),
+  invite: z.string().max(64).optional(),
 });
 
 export async function POST(request: Request) {
@@ -49,7 +51,8 @@ export async function POST(request: Request) {
       },
     });
 
-    queueTesterInvite(user);
+    claimTesterInvite(user);
+    await applyInviteConnection(user.id, body.invite);
 
     const token = await createSessionToken(user);
     await setSessionCookie(token);

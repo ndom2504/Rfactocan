@@ -1,7 +1,7 @@
 /**
  * Community media upload from the browser.
- * Videos & larger files go direct to Vercel Blob (avoids ~4.5 MB serverless limit).
- * Small images/PDF can still use the classic FormData path.
+ * Prefer Cloudflare R2 (presigned PUT) when configured — works when Vercel Blob
+ * quota is exhausted. Falls back to Vercel Blob client upload, then FormData.
  */
 
 import { upload } from "@vercel/blob/client";
@@ -18,6 +18,8 @@ type BlobAccess = "public" | "private";
 type UploadConfig = {
   access: BlobAccess;
   blobConfigured: boolean;
+  r2Configured: boolean;
+  storageProvider: "r2" | "blob" | "none";
   maxVideoBytes: number;
 };
 
@@ -28,10 +30,21 @@ async function getUploadConfig(): Promise<UploadConfig> {
   try {
     const res = await fetch("/api/community/upload", { method: "GET" });
     if (res.ok) {
-      const data = (await res.json()) as Partial<UploadConfig>;
+      const data = (await res.json()) as Partial<UploadConfig> & {
+        storageProvider?: string;
+      };
       cachedConfig = {
         access: data.access === "public" ? "public" : "private",
         blobConfigured: Boolean(data.blobConfigured),
+        r2Configured: Boolean(data.r2Configured),
+        storageProvider:
+          data.storageProvider === "r2" || data.storageProvider === "blob"
+            ? data.storageProvider
+            : data.r2Configured
+              ? "r2"
+              : data.blobConfigured
+                ? "blob"
+                : "none",
         maxVideoBytes: Number(data.maxVideoBytes) || 500 * 1024 * 1024,
       };
       return cachedConfig;
@@ -42,6 +55,8 @@ async function getUploadConfig(): Promise<UploadConfig> {
   return {
     access: "private",
     blobConfigured: true,
+    r2Configured: false,
+    storageProvider: "blob",
     maxVideoBytes: 500 * 1024 * 1024,
   };
 }
@@ -76,11 +91,61 @@ async function uploadViaFormData(file: File): Promise<CommunityAttachment> {
   };
 }
 
+async function uploadViaR2Presign(file: File): Promise<CommunityAttachment> {
+  const config = await getUploadConfig();
+  if (file.size > config.maxVideoBytes) {
+    throw new Error(
+      `Fichier trop volumineux (max ${Math.floor(config.maxVideoBytes / (1024 * 1024))} Mo). Compressez la vidéo.`
+    );
+  }
+  const typeMax = maxBytesForCommunityContentType(file.type);
+  if (file.size > typeMax) {
+    throw new Error(
+      `Fichier trop volumineux (max ${Math.floor(typeMax / (1024 * 1024))} Mo).`
+    );
+  }
+
+  const res = await fetch("/api/community/presign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contentType: file.type || "application/octet-stream",
+      size: file.size,
+      fileName: file.name,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || "Échec du pré-signage R2");
+  }
+
+  const put = await fetch(data.uploadUrl as string, {
+    method: "PUT",
+    headers: {
+      "Content-Type":
+        (data.headers?.["Content-Type"] as string) ||
+        file.type ||
+        "application/octet-stream",
+    },
+    body: file,
+  });
+  if (!put.ok) {
+    throw new Error(`Upload R2 échoué (${put.status})`);
+  }
+
+  return {
+    url: data.url as string,
+    name: (data.name as string) || file.name,
+    contentType: (data.contentType as string) || file.type,
+    size: file.size,
+  };
+}
+
 async function uploadViaBlobDirect(file: File): Promise<CommunityAttachment> {
   const config = await getUploadConfig();
-  if (!config.blobConfigured) {
+  if (!config.blobConfigured && !config.r2Configured) {
     throw new Error(
-      "Stockage cloud non configuré. Contactez l’admin (BLOB_READ_WRITE_TOKEN)."
+      "Stockage cloud non configuré. Contactez l’admin (R2_* ou BLOB_READ_WRITE_TOKEN)."
     );
   }
   if (file.size > config.maxVideoBytes) {
@@ -115,17 +180,30 @@ async function uploadViaBlobDirect(file: File): Promise<CommunityAttachment> {
 }
 
 /**
- * Pick the right path: direct Blob for videos / large files, FormData otherwise.
+ * Pick the right path: R2 → Blob direct → FormData.
  */
 export async function uploadCommunityAttachment(
   file: File
 ): Promise<CommunityAttachment> {
+  const config = await getUploadConfig();
   const isVideo = isVideoAttachment(file.type, file.name);
-  if (isVideo || file.size > SERVER_FORM_SAFE_BYTES) {
+  const needsDirect = isVideo || file.size > SERVER_FORM_SAFE_BYTES;
+
+  if (config.storageProvider === "r2" || config.r2Configured) {
+    if (needsDirect) {
+      return uploadViaR2Presign(file);
+    }
+    try {
+      return await uploadViaFormData(file);
+    } catch {
+      return uploadViaR2Presign(file);
+    }
+  }
+
+  if (needsDirect) {
     try {
       return await uploadViaBlobDirect(file);
     } catch (e) {
-      // If Blob client path fails (dev without token), try FormData only if small enough
       if (file.size <= SERVER_FORM_SAFE_BYTES) {
         return uploadViaFormData(file);
       }

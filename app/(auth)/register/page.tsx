@@ -70,6 +70,7 @@ function RegisterForm() {
   const [carrierType, setCarrierType] = useState<CarrierType>("particulier");
   const [country, setCountry] = useState("");
   const [refCode, setRefCode] = useState<string | null>(null);
+  const inviteUserId = params.get("invite")?.trim() || null;
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registerAuth, setRegisterAuth] = useState<"email" | "phone">("email");
@@ -136,6 +137,7 @@ function RegisterForm() {
         role,
         country: country || undefined,
         ref: refCode || undefined,
+        invite: inviteUserId || undefined,
       }),
     });
     const data = await res.json();

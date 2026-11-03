@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -70,8 +70,18 @@ export default function StoryViewerScreen() {
   const [paused, setPaused] = useState(false);
   const [busy, setBusy] = useState(false);
   const mine = Boolean(initial?.mine);
+  const authorUserId = initial?.userId || initial?.author?.id || "";
   const authorName = initial?.author?.displayName || "Rfacto";
   const authorAvatar = initial?.author?.avatarUrl;
+
+  function openAuthorProfile() {
+    if (!authorUserId) return;
+    if (mine) {
+      router.push("/profile" as Href);
+      return;
+    }
+    router.push(`/member/${authorUserId}` as Href);
+  }
   const viewed = useRef(new Set<string>());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -279,6 +289,12 @@ export default function StoryViewerScreen() {
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable
+            onPress={openAuthorProfile}
+            disabled={!authorUserId}
+            hitSlop={6}
+            style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}
+          >
           {authorAvatar ? (
             <Image
               source={{ uri: mediaUrl(authorAvatar) }}
@@ -312,6 +328,7 @@ export default function StoryViewerScreen() {
               {` · ${index + 1}/${items.length}`}
             </Text>
           </View>
+          </Pressable>
           {mine ? (
             <Pressable
               onPress={() => void deleteCurrent()}

@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { ErrorText, Muted, Screen } from "@/components/ui";
-import { api, mediaUrl, uploadFile } from "@/lib/api";
+import { api, getApiUrl, mediaUrl, uploadFile } from "@/lib/api";
 import { chatReplyListPreview } from "@/lib/chat-reply";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -36,9 +36,9 @@ import { storyCoverItem } from "@/lib/story-cover";
 import { setStoryFeed, toStoryFeedItems } from "@/lib/story-feed";
 import { useOptionalTheme } from "@/lib/theme-context";
 import { colors as lightColors } from "@/lib/theme";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-testing";
 
 type Peer = {
+  id?: string | null;
   displayName?: string | null;
   avatarUrl?: string | null;
   online?: boolean | null;
@@ -85,6 +85,7 @@ type InboxRow = {
   key: string;
   href: Href;
   name: string;
+  memberId?: string | null;
   avatarUrl?: string | null;
   online?: boolean;
   title: string;
@@ -99,15 +100,17 @@ function Avatar({
   url,
   size = 48,
   online,
+  onPress,
 }: {
   name: string;
   url?: string | null;
   size?: number;
   online?: boolean;
+  onPress?: () => void;
 }) {
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const src = url ? mediaUrl(url) : "";
-  return (
+  const body = (
     <View style={{ width: size, height: size }}>
       {src ? (
         <Image
@@ -157,6 +160,12 @@ function Avatar({
         />
       ) : null}
     </View>
+  );
+  if (!onPress) return body;
+  return (
+    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="button">
+      {body}
+    </Pressable>
   );
 }
 
@@ -226,6 +235,7 @@ export default function MessagesScreen() {
           key: `pay-${p.id}`,
           href: `/messages/${p.threadId}`,
           name: other?.displayName || "—",
+          memberId: other?.id ?? null,
           avatarUrl: other?.avatarUrl,
           online: Boolean(other?.online),
           title: p.title || t("svc_pay_inbox"),
@@ -270,6 +280,7 @@ export default function MessagesScreen() {
           key: `dm-${th.id}`,
           href: `/messages/${th.id}`,
           name: th.peer?.displayName || "Contact",
+          memberId: th.peer?.id ?? null,
           avatarUrl: th.peer?.avatarUrl,
           online: Boolean(th.peer?.online),
           title: th.peer?.displayName || "Contact",
@@ -293,6 +304,7 @@ export default function MessagesScreen() {
           key: `b-${b.id}`,
           href: `/booking/${b.id}`,
           name: peer?.displayName || "—",
+          memberId: peer?.id ?? null,
           avatarUrl: peer?.avatarUrl,
           online: Boolean(peer?.online),
           title: `${peer?.displayName || "—"} · ${b.request?.fromCity || "?"} → ${b.request?.toCity || "?"}`,
@@ -434,31 +446,20 @@ export default function MessagesScreen() {
     }
   }
 
-  async function shareInvite(url: string) {
-    const who = user?.displayName || "Rfacto";
+  async function shareInviteLink() {
+    if (!user?.id) return;
+    const who = user.displayName || "Rfacto";
+    const url = `${getApiUrl()}/invite?u=${encodeURIComponent(user.id)}`;
     try {
       await Share.share({
         message: t("invite_contacts_message")
           .replace("{who}", who)
           .replace("{url}", url),
+        url,
       });
     } catch {
       /* cancelled */
     }
-  }
-
-  function pickStoreAndShare() {
-    Alert.alert(t("invite_share_pick_title"), t("invite_share_pick_hint"), [
-      {
-        text: t("invite_share_android"),
-        onPress: () => void shareInvite(PLAY_STORE_URL),
-      },
-      {
-        text: t("invite_share_iphone"),
-        onPress: () => void shareInvite(APP_STORE_URL),
-      },
-      { text: t("close"), style: "cancel" },
-    ]);
   }
 
   const others = storyGroups;
@@ -817,7 +818,7 @@ export default function MessagesScreen() {
               <Text style={{ fontWeight: "800", fontSize: 17, color: colors.foreground }}>
                 {t("messages_conversations")}
               </Text>
-              <Pressable onPress={pickStoreAndShare}>
+              <Pressable onPress={() => void shareInviteLink()}>
                 <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
                   {t("invite_contacts_share_link")} ›
                 </Text>
@@ -835,9 +836,11 @@ export default function MessagesScreen() {
         }
         renderItem={({ item }) => {
           const unread = item.unreadCount > 0;
+          const openMember = item.memberId
+            ? () => router.push(`/member/${item.memberId}` as Href)
+            : undefined;
           return (
-            <Pressable
-              onPress={() => router.push(item.href)}
+            <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -851,8 +854,14 @@ export default function MessagesScreen() {
                 name={item.name}
                 url={item.avatarUrl}
                 online={item.online}
+                onPress={
+                  openMember || (() => router.push(item.href))
+                }
               />
-              <View style={{ flex: 1, minWidth: 0 }}>
+              <Pressable
+                onPress={() => router.push(item.href)}
+                style={{ flex: 1, minWidth: 0 }}
+              >
                 <View
                   style={{
                     flexDirection: "row",
@@ -925,8 +934,8 @@ export default function MessagesScreen() {
                     </View>
                   ) : null}
                 </View>
-              </View>
-            </Pressable>
+              </Pressable>
+            </View>
           );
         }}
       />

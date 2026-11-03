@@ -10,9 +10,12 @@ import {
   isAllowedCommunityContentType,
   maxBytesForCommunityContentType,
 } from "@/lib/community";
+import { isR2Configured } from "@/lib/r2";
 import {
+  activeStorageProvider,
   blobAccess,
   isBlobConfigured,
+  isCloudStorageConfigured,
   uploadCommunityFile,
 } from "@/lib/storage";
 
@@ -38,12 +41,23 @@ export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") || "";
 
   // —— Client direct-to-Blob (handleUpload token exchange) ——
+  // Skip when R2 is active (Blob quota often exhausted); clients use /presign instead.
   if (contentType.includes("application/json")) {
+    if (isR2Configured()) {
+      return NextResponse.json(
+        {
+          error:
+            "Utilisez l’upload R2 (presign). Vercel Blob est en secours uniquement.",
+          code: "USE_R2_PRESIGN",
+        },
+        { status: 409 }
+      );
+    }
     if (!isBlobConfigured()) {
       return NextResponse.json(
         {
           error:
-            "Stockage cloud non configuré (BLOB_READ_WRITE_TOKEN). Requis pour les vidéos en production.",
+            "Stockage cloud non configuré. Ajoutez Cloudflare R2 (R2_*) ou BLOB_READ_WRITE_TOKEN.",
         },
         { status: 503 }
       );
@@ -191,11 +205,14 @@ export async function POST(request: Request) {
 
 /** Public config so clients know access mode + limits (no secrets). */
 export async function GET() {
+  const provider = activeStorageProvider();
   return NextResponse.json({
     access: blobAccess(),
     maxVideoBytes: COMMUNITY_MAX_VIDEO_BYTES,
     maxImageBytes: maxBytesForCommunityContentType("image/jpeg"),
     maxDocBytes: maxBytesForCommunityContentType("application/pdf"),
-    blobConfigured: isBlobConfigured(),
+    blobConfigured: isCloudStorageConfigured(),
+    r2Configured: isR2Configured(),
+    storageProvider: provider,
   });
 }

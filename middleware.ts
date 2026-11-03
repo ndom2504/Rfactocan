@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { INVITE_COOKIE } from "@/lib/invite-cookie";
 
 const SHARE_CRAWLER =
   /facebookexternalhit|Facebot|Twitterbot|WhatsApp|Slackbot|LinkedInBot|TelegramBot|Discordbot|Pinterest|iMessageBot/i;
@@ -63,6 +64,20 @@ export function middleware(request: NextRequest) {
   const crawler = rewriteShareCrawler(request);
   if (crawler) return crawler;
 
+  if (request.nextUrl.pathname === "/invite") {
+    const inviterId = request.nextUrl.searchParams.get("u")?.trim() || "";
+    const response = NextResponse.next();
+    if (inviterId.length >= 8) {
+      response.cookies.set(INVITE_COOKIE, inviterId, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+    }
+    return response;
+  }
+
   if (!request.nextUrl.pathname.startsWith("/api")) {
     return NextResponse.next();
   }
@@ -91,6 +106,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/:path*",
+    "/invite",
     "/community/:id",
     "/shops/:id",
     "/services/listing/:id",

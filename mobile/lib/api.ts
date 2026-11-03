@@ -125,6 +125,8 @@ function parseJsonBody(body: string) {
   }
 }
 
+const SERVER_FORM_SAFE_BYTES = 3.5 * 1024 * 1024;
+
 async function nativeMultipart(
   path: string,
   file: LocalFile,
@@ -150,23 +152,99 @@ async function nativeMultipart(
   return data;
 }
 
+/** Direct PUT to Cloudflare R2 via API presign (when Vercel Blob quota is full). */
+async function uploadViaR2Presign(file: LocalFile) {
+  const uri = toNativeUri(file.uri);
+  const native = new File(uri);
+  let size = 0;
+  try {
+    size = typeof native.size === "number" ? native.size : 0;
+  } catch {
+    size = 0;
+  }
+  if (size <= 0) size = SERVER_FORM_SAFE_BYTES + 1;
+
+  const signed = await api<{
+    uploadUrl: string;
+    url: string;
+    headers?: Record<string, string>;
+    name?: string;
+    contentType?: string;
+  }>("/api/community/presign", {
+    method: "POST",
+    body: JSON.stringify({
+      contentType: file.type || "application/octet-stream",
+      size,
+      fileName: file.name,
+    }),
+  });
+
+  const contentType =
+    signed.headers?.["Content-Type"] ||
+    file.type ||
+    "application/octet-stream";
+  const put = await native.upload(signed.uploadUrl, {
+    httpMethod: "PUT",
+    uploadType: UploadType.BINARY_CONTENT,
+    mimeType: contentType,
+    headers: { "Content-Type": contentType },
+  });
+  if (put.status < 200 || put.status >= 300) {
+    throw new Error(`Upload R2 échoué (${put.status})`);
+  }
+  return {
+    url: signed.url,
+    name: signed.name || file.name,
+    contentType: signed.contentType || contentType,
+  };
+}
+
 export async function uploadFile(
   path: string,
   file: LocalFile
 ): Promise<{ url: string; name?: string; contentType?: string }> {
-  const data = await nativeMultipart(path, file);
-  const url = typeof data.url === "string" ? data.url : "";
-  if (!url) {
-    throw new Error(
-      (typeof data.error === "string" && data.error) || "Échec du téléversement."
-    );
+  const community = path.includes("/community/upload");
+  if (community) {
+    let size = 0;
+    try {
+      size = new File(toNativeUri(file.uri)).size || 0;
+    } catch {
+      size = 0;
+    }
+    if (size > SERVER_FORM_SAFE_BYTES || size <= 0) {
+      try {
+        return await uploadViaR2Presign(file);
+      } catch {
+        /* fall through to multipart if R2 not ready / small enough */
+        if (size > SERVER_FORM_SAFE_BYTES) throw new Error("Échec du téléversement.");
+      }
+    }
   }
-  return {
-    url,
-    name: typeof data.name === "string" ? data.name : file.name,
-    contentType:
-      typeof data.contentType === "string" ? data.contentType : file.type,
-  };
+
+  try {
+    const data = await nativeMultipart(path, file);
+    const url = typeof data.url === "string" ? data.url : "";
+    if (!url) {
+      throw new Error(
+        (typeof data.error === "string" && data.error) || "Échec du téléversement."
+      );
+    }
+    return {
+      url,
+      name: typeof data.name === "string" ? data.name : file.name,
+      contentType:
+        typeof data.contentType === "string" ? data.contentType : file.type,
+    };
+  } catch (err) {
+    if (community) {
+      try {
+        return await uploadViaR2Presign(file);
+      } catch {
+        throw err;
+      }
+    }
+    throw err;
+  }
 }
 
 export async function postMultipart<T = Record<string, unknown>>(

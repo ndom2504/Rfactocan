@@ -37,6 +37,7 @@ function IconBtn({
 
 export function DmReactionPicker({
   onPick,
+  onCopy,
   onShare,
   onForward,
   onEdit,
@@ -44,6 +45,7 @@ export function DmReactionPicker({
   alignEnd,
 }: {
   onPick: (emoji: string) => void;
+  onCopy?: () => void;
   onShare: () => void;
   onForward: () => void;
   onEdit?: () => void;
@@ -98,6 +100,14 @@ export function DmReactionPicker({
           marginHorizontal: 2,
         }}
       />
+      {onCopy ? (
+        <IconBtn
+          name="copy-outline"
+          onPress={onCopy}
+          color={colors.accent}
+          label={t("dm_copy")}
+        />
+      ) : null}
       <IconBtn
         name="share-outline"
         onPress={onShare}

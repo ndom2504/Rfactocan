@@ -170,7 +170,11 @@ export default function ServiceListingScreen() {
             : ""}
         </Muted>
 
-        <View
+        <Pressable
+          onPress={() => {
+            if (listing.userId) router.push(`/member/${listing.userId}` as Href);
+          }}
+          disabled={!listing.userId}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -215,7 +219,7 @@ export default function ServiceListingScreen() {
                 : t("services_no_rating")}
             </Muted>
           </View>
-        </View>
+        </Pressable>
 
         <Text style={{ color: colors.foreground, lineHeight: 22, marginBottom: 16 }}>
           {listing.description}

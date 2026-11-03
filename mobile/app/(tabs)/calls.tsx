@@ -32,23 +32,28 @@ const FILTERS: { id: CallListFilter; labelKey: string }[] = [
   { id: "outbound", labelKey: "calls_filter_outgoing" },
 ];
 
-function Avatar({ name, url }: { name: string; url?: string | null }) {
+function Avatar({
+  name,
+  url,
+  onPress,
+}: {
+  name: string;
+  url?: string | null;
+  onPress?: () => void;
+}) {
   const colors = useOptionalTheme()?.colors ?? lightColors;
   const src = url ? mediaUrl(url) : "";
-  if (src) {
-    return (
-      <Image
-        source={{ uri: src }}
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: colors.accentSoft,
-        }}
-      />
-    );
-  }
-  return (
+  const body = src ? (
+    <Image
+      source={{ uri: src }}
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: colors.accentSoft,
+      }}
+    />
+  ) : (
     <View
       style={{
         width: 48,
@@ -63,6 +68,12 @@ function Avatar({ name, url }: { name: string; url?: string | null }) {
         {(name || "R").slice(0, 1).toUpperCase()}
       </Text>
     </View>
+  );
+  if (!onPress) return body;
+  return (
+    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="button">
+      {body}
+    </Pressable>
   );
 }
 
@@ -202,66 +213,74 @@ export default function CallsScreen() {
           const icon = directionIcon(item);
           const statusKey = callStatusPreviewKey(item);
           const statusLabel = t(statusKey);
+          const openMember = item.peer?.id
+            ? () => router.push(`/member/${item.peer!.id}` as Href)
+            : undefined;
           return (
-            <Pressable onPress={() => openThread(item)}>
-              <Card>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
+            <Card>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <Avatar
+                  name={name}
+                  url={item.peer?.avatarUrl}
+                  onPress={openMember || (() => openThread(item))}
+                />
+                <Pressable
+                  onPress={() => openThread(item)}
+                  style={{ flex: 1, minWidth: 0 }}
                 >
-                  <Avatar name={name} url={item.peer?.avatarUrl} />
-                  <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={{
+                      fontWeight: "700",
+                      fontSize: 15,
+                      color: missed ? "#DC2626" : colors.foreground,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {name}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 2,
+                    }}
+                  >
+                    <Ionicons name={icon.name} size={14} color={icon.color} />
                     <Text
                       style={{
-                        fontWeight: "700",
-                        fontSize: 15,
-                        color: missed ? "#DC2626" : colors.foreground,
+                        color: missed ? "#DC2626" : colors.muted,
+                        fontSize: 13,
+                        flexShrink: 1,
                       }}
                       numberOfLines={1}
                     >
-                      {name}
+                      {statusLabel}
                     </Text>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 6,
-                        marginTop: 2,
-                      }}
-                    >
-                      <Ionicons name={icon.name} size={14} color={icon.color} />
-                      <Text
-                        style={{
-                          color: missed ? "#DC2626" : colors.muted,
-                          fontSize: 13,
-                          flexShrink: 1,
-                        }}
-                        numberOfLines={1}
-                      >
-                        {statusLabel}
-                      </Text>
-                    </View>
                   </View>
-                  <View style={{ alignItems: "flex-end", gap: 8 }}>
-                    <Text style={{ color: colors.muted, fontSize: 12 }}>
-                      {formatChatListTime(item.createdAt)}
-                    </Text>
-                    <Pressable
-                      onPress={() => void redial(item)}
-                      hitSlop={8}
-                      disabled={callingId === item.id}
-                      accessibilityLabel={t("call_redial")}
-                      style={{ opacity: callingId === item.id ? 0.4 : 1 }}
-                    >
-                      <Ionicons name="call" size={18} color={colors.accent} />
-                    </Pressable>
-                  </View>
+                </Pressable>
+                <View style={{ alignItems: "flex-end", gap: 8 }}>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>
+                    {formatChatListTime(item.createdAt)}
+                  </Text>
+                  <Pressable
+                    onPress={() => void redial(item)}
+                    hitSlop={8}
+                    disabled={callingId === item.id}
+                    accessibilityLabel={t("call_redial")}
+                    style={{ opacity: callingId === item.id ? 0.4 : 1 }}
+                  >
+                    <Ionicons name="call" size={18} color={colors.accent} />
+                  </Pressable>
                 </View>
-              </Card>
-            </Pressable>
+              </View>
+            </Card>
           );
         }}
       />

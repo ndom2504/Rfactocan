@@ -1,4 +1,5 @@
 import { requestRecordingPermissionsAsync } from "expo-audio";
+import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -336,6 +337,31 @@ export default function DirectChatScreen() {
     } catch {
       setMessages(previous);
       setError(t("react_failed"));
+    }
+  }
+
+  function messageCopyText(message: Message) {
+    const url = message.attachmentUrl ? mediaUrl(message.attachmentUrl) : "";
+    const caption = isAttachmentOnlyBody(message.body)
+      ? ""
+      : (message.body || "").trim();
+    if (url && caption) return `${caption}\n${url}`;
+    return caption || url;
+  }
+
+  async function copyMessage(message: Message) {
+    setReactingToId(null);
+    const text = messageCopyText(message);
+    if (!text) {
+      setError(t("dm_copy_failed"));
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(text);
+      setPayOk(t("dm_copied"));
+      setTimeout(() => setPayOk(""), 2000);
+    } catch {
+      setError(t("dm_copy_failed"));
     }
   }
 
@@ -789,49 +815,95 @@ export default function DirectChatScreen() {
           headerBackTitle: "",
           headerBackTitleVisible: false,
           headerTitle: () => (
-            <View style={{ maxWidth: 220 }}>
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color: colors.foreground,
-                }}
-              >
-                {peer || t("dm_direct_chat")}
-              </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 2,
-                }}
-              >
-                <View
+            <Pressable
+              onPress={() => {
+                if (peerId) router.push(`/member/${peerId}` as Href);
+              }}
+              disabled={!peerId}
+              style={{
+                maxWidth: 240,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              {peerAvatar ? (
+                <Image
+                  source={{ uri: mediaUrl(peerAvatar) }}
                   style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor:
-                      peerTyping || peerOnline ? "#22c55e" : colors.muted,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: colors.accentSoft,
                   }}
                 />
+              ) : (
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: colors.accentSoft,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.foreground,
+                      fontWeight: "700",
+                      fontSize: 14,
+                    }}
+                  >
+                    {(peer || "R").slice(0, 1).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={{ flexShrink: 1 }}>
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontSize: 12,
-                    color: peerTyping || peerOnline ? "#15803d" : colors.muted,
+                    fontSize: 17,
+                    fontWeight: "600",
+                    color: colors.foreground,
                   }}
                 >
-                  {peerTyping
-                    ? t("typing")
-                    : peerOnline
-                      ? t("online")
-                      : t("offline")}
+                  {peer || t("dm_direct_chat")}
                 </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 2,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor:
+                        peerTyping || peerOnline ? "#22c55e" : colors.muted,
+                    }}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontSize: 12,
+                      color:
+                        peerTyping || peerOnline ? "#15803d" : colors.muted,
+                    }}
+                  >
+                    {peerTyping
+                      ? t("typing")
+                      : peerOnline
+                        ? t("online")
+                        : t("offline")}
+                  </Text>
+                </View>
               </View>
-            </View>
+            </Pressable>
           ),
           headerRight: () => (
             <Pressable
@@ -1014,6 +1086,11 @@ export default function DirectChatScreen() {
                   <DmReactionPicker
                     alignEnd={mine}
                     onPick={(emoji) => void reactToMessage(item.id, emoji)}
+                    onCopy={
+                      messageCopyText(item)
+                        ? () => void copyMessage(item)
+                        : undefined
+                    }
                     onShare={() => void shareMessage(item)}
                     onForward={() => void openForward(item)}
                     onEdit={

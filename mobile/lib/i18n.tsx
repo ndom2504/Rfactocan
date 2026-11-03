@@ -121,9 +121,9 @@ const FR = {
   no_messages: "Aucune conversation pour le moment.",
   invite_contacts_share_link: "Partager le lien d’invitation",
   invite_contacts_hint:
-    "Invitez vos proches à rejoindre Rfacto. Choisissez Android ou iPhone pour envoyer le bon lien.",
+    "Invitez vos proches à rejoindre Rfacto. Votre lien permet de télécharger l’app et de se connecter avec vous.",
   invite_contacts_message:
-    "{who} t’invite à rejoindre Rfacto — communauté, services et mises en relation.\n\nTélécharge l’app ici :\n{url}",
+    "{who} t’invite à rejoindre Rfacto — communauté, services et mises en relation.\n\nTélécharge l’app et connecte-toi avec moi :\n{url}",
   invite_share_pick_title: "Quel téléphone ?",
   invite_share_pick_hint:
     "Le lien envoyé ouvre la fiche de l’app sur le store choisi.",
@@ -518,6 +518,9 @@ const FR = {
   react_failed: "Impossible d’enregistrer la réaction.",
   dm_share: "Partager",
   dm_share_failed: "Impossible de partager ce message.",
+  dm_copy: "Copier",
+  dm_copied: "Message copié",
+  dm_copy_failed: "Impossible de copier ce message.",
   dm_edit: "Modifier",
   dm_edit_save: "Enregistrer",
   dm_edited: "Modifié",
@@ -922,14 +925,14 @@ const EN: Record<keyof typeof FR, string> = {
   no_messages: "No conversations yet.",
   invite_contacts_share_link: "Share invite link",
   invite_contacts_hint:
-    "Invite people you know to join Rfacto. Choose Android or iPhone to send the right download link.",
+    "Invite people you know to join Rfacto. Your link lets them download the app and connect with you.",
   invite_share_pick_title: "Which phone?",
   invite_share_pick_hint:
     "The link opens the app listing on the store you pick.",
   invite_share_android: "Android · Play Store",
   invite_share_iphone: "iPhone · App Store",
   invite_contacts_message:
-    "{who} is inviting you to join Rfacto — community, services and matching.\n\nDownload the app here:\n{url}",
+    "{who} is inviting you to join Rfacto — community, services and matching.\n\nDownload the app and connect with me:\n{url}",
   dm_direct_chat: "Direct message",
   online: "Online",
   offline: "Offline",
@@ -1316,6 +1319,9 @@ const EN: Record<keyof typeof FR, string> = {
   react_failed: "Could not save the reaction.",
   dm_share: "Share",
   dm_share_failed: "Could not share this message.",
+  dm_copy: "Copy",
+  dm_copied: "Message copied",
+  dm_copy_failed: "Could not copy this message.",
   dm_forward: "Forward",
   dm_forward_title: "Forward to…",
   dm_forward_empty: "No other conversation.",
