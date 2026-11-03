@@ -10,6 +10,7 @@ import {
   otherUserId,
   type DmContextType,
 } from "@/lib/dm";
+import { messageNotificationText } from "@/lib/chat-reply";
 import { notifyUser } from "@/lib/notifications";
 import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
@@ -241,7 +242,7 @@ export async function POST(request: Request) {
         userId: body.toUserId,
         type: "DIRECT_MESSAGE",
         title: `Message de ${me?.displayName || session.displayName || "Un membre"}`,
-        body: body.body.trim().slice(0, 120),
+        body: messageNotificationText(body.body),
         href: conversationPath(thread.id, thread.channel),
       });
     }

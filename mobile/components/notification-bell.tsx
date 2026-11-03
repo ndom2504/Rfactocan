@@ -7,10 +7,10 @@ import {
   View,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useRouter, type Href } from "expo-router";
+import { useRouter } from "expo-router";
 import { api } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
-import { onPushReceived } from "@/lib/push";
+import { hrefToExpoRoute, onPushReceived } from "@/lib/push";
 import { useI18n } from "@/lib/i18n";
 import { colors } from "@/lib/theme";
 
@@ -23,26 +23,6 @@ type Item = {
   readAt: string | null;
   createdAt: string;
 };
-
-function hrefToRoute(href: string): Href | null {
-  const booking = /\/bookings\/([^/?#]+)/.exec(href);
-  if (booking) return `/booking/${booking[1]}`;
-  const trip = /\/trips\/([^/?#]+)/.exec(href);
-  if (trip) return `/trip/${trip[1]}`;
-  const request = /\/requests\/([^/?#]+)/.exec(href);
-  if (request) return `/request/${request[1]}`;
-  const community = /\/community\/([^/?#]+)/.exec(href);
-  if (community) return `/community/${community[1]}`;
-  if (href.includes("/messages")) return "/(tabs)/messages";
-  if (href.includes("/community")) return "/(tabs)/community";
-  if (href.includes("/ambassador") || href.includes("/herald")) {
-    return "/herald" as Href;
-  }
-  if (href.includes("/dashboard") || href.includes("/profile")) {
-    return href.includes("/profile") ? "/profile" : "/(tabs)";
-  }
-  return null;
-}
 
 export function NotificationBell() {
   const { t } = useI18n();
@@ -89,12 +69,14 @@ export function NotificationBell() {
     void markRead([item.id]);
     setOpen(false);
     const href = item.href ?? "";
-    const route = href ? hrefToRoute(href) : null;
+    const route = href ? hrefToExpoRoute(href) : null;
     if (route) {
       router.push(route);
       return;
     }
-    if (item.type === "MESSAGE") router.push("/(tabs)/messages");
+    if ((item.type ?? "").toUpperCase().includes("MESSAGE")) {
+      router.push("/(tabs)/messages");
+    }
   }
 
   return (

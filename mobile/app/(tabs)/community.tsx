@@ -1,5 +1,6 @@
 import { type Href, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   ActivityIndicator,
   Alert,
@@ -418,8 +419,16 @@ export default function CommunityScreen() {
   }
 
   async function deletePost(item: CommunityPost) {
-    if (!isNativeCommunityPostId(item.id)) return;
-    await api(`/api/community/posts/${item.id}`, { method: "DELETE" });
+    let url: string | null = null;
+    if (item.id.startsWith("svc:")) {
+      url = `/api/services/${item.id.slice(4)}`;
+    } else if (item.id.startsWith("shop-product:")) {
+      url = `/api/shops/products/${item.id.slice("shop-product:".length)}`;
+    } else if (isNativeCommunityPostId(item.id)) {
+      url = `/api/community/posts/${item.id}`;
+    }
+    if (!url) return;
+    await api(url, { method: "DELETE" });
     setPosts((prev) => prev.filter((p) => p.id !== item.id));
   }
 
@@ -429,6 +438,11 @@ export default function CommunityScreen() {
     );
     const isOwnerNative =
       Boolean(item.isOwner) && isNativeCommunityPostId(item.id);
+    const canDelete =
+      Boolean(item.isOwner) &&
+      (isNativeCommunityPostId(item.id) ||
+        item.id.startsWith("svc:") ||
+        item.id.startsWith("shop-product:"));
     const buttons: {
       text: string;
       style?: "cancel" | "destructive" | "default";
@@ -450,6 +464,38 @@ export default function CommunityScreen() {
         text: t("community_edit"),
         onPress: () => router.push(`/community/${item.id}` as Href),
       });
+    }
+    if (!item.isOwner) {
+      buttons.push({
+        text: t("community_report"),
+        onPress: () => {
+          Alert.alert(t("community_report"), t("community_report_reason"), [
+            { text: t("cancel"), style: "cancel" },
+            {
+              text: t("community_report_send"),
+              style: "destructive",
+              onPress: () =>
+                void runExclusive(`${item.id}:report`, async () => {
+                  const postId = isNativeCommunityPostId(item.id) ? item.id : "";
+                  await api("/api/reports", {
+                    method: "POST",
+                    body: JSON.stringify(
+                      postId
+                        ? { communityPostId: postId, reason: t("community_report") }
+                        : {
+                            targetUserId: item.author?.id,
+                            reason: t("community_report"),
+                          }
+                    ),
+                  });
+                  Alert.alert(t("messages_title"), t("community_report_sent"));
+                }),
+            },
+          ]);
+        },
+      });
+    }
+    if (canDelete) {
       buttons.push({
         text: t("community_delete"),
         style: "destructive",
@@ -659,6 +705,13 @@ export default function CommunityScreen() {
                     {` · ${item.author?.connectionCount ?? 0} ${t("community_connections")}`}
                   </Text>
                 </Pressable>
+                <Pressable
+                  onPress={() => openPostOptions(item)}
+                  hitSlop={8}
+                  accessibilityLabel={t("my_projects_options")}
+                >
+                  <Ionicons name="ellipsis-vertical" size={20} color={colors.muted} />
+                </Pressable>
               </View>
 
               {item.title?.trim() ? (
@@ -779,9 +832,7 @@ export default function CommunityScreen() {
                 <ActionCell
                   label={t("community_share")}
                   onPress={() =>
-                    runExclusive(`${item.id}:share`, async () => {
-                      openPostOptions(item);
-                    })
+                    void runExclusive(`${item.id}:share`, () => sharePost(item))
                   }
                 />
               </View>

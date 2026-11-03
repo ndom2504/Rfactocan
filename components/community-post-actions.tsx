@@ -44,9 +44,23 @@ type Props = {
   onDeleted?: (id: string) => void;
 };
 
+function deleteUrl(post: EditablePost): string | null {
+  if (post.id.startsWith("svc:")) {
+    return `/api/services/${post.id.slice(4)}`;
+  }
+  if (post.id.startsWith("shop-product:")) {
+    return `/api/shops/products/${post.id.slice("shop-product:".length)}`;
+  }
+  if (post.source === "post" || !post.source) {
+    return `/api/community/posts/${post.id}`;
+  }
+  return null;
+}
+
 export function CommunityPostActions({ post, onUpdated, onDeleted }: Props) {
   const { t } = useI18n();
   const isRealPost = post.source === "post" || !post.source;
+  const removeUrl = post.isOwner ? deleteUrl(post) : null;
   const [editing, setEditing] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [kind, setKind] = useState(String(post.kind));
@@ -58,7 +72,7 @@ export function CommunityPostActions({ post, onUpdated, onDeleted }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
-  if (!isRealPost) return null;
+  if (!isRealPost && !removeUrl) return null;
 
   async function saveEdit() {
     setBusy(true);
@@ -90,7 +104,9 @@ export function CommunityPostActions({ post, onUpdated, onDeleted }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/community/posts/${post.id}`, {
+      const url = removeUrl;
+      if (!url) return;
+      const res = await fetch(url, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -137,28 +153,28 @@ export function CommunityPostActions({ post, onUpdated, onDeleted }: Props) {
   return (
     <div className="mt-2 space-y-3">
       <div className="flex flex-wrap gap-2">
-        {post.isOwner && (
-          <>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setEditing((v) => !v);
-                setReporting(false);
-              }}
-              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
-            >
-              {t("community_edit")}
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void remove()}
-              className="text-xs text-[var(--muted)] hover:text-red-700"
-            >
-              {t("community_delete")}
-            </button>
-          </>
+        {isRealPost && post.isOwner && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setEditing((v) => !v);
+              setReporting(false);
+            }}
+            className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+          >
+            {t("community_edit")}
+          </button>
+        )}
+        {removeUrl && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void remove()}
+            className="text-xs text-[var(--muted)] hover:text-red-700"
+          >
+            {t("community_delete")}
+          </button>
         )}
         {!post.isOwner && (
           <button

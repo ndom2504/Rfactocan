@@ -570,6 +570,7 @@ const dict = {
     my_projects_shops: "Mes boutiques",
     my_projects_edit: "Modifier",
     my_projects_options: "Options",
+    my_projects_view: "Voir",
     my_projects_pause: "Mettre en veille",
     my_projects_resume: "Republier",
     my_projects_status_paused: "En veille",
@@ -1030,6 +1031,7 @@ const dict = {
     ambassador_open_cta: "Espace Héraut Réseau",
     ambassador_close: "Fermer",
     ambassador_become_cta: "Héraut Réseau",
+    browse_meet: "Rencontre",
     ambassador_apply_pending_cta: "Demande Héraut Réseau en cours",
     ambassador_apply_title: "Héraut Réseau Rfacto",
     ambassador_apply_lead:
@@ -2386,6 +2388,7 @@ const dict = {
     my_projects_shops: "My shops",
     my_projects_edit: "Edit",
     my_projects_options: "Options",
+    my_projects_view: "View",
     my_projects_pause: "Put on hold",
     my_projects_resume: "Publish again",
     my_projects_status_paused: "On hold",
@@ -2845,6 +2848,7 @@ const dict = {
     ambassador_open_cta: "Network Herald space",
     ambassador_close: "Close",
     ambassador_become_cta: "Network Herald",
+    browse_meet: "Meet",
     ambassador_apply_pending_cta: "Network Herald request pending",
     ambassador_apply_title: "Rfacto Network Herald",
     ambassador_apply_lead:

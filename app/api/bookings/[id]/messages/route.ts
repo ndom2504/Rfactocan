@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { isUserOnline } from "@/lib/presence";
 import { prisma } from "@/lib/prisma";
+import { messageNotificationText } from "@/lib/chat-reply";
 import { notifyUser, notifyUserBackground } from "@/lib/notifications";
 import { readBookingPeerTyping } from "@/lib/dm-typing";
 
@@ -202,11 +203,12 @@ export async function POST(request: Request, { params }: Params) {
       session.id === booking.senderId
         ? booking.trip.userId
         : booking.senderId;
+    const spoken = messageNotificationText(text, attachmentUrl, "");
     const preview = attachmentUrl
-      ? text
-        ? `📎 ${text.slice(0, 80)}`
+      ? spoken
+        ? `📎 ${spoken.slice(0, 80)}`
         : "📎 Pièce jointe"
-      : text.slice(0, 100);
+      : spoken.slice(0, 100);
 
     notifyUserBackground({
       userId: recipientId,

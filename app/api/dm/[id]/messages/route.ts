@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { assertThreadParticipant, conversationPath, dmChannel, otherUserId, userIsServiceProviderInThread } from "@/lib/dm";
 import { isUserOnline } from "@/lib/presence";
+import { messageNotificationText } from "@/lib/chat-reply";
 import { notifyUser } from "@/lib/notifications";
 import { summarizeReactions, type ReactionSummary } from "@/lib/dm-reactions";
 import { persistTyping, readPeerTyping } from "@/lib/dm-typing";
@@ -197,8 +198,13 @@ export async function POST(request: Request, { params }: Params) {
       userId: peerId,
       type: "DIRECT_MESSAGE",
       title: `Message de ${me?.displayName || "Un membre"}`,
-      body: (text || "Pièce jointe").slice(0, 120),
+      body: messageNotificationText(
+        text,
+        body.attachmentUrl,
+        "Pièce jointe"
+      ),
       href: conversationPath(id, thread.channel),
+      data: { threadId: id },
     });
 
     return NextResponse.json({ message }, { status: 201 });

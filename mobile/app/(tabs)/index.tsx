@@ -105,26 +105,6 @@ export default function HomeScreen() {
             {t("verified")}
           </Text>
         ) : null}
-        <Text
-          style={{
-            marginTop: 6,
-            color: colors.muted,
-            fontSize: 14,
-            textAlign: "center",
-          }}
-        >
-          {t("dashboard_subtitle")}
-        </Text>
-        <Text
-          style={{
-            marginTop: 4,
-            color: colors.muted,
-            fontSize: 12,
-            textAlign: "center",
-          }}
-        >
-          {t("dashboard_actors_hint")}
-        </Text>
       </View>
 
       <View style={{ gap: 10 }}>
@@ -153,10 +133,6 @@ export default function HomeScreen() {
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {(
           [
-            ["/(tabs)/trips", t("browse_trips")],
-            ["/(tabs)/requests", t("browse_requests")],
-            ["/services", t("browse_services")],
-            ["/(tabs)/shops", t("browse_shops")],
             ["/meet", t("browse_meet")],
             ["/herald", t("ambassador_become_cta")],
             ...(user?.role === "ADMIN"

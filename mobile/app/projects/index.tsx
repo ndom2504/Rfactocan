@@ -1,7 +1,7 @@
 import { type Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Image, ScrollView, Text, View } from "react-native";
-import { Badge, Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
+import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Button, Card, ErrorText, Muted, Screen, Title } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { shopCategoryLabel } from "@/lib/shops-catalog";
@@ -129,33 +129,6 @@ export default function MyProjectsScreen() {
     }
   }
 
-  async function setProductActive(shopId: string, productId: string, active: boolean) {
-    setBusyId(productId);
-    setError("");
-    try {
-      await api(`/api/shops/products/${productId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ active }),
-      });
-      setShops((prev) =>
-        prev.map((shop) =>
-          shop.id === shopId
-            ? {
-                ...shop,
-                products: (shop.products ?? []).map((p) =>
-                  p.id === productId ? { ...p, active } : p
-                ),
-              }
-            : shop
-        )
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("retry"));
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   function serviceOptions(s: ServiceRow) {
     Alert.alert(t("my_projects_options"), s.title, [
       {
@@ -211,47 +184,6 @@ export default function MyProjectsScreen() {
     ]);
   }
 
-  function productOptions(shop: ShopRow, product: ProductRow) {
-    Alert.alert(t("my_projects_options"), product.title, [
-      {
-        text: t("my_projects_edit"),
-        onPress: () => router.push(`/shops/${shop.id}/manage` as Href),
-      },
-      {
-        text: product.active ? t("my_projects_pause") : t("my_projects_resume"),
-        onPress: () => void setProductActive(shop.id, product.id, !product.active),
-      },
-      {
-        text: t("my_projects_delete"),
-        style: "destructive",
-        onPress: () =>
-          void (async () => {
-            setBusyId(product.id);
-            try {
-              await api(`/api/shops/products/${product.id}`, { method: "DELETE" });
-              setShops((prev) =>
-                prev.map((row) =>
-                  row.id === shop.id
-                    ? {
-                        ...row,
-                        products: (row.products ?? []).map((p) =>
-                          p.id === product.id ? { ...p, active: false } : p
-                        ),
-                      }
-                    : row
-                )
-              );
-            } catch (e) {
-              setError(e instanceof Error ? e.message : t("retry"));
-            } finally {
-              setBusyId(null);
-            }
-          })(),
-      },
-      { text: t("cancel"), style: "cancel" },
-    ]);
-  }
-
   async function deleteShop(id: string) {
     setBusyId(id);
     setError("");
@@ -294,120 +226,128 @@ export default function MyProjectsScreen() {
 
         {services.length ? <Title>{t("my_projects_services")}</Title> : null}
         {services.map((s) => (
-          <Card key={s.id}>
-            <View style={{ flexDirection: "row", gap: 12 }}>
+          <Card key={s.id} style={{ paddingVertical: 8, paddingHorizontal: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               {s.photos?.[0] ? (
                 <Image
                   source={{ uri: s.photos[0] }}
-                  style={{ width: 88, height: 88, borderRadius: 12 }}
+                  style={{ width: 56, height: 56, borderRadius: 10 }}
                 />
-              ) : (
-                <View
-                  style={{
-                    width: 88,
-                    height: 88,
-                    borderRadius: 12,
-                    backgroundColor: colors.surface2,
-                  }}
-                />
-              )}
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ fontWeight: "700", color: colors.foreground }}>
+              ) : null}
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{ fontWeight: "700", color: colors.foreground }}
+                >
                   {s.title}
                 </Text>
                 <Muted>
                   {[s.city, s.country].filter(Boolean).join(", ") || "—"} · {s.status}
                 </Muted>
                 {s.priceAmount != null ? (
-                  <Text style={{ color: colors.foreground }}>
+                  <Text style={{ color: colors.foreground, fontSize: 13 }}>
                     {s.priceAmount} {s.currency ?? ""}
                   </Text>
                 ) : null}
               </View>
+              <Pressable
+                onPress={() => serviceOptions(s)}
+                disabled={busyId === s.id}
+                hitSlop={8}
+              >
+                <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
+                  {t("my_projects_options")}
+                </Text>
+              </Pressable>
             </View>
-            <Button
-              label={t("my_projects_options")}
-              variant="outline"
-              onPress={() => serviceOptions(s)}
-              disabled={busyId === s.id}
-            />
           </Card>
         ))}
 
         {shops.length ? <Title>{t("my_projects_shops")}</Title> : null}
         {shops.map((s) => {
-          const cover = s.coverUrl || s.logoUrl || s.products?.[0]?.photoUrl || null;
+          const productPhotos = new Set(
+            (s.products ?? [])
+              .map((product) => productCover(product))
+              .filter((url): url is string => Boolean(url))
+          );
+          const cover = [s.coverUrl, s.logoUrl].find(
+            (url) => url && !productPhotos.has(url)
+          );
           return (
-          <Card key={s.id}>
-            <View style={{ flexDirection: "row", gap: 12 }}>
+          <Card key={s.id} style={{ paddingVertical: 8, paddingHorizontal: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               {cover ? (
                 <Image
                   source={{ uri: cover }}
-                  style={{ width: 88, height: 88, borderRadius: 12 }}
+                  style={{ width: 56, height: 56, borderRadius: 10 }}
                 />
-              ) : (
-                <View
-                  style={{
-                    width: 88,
-                    height: 88,
-                    borderRadius: 12,
-                    backgroundColor: colors.surface2,
-                  }}
-                />
-              )}
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ fontWeight: "700", color: colors.foreground }}>
+              ) : null}
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{ fontWeight: "700", color: colors.foreground }}
+                >
                   {s.name}
                 </Text>
                 <Muted>
                   {s.category ? `${shopCategoryLabel(s.category, locale)} · ` : ""}
-                  {[s.city, s.country].filter(Boolean).join(", ") || "—"}
+                  {[s.city, s.country].filter(Boolean).join(", ") || "—"} · {s.status}
                 </Muted>
-                <Badge>{s.status}</Badge>
               </View>
+              <Pressable
+                onPress={() => shopOptions(s)}
+                disabled={busyId === s.id}
+                hitSlop={8}
+              >
+                <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
+                  {t("my_projects_options")}
+                </Text>
+              </Pressable>
             </View>
-            {(s.products ?? []).length ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  {(s.products ?? []).map((product) => {
-                    const photo = productCover(product);
-                    return (
-                      <View key={product.id} style={{ width: 120, opacity: product.active ? 1 : 0.55 }}>
-                        {photo ? (
-                          <Image
-                            source={{ uri: photo }}
-                            style={{ width: 120, height: 80, borderRadius: 10 }}
-                          />
-                        ) : (
-                          <View
-                            style={{
-                              width: 120,
-                              height: 80,
-                              borderRadius: 10,
-                              backgroundColor: colors.surface2,
-                            }}
-                          />
-                        )}
-                        <Text numberOfLines={1} style={{ color: colors.foreground, marginTop: 4 }}>
-                          {product.title}
-                        </Text>
-                        <Button
-                          label={t("my_projects_options")}
-                          variant="outline"
-                          onPress={() => productOptions(s, product)}
-                        />
-                      </View>
-                    );
-                  })}
+            {(s.products ?? []).map((product) => {
+              const photo = productCover(product);
+              const price =
+                product.priceCents != null
+                  ? `${(product.priceCents / 100).toFixed(2)} ${s.currency ?? ""}`.trim()
+                  : "";
+              return (
+                <View
+                  key={product.id}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    marginTop: 8,
+                    opacity: product.active ? 1 : 0.55,
+                  }}
+                >
+                  {photo ? (
+                    <Image
+                      source={{ uri: photo }}
+                      style={{ width: 48, height: 48, borderRadius: 8 }}
+                    />
+                  ) : null}
+                  <View style={{ flex: 1 }}>
+                    <Text numberOfLines={1} style={{ color: colors.foreground }}>
+                      {product.title}
+                    </Text>
+                    {price ? (
+                      <Muted>{price}</Muted>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    onPress={() =>
+                      router.push(`/shops/product/${product.id}` as Href)
+                    }
+                    hitSlop={8}
+                  >
+                    <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 13 }}>
+                      {t("my_projects_view")}
+                    </Text>
+                  </Pressable>
                 </View>
-              </ScrollView>
-            ) : null}
-            <Button
-              label={t("my_projects_options")}
-              variant="outline"
-              onPress={() => shopOptions(s)}
-              disabled={busyId === s.id}
-            />
+              );
+            })}
           </Card>
           );
         })}

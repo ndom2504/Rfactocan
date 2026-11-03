@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, type Href } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -27,11 +27,24 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function PushBridge() {
   const router = useRouter();
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const [queued, setQueued] = useState<Href | null>(null);
+
   useEffect(() => {
     return watchPushNotifications((href) => {
-      router.push(href);
+      setQueued(href);
     });
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    if (!queued || loading || !user) return;
+    const root = String(segments[0] ?? "");
+    if (!root || root === "index" || root === "(auth)") return;
+    setQueued(null);
+    router.push(queued);
+  }, [queued, loading, user, segments, router]);
+
   return null;
 }
 

@@ -185,69 +185,6 @@ export default function MyProjectsPage() {
     }
   }
 
-  async function setProductActive(shopId: string, productId: string, active: boolean) {
-    setBusyId(productId);
-    setActionError("");
-    try {
-      const res = await fetch(`/api/shops/products/${productId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setActionError(data.error || t("my_projects_share_error"));
-        return;
-      }
-      setShops((prev) =>
-        prev.map((shop) =>
-          shop.id === shopId
-            ? {
-                ...shop,
-                products: (shop.products ?? []).map((p) =>
-                  p.id === productId ? { ...p, active } : p
-                ),
-              }
-            : shop
-        )
-      );
-    } catch {
-      setActionError(t("my_projects_share_error"));
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function deleteProduct(shopId: string, productId: string) {
-    if (!confirm(t("my_projects_delete_service_confirm"))) return;
-    setBusyId(productId);
-    setActionError("");
-    try {
-      const res = await fetch(`/api/shops/products/${productId}`, { method: "DELETE" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setActionError(data.error || t("my_projects_share_error"));
-        return;
-      }
-      setShops((prev) =>
-        prev.map((shop) =>
-          shop.id === shopId
-            ? {
-                ...shop,
-                products: (shop.products ?? []).map((p) =>
-                  p.id === productId ? { ...p, active: false } : p
-                ),
-              }
-            : shop
-        )
-      );
-    } catch {
-      setActionError(t("my_projects_share_error"));
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   async function deleteShop(id: string) {
     if (!confirm(t("my_projects_delete_shop_confirm"))) return;
     setBusyId(id);
@@ -423,24 +360,27 @@ export default function MyProjectsPage() {
           </h2>
           <div className="grid gap-3">
             {shops.map((s) => {
-              const cover = s.coverUrl || s.logoUrl || null;
+              const productPhotos = new Set(
+                (s.products ?? [])
+                  .map((product) => productCover(product))
+                  .filter((url): url is string => Boolean(url))
+              );
+              const cover = [s.coverUrl, s.logoUrl].find(
+                (url) => url && !productPhotos.has(url)
+              );
               return (
                 <Card key={s.id} className="overflow-hidden p-0">
                   <div className="flex flex-col sm:flex-row">
-                    <div className="relative h-40 w-full shrink-0 bg-[var(--surface-2)] sm:h-auto sm:w-44">
-                      {cover ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                    {cover ? (
+                      <div className="relative h-28 w-full shrink-0 bg-[var(--surface-2)] sm:h-auto sm:w-28">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={cover}
                           alt=""
                           className="h-full w-full object-cover"
                         />
-                      ) : (
-                        <div className="flex h-full min-h-[7rem] items-center justify-center text-xs text-[var(--muted)]">
-                          {t("services_no_cover")}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : null}
                     <div className="flex flex-1 flex-wrap items-start justify-between gap-3 p-4">
                       <div className="min-w-0">
                         <CardTitle className="text-base">{s.name}</CardTitle>
@@ -497,58 +437,37 @@ export default function MyProjectsPage() {
                     </div>
                   </div>
                   {(s.products ?? []).length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] p-3 sm:grid-cols-4">
+                    <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
                       {(s.products ?? []).map((product) => {
                         const photo = productCover(product);
                         return (
                           <div
                             key={product.id}
-                            className={`overflow-hidden rounded-xl border border-[var(--border)] ${product.active ? "" : "opacity-60"}`}
+                            className={`flex items-center gap-3 px-3 py-2 ${product.active ? "" : "opacity-60"}`}
                           >
-                            <div className="relative h-24 bg-[var(--surface-2)]">
-                              {photo ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={photo} alt="" className="h-full w-full object-cover" />
-                              ) : null}
-                              <div className="absolute right-1 top-1">
-                                <OptionsMenu label="⋯">
-                                  <Link href={`/shops/${s.id}/manage`}>
-                                    <Button size="sm" variant="ghost" className="w-full justify-start">
-                                      {t("my_projects_edit")}
-                                    </Button>
-                                  </Link>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="w-full justify-start"
-                                    disabled={busyId === product.id}
-                                    onClick={() =>
-                                      void setProductActive(s.id, product.id, !product.active)
-                                    }
-                                  >
-                                    {product.active
-                                      ? t("my_projects_pause")
-                                      : t("my_projects_resume")}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="danger"
-                                    className="w-full justify-start"
-                                    disabled={busyId === product.id}
-                                    onClick={() => void deleteProduct(s.id, product.id)}
-                                  >
-                                    {t("my_projects_delete")}
-                                  </Button>
-                                </OptionsMenu>
-                              </div>
+                            {photo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={photo}
+                                alt=""
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                              />
+                            ) : null}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">{product.title}</p>
+                              <p className="text-xs text-[var(--muted)]">
+                                {formatMoney(
+                                  product.priceCents / 100,
+                                  (normalizeCurrency(s.currency) as MoneyCurrency) ?? "XAF"
+                                )}
+                              </p>
                             </div>
-                            <p className="truncate px-2 py-1 text-xs font-medium">{product.title}</p>
-                            <p className="px-2 pb-2 text-xs text-[var(--muted)]">
-                              {formatMoney(
-                                product.priceCents / 100,
-                                (normalizeCurrency(s.currency) as MoneyCurrency) ?? "XAF"
-                              )}
-                            </p>
+                            <Link
+                              href={`/shops/product/${product.id}`}
+                              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm font-medium"
+                            >
+                              {t("my_projects_view")}
+                            </Link>
                           </div>
                         );
                       })}

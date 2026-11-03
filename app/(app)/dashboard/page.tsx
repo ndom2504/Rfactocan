@@ -78,16 +78,6 @@ export default async function DashboardPage() {
           initialKpis={ambassadorKpis ?? undefined}
           collapsedByDefault
         />
-      ) : !user.isAmbassador ? (
-        <div className="mx-auto flex w-full max-w-md justify-center">
-          <Link href="/ambassador/apply" className="w-full">
-            <Button className="h-12 w-full text-base" variant="outline">
-              {ambPending
-                ? t(locale, "ambassador_apply_pending_cta")
-                : t(locale, "ambassador_become_cta")}
-            </Button>
-          </Link>
-        </div>
       ) : null}
 
       <div
@@ -124,6 +114,21 @@ export default async function DashboardPage() {
             className="h-12 w-full border-[var(--accent)] bg-transparent text-base text-[var(--foreground)] shadow-none hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
             {t(locale, "my_projects_title")}
+          </Button>
+        </Link>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-md flex-wrap justify-center gap-2">
+        <Link href="/meet">
+          <Button variant="outline" className="h-10 border-[var(--accent)]">
+            {t(locale, "browse_meet")}
+          </Button>
+        </Link>
+        <Link href="/ambassador/apply">
+          <Button variant="outline" className="h-10 border-[var(--accent)]">
+            {ambPending
+              ? t(locale, "ambassador_apply_pending_cta")
+              : t(locale, "ambassador_become_cta")}
           </Button>
         </Link>
       </div>

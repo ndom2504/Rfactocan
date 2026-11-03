@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import * as SecureStore from "expo-secure-store";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import type { Href } from "expo-router";
@@ -303,6 +304,10 @@ export async function unregisterPushToken() {
 
 export function hrefToExpoRoute(href?: string | null): Href | null {
   if (!href) return null;
+  const dm = /\/messages\/dm\/([^/?#]+)/.exec(href);
+  if (dm) return `/messages/${dm[1]}` as Href;
+  const inChat = /\/in\/chat\/([^/?#]+)/.exec(href);
+  if (inChat) return `/in-chat/${inChat[1]}` as Href;
   const booking = /\/bookings\/([^/?#]+)/.exec(href);
   if (booking) return `/booking/${booking[1]}`;
   const trip = /\/trips\/([^/?#]+)/.exec(href);
@@ -313,6 +318,14 @@ export function hrefToExpoRoute(href?: string | null): Href | null {
   if (community) return `/community/${community[1]}`;
   const service = /\/services\/listing\/([^/?#]+)/.exec(href);
   if (service) return `/service/${service[1]}` as Href;
+  const servicePay = /\/service-payments\/([^/?#]+)/.exec(href);
+  if (servicePay) return `/service-payments/${servicePay[1]}` as Href;
+  const shopProduct = /\/shops\/product\/([^/?#]+)/.exec(href);
+  if (shopProduct) return `/shops/product/${shopProduct[1]}` as Href;
+  const shop = /\/shops\/([^/?#]+)/.exec(href);
+  if (shop && !["new", "orders", "search", "product"].includes(shop[1])) {
+    return `/shops/${shop[1]}` as Href;
+  }
   if (href.includes("/ambassador") || href.includes("/herald")) {
     return "/herald" as Href;
   }
@@ -320,6 +333,17 @@ export function hrefToExpoRoute(href?: string | null): Href | null {
   if (href.includes("/community")) return "/(tabs)/community";
   if (href.includes("/profile")) return "/profile";
   if (href.includes("/dashboard")) return "/(tabs)";
+  return null;
+}
+
+function routeFromPush(payload: PushPayload): Href | null {
+  const route = hrefToExpoRoute(payload.href);
+  if (route) return route;
+  const type = (payload.type ?? "").toUpperCase();
+  if (payload.threadId && type.includes("MESSAGE")) {
+    return `/messages/${payload.threadId}` as Href;
+  }
+  if (type.includes("MESSAGE")) return "/(tabs)/messages";
   return null;
 }
 
@@ -334,21 +358,40 @@ export function watchPushNotifications(onOpenHref: (href: Href) => void) {
       const payload = readPushData(event.request.content.data);
       emitIncomingCallIfNeeded(payload);
     });
+    const opened = new Set<string>();
+    const openResponse = (
+      event: {
+        notification: {
+          request: { identifier: string; content: { data: unknown } };
+        };
+      }
+    ) => {
+      const id = event.notification.request.identifier;
+      if (opened.has(id)) return;
+      opened.add(id);
+      void SecureStore.setItemAsync("rfacto_last_push_open", id).catch(() => {});
+      emitPushReceived();
+      const payload = readPushData(event.notification.request.content.data);
+      emitIncomingCallIfNeeded(payload);
+      const route = routeFromPush(payload);
+      if (route) onOpenHref(route);
+    };
     const response = Notifications.addNotificationResponseReceivedListener(
       (event) => {
-        emitPushReceived();
-        const payload = readPushData(event.notification.request.content.data);
-        emitIncomingCallIfNeeded(payload);
-        const route = hrefToExpoRoute(payload.href);
-        if (route) {
-          onOpenHref(route);
-          return;
-        }
-        if ((payload.type ?? "").toUpperCase().includes("MESSAGE")) {
-          onOpenHref("/(tabs)/messages");
-        }
+        openResponse(event);
       }
     );
+    void Notifications.getLastNotificationResponseAsync()
+      .then(async (last) => {
+        if (cancelled || !last) return;
+        const id = last.notification.request.identifier;
+        const seen = await SecureStore.getItemAsync("rfacto_last_push_open").catch(
+          () => null
+        );
+        if (seen === id) return;
+        openResponse(last);
+      })
+      .catch(() => {});
     unsub = () => {
       received.remove();
       response.remove();

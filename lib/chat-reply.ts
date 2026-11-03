@@ -6,7 +6,7 @@ export type ParsedChatReply = {
 };
 
 const HEADER =
-  /^(?:⟦|\[)rf-reply\|([^\n⟧\]]+)(?:⟧|\])?\s*(?:\n([\s\S]*))?$/i;
+  /^(?:⟦|\[)\s*rf?-reply(?:\|([^\n⟧\]]*))?(?:⟧|\])?\s*(?:\n([\s\S]*))?$/i;
 
 export function parseChatReply(raw?: string | null): ParsedChatReply {
   const text = raw || "";
@@ -46,14 +46,40 @@ export function chatReplyListPreview(
 ) {
   const parsed = parseChatReply(body);
   const text = parsed.body.trim();
-  if (text && !/rf-reply/i.test(text)) return clip(text);
+  if (text && !/rf?-reply/i.test(text)) return clip(text);
   const stripped = (body || "")
     .split("\n")
-    .filter((line) => !/rf-reply/i.test(line))
+    .filter((line) => !/rf?-reply/i.test(line))
     .join("\n")
     .trim();
-  if (stripped && !/rf-reply/i.test(stripped)) return clip(stripped);
+  if (stripped && !/rf?-reply/i.test(stripped)) return clip(stripped);
   if (attachmentUrl) return "📎";
   if (parsed.quoteExcerpt?.trim()) return clip(parsed.quoteExcerpt.trim());
   return empty;
+}
+
+function looksLikeReplyMarkup(text: string) {
+  return /rf?-reply|⟦|⟧/i.test(text) || /^cm[a-z0-9]{18,}/i.test(text.trim());
+}
+
+/** Human text for a push or in-app notification. Never the swipe-reply marker. */
+export function messageNotificationText(
+  body?: string | null,
+  attachmentUrl?: string | null,
+  fallback = "Nouveau message"
+) {
+  const preview = chatReplyListPreview(body, attachmentUrl, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (preview === "📎" || preview === "🎥") return "Pièce jointe";
+  if (preview && !looksLikeReplyMarkup(preview)) return preview.slice(0, 140);
+  const cleaned = (body || "")
+    .split("\n")
+    .map((line) => line.replace(/⟦|⟧|\[|\]/g, "").trim())
+    .filter((line) => line && !looksLikeReplyMarkup(line) && !line.includes("|"))
+    .join(" ")
+    .trim();
+  if (cleaned) return cleaned.slice(0, 140);
+  if (attachmentUrl) return "Pièce jointe";
+  return fallback;
 }

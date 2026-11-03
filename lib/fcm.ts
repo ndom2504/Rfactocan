@@ -144,7 +144,10 @@ export async function sendFcmToUsers(input: {
               "interruption-level": incomingCall
                 ? "time-sensitive"
                 : "active",
-              "content-available": 1,
+              // content-available wakes the app instead of showing a banner.
+              // Only calls need that wake. Message alerts must stay visible
+              // when the iPhone app is backgrounded or closed.
+              ...(incomingCall ? { "content-available": 1 } : {}),
             },
           },
         },
