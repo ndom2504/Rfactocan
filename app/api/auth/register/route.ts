@@ -10,7 +10,7 @@ import { currencyForCountry } from "@/lib/currency";
 import { resolveCountryCode } from "@/lib/detect-country";
 import { applyInviteConnection } from "@/lib/invite-connect";
 import { prisma } from "@/lib/prisma";
-import { claimTesterInvite } from "@/lib/store-testing";
+import { queueTesterInvite } from "@/lib/store-testing";
 
 const schema = z.object({
   email: z.string().email(),
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       },
     });
 
-    claimTesterInvite(user);
+    queueTesterInvite(user);
     await applyInviteConnection(user.id, body.invite);
 
     const token = await createSessionToken(user);
