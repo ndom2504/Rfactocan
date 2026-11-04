@@ -437,8 +437,10 @@ export async function GET(request: Request) {
         title: person.displayName,
         body: [
           `Identifiant : ${person.memberCode}`,
-          "Ouvrez le profil pour lui écrire.",
-        ].join("\n\n"),
+          person.bio?.trim() ? `Slogan\n${person.bio.trim()}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
         attachments: [],
         createdAt: person.createdAt,
         href: `/member/${person.id}`,

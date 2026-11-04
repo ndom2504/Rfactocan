@@ -211,6 +211,26 @@ export function CommunityFeed() {
     }
   }
 
+  async function contactMember(authorId: string) {
+    try {
+      const res = await fetch("/api/dm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toUserId: authorId }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        thread?: { id: string };
+        threadId?: string;
+      };
+      if (!res.ok) throw new Error(data.error || "Erreur");
+      const threadId = data.thread?.id ?? data.threadId;
+      if (threadId) router.push(`/messages/dm/${threadId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    }
+  }
+
   async function removePost(id: string) {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }
@@ -442,7 +462,15 @@ export function CommunityFeed() {
         <p className="text-sm text-[var(--muted)]">{t("community_search_empty")}</p>
       ) : (
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
-          {visiblePosts.map((post) => (
+          {visiblePosts.map((post) => {
+            const profile = post.id.startsWith("member:");
+            const identifier = post.body
+              .split("\n")
+              .map((line) => line.trim())
+              .find((line) => line.toLowerCase().startsWith("identifiant"))
+              ?.replace(/^[^:]+:\s*/, "");
+            const slogan = post.author.bio?.trim() ?? "";
+            return (
             <li key={post.id} className="overflow-hidden py-4">
               {post.author.bannerUrl ? (
                 <Link href={`/member/${post.author.id}`} className="mb-3 block">
@@ -483,7 +511,7 @@ export function CommunityFeed() {
                       : ""}
                     {` · ${post.author.connectionCount ?? 0} ${t("community_connections")}`}
                   </p>
-                  {post.author.bio && (
+                  {!profile && post.author.bio && (
                     <p className="mt-0.5 line-clamp-1 text-xs text-[var(--muted)]">
                       {post.author.bio}
                     </p>
@@ -492,7 +520,7 @@ export function CommunityFeed() {
               </div>
 
               {post.title && (
-                <h2 className="mt-3 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
+                <h2 className={`mt-3 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)] ${profile ? "text-center" : ""}`}>
                   {post.href ? (
                     <Link href={post.href} className="hover:underline">
                       {post.title}
@@ -502,7 +530,25 @@ export function CommunityFeed() {
                   )}
                 </h2>
               )}
-              <ExpandableText text={post.body} className="mt-2" />
+              {profile ? (
+                <div className="mt-2 text-center text-sm leading-relaxed">
+                  {identifier ? (
+                    <p>
+                      {t("community_identifier")} : {identifier}
+                    </p>
+                  ) : null}
+                  {slogan ? (
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                        {t("community_slogan")}
+                      </p>
+                      <p className="mt-1 whitespace-pre-line">{slogan}</p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <ExpandableText text={post.body} className="mt-2" />
+              )}
 
               {(post.attachments?.length ?? 0) > 0 && (
                 <div className="mt-3 -mx-1 overflow-hidden sm:mx-0">
@@ -514,7 +560,44 @@ export function CommunityFeed() {
               )}
 
               <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
-                {post.href ? (
+                {profile ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={post.isOwner}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void toggleConnect(
+                          post.author.id,
+                          Boolean(post.author.connectedByMe)
+                        );
+                      }}
+                      className={`rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-40 ${
+                        post.author.connectedByMe
+                          ? "bg-[var(--accent-soft)] text-[var(--foreground)]"
+                          : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+                      }`}
+                    >
+                      {post.author.connectedByMe
+                        ? t("community_connected")
+                        : t("community_connect")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={post.isOwner}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void contactMember(post.author.id);
+                      }}
+                      className="rounded-md px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                    >
+                      {t("community_contact")}
+                    </button>
+                  </>
+                ) : null}
+                {!profile && post.href ? (
                   <Link
                     href={post.href}
                     className="rounded-md bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:underline"
@@ -522,6 +605,8 @@ export function CommunityFeed() {
                     {t("community_see")}
                   </Link>
                 ) : null}
+                {!profile ? (
+                <>
                 <button
                   type="button"
                   title={t("community_connect_hint")}
@@ -561,7 +646,10 @@ export function CommunityFeed() {
                   title={post.title}
                   body={post.body}
                 />
+                </>
+                ) : null}
               </div>
+              {!profile ? (
               <CommunityPostActions
                 post={post}
                 onUpdated={(updated) =>
@@ -581,8 +669,10 @@ export function CommunityFeed() {
                 }
                 onDeleted={(id) => void removePost(id)}
               />
+              ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>

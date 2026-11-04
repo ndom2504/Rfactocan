@@ -31,6 +31,7 @@ import {
   collectCommunityVideos,
   setCommunityVideoFeed,
 } from "@/lib/community-video-feed";
+import { startDirectChat } from "@/lib/dm";
 import { formatRelativeTime } from "@/lib/format";
 import { showIdentityVerified } from "@/lib/kyc";
 import { useI18n } from "@/lib/i18n";
@@ -303,6 +304,16 @@ export default function CommunityScreen() {
           actionLock.current = false;
         }, 400);
       });
+  }
+
+  function contactMember(item: CommunityPost) {
+    const authorId = item.author?.id;
+    if (!authorId || item.isOwner) return;
+    runExclusive(`${item.id}:contact`, async () => {
+      const threadId = await startDirectChat({ toUserId: authorId });
+      if (!threadId) throw new Error(t("retry"));
+      router.push(`/messages/${threadId}` as Href);
+    });
   }
 
   function openListing(item: CommunityPost) {
@@ -645,6 +656,13 @@ export default function CommunityScreen() {
           const longBody =
             item.body.length > 280 || (item.body.match(/\n/g) || []).length >= 5;
           const isOpen = Boolean(expanded[item.id]);
+          const profile = item.id.startsWith("member:");
+          const identifier = item.body
+            .split("\n")
+            .map((line) => line.trim())
+            .find((line) => line.toLowerCase().startsWith("identifiant"))
+            ?.replace(/^[^:]+:\s*/, "");
+          const slogan = item.author?.bio?.trim() ?? "";
           const name = item.author?.displayName || "Rfacto";
           const authorId = item.author?.id;
           const openMember = () => {
@@ -707,6 +725,7 @@ export default function CommunityScreen() {
                     {` · ${item.author?.connectionCount ?? 0} ${t("community_connections")}`}
                   </Text>
                 </Pressable>
+                {profile ? null : (
                 <Pressable
                   onPress={() => openPostOptions(item)}
                   hitSlop={8}
@@ -714,9 +733,63 @@ export default function CommunityScreen() {
                 >
                   <Ionicons name="ellipsis-vertical" size={20} color={colors.muted} />
                 </Pressable>
+                )}
               </View>
 
-              {item.title?.trim() ? (
+              {profile ? (
+                <View style={{ paddingHorizontal: 14, paddingBottom: 8 }}>
+                  {item.title?.trim() ? (
+                    <Text
+                      style={{
+                        fontWeight: "700",
+                        fontSize: 16,
+                        color: colors.foreground,
+                        marginBottom: 6,
+                        textAlign: "center",
+                      }}
+                    >
+                      {item.title.trim()}
+                    </Text>
+                  ) : null}
+                  {identifier ? (
+                    <Text
+                      style={{
+                        color: colors.foreground,
+                        lineHeight: 21,
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("community_identifier")} : {identifier}
+                    </Text>
+                  ) : null}
+                  {slogan ? (
+                    <View style={{ marginTop: 10 }}>
+                      <Text
+                        style={{
+                          color: colors.muted,
+                          fontSize: 12,
+                          fontWeight: "700",
+                          letterSpacing: 0.4,
+                          textAlign: "center",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {t("community_slogan")}
+                      </Text>
+                      <Text
+                        style={{
+                          marginTop: 4,
+                          color: colors.foreground,
+                          lineHeight: 21,
+                          textAlign: "center",
+                        }}
+                      >
+                        {slogan}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              ) : item.title?.trim() ? (
                 <Pressable
                   onPress={() => openListing(item)}
                   style={{ paddingHorizontal: 14 }}
@@ -734,7 +807,7 @@ export default function CommunityScreen() {
                 </Pressable>
               ) : null}
 
-              {item.body ? (
+              {!profile && item.body ? (
                 <Text
                   style={{
                     color: colors.foreground,
@@ -786,7 +859,7 @@ export default function CommunityScreen() {
                 />
               ))}
 
-              {(item.commentCount ?? 0) > 0 ? (
+              {!profile && (item.commentCount ?? 0) > 0 ? (
                 <Text
                   style={{
                     color: colors.muted,
@@ -820,6 +893,16 @@ export default function CommunityScreen() {
                   busy={busyKey === `${item.id}:connect`}
                   onPress={() => toggleConnect(item)}
                 />
+                {profile ? (
+                  <ActionCell
+                    label={t("community_contact")}
+                    disabled={item.isOwner}
+                    busy={busyKey === `${item.id}:contact`}
+                    onPress={() => contactMember(item)}
+                  />
+                ) : null}
+                {profile ? null : (
+                <>
                 <ActionCell
                   label={t("community_comment_action")}
                   busy={busyKey === `${item.id}:comments`}
@@ -837,6 +920,8 @@ export default function CommunityScreen() {
                     void runExclusive(`${item.id}:share`, () => sharePost(item))
                   }
                 />
+                </>
+                )}
               </View>
             </View>
           );
