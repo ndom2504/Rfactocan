@@ -210,7 +210,8 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-  const [services, shopProducts, virtualPosts, newsPosts] = await Promise.all([
+  const [services, shopProducts, virtualPosts, opportunityPosts, newsPosts] =
+    await Promise.all([
     prisma.serviceListing.findMany({
       where: { status: "OPEN" },
       include: { user: { select: AUTHOR_SELECT } },
@@ -233,6 +234,15 @@ export async function GET(request: Request) {
       },
       orderBy: { createdAt: "desc" },
       take: 24,
+    }),
+    prisma.communityPost.findMany({
+      where: { status: "OPEN", sourceKey: { startsWith: "opportunity:" } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 12,
     }),
     prisma.communityPost.findMany({
       where: { status: "OPEN", sourceKey: { startsWith: "news:" } },
@@ -382,6 +392,13 @@ export async function GET(request: Request) {
   }
 
   const headlines: FeedItem[] = [];
+  for (const post of opportunityPosts) {
+    if (!wantsMarketplace(kind, "PRODUCT")) continue;
+    const item = serializePost(post);
+    item.kind = "PRODUCT";
+    item.isOwner = post.authorId === session.id;
+    headlines.push(item);
+  }
   for (const post of newsPosts) {
     if (!wantsMarketplace(kind, "COMMUNITY")) continue;
     const item = serializePost(post);
