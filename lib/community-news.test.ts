@@ -21,6 +21,20 @@ describe("community news", () => {
     assert.equal(entries[0]?.imageUrl, "https://cdn.example.com/jets.jpg");
   });
 
+  it("prend la photo d'une une même sans extension dans le nom de balise", () => {
+    const entries = parseFeedEntries(`
+      <feed><entry>
+        <title>Redesigned Health app</title>
+        <link href="https://www.apple.com/newsroom/health/"/>
+        <link href="https://www.apple.com/newsroom/images/health/tile/health.jpg" rel="enclosure" type="image/jpeg"/>
+      </entry></feed>
+    `);
+    assert.equal(
+      entries[0]?.imageUrl,
+      "https://www.apple.com/newsroom/images/health/tile/health.jpg"
+    );
+  });
+
   it("rédige un résultat avec la source et le hashtag", () => {
     const nhl = NEWS_DESKS.find((desk) => desk.id === "nhl");
     assert.ok(nhl);

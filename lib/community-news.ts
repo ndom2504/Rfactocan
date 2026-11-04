@@ -80,12 +80,38 @@ function linkFrom(chunk: string) {
   return plain.startsWith("http") ? plain : "";
 }
 
+function decodeXml(value: string) {
+  return value
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&amp;/gi, "&");
+}
+
+function isRasterImageUrl(url: string) {
+  return /^https?:\/\//i.test(url) && /\.(?:jpe?g|png|webp)(?:[.?]|$)/i.test(url) && !/\.svg(?:[.?]|$)/i.test(url);
+}
+
 function imageFrom(chunk: string) {
-  const candidates = [
-    ...chunk.matchAll(/<(?:media:content|media:thumbnail|enclosure)\b[^>]*url=["']([^"']+)["'][^>]*>/gi),
-    ...chunk.matchAll(/<img\b[^>]*src=["']([^"']+)["'][^>]*>/gi),
-  ].map((match) => match[1]);
-  return candidates.find((url) => /\.(?:jpe?g|png|webp)(?:\?|$)/i.test(url)) || "";
+  const decoded = decodeXml(chunk);
+  const candidates: string[] = [];
+  for (const match of decoded.matchAll(/<(?:media:content|media:thumbnail|enclosure|link|img)\b[^>]*>/gi)) {
+    const tag = match[0];
+    const url = tag.match(/\b(?:url|href|src)=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const markedImage =
+      /<img\b/i.test(tag) ||
+      /type=["']image\//i.test(tag) ||
+      /rel=["']enclosure["']/i.test(tag) ||
+      /medium=["']image["']/i.test(tag);
+    if (markedImage || isRasterImageUrl(url)) candidates.push(url);
+  }
+  return (
+    candidates.find((url) => isRasterImageUrl(url) && !/logo|icon|favicon/i.test(url)) ||
+    candidates.find((url) => isRasterImageUrl(url)) ||
+    ""
+  );
 }
 
 export type FeedEntry = { title: string; link: string; summary: string; imageUrl: string };
@@ -103,7 +129,7 @@ export function parseFeedEntries(xml: string): FeedEntry[] {
     ).slice(0, 320);
     if (!title || !link) continue;
     entries.push({ title: title.slice(0, 120), link, summary, imageUrl: imageFrom(chunk) });
-    if (entries.length >= 3) break;
+    if (entries.length >= 8) break;
   }
   return entries;
 }
@@ -170,8 +196,27 @@ export function formatScoreStory(input: {
 }
 
 function rasterLogo(url?: string) {
-  if (!url) return undefined;
-  return /\.(?:jpe?g|png|webp)(?:\?|$)/i.test(url) ? url : undefined;
+  if (!url || !isRasterImageUrl(url)) return undefined;
+  return url;
+}
+
+async function pageImage(url: string) {
+  try {
+    const html = await fetchText(url);
+    const patterns = [
+      /property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      /content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      /name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+      /content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i,
+    ];
+    for (const pattern of patterns) {
+      const found = html.match(pattern)?.[1];
+      if (found && isRasterImageUrl(found)) return found;
+    }
+  } catch (error) {
+    console.error("[community-news] image", error instanceof Error ? error.message : error);
+  }
+  return undefined;
 }
 
 function articleStory(desk: Desk, sourceName: string, entry: FeedEntry): Story {
@@ -261,7 +306,13 @@ function sideFromNhl(team: unknown): Side {
     typeof row.name === "string"
       ? row.name
       : row.name?.fr || row.name?.default || row.abbrev || "";
-  return { name, score: row.score == null ? "" : String(row.score), logo: row.logo };
+  const abbrev = row.abbrev?.toLowerCase();
+  const crest = abbrev ? `https://a.espncdn.com/i/teamlogos/nhl/500/${abbrev}.png` : undefined;
+  return {
+    name,
+    score: row.score == null ? "" : String(row.score),
+    logo: rasterLogo(row.logo) || crest,
+  };
 }
 
 async function espnStories(id: DeskId, sourceName: string, path: string): Promise<Story[]> {
@@ -321,7 +372,10 @@ function espnState(event: Record<string, unknown>): "final" | "live" | "upcoming
 
 function sideFromEspn(row: Record<string, unknown> | undefined): Side {
   const team = (row?.team ?? {}) as { displayName?: string; abbreviation?: string; logo?: string };
-  const athlete = (row?.athlete ?? {}) as { displayName?: string };
+  const athlete = (row?.athlete ?? {}) as {
+    displayName?: string;
+    flag?: { href?: string };
+  };
   const lines = (row?.linescores ?? []) as Array<{ displayValue?: string; value?: number }>;
   const sets = lines
     .map((line) => line.displayValue || (line.value == null ? "" : String(line.value)))
@@ -330,14 +384,28 @@ function sideFromEspn(row: Record<string, unknown> | undefined): Side {
   return {
     name: team.displayName || athlete.displayName || team.abbreviation || "",
     score: row?.score != null && String(row.score) !== "" ? String(row.score) : sets,
-    logo: team.logo,
+    logo: team.logo || athlete.flag?.href,
     winner: row?.winner === true,
   };
 }
 
 async function feedStories(id: DeskId, sourceName: string, url: string, take = 1): Promise<Story[]> {
-  const entries = parseFeedEntries(await fetchText(url)).slice(0, take);
-  return entries.map((entry) => articleStory(desk(id), sourceName, entry));
+  const entries = parseFeedEntries(await fetchText(url)).sort(
+    (a, b) => Number(Boolean(b.imageUrl)) - Number(Boolean(a.imageUrl))
+  );
+  const stories: Story[] = [];
+  let lookedUp = 0;
+  for (const entry of entries) {
+    if (stories.length >= take) break;
+    const story = articleStory(desk(id), sourceName, entry);
+    if (!story.imageUrl && lookedUp < 3) {
+      lookedUp += 1;
+      story.imageUrl = await pageImage(entry.link);
+    }
+    if (!story.imageUrl) continue;
+    stories.push(story);
+  }
+  return stories;
 }
 
 async function collect(label: string, load: () => Promise<Story[]>, into: Story[]) {
@@ -381,7 +449,9 @@ export async function collectCommunityNews(): Promise<Story[]> {
       "https://www.canada.ca/fr/nouvelles.atom"
     )
   , stories);
-  return stories.filter((story) => story.title.length > 3 && story.body.length > 20);
+  return stories.filter(
+    (story) => story.title.length > 3 && story.body.length > 20 && Boolean(story.imageUrl)
+  );
 }
 
 async function ensureDeskUser(item: Desk) {
@@ -434,7 +504,7 @@ export async function publishCommunityNews() {
     };
     const existing = await prisma.communityPost.findUnique({
       where: { sourceKey },
-      select: { id: true, title: true, body: true },
+      select: { id: true, title: true, body: true, attachmentsJson: true },
     });
     if (!existing) {
       await prisma.communityPost.create({
@@ -443,7 +513,13 @@ export async function publishCommunityNews() {
       created += 1;
       continue;
     }
-    if (existing.title === data.title && existing.body === data.body) continue;
+    if (
+      existing.title === data.title &&
+      existing.body === data.body &&
+      existing.attachmentsJson === data.attachmentsJson
+    ) {
+      continue;
+    }
     await prisma.communityPost.update({
       where: { id: existing.id },
       data: { ...data, createdAt: new Date() },
@@ -451,5 +527,14 @@ export async function publishCommunityNews() {
     updated += 1;
   }
 
-  return { ok: true as const, found: stories.length, created, updated };
+  const hidden = await prisma.communityPost.updateMany({
+    where: {
+      status: "OPEN",
+      sourceKey: { startsWith: "news:" },
+      attachmentsJson: "[]",
+    },
+    data: { status: "HIDDEN" },
+  });
+
+  return { ok: true as const, found: stories.length, created, updated, hidden: hidden.count };
 }
