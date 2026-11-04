@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 const FETCH_HEADERS = {
   Accept: "application/rss+xml, application/xml, application/json, text/xml, */*",
   "User-Agent": "RfactoCommunity/1.0 (news headlines)",
+  "Accept-Language": "fr-CA,fr;q=0.9",
 };
 
 type DeskId =
@@ -38,7 +39,7 @@ export const NEWS_DESKS: Desk[] = [
   { id: "nhl", name: "NHL", tag: "NHL", email: "news-nhl@rfacto.local" },
   { id: "nba", name: "NBA", tag: "NBA", email: "news-nba@rfacto.local" },
   { id: "nfl", name: "NFL", tag: "NFL", email: "news-nfl@rfacto.local" },
-  { id: "soccer", name: "Soccer", tag: "Soccer", email: "news-soccer@rfacto.local" },
+  { id: "soccer", name: "Football", tag: "Football", email: "news-soccer@rfacto.local" },
   { id: "f1", name: "Formule 1", tag: "F1", email: "news-f1@rfacto.local" },
   { id: "atp", name: "ATP", tag: "ATP", email: "news-atp@rfacto.local" },
   { id: "wta", name: "WTA", tag: "WTA", email: "news-wta@rfacto.local" },
@@ -62,6 +63,10 @@ export function stripHtml(value: string) {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+      String.fromCodePoint(parseInt(code, 16))
+    )
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -219,9 +224,55 @@ async function pageImage(url: string) {
   return undefined;
 }
 
-function articleStory(desk: Desk, sourceName: string, entry: FeedEntry): Story {
-  const title = publicTitle(entry);
-  const summary = entry.summary && entry.summary !== title ? entry.summary : "À la une.";
+const FRENCH_WORDS =
+  "\\b(le|la|les|des|une|un|pour|dans|avec|est|au|aux|du|sur|qui|que|par|plus|cette|son|ses|nous|vous|nouvelle|nouvelles|prend|appui|ouvre)\\b";
+const ENGLISH_WORDS =
+  "\\b(the|and|for|with|from|what|how|will|this|that|are|have|has|our|your|about|into|after|before|sharing|would|could)\\b";
+
+export function looksFrench(text: string) {
+  const accents = (text.match(/[àâäéèêëïîôùûüçœæ]/gi) || []).length;
+  const french = (text.match(new RegExp(FRENCH_WORDS, "gi")) || []).length + accents;
+  const english = (text.match(new RegExp(ENGLISH_WORDS, "gi")) || []).length;
+  if (french === 0 && english === 0) return false;
+  return french >= english;
+}
+
+export function keepInFrenchFeed(title: string) {
+  const trimmed = title.trim();
+  if (looksFrench(trimmed)) return true;
+  if (/^[^.]{2,80}\s[–-]\s[^.]{2,80}$/.test(trimmed)) return true;
+  return /\bbat\b|l'emporte|contre|à l'affiche/i.test(trimmed);
+}
+
+export async function toFrench(text: string) {
+  const clean = text.trim();
+  if (!clean || looksFrench(clean)) return clean;
+  try {
+    const url =
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=fr&dt=t&q=" +
+      encodeURIComponent(clean.slice(0, 450));
+    const response = await fetch(url, {
+      headers: FETCH_HEADERS,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) return clean;
+    const data = (await response.json()) as Array<Array<[string]>>;
+    const translated = (data[0] || [])
+      .map((part) => part?.[0] || "")
+      .join("")
+      .trim();
+    return translated || clean;
+  } catch (error) {
+    console.error("[community-news] fr", error instanceof Error ? error.message : error);
+    return clean;
+  }
+}
+
+async function articleStory(desk: Desk, sourceName: string, entry: FeedEntry): Promise<Story> {
+  const rawTitle = publicTitle(entry);
+  const rawSummary = entry.summary && entry.summary !== rawTitle ? entry.summary : "À la une.";
+  const title = (await toFrench(rawTitle)).slice(0, 120);
+  const summary = rawSummary === "À la une." ? rawSummary : await toFrench(rawSummary);
   return {
     deskId: desk.id,
     key: `${desk.id}:${hashKey(entry.link)}`,
@@ -390,14 +441,18 @@ function sideFromEspn(row: Record<string, unknown> | undefined): Side {
 }
 
 async function feedStories(id: DeskId, sourceName: string, url: string, take = 1): Promise<Story[]> {
-  const entries = parseFeedEntries(await fetchText(url)).sort(
-    (a, b) => Number(Boolean(b.imageUrl)) - Number(Boolean(a.imageUrl))
-  );
+  const entries = parseFeedEntries(await fetchText(url)).sort((a, b) => {
+    const language =
+      Number(looksFrench(b.title) || looksFrench(b.summary)) -
+      Number(looksFrench(a.title) || looksFrench(a.summary));
+    if (language) return language;
+    return Number(Boolean(b.imageUrl)) - Number(Boolean(a.imageUrl));
+  });
   const stories: Story[] = [];
   let lookedUp = 0;
   for (const entry of entries) {
     if (stories.length >= take) break;
-    const story = articleStory(desk(id), sourceName, entry);
+    const story = await articleStory(desk(id), sourceName, entry);
     if (!story.imageUrl && lookedUp < 3) {
       lookedUp += 1;
       story.imageUrl = await pageImage(entry.link);
@@ -432,9 +487,15 @@ export async function collectCommunityNews(): Promise<Story[]> {
   await collect("f1", () => feedStories("f1", "Formula1.com", "https://www.formula1.com/en/latest/all.xml"), stories);
   await collect("atp", () => espnStories("atp", "ESPN · ATP", "tennis/atp"), stories);
   await collect("wta", () => espnStories("wta", "ESPN · WTA", "tennis/wta"), stories);
-  await collect("apple", () => feedStories("tech", "Apple Newsroom", "https://www.apple.com/newsroom/rss-feed.rss"), stories);
-  await collect("google", () => feedStories("tech", "Blog Google", "https://blog.google/rss/"), stories);
-  await collect("microsoft", () => feedStories("tech", "Microsoft", "https://news.microsoft.com/feed/"), stories);
+  await collect("apple", () =>
+    feedStories("tech", "Apple Newsroom", "https://www.apple.com/ca/fr/newsroom/rss-feed.rss")
+  , stories);
+  await collect("google", () =>
+    feedStories("tech", "Blog Google", "https://blog.google/intl/fr-ca/rss/")
+  , stories);
+  await collect("microsoft", () =>
+    feedStories("tech", "Microsoft", "https://news.microsoft.com/fr-ca/feed/")
+  , stories);
   await collect("eu", () =>
     feedStories(
       "business",
@@ -527,6 +588,20 @@ export async function publishCommunityNews() {
     updated += 1;
   }
 
+  const openNews = await prisma.communityPost.findMany({
+    where: { status: "OPEN", sourceKey: { startsWith: "news:" } },
+    select: { id: true, title: true },
+  });
+  const englishIds = openNews
+    .filter((post) => post.title && !keepInFrenchFeed(post.title))
+    .map((post) => post.id);
+  if (englishIds.length > 0) {
+    await prisma.communityPost.updateMany({
+      where: { id: { in: englishIds } },
+      data: { status: "HIDDEN" },
+    });
+  }
+
   const hidden = await prisma.communityPost.updateMany({
     where: {
       status: "OPEN",
@@ -536,5 +611,11 @@ export async function publishCommunityNews() {
     data: { status: "HIDDEN" },
   });
 
-  return { ok: true as const, found: stories.length, created, updated, hidden: hidden.count };
+  return {
+    ok: true as const,
+    found: stories.length,
+    created,
+    updated,
+    hidden: hidden.count + englishIds.length,
+  };
 }

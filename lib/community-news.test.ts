@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { NEWS_DESKS, formatScoreStory, parseFeedEntries } from "./community-news";
+import {
+  NEWS_DESKS,
+  formatScoreStory,
+  keepInFrenchFeed,
+  looksFrench,
+  parseFeedEntries,
+  stripHtml,
+} from "./community-news";
 
 describe("community news", () => {
   it("lit un titre RSS et sa source", () => {
@@ -51,5 +58,14 @@ describe("community news", () => {
     assert.match(story?.body ?? "", /Mammoth l'emporte 3-2/);
     assert.match(story?.body ?? "", /Source : NHL.com/);
     assert.match(story?.body ?? "", /#NHL/);
+  });
+
+  it("garde le français et les résultats, pas un titre anglais", () => {
+    assert.equal(looksFrench("L'app Santé prend en charge de nouvelles langues"), true);
+    assert.equal(looksFrench("We're sharing our framework for health"), false);
+    assert.equal(keepInFrenchFeed("Ducks 5 – Canucks 4"), true);
+    assert.equal(keepInFrenchFeed("Real Madrid – AEK Athens"), true);
+    assert.equal(keepInFrenchFeed("We're sharing our framework for health"), false);
+    assert.equal(stripHtml("Transformer l&#8217;industrie"), "Transformer l\u2019industrie");
   });
 });
