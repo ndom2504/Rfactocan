@@ -58,12 +58,8 @@ export function DmReactionPicker({
     <View
       style={{
         alignSelf: alignEnd ? "flex-end" : "flex-start",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        alignItems: "center",
-        maxWidth: 320,
         backgroundColor: colors.surface,
-        borderRadius: 24,
+        borderRadius: 16,
         paddingHorizontal: 4,
         paddingVertical: 4,
         marginBottom: 6,
@@ -76,66 +72,71 @@ export function DmReactionPicker({
         shadowOffset: { width: 0, height: 2 },
       }}
     >
-      {DM_REACTION_EMOJIS.map((emoji) => (
-        <Pressable
-          key={emoji}
-          onPress={() => onPick(emoji)}
-          accessibilityLabel={emoji}
-          style={{
-            width: 36,
-            height: 36,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 18,
-          }}
-        >
-          <Text style={{ fontSize: 22, lineHeight: 26 }}>{emoji}</Text>
-        </Pressable>
-      ))}
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        {DM_REACTION_EMOJIS.map((emoji) => (
+          <Pressable
+            key={emoji}
+            onPress={() => onPick(emoji)}
+            accessibilityLabel={emoji}
+            style={{
+              width: 36,
+              height: 36,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 18,
+            }}
+          >
+            <Text style={{ fontSize: 22, lineHeight: 26 }}>{emoji}</Text>
+          </Pressable>
+        ))}
+      </View>
       <View
         style={{
-          width: 1,
-          height: 20,
-          backgroundColor: colors.border,
-          marginHorizontal: 2,
+          flexDirection: "row",
+          alignItems: "center",
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          marginTop: 2,
+          paddingTop: 2,
         }}
-      />
-      {onCopy ? (
+      >
+        {onCopy ? (
+          <IconBtn
+            name="copy-outline"
+            onPress={onCopy}
+            color={colors.accent}
+            label={t("dm_copy")}
+          />
+        ) : null}
         <IconBtn
-          name="copy-outline"
-          onPress={onCopy}
+          name="share-outline"
+          onPress={onShare}
           color={colors.accent}
-          label={t("dm_copy")}
+          label={t("dm_share")}
         />
-      ) : null}
-      <IconBtn
-        name="share-outline"
-        onPress={onShare}
-        color={colors.accent}
-        label={t("dm_share")}
-      />
-      <IconBtn
-        name="arrow-redo-outline"
-        onPress={onForward}
-        color={colors.accent}
-        label={t("dm_forward")}
-      />
-      {onEdit ? (
         <IconBtn
-          name="create-outline"
-          onPress={onEdit}
+          name="arrow-redo-outline"
+          onPress={onForward}
           color={colors.accent}
-          label={t("dm_edit")}
+          label={t("dm_forward")}
         />
-      ) : null}
-      {onDelete ? (
-        <IconBtn
-          name="trash-outline"
-          onPress={onDelete}
-          color={colors.danger}
-          label={t("dm_delete_file")}
-        />
-      ) : null}
+        {onEdit ? (
+          <IconBtn
+            name="create-outline"
+            onPress={onEdit}
+            color={colors.accent}
+            label={t("dm_edit")}
+          />
+        ) : null}
+        {onDelete ? (
+          <IconBtn
+            name="trash-outline"
+            onPress={onDelete}
+            color={colors.danger}
+            label={t("dm_delete_file")}
+          />
+        ) : null}
+      </View>
     </View>
   );
 }

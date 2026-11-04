@@ -170,6 +170,24 @@ export default function DirectChatScreen() {
   const [sending, setSending] = useState(false);
   const [calling, setCalling] = useState(false);
   const [reactingToId, setReactingToId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!reactingToId) return;
+    const index = messages.findIndex((m) => m.id === reactingToId);
+    if (index < 0) return;
+    const scroll = () => {
+      listRef.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 1,
+      });
+    };
+    const frame = requestAnimationFrame(scroll);
+    const later = setTimeout(scroll, 80);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(later);
+    };
+  }, [reactingToId, messages]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const [editBusy, setEditBusy] = useState(false);
@@ -928,8 +946,28 @@ export default function DirectChatScreen() {
           ref={listRef}
           data={messages}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingVertical: 12, gap: 8 }}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          contentContainerStyle={{
+            paddingTop: 12,
+            paddingBottom: reactingToId ? 120 : 12,
+            gap: 8,
+          }}
+          onContentSizeChange={() => {
+            if (reactingToId) {
+              const index = messages.findIndex((m) => m.id === reactingToId);
+              if (index >= 0) {
+                listRef.current?.scrollToIndex({
+                  index,
+                  animated: true,
+                  viewPosition: 1,
+                });
+                return;
+              }
+            }
+            listRef.current?.scrollToEnd({ animated: false });
+          }}
+          onScrollToIndexFailed={() => {
+            listRef.current?.scrollToEnd({ animated: true });
+          }}
           onScrollBeginDrag={() => setReactingToId(null)}
           ListFooterComponent={peerTyping ? <TypingBubble /> : null}
           ListHeaderComponent={

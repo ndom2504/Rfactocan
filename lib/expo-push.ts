@@ -18,15 +18,45 @@ type ExpoMessage = {
   title: string;
   body: string;
   data?: Record<string, string>;
-  sound?: "default" | null;
+  sound: "default";
+  priority: "high";
   badge?: number;
-  channelId?: string;
-  priority?: "default" | "normal" | "high";
   ttl?: number;
-  interruptionLevel?: "active" | "critical" | "passive" | "time-sensitive";
-  /** Silent wake only — never set on normal message alerts. */
-  _contentAvailable?: boolean;
 };
+
+/**
+ * Visible iOS alert. channelId is Android-only and is not sent.
+ * interruptionLevel and _contentAvailable are omitted: without the
+ * Time Sensitive entitlement, or with a silent content-available wake,
+ * APNs accepts the ticket then shows nothing while the app is backgrounded.
+ */
+export function buildExpoAlertMessage(input: {
+  to: string;
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+  ttlSeconds?: number;
+}): ExpoMessage {
+  const data: Record<string, string> = {};
+  for (const [key, value] of Object.entries(input.data ?? {})) {
+    if (key === "title" || key === "body" || key === "channelId") continue;
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    data[key] = trimmed.slice(0, 500);
+  }
+  const message: ExpoMessage = {
+    to: input.to,
+    title: input.title.trim() || "Rfacto",
+    body: input.body.trim() || "Nouveau message",
+    sound: "default",
+    priority: "high",
+    badge: 1,
+  };
+  if (Object.keys(data).length > 0) message.data = data;
+  if (input.ttlSeconds && input.ttlSeconds > 0) message.ttl = input.ttlSeconds;
+  return message;
+}
 
 type ExpoTicket = {
   status?: string;
@@ -90,19 +120,15 @@ export async function sendExpoPushToTokens(input: {
   const unique = [...new Set(input.tokens)].filter(isExpoPushToken);
   if (unique.length === 0) return { sent: 0 };
 
-  const messages: ExpoMessage[] = unique.map((to) => ({
-    to,
-    title: input.title,
-    body: input.body,
-    data: input.data,
-    sound: "default",
-    badge: 1,
-    channelId: input.channelId,
-    priority: "high",
-    ttl: input.ttlSeconds,
-    interruptionLevel: input.incomingCall ? "time-sensitive" : "active",
-    ...(input.incomingCall ? { _contentAvailable: true } : {}),
-  }));
+  const messages = unique.map((to) =>
+    buildExpoAlertMessage({
+      to,
+      title: input.title,
+      body: input.body,
+      data: input.data,
+      ttlSeconds: input.ttlSeconds,
+    })
+  );
 
   let sent = 0;
   const invalidTokens: string[] = [];
@@ -111,13 +137,16 @@ export async function sendExpoPushToTokens(input: {
   for (let i = 0; i < messages.length; i += chunkSize) {
     const chunk = messages.slice(i, i + chunkSize);
     try {
+      const headers: Record<string, string> = {
+        Accept: "application/json",
+        "Accept-Encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+      };
+      const accessToken = process.env.EXPO_ACCESS_TOKEN?.trim();
+      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
       const res = await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Accept-Encoding": "gzip, deflate",
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(chunk),
       });
       if (!res.ok) {

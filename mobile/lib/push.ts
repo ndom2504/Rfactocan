@@ -76,8 +76,17 @@ export function isExpoGo() {
   return Constants.appOwnership === "expo";
 }
 
+/**
+ * Expo Go on iOS still delivers remote alerts, so a push test can pass
+ * before an App Store build. Android Expo Go dropped remote push in SDK 53.
+ */
+export function remotePushAvailable() {
+  if (!isExpoGo()) return true;
+  return Platform.OS === "ios";
+}
+
 async function loadNotifications(): Promise<NotificationsModule | null> {
-  if (isExpoGo()) return null;
+  if (!remotePushAvailable()) return null;
   try {
     const Notifications = await import("expo-notifications");
     Notifications.setNotificationHandler({
@@ -173,7 +182,7 @@ let lastPostedToken = "";
 let lastPostedAt = 0;
 
 export async function clearAppBadge() {
-  if (isExpoGo()) return;
+  if (!remotePushAvailable()) return;
   const Notifications = await loadNotifications();
   if (!Notifications) return;
   try {
@@ -184,7 +193,13 @@ export async function clearAppBadge() {
 }
 
 export async function registerPushToken(force = false) {
-  if (isExpoGo() || !Device.isDevice) return;
+  if (!Device.isDevice) return;
+  if (!remotePushAvailable()) {
+    console.warn(
+      "[push] Expo Go Android cannot receive remote notifications. Use the iPhone app in Expo Go, or a dev build."
+    );
+    return;
+  }
   if (registerInFlight) return registerInFlight;
   registerInFlight = (async () => {
     const Notifications = await loadNotifications();
@@ -285,7 +300,7 @@ export async function testPushNotification(): Promise<{
 }
 
 export async function unregisterPushToken() {
-  if (isExpoGo()) return;
+  if (!remotePushAvailable()) return;
   const Notifications = await loadNotifications();
   if (!Notifications) return;
   try {
@@ -348,7 +363,7 @@ function routeFromPush(payload: PushPayload): Href | null {
 }
 
 export function watchPushNotifications(onOpenHref: (href: Href) => void) {
-  if (isExpoGo()) return () => {};
+  if (!remotePushAvailable()) return () => {};
   let cancelled = false;
   let unsub = () => {};
   void loadNotifications().then((Notifications) => {

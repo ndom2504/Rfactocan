@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publishCommunityNews } from "@/lib/community-news";
 import { publishVirtualCommunityPosts } from "@/lib/virtual-community-posts";
 
 export const runtime = "nodejs";
@@ -29,7 +30,11 @@ export async function GET(request: Request) {
 
   try {
     const result = await publishVirtualCommunityPosts(limit);
-    return NextResponse.json(result);
+    const news = await publishCommunityNews().catch((error) => {
+      console.error("[cron/community-news]", error);
+      return { ok: false as const, error: "Échec des actus" };
+    });
+    return NextResponse.json({ ...result, news });
   } catch (error) {
     console.error("[cron/virtual-community]", error);
     return NextResponse.json(

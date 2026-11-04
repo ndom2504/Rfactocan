@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isExpoPushToken } from "./expo-push";
+import { buildExpoAlertMessage, isExpoPushToken } from "./expo-push";
 
 describe("isExpoPushToken", () => {
   it("accepte les jetons Expo iOS", () => {
@@ -16,5 +16,38 @@ describe("isExpoPushToken", () => {
   it("rejette vide / null", () => {
     assert.equal(isExpoPushToken(""), false);
     assert.equal(isExpoPushToken(null), false);
+  });
+});
+
+describe("buildExpoAlertMessage", () => {
+  it("envoie une alerte iOS visible, sans channelId ni réveil silencieux", () => {
+    const message = buildExpoAlertMessage({
+      to: "ExponentPushToken[abc]",
+      title: "Nouveau message",
+      body: "Vous avez reçu un message.",
+      data: {
+        type: "DIRECT_MESSAGE",
+        href: "/messages/dm/1",
+        threadId: "1",
+        title: "ignore",
+        channelId: "rfacto_messages_v3",
+      },
+    });
+    assert.deepEqual(message, {
+      to: "ExponentPushToken[abc]",
+      title: "Nouveau message",
+      body: "Vous avez reçu un message.",
+      sound: "default",
+      priority: "high",
+      badge: 1,
+      data: {
+        type: "DIRECT_MESSAGE",
+        href: "/messages/dm/1",
+        threadId: "1",
+      },
+    });
+    assert.equal("channelId" in message, false);
+    assert.equal("_contentAvailable" in message, false);
+    assert.equal("interruptionLevel" in message, false);
   });
 });
