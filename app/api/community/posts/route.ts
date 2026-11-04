@@ -200,7 +200,7 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-  const [services, shopProducts, virtualPosts] = await Promise.all([
+  const [services, shopProducts, virtualPosts, newsPosts] = await Promise.all([
     prisma.serviceListing.findMany({
       where: { status: "OPEN" },
       include: { user: { select: AUTHOR_SELECT } },
@@ -223,6 +223,15 @@ export async function GET(request: Request) {
       },
       orderBy: { createdAt: "desc" },
       take: 24,
+    }),
+    prisma.communityPost.findMany({
+      where: { status: "OPEN", sourceKey: { startsWith: "news:" } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
     }),
   ]);
 
@@ -362,12 +371,20 @@ export async function GET(request: Request) {
     }
   }
 
+  const headlines: FeedItem[] = [];
+  for (const post of newsPosts) {
+    if (!wantsMarketplace(kind, "COMMUNITY")) continue;
+    const item = serializePost(post);
+    item.isOwner = post.authorId === session.id;
+    headlines.push(item);
+  }
+
   feed.sort(
     (a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const slice = feed.slice(0, take);
+  const slice = [...headlines, ...feed].slice(0, take);
   const connMap = await loadAuthorConnections(
     session.id,
     slice.map((p) => p.author.id)
