@@ -1,17 +1,27 @@
-import { ensureMissingMemberCodes } from "../lib/member-code";
+import { ensureMemberCode } from "../lib/member-code";
 import { prisma } from "../lib/prisma";
 
 async function main() {
-  let assigned = 0;
-  for (;;) {
-    const batch = await ensureMissingMemberCodes(200);
-    assigned += batch;
-    if (batch === 0) break;
-  }
-  const total = await prisma.user.count({
-    where: { memberCode: { not: null } },
+  const users = await prisma.user.findMany({
+    where: { status: "ACTIVE" },
+    select: { id: true, displayName: true, memberCode: true },
+    orderBy: { createdAt: "asc" },
   });
-  console.log(JSON.stringify({ assigned, total }));
+  let updated = 0;
+  for (const user of users) {
+    const next = await ensureMemberCode(user.id);
+    if (next && next !== user.memberCode) updated += 1;
+  }
+  const sample = await prisma.user.findMany({
+    where: {
+      status: "ACTIVE",
+      NOT: { email: { endsWith: "@rfacto.local" } },
+    },
+    select: { displayName: true, memberCode: true },
+    orderBy: { createdAt: "asc" },
+    take: 8,
+  });
+  console.log(JSON.stringify({ users: users.length, updated, sample }));
   await prisma.$disconnect();
 }
 

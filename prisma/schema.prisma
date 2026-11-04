@@ -243,7 +243,7 @@ model User {
   isAmbassador                 Boolean                 @default(false)
   /// Unique agent code for invite links (/register?ref=CODE)
   agentCode                    String?                 @unique
-  /// Public member code shown next to the name and used in community search (RF7K2M)
+  /// Public handle taken from the display name (Maya Chen → MayaChen)
   memberCode                   String?                 @unique
   /// Set once at signup when arriving via an active ambassador link
   referredById                 String?
