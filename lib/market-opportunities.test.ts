@@ -3,15 +3,16 @@ import test from "node:test";
 import {
   deliveryLabel,
   opportunityBody,
+  rankOpportunityPosts,
   toOpportunity,
 } from "./market-opportunities";
 
 const market = {
-  code: "CA" as const,
-  country: "CA" as const,
-  currency: "CAD" as const,
+  code: "CA",
+  country: "CA",
+  currency: "CAD",
   label: "Canada",
-  destination: "",
+  destination: "le Canada",
 };
 
 test("delivery window is written in French", () => {
@@ -25,13 +26,15 @@ test("opportunity card states the trend, the price and the source", () => {
     priceLabel: "18,40 CAD",
     delivery: "7 à 15 jours",
     marketLabel: "Canada",
-    destination: "",
+    destination: "le Canada",
     productUrl: "https://www.aliexpress.com/item/1.html",
     rating: 4.6,
+    origin: "Chine",
   });
   assert.match(body, /12[\s\u00a0\u202f]?400 ventes/);
   assert.match(body, /18,40 CAD/);
-  assert.match(body, /Demandé au Canada/);
+  assert.match(body, /vers le Canada/);
+  assert.match(body, /Expédié de Chine/);
   assert.match(body, /Source : AliExpress · Canada/);
 });
 
@@ -67,4 +70,23 @@ test("a ranked product becomes a Canada opportunity", () => {
   );
   assert.equal(draft?.sourceKey, "opportunity:ca:99");
   assert.match(draft?.body || "", /8 à 14 jours/);
+});
+
+test("the feed leads with the United States, France and Hong Kong", () => {
+  const ranked = rankOpportunityPosts([
+    { sourceKey: "opportunity:de:1" },
+    { sourceKey: "opportunity:de:2" },
+    { sourceKey: "opportunity:us:1" },
+    { sourceKey: "opportunity:fr:1" },
+    { sourceKey: "opportunity:hk:1" },
+  ]);
+  assert.deepEqual(
+    ranked.map((post) => post.sourceKey),
+    [
+      "opportunity:us:1",
+      "opportunity:fr:1",
+      "opportunity:hk:1",
+      "opportunity:de:1",
+    ]
+  );
 });

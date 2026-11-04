@@ -11,6 +11,7 @@ import {
   type CommunityAttachment,
 } from "@/lib/community";
 import { loadAuthorConnections } from "@/lib/connections";
+import { rankOpportunityPosts } from "@/lib/market-opportunities";
 import { prisma } from "@/lib/prisma";
 import { toReadableMediaUrl } from "@/lib/storage";
 import { publicContactVerified } from "@/lib/kyc-policy";
@@ -242,7 +243,7 @@ export async function GET(request: Request) {
         _count: { select: { comments: true } },
       },
       orderBy: { createdAt: "desc" },
-      take: 12,
+      take: 200,
     }),
     prisma.communityPost.findMany({
       where: { status: "OPEN", sourceKey: { startsWith: "news:" } },
@@ -392,13 +393,17 @@ export async function GET(request: Request) {
   }
 
   const headlines: FeedItem[] = [];
-  for (const post of opportunityPosts) {
-    if (!wantsMarketplace(kind, "PRODUCT")) continue;
+  const rankedOpportunities = wantsMarketplace(kind, "PRODUCT")
+    ? rankOpportunityPosts(opportunityPosts)
+    : [];
+  const extraOpportunities: FeedItem[] = [];
+  rankedOpportunities.forEach((post, index) => {
     const item = serializePost(post);
     item.kind = "PRODUCT";
     item.isOwner = post.authorId === session.id;
-    headlines.push(item);
-  }
+    if (index < 12) headlines.push(item);
+    else extraOpportunities.push(item);
+  });
   for (const post of newsPosts) {
     if (!wantsMarketplace(kind, "COMMUNITY")) continue;
     const item = serializePost(post);
@@ -447,7 +452,7 @@ export async function GET(request: Request) {
       console.error("Community member directory skipped:", error);
     }
   }
-  const visible = [...slice, ...members];
+  const visible = [...slice, ...extraOpportunities, ...members];
   const connMap = await loadAuthorConnections(
     session.id,
     visible.map((p) => p.author.id)

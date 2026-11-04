@@ -4,8 +4,8 @@ const ACTOR = "zen-studio~aliexpress-scraper";
 const DESK_EMAIL = "opportunities@rfacto.local";
 
 /**
- * Termes utiles au corridor Canada–Afrique : objets légers, souvent renvoyés
- * ou revendus. Le total est plafonné pour limiter le coût Apify.
+ * Mêmes familles de produits, prix selon le pays de livraison.
+ * Quatre résultats par pays : assez pour une tendance, sans relancer un catalogue.
  */
 const KEYWORDS = [
   "écouteurs bluetooth",
@@ -14,24 +14,88 @@ const KEYWORDS = [
   "chargeur téléphone",
 ];
 
-const MARKETS = [
-  {
-    code: "CA",
-    country: "CA",
-    currency: "CAD",
-    label: "Canada",
-    destination: "",
-  },
-  {
-    code: "MA",
-    country: "MA",
-    currency: "MAD",
-    label: "Maroc",
-    destination: "le Maroc",
-  },
-] as const;
+export type Market = {
+  code: string;
+  country: string;
+  currency: string;
+  label: string;
+  destination: string;
+};
 
-type Market = (typeof MARKETS)[number];
+/** Ordre d’affichage : États-Unis, France, porte Chine, puis le corridor déjà ouvert. */
+export const FEATURED_MARKETS = ["us", "fr", "hk", "ca", "ma"];
+
+const MARKETS: Market[] = [
+  ["US", "USD", "États-Unis", "les États-Unis"],
+  ["FR", "EUR", "France", "la France"],
+  ["HK", "HKD", "Hong Kong", "Hong Kong"],
+  ["CA", "CAD", "Canada", "le Canada"],
+  ["MA", "MAD", "Maroc", "le Maroc"],
+  ["AE", "AED", "Émirats arabes unis", "les Émirats arabes unis"],
+  ["AR", "ARS", "Argentine", "l'Argentine"],
+  ["AT", "EUR", "Autriche", "l'Autriche"],
+  ["AU", "AUD", "Australie", "l'Australie"],
+  ["BE", "EUR", "Belgique", "la Belgique"],
+  ["BG", "BGN", "Bulgarie", "la Bulgarie"],
+  ["BR", "BRL", "Brésil", "le Brésil"],
+  ["CH", "CHF", "Suisse", "la Suisse"],
+  ["CL", "CLP", "Chili", "le Chili"],
+  ["CO", "COP", "Colombie", "la Colombie"],
+  ["CY", "EUR", "Chypre", "Chypre"],
+  ["CZ", "CZK", "Tchéquie", "la Tchéquie"],
+  ["DE", "EUR", "Allemagne", "l'Allemagne"],
+  ["DK", "DKK", "Danemark", "le Danemark"],
+  ["EE", "EUR", "Estonie", "l'Estonie"],
+  ["EG", "EGP", "Égypte", "l'Égypte"],
+  ["ES", "EUR", "Espagne", "l'Espagne"],
+  ["FI", "EUR", "Finlande", "la Finlande"],
+  ["GB", "GBP", "Royaume-Uni", "le Royaume-Uni"],
+  ["GR", "EUR", "Grèce", "la Grèce"],
+  ["HR", "EUR", "Croatie", "la Croatie"],
+  ["HU", "HUF", "Hongrie", "la Hongrie"],
+  ["ID", "IDR", "Indonésie", "l'Indonésie"],
+  ["IE", "EUR", "Irlande", "l'Irlande"],
+  ["IL", "ILS", "Israël", "Israël"],
+  ["IN", "INR", "Inde", "l'Inde"],
+  ["IS", "ISK", "Islande", "l'Islande"],
+  ["IT", "EUR", "Italie", "l'Italie"],
+  ["JP", "JPY", "Japon", "le Japon"],
+  ["KR", "KRW", "Corée du Sud", "la Corée du Sud"],
+  ["KW", "KWD", "Koweït", "le Koweït"],
+  ["LT", "EUR", "Lituanie", "la Lituanie"],
+  ["LU", "EUR", "Luxembourg", "le Luxembourg"],
+  ["LV", "EUR", "Lettonie", "la Lettonie"],
+  ["MT", "EUR", "Malte", "Malte"],
+  ["MX", "MXN", "Mexique", "le Mexique"],
+  ["MY", "MYR", "Malaisie", "la Malaisie"],
+  ["NG", "NGN", "Nigeria", "le Nigeria"],
+  ["NL", "EUR", "Pays-Bas", "les Pays-Bas"],
+  ["NO", "NOK", "Norvège", "la Norvège"],
+  ["NZ", "NZD", "Nouvelle-Zélande", "la Nouvelle-Zélande"],
+  ["PE", "PEN", "Pérou", "le Pérou"],
+  ["PH", "PHP", "Philippines", "les Philippines"],
+  ["PL", "PLN", "Pologne", "la Pologne"],
+  ["PT", "EUR", "Portugal", "le Portugal"],
+  ["QA", "QAR", "Qatar", "le Qatar"],
+  ["RO", "RON", "Roumanie", "la Roumanie"],
+  ["SA", "SAR", "Arabie saoudite", "l'Arabie saoudite"],
+  ["SE", "SEK", "Suède", "la Suède"],
+  ["SG", "SGD", "Singapour", "Singapour"],
+  ["SI", "EUR", "Slovénie", "la Slovénie"],
+  ["SK", "EUR", "Slovaquie", "la Slovaquie"],
+  ["TH", "THB", "Thaïlande", "la Thaïlande"],
+  ["TR", "TRY", "Turquie", "la Turquie"],
+  ["TW", "TWD", "Taïwan", "Taïwan"],
+  ["UA", "UAH", "Ukraine", "l'Ukraine"],
+  ["VN", "VND", "Vietnam", "le Vietnam"],
+  ["ZA", "ZAR", "Afrique du Sud", "l'Afrique du Sud"],
+].map(([code, currency, label, destination]) => ({
+  code,
+  country: code,
+  currency,
+  label,
+  destination,
+}));
 
 type RawProduct = {
   productId?: string | number;
@@ -45,6 +109,7 @@ type RawProduct = {
   rating?: number;
   deliveryDaysMin?: number;
   deliveryDaysMax?: number;
+  shipsFrom?: string;
   available?: boolean;
 };
 
@@ -78,7 +143,9 @@ export function opportunityBody(input: {
   destination: string;
   productUrl: string;
   rating?: number;
+  origin?: string;
 }) {
+  const place = input.destination || input.marketLabel;
   const trend =
     input.soldCount > 0
       ? `Tendance : ${formatCount(input.soldCount)} ventes.`
@@ -91,14 +158,14 @@ export function opportunityBody(input: {
   const ship = input.delivery
     ? `Livraison estimée : ${input.delivery}.`
     : "";
-  const marketing = input.destination
-    ? `À proposer aux membres qui envoient vers ${input.destination}. Le prix se discute directement avec l'acheteur.`
-    : "Demandé au Canada. À proposer dans la communauté ; le prix se discute avec l'acheteur.";
+  const origin = input.origin ? `Expédié de ${input.origin}.` : "";
+  const marketing = `À proposer aux membres qui vendent vers ${place}. Le prix se discute directement avec l'acheteur.`;
   return [
     trend,
     price,
     rating,
     ship,
+    origin,
     marketing,
     "",
     `Source : AliExpress · ${input.marketLabel}`,
@@ -146,13 +213,32 @@ export function toOpportunity(
       destination: market.destination,
       productUrl,
       rating: typeof product.rating === "number" ? product.rating : undefined,
+      origin: product.shipsFrom?.toUpperCase() === "CN" ? "Chine" : "",
     }),
   };
 }
 
+export function rankOpportunityPosts<T extends { sourceKey: string | null }>(
+  posts: T[]
+) {
+  const best = new Map<string, T>();
+  for (const post of posts) {
+    const code = (post.sourceKey || "").split(":")[1] || "";
+    if (!code || best.has(code)) continue;
+    best.set(code, post);
+  }
+  const rank = (code: string) => {
+    const index = FEATURED_MARKETS.indexOf(code);
+    return index === -1 ? FEATURED_MARKETS.length : index;
+  };
+  return [...best.entries()]
+    .sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0]))
+    .map((entry) => entry[1]);
+}
+
 async function runMarket(market: Market, token: string) {
   const response = await fetch(
-    `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?timeout=240`,
+    `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?timeout=90`,
     {
       method: "POST",
       headers: {
@@ -161,7 +247,7 @@ async function runMarket(market: Market, token: string) {
       },
       body: JSON.stringify({
         keywords: KEYWORDS,
-        maxResults: 8,
+        maxResults: 4,
         country: market.country,
         currency: market.currency,
         language: "fr_FR",
@@ -170,12 +256,9 @@ async function runMarket(market: Market, token: string) {
         includeDescription: false,
         includeReviews: false,
       }),
-      signal: AbortSignal.timeout(260_000),
+      signal: AbortSignal.timeout(100_000),
     }
   );
-  if (response.status === 400 && market.currency !== "EUR") {
-    return runMarket({ ...market, currency: "EUR" }, token);
-  }
   if (!response.ok) {
     const detail = (await response.text()).slice(0, 180);
     throw new Error(`Apify ${market.code} ${response.status} ${detail}`);
@@ -209,18 +292,28 @@ export async function publishMarketOpportunities() {
 
   const drafts: OpportunityDraft[] = [];
   const errors: string[] = [];
-  for (const market of MARKETS) {
-    try {
-      const rows = await runMarket(market, token);
-      const ranked = [...rows]
-        .sort((a, b) => (Number(b.soldCount) || 0) - (Number(a.soldCount) || 0))
-        .map((row) => toOpportunity(row, market))
-        .filter((row): row is OpportunityDraft => Boolean(row));
-      drafts.push(...ranked.slice(0, 6));
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : String(error));
+  let cursor = 0;
+  async function worker() {
+    while (cursor < MARKETS.length) {
+      const market = MARKETS[cursor];
+      cursor += 1;
+      try {
+        const rows = await runMarket(market, token);
+        const ranked = [...rows]
+          .sort((a, b) => (Number(b.soldCount) || 0) - (Number(a.soldCount) || 0))
+          .map((row) => toOpportunity(row, market))
+          .filter((row): row is OpportunityDraft => Boolean(row))
+          .slice(0, 2);
+        drafts.push(...ranked);
+        console.log(`${market.code} ${ranked.length}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        errors.push(message);
+        console.log(`${market.code} échec`);
+      }
     }
   }
+  await Promise.all(Array.from({ length: 4 }, () => worker()));
 
   if (!drafts.length) {
     return { ok: false as const, error: errors.join(" | ") || "Aucun produit" };
@@ -272,21 +365,29 @@ export async function publishMarketOpportunities() {
     updated += 1;
   }
 
-  const hidden = await prisma.communityPost.updateMany({
-    where: {
-      status: "OPEN",
-      sourceKey: { startsWith: "opportunity:" },
-      NOT: { sourceKey: { in: keys } },
-    },
-    data: { status: "HIDDEN" },
-  });
+  const prefixes = [
+    ...new Set(keys.map((key) => key.split(":").slice(0, 2).join(":") + ":")),
+  ];
+  let hidden = 0;
+  for (const prefix of prefixes) {
+    const keep = keys.filter((key) => key.startsWith(prefix));
+    const result = await prisma.communityPost.updateMany({
+      where: {
+        status: "OPEN",
+        sourceKey: { startsWith: prefix },
+        NOT: { sourceKey: { in: keep } },
+      },
+      data: { status: "HIDDEN" },
+    });
+    hidden += result.count;
+  }
 
   return {
     ok: true as const,
     found: drafts.length,
     created,
     updated,
-    hidden: hidden.count,
+    hidden,
     errors,
   };
 }
