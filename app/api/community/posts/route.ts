@@ -15,6 +15,10 @@ import { prisma } from "@/lib/prisma";
 import { toReadableMediaUrl } from "@/lib/storage";
 import { publicContactVerified } from "@/lib/kyc-policy";
 import {
+  ensureMissingMemberCodes,
+  shownMemberName,
+} from "@/lib/member-code";
+import {
   communitySourceKey,
   parseCommunityFeedId,
 } from "@/lib/community-source";
@@ -90,6 +94,8 @@ function serializePost(post: {
     kycStatus: string;
     ratingAvg: number;
     ratingCount: number;
+    memberCode?: string | null;
+    email?: string | null;
   };
 }): FeedItem {
   return {
@@ -104,7 +110,7 @@ function serializePost(post: {
     source: "post",
     author: {
       id: post.author.id,
-      displayName: post.author.displayName,
+      displayName: shownMemberName(post.author),
       avatarUrl: toReadableMediaUrl(post.author.avatarUrl),
       bannerUrl: toReadableMediaUrl(post.author.bannerUrl ?? null),
       bio: post.author.bio,
@@ -132,12 +138,14 @@ function toFeedAuthor(
     kycStatus: string;
     ratingAvg: number;
     ratingCount: number;
+    memberCode?: string | null;
+    email?: string | null;
   },
   country?: string | null
 ): FeedAuthor {
   return {
     id: user.id,
-    displayName: user.displayName,
+    displayName: shownMemberName(user),
     avatarUrl: toReadableMediaUrl(user.avatarUrl),
     bannerUrl: toReadableMediaUrl(user.bannerUrl ?? null),
     bio: user.bio,
@@ -158,6 +166,8 @@ const AUTHOR_SELECT = {
   bio: true,
   country: true,
   phone: true,
+  email: true,
+  memberCode: true,
   kycStatus: true,
   ratingAvg: true,
   ratingCount: true,
@@ -385,11 +395,47 @@ export async function GET(request: Request) {
   );
 
   const slice = [...headlines, ...feed].slice(0, take);
+  let members: FeedItem[] = [];
+  if (wantsMarketplace(kind, "COMMUNITY")) {
+    try {
+      await ensureMissingMemberCodes();
+      const people = await prisma.user.findMany({
+        where: {
+          status: "ACTIVE",
+          memberCode: { not: null },
+          NOT: { email: { endsWith: "@rfacto.local", mode: "insensitive" } },
+        },
+        select: { ...AUTHOR_SELECT, createdAt: true },
+        orderBy: { displayName: "asc" },
+        take: 400,
+      });
+      members = people.map((person) => ({
+        id: `member:${person.id}`,
+        kind: "COMMUNITY",
+        title: person.displayName,
+        body: [
+          `Identifiant : ${person.memberCode}`,
+          "Ouvrez le profil pour lui écrire.",
+        ].join("\n\n"),
+        attachments: [],
+        createdAt: person.createdAt,
+        href: `/member/${person.id}`,
+        source: "post",
+        author: toFeedAuthor(person, person.country),
+        isOwner: person.id === session.id,
+        viewCount: 0,
+        commentCount: 0,
+      }));
+    } catch (error) {
+      console.error("Community member directory skipped:", error);
+    }
+  }
+  const visible = [...slice, ...members];
   const connMap = await loadAuthorConnections(
     session.id,
-    slice.map((p) => p.author.id)
+    visible.map((p) => p.author.id)
   );
-  for (const item of slice) {
+  for (const item of visible) {
     const stats = connMap.get(item.author.id);
     if (stats) {
       item.author.connectionCount = stats.connectionCount;
@@ -397,7 +443,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const listingKeys = slice
+  const listingKeys = visible
     .map((p) => parseCommunityFeedId(p.id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p))
     .map((p) => communitySourceKey(p.source, p.sourceId));
@@ -413,7 +459,7 @@ export async function GET(request: Request) {
       const countByKey = new Map(
         threads.map((t) => [t.sourceKey, t._count.comments])
       );
-      for (const item of slice) {
+      for (const item of visible) {
         const parsed = parseCommunityFeedId(item.id);
         if (!parsed) continue;
         item.commentCount =
@@ -425,7 +471,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
-    posts: slice,
+    posts: visible,
   });
   } catch (error) {
     console.error("[community feed]", error);

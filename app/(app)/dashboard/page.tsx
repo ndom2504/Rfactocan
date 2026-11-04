@@ -13,6 +13,7 @@ import { getAmbassadorKpis } from "@/lib/ambassador-stats";
 import { formatDate, formatKg } from "@/lib/utils";
 import { getCountryName } from "@/lib/corridors";
 import { androidTesterUrl, iosTesterUrl } from "@/lib/store-testing";
+import { ensureMemberCode, publicDisplayName } from "@/lib/member-code";
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -48,17 +49,23 @@ export default async function DashboardPage() {
         : Promise.resolve(null),
       prisma.user.findUnique({
         where: { id: user.id },
-        select: { ambassadorRequestStatus: true },
+        select: { ambassadorRequestStatus: true, memberCode: true, displayName: true },
       }),
     ]);
 
   const ambPending = ambProfile?.ambassadorRequestStatus === "PENDING";
+  const memberCode =
+    ambProfile?.memberCode ?? (await ensureMemberCode(user.id));
+  const homeName = publicDisplayName(
+    ambProfile?.displayName || user.displayName,
+    memberCode
+  );
 
   return (
     <div>
       <DashboardWelcomeBanner
         userId={user.id}
-        displayName={user.displayName}
+        displayName={homeName}
         avatarUrl={user.avatarUrl}
         bannerUrl={user.bannerUrl}
         kycVerified={isIdentityVerificationEnabled() && userSatisfiesKyc(user)}

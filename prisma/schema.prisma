@@ -243,6 +243,8 @@ model User {
   isAmbassador                 Boolean                 @default(false)
   /// Unique agent code for invite links (/register?ref=CODE)
   agentCode                    String?                 @unique
+  /// Public member code shown next to the name and used in community search (RF7K2M)
+  memberCode                   String?                 @unique
   /// Set once at signup when arriving via an active ambassador link
   referredById                 String?
   /// User-submitted request to become ambassador

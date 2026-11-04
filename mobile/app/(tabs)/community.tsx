@@ -59,6 +59,8 @@ function listingHref(item: CommunityPost): Href | null {
   const serviceListingId = firstPathId(href, "/services/listing/");
   if (serviceListingId) return `/service/${serviceListingId}` as Href;
   if (href.startsWith("/services")) return "/services";
+  const memberId = firstPathId(href, "/member/");
+  if (memberId) return `/member/${memberId}` as Href;
   const meetUserId = firstPathId(href, "/meet/");
   if (meetUserId) return `/meet/${meetUserId}` as Href;
   if (href.startsWith("/meet")) return "/meet" as Href;

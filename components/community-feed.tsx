@@ -85,6 +85,7 @@ export function CommunityFeed() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"" | CommunityFeedFilterId>("");
+  const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [commentingId, setCommentingId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -277,6 +278,17 @@ export function CommunityFeed() {
     }
   }
 
+  const needle = query.trim().toLowerCase();
+  const visiblePosts = needle
+    ? posts.filter((post) =>
+        [post.title, post.body, post.author.displayName, post.author.bio, post.author.country]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(needle)
+      )
+    : posts;
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <section className="border-b border-[var(--border)] pb-6">
@@ -398,6 +410,14 @@ export function CommunityFeed() {
         </p>
       )}
 
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={t("community_search_placeholder")}
+        className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--accent)]"
+        aria-label={t("community_search_placeholder")}
+      />
+
       <div className="flex flex-wrap gap-2">
         <FilterChip
           active={filter === ""}
@@ -418,9 +438,11 @@ export function CommunityFeed() {
         <p className="text-sm text-[var(--muted)]">{t("loading")}</p>
       ) : posts.length === 0 ? (
         <p className="text-sm text-[var(--muted)]">{t("community_empty")}</p>
+      ) : visiblePosts.length === 0 ? (
+        <p className="text-sm text-[var(--muted)]">{t("community_search_empty")}</p>
       ) : (
         <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
-          {posts.map((post) => (
+          {visiblePosts.map((post) => (
             <li key={post.id} className="overflow-hidden py-4">
               {post.author.bannerUrl ? (
                 <Link href={`/member/${post.author.id}`} className="mb-3 block">

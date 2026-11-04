@@ -49,6 +49,8 @@ const dict = {
       "Images (jpeg/png/webp/gif, 50 Mo), vidéos (mp4/webm/mov, max 500 Mo) ou PDF (50 Mo), jusqu’à 10 fichiers.",
     community_attachments_max: "Maximum 10 fichiers par publication.",
     community_publish: "Publier l'annonce",
+    community_search_placeholder: "Nom ou identifiant d’un membre…",
+    community_search_empty: "Aucun membre ni aucune annonce pour cette recherche.",
     community_empty:
       "Rien pour le moment. Annoncez un événement, ou publiez un voyage, un colis ou un service.",
     community_delete: "Supprimer",
@@ -1875,6 +1877,8 @@ const dict = {
       "Images (jpeg/png/webp/gif, 50 MB), videos (mp4/webm/mov, max 500 MB) or PDF (50 MB), up to 10 files.",
     community_attachments_max: "Maximum 10 files per post.",
     community_publish: "Publish announcement",
+    community_search_placeholder: "Member name or ID…",
+    community_search_empty: "No member or listing matches this search.",
     community_empty:
       "Nothing yet. Announce an event, or publish a trip, a parcel or a service.",
     community_delete: "Delete",

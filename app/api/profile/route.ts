@@ -14,6 +14,11 @@ import {
   KYC_ENFORCEMENT_SUSPENDED,
 } from "@/lib/kyc-policy";
 import { countryFromE164 } from "@/lib/phone-auth";
+import {
+  ensureMemberCode,
+  publicDisplayName,
+  stripMemberCode,
+} from "@/lib/member-code";
 
 const mediaUrl = z
   .string()
@@ -61,10 +66,13 @@ export async function GET(request: Request) {
   }
   // Never expose the raw private blob URL in JSON; use /api/kyc/manual-id to stream.
   const { manualIdDocUrl, ...safe } = user;
+  const memberCode = await ensureMemberCode(user.id);
   return NextResponse.json(
     {
       user: {
         ...safe,
+        memberCode,
+        displayName: publicDisplayName(user.displayName, memberCode),
         hasManualIdDoc: Boolean(manualIdDocUrl),
         kycRequired: isKycRequiredForCountry(
           user.country ?? (user.phone ? countryFromE164(user.phone) : null)
@@ -87,6 +95,13 @@ export async function PATCH(request: Request) {
     const body = schema.parse(await request.json());
     const { acceptPublicationCharter, ...rest } = body;
     const data: Record<string, unknown> = { ...rest };
+    if (typeof rest.displayName === "string") {
+      const current = await prisma.user.findUnique({
+        where: { id: session.id },
+        select: { memberCode: true },
+      });
+      data.displayName = stripMemberCode(rest.displayName, current?.memberCode);
+    }
     if (acceptPublicationCharter === true) {
       data.publicationCharterAcceptedAt = new Date();
     }

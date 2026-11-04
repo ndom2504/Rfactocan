@@ -4,6 +4,7 @@ import { openRequestDateWhere, openTripDateWhere } from "@/lib/listing-freshness
 import { prisma } from "@/lib/prisma";
 import { toReadableMediaUrl } from "@/lib/storage";
 import { publicContactVerified } from "@/lib/kyc-policy";
+import { ensureMemberCode, publicDisplayName } from "@/lib/member-code";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -33,6 +34,8 @@ export async function GET(_request: Request, { params }: Params) {
       completedDeliveries: true,
       createdAt: true,
       status: true,
+      memberCode: true,
+      email: true,
     },
   });
 
@@ -189,7 +192,12 @@ export async function GET(_request: Request, { params }: Params) {
   return NextResponse.json({
     user: {
       id: user.id,
-      displayName: user.displayName,
+      displayName: user.email?.toLowerCase().endsWith("@rfacto.local")
+        ? user.displayName
+        : publicDisplayName(
+            user.displayName,
+            user.memberCode ?? (await ensureMemberCode(user.id))
+          ),
       avatarUrl: toReadableMediaUrl(user.avatarUrl),
       bannerUrl: toReadableMediaUrl(user.bannerUrl),
       bio: user.bio,
