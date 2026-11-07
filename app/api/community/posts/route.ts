@@ -11,6 +11,7 @@ import {
   type CommunityAttachment,
 } from "@/lib/community";
 import { loadAuthorConnections } from "@/lib/connections";
+import { sourceUrlFromBody } from "@/lib/community-trends";
 import { rankOpportunityPosts } from "@/lib/market-opportunities";
 import { prisma } from "@/lib/prisma";
 import { toReadableMediaUrl } from "@/lib/storage";
@@ -83,6 +84,7 @@ function serializePost(post: {
   createdAt: Date;
   updatedAt: Date;
   authorId: string;
+  sourceKey?: string | null;
   viewCount?: number;
   _count?: { comments?: number };
   author: {
@@ -107,7 +109,10 @@ function serializePost(post: {
     attachments: parseAttachmentsJson(post.attachmentsJson),
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
-    href: `/community/${post.id}`,
+    href:
+      post.sourceKey?.startsWith("trend:") && sourceUrlFromBody(post.body)
+        ? sourceUrlFromBody(post.body)
+        : `/community/${post.id}`,
     source: "post",
     author: {
       id: post.author.id,
@@ -211,7 +216,7 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-  const [services, shopProducts, virtualPosts, opportunityPosts, newsPosts] =
+  const [services, shopProducts, virtualPosts, trendPosts, opportunityPosts, newsPosts] =
     await Promise.all([
     prisma.serviceListing.findMany({
       where: { status: "OPEN" },
@@ -235,6 +240,15 @@ export async function GET(request: Request) {
       },
       orderBy: { createdAt: "desc" },
       take: 24,
+    }),
+    prisma.communityPost.findMany({
+      where: { status: "OPEN", sourceKey: { startsWith: "trend:" } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 12,
     }),
     prisma.communityPost.findMany({
       where: { status: "OPEN", sourceKey: { startsWith: "opportunity:" } },
@@ -393,6 +407,18 @@ export async function GET(request: Request) {
   }
 
   const headlines: FeedItem[] = [];
+  for (const post of trendPosts) {
+    const lane = post.sourceKey?.split(":")[1];
+    const visible =
+      !kind ||
+      kind === "ALL" ||
+      kind === "COMMUNITY" ||
+      (kind === "PRODUCT" && lane === "produit");
+    if (!visible) continue;
+    const item = serializePost(post);
+    item.isOwner = post.authorId === session.id;
+    headlines.push(item);
+  }
   const rankedOpportunities = wantsMarketplace(kind, "PRODUCT")
     ? rankOpportunityPosts(opportunityPosts)
     : [];

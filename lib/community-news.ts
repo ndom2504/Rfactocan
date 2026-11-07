@@ -112,6 +112,12 @@ function imageFrom(chunk: string) {
       /medium=["']image["']/i.test(tag);
     if (markedImage || isRasterImageUrl(url)) candidates.push(url);
   }
+  const youtube = decoded.match(
+    /youtu(?:\.be\/|be\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/i
+  )?.[1];
+  if (youtube) {
+    candidates.push(`https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`);
+  }
   return (
     candidates.find((url) => isRasterImageUrl(url) && !/logo|icon|favicon/i.test(url)) ||
     candidates.find((url) => isRasterImageUrl(url)) ||

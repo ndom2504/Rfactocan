@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Linking,
   Image,
   Pressable,
   Share,
@@ -317,6 +318,11 @@ export default function CommunityScreen() {
   }
 
   function openListing(item: CommunityPost) {
+    const href = item.href ?? "";
+    if (/^https?:\/\//i.test(href)) {
+      void Linking.openURL(href);
+      return;
+    }
     const dest = listingHref(item);
     if (dest) router.push(dest);
   }

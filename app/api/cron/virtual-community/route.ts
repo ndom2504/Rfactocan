@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { publishCommunityNews } from "@/lib/community-news";
+import { publishCommunityTrends } from "@/lib/community-trends";
 import { publishVirtualCommunityPosts } from "@/lib/virtual-community-posts";
 
 export const runtime = "nodejs";
@@ -34,7 +35,11 @@ export async function GET(request: Request) {
       console.error("[cron/community-news]", error);
       return { ok: false as const, error: "Échec des actus" };
     });
-    return NextResponse.json({ ...result, news });
+    const trends = await publishCommunityTrends().catch((error) => {
+      console.error("[cron/community-trends]", error);
+      return { ok: false as const, error: "Échec des tendances" };
+    });
+    return NextResponse.json({ ...result, news, trends });
   } catch (error) {
     console.error("[cron/virtual-community]", error);
     return NextResponse.json(

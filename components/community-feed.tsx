@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useState, Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -522,9 +522,9 @@ export function CommunityFeed() {
               {post.title && (
                 <h2 className={`mt-3 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)] ${profile ? "text-center" : ""}`}>
                   {post.href ? (
-                    <Link href={post.href} className="hover:underline">
+                    <SourceLink href={post.href} className="hover:underline">
                       {post.title}
-                    </Link>
+                    </SourceLink>
                   ) : (
                     post.title
                   )}
@@ -598,12 +598,12 @@ export function CommunityFeed() {
                   </>
                 ) : null}
                 {!profile && post.href ? (
-                  <Link
+                  <SourceLink
                     href={post.href}
                     className="rounded-md bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:underline"
                   >
                     {t("community_see")}
-                  </Link>
+                  </SourceLink>
                 ) : null}
                 {!profile ? (
                 <>
@@ -676,6 +676,29 @@ export function CommunityFeed() {
         </ul>
       )}
     </div>
+  );
+}
+
+function SourceLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  if (/^https?:\/\//i.test(href)) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
   );
 }
 

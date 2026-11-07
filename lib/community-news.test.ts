@@ -42,6 +42,22 @@ describe("community news", () => {
     );
   });
 
+  it("prend l'image d'une vidéo officielle dans la description", () => {
+    const entries = parseFeedEntries(`
+      <rss><channel>
+        <item>
+          <title>Conseiller relation entreprise</title>
+          <link>https://recrute.francetravail.org/offre</link>
+          <description>Découvrir le métier https://youtu.be/Fbi14JWDTdg</description>
+        </item>
+      </channel></rss>
+    `);
+    assert.equal(
+      entries[0]?.imageUrl,
+      "https://i.ytimg.com/vi/Fbi14JWDTdg/hqdefault.jpg"
+    );
+  });
+
   it("rédige un résultat avec la source et le hashtag", () => {
     const nhl = NEWS_DESKS.find((desk) => desk.id === "nhl");
     assert.ok(nhl);
