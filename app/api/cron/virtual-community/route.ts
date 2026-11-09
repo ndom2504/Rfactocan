@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { publishCommunityNews } from "@/lib/community-news";
+import { publishBarreauResources } from "@/lib/community-barreau";
 import { publishCommunityTrends } from "@/lib/community-trends";
 import { publishVirtualCommunityPosts } from "@/lib/virtual-community-posts";
 
@@ -39,7 +40,11 @@ export async function GET(request: Request) {
       console.error("[cron/community-trends]", error);
       return { ok: false as const, error: "Échec des tendances" };
     });
-    return NextResponse.json({ ...result, news, trends });
+    const barreau = await publishBarreauResources().catch((error) => {
+      console.error("[cron/community-barreau]", error);
+      return { ok: false as const, error: "Échec du parcours du Barreau" };
+    });
+    return NextResponse.json({ ...result, news, trends, barreau });
   } catch (error) {
     console.error("[cron/virtual-community]", error);
     return NextResponse.json(

@@ -110,7 +110,9 @@ function serializePost(post: {
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
     href:
-      post.sourceKey?.startsWith("trend:") && sourceUrlFromBody(post.body)
+      (post.sourceKey?.startsWith("trend:") ||
+        post.sourceKey?.startsWith("barreau:")) &&
+      sourceUrlFromBody(post.body)
         ? sourceUrlFromBody(post.body)
         : `/community/${post.id}`,
     source: "post",
@@ -216,7 +218,7 @@ export async function GET(request: Request) {
   const feed: FeedItem[] = [];
 
   try {
-  const [services, shopProducts, virtualPosts, trendPosts, opportunityPosts, newsPosts] =
+  const [services, shopProducts, virtualPosts, barreauPosts, trendPosts, opportunityPosts, newsPosts] =
     await Promise.all([
     prisma.serviceListing.findMany({
       where: { status: "OPEN" },
@@ -240,6 +242,15 @@ export async function GET(request: Request) {
       },
       orderBy: { createdAt: "desc" },
       take: 24,
+    }),
+    prisma.communityPost.findMany({
+      where: { status: "OPEN", sourceKey: { startsWith: "barreau:" } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 16,
     }),
     prisma.communityPost.findMany({
       where: { status: "OPEN", sourceKey: { startsWith: "trend:" } },
@@ -407,6 +418,12 @@ export async function GET(request: Request) {
   }
 
   const headlines: FeedItem[] = [];
+  for (const post of barreauPosts) {
+    if (!wantsMarketplace(kind, "COMMUNITY") && kind && kind !== "ALL") continue;
+    const item = serializePost(post);
+    item.isOwner = post.authorId === session.id;
+    headlines.push(item);
+  }
   for (const post of trendPosts) {
     const lane = post.sourceKey?.split(":")[1];
     const visible =
